@@ -231,13 +231,18 @@ registerNodeSerializer({
     serialize(node: unknown): Record<string, unknown>
     {
         const vm = node as TextNode;
-        return { text: serializeShapeText(vm.Text) };
+        const out: Record<string, unknown> = { text: serializeShapeText(vm.Text) };
+        // A text node is a paintable Figure — persist its Format Shape fill/stroke
+        // too, not just its caption (was dropped → styling lost on reopen).
+        writeFillStroke(out, vm);
+        return out;
     },
 
     deserialize(data: Record<string, unknown>): TextNode
     {
         const vm = new TextNode();
         if (data.text !== undefined) applySerializedText(vm.Text, data.text as SerializedText);
+        readFillStroke(data, vm);
         return vm;
     },
 });
@@ -261,16 +266,21 @@ registerNodeSerializer({
     serialize(node: unknown): Record<string, unknown>
     {
         const c = node as Callout;
-        return {
+        const out: Record<string, unknown> = {
             text:           serializeShapeText(c.Text),
             leaderTargetId: c.LeaderTargetId,
         };
+        // A callout is a paintable Figure — persist its Format Shape fill/stroke
+        // too (its bubble body + outline), not just its caption/leader.
+        writeFillStroke(out, c);
+        return out;
     },
 
     deserialize(data: Record<string, unknown>): Callout
     {
         const callout = new Callout();
         if (data.text !== undefined) applySerializedText(callout.Text, data.text as SerializedText);
+        readFillStroke(data, callout);
         // leaderTargetId is read by DiagramDocument._deserialize during the
         // second pass (pendingLeaders).  Nothing to do here.
         return callout;
