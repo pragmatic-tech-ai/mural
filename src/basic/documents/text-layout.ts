@@ -1,7 +1,7 @@
-import { Brush, FontFamily, FormattedText, TextAlignment, type TextMetrics } from '../../visual-engine/index.js';
+import { Brush, FontFamily, FormattedText, type ImageSource, type Stretch, TextAlignment, type TextMetrics } from '../../visual-engine/index.js';
 import { Point, Rect, Visual, type DrawingContext } from '../../runtime/index.js';
 import { Inline, type LinkTarget, type RunProps } from './text-element.js';
-import { Run, Span, LineBreak, InlineUIContainer } from './inlines.js';
+import { Run, Span, LineBreak, InlineUIContainer, ImageInline, ImageDisplay } from './inlines.js';
 
 // ─────────────────────────────────────────────────────────────────────
 // Flatten + line layout for the inline content model. The mural analog of
@@ -15,7 +15,8 @@ import { Run, Span, LineBreak, InlineUIContainer } from './inlines.js';
 export type FlowItem =
     | { kind: 'text';   text: string; props: RunProps; source: Inline }
     | { kind: 'break' }
-    | { kind: 'object'; visual: Visual; source: Inline };
+    | { kind: 'object'; visual: Visual; source: Inline }
+    | { kind: 'image';  image: ImageSource; width: number; height: number; stretch: Stretch; display: ImageDisplay; source: Inline };
 
 // Flatten the inline tree into a flow stream. `base` is the hosting
 // TextBlock's own resolved format; each Span overrides it for its subtree.
@@ -64,6 +65,12 @@ function walk(inlines: readonly Inline[], ctx: RunProps, out: FlowItem[]): void
         {
             const child = el.Child;
             if (child !== undefined) out.push({ kind: 'object', visual: child, source: el });
+        }
+        else if (el instanceof ImageInline)
+        {
+            const src = el.Source;
+            if (src !== undefined)
+                out.push({ kind: 'image', image: src, width: el.LayoutWidth, height: el.LayoutHeight, stretch: el.Stretch, display: el.Display, source: el });
         }
         else if (el instanceof Span)
         {
@@ -116,7 +123,23 @@ export interface ObjectFragment
     readonly source: Inline;
 }
 
-export type Fragment = TextFragment | ObjectFragment;
+export interface ImageFragment
+{
+    readonly kind: 'image';
+    readonly image: ImageSource;
+    readonly stretch: Stretch;
+    x: number; y: number;
+    readonly width: number;
+    readonly height: number;
+    // Distance above / below the line baseline — middle-aligned to the text
+    // (an inline image has no text baseline of its own). Finalised in commit()
+    // like an ObjectFragment; ascent + descent === height for hit-testing.
+    ascent: number;
+    descent: number;
+    readonly source: Inline;
+}
+
+export type Fragment = TextFragment | ObjectFragment | ImageFragment;
 
 export interface Line
 {
@@ -160,6 +183,7 @@ type Token =
     | { kind: 'word';   pieces: Piece[]; width: number }
     | { kind: 'space';  width: number }
     | { kind: 'object'; visual: Visual; width: number; height: number; baseline?: number; source: Inline }
+    | { kind: 'image';  image: ImageSource; width: number; height: number; stretch: Stretch; display: ImageDisplay; source: Inline }
     | { kind: 'break' };
 
 export function layoutInlines(items: FlowItem[], opt: LayoutOptions): LayoutResult
@@ -184,6 +208,20 @@ export function layoutInlines(items: FlowItem[], opt: LayoutOptions): LayoutResu
             flushWord();
             const size = opt.measureObject(item.visual);
             tokens.push({ kind: 'object', visual: item.visual, width: size.width, height: size.height, baseline: size.baseline, source: item.source });
+            continue;
+        }
+        if (item.kind === 'image')
+        {
+            flushWord();
+            // Cap to the available width (scaling height proportionally) so a
+            // large image never overflows the line; unbounded width → no cap.
+            let w = item.width, h = item.height;
+            if (Number.isFinite(opt.availableWidth) && w > opt.availableWidth && w > 0)
+            {
+                h = h * (opt.availableWidth / w);
+                w = opt.availableWidth;
+            }
+            tokens.push({ kind: 'image', image: item.image, width: w, height: h, stretch: item.stretch, display: item.display, source: item.source });
             continue;
         }
         // text — split into alternating non-ws / ws segments, tracking the
@@ -247,11 +285,15 @@ export function layoutInlines(items: FlowItem[], opt: LayoutOptions): LayoutResu
         const centreAbove = hasText ? (maxAscent - maxDescent) / 2 : 0;
         for (const f of frags)
         {
-            if (f.kind !== 'object') continue;
-            if (f.baseline !== undefined && Number.isFinite(f.baseline))
+            if (f.kind === 'text') continue;
+            // object / image: baseline-align if the object reported its own text
+            // baseline, else middle-align on the text's vertical middle. An image
+            // has no baseline of its own → always middle-aligned.
+            const objBaseline = f.kind === 'object' ? f.baseline : undefined;
+            if (objBaseline !== undefined && Number.isFinite(objBaseline))
             {
-                f.ascent  = f.baseline;
-                f.descent = f.height - f.baseline;
+                f.ascent  = objBaseline;
+                f.descent = f.height - objBaseline;
             }
             else
             {
@@ -294,6 +336,19 @@ export function layoutInlines(items: FlowItem[], opt: LayoutOptions): LayoutResu
         if (tok.kind === 'break') { commit(false); continue; }
         if (tok.kind === 'space') { pendingSpace = tok.width; continue; }
 
+        // A block image is a figure on its own line: end the current line, place
+        // the image alone, end that line. The paragraph's per-line alignment shift
+        // centres / right-aligns it at render like any other line.
+        if (tok.kind === 'image' && tok.display === ImageDisplay.Block)
+        {
+            commit(false);
+            frags.push({ kind: 'image', image: tok.image, stretch: tok.stretch, x: 0, y: 0, width: tok.width, height: tok.height, ascent: 0, descent: 0, source: tok.source });
+            curX += tok.width;
+            commit(false);
+            pendingSpace = undefined;
+            continue;
+        }
+
         const atomWidth = tok.width;
         const spaceBefore = (frags.length > 0 && pendingSpace !== undefined) ? pendingSpace : 0;
         if (opt.wrap && frags.length > 0 && curX + spaceBefore + atomWidth > opt.availableWidth)
@@ -310,7 +365,7 @@ export function layoutInlines(items: FlowItem[], opt: LayoutOptions): LayoutResu
         pendingSpace = undefined;
 
         if (tok.kind === 'word') { placePieces(tok.pieces); }
-        else /* object */
+        else if (tok.kind === 'object')
         {
             // ascent/descent are finalised in commit() (baseline- or middle-
             // align); objects don't inflate the line's text metrics during fill.
@@ -318,6 +373,14 @@ export function layoutInlines(items: FlowItem[], opt: LayoutOptions): LayoutResu
                 kind: 'object', visual: tok.visual, x: curX, y: 0,
                 width: tok.width, height: tok.height, ascent: 0, descent: 0,
                 baseline: tok.baseline, source: tok.source,
+            });
+            curX += tok.width;
+        }
+        else /* inline image */
+        {
+            frags.push({
+                kind: 'image', image: tok.image, stretch: tok.stretch, x: curX, y: 0,
+                width: tok.width, height: tok.height, ascent: 0, descent: 0, source: tok.source,
             });
             curX += tok.width;
         }
@@ -384,14 +447,24 @@ export function renderLayout(dc: DrawingContext, layout: LayoutResult, o: Render
     {
         for (const f of line.frags)
         {
-            if (f.kind !== 'text') continue;
-            const fg = f.props.foreground ?? (f.props.link !== undefined ? o.link : o.ink);
-            const formatted = new FormattedText(
-                f.text, f.props.family, f.props.size, fg,
-                f.props.weight, f.props.style, f.metrics,
-                o.letterSpacing, f.props.decorations,
-            );
-            dc.DrawText(formatted, new Point(o.originX + f.x + line.shift, o.originY + f.y));
+            if (f.kind === 'text')
+            {
+                const fg = f.props.foreground ?? (f.props.link !== undefined ? o.link : o.ink);
+                const formatted = new FormattedText(
+                    f.text, f.props.family, f.props.size, fg,
+                    f.props.weight, f.props.style, f.metrics,
+                    o.letterSpacing, f.props.decorations,
+                );
+                dc.DrawText(formatted, new Point(o.originX + f.x + line.shift, o.originY + f.y));
+            }
+            else if (f.kind === 'image')
+            {
+                // Painted directly (not as a child visual) so it renders on the
+                // live canvas AND in the SVG/PPTX/PNG export — both DrawingContexts
+                // implement DrawImage. ObjectFragments (InlineUIContainer) still
+                // paint separately as the host's child visuals (skipped here).
+                dc.DrawImage(f.image, new Rect(o.originX + f.x + line.shift, o.originY + f.y, f.width, f.height), f.stretch);
+            }
         }
     }
 }

@@ -1,7 +1,7 @@
-import { FontStyle, FontWeight, TextAlignment, TextDecorations } from '../../../visual-engine/index.js';
+import { BitmapImage, FontStyle, FontWeight, Stretch, TextAlignment, TextDecorations } from '../../../visual-engine/index.js';
 import { FlowDocument } from '../../../basic/documents/flow-document.js';
 import { Paragraph } from '../../../basic/documents/paragraph.js';
-import { Run } from '../../../basic/documents/inlines.js';
+import { ImageDisplay, ImageInline, Run } from '../../../basic/documents/inlines.js';
 import { DocumentParagraphs, ParagraphText } from '../../../basic/documents/text-navigation.js';
 import { NormalizeParagraph } from '../../../basic/documents/text-editing.js';
 import { Field, FieldKind } from '../shape-text-field.js';
@@ -20,13 +20,27 @@ import { Field, FieldKind } from '../shape-text-field.js';
 // / colour aren't editable in place yet and aren't persisted — they'd be
 // dead fields. A later slice widens both together.
 
+// An image inline's persisted form. `uri` is the ImageSource URI verbatim — a
+// `data:` URI embeds the bytes (self-contained), an `http`/`blob` URI references
+// (so both embed and external-reference modes ride one field). Size / stretch /
+// display are omitted at their defaults.
+export interface SerializedImage
+{
+    readonly uri:      string;
+    readonly w?:       number;
+    readonly h?:       number;
+    readonly stretch?: Stretch;       // omitted when Uniform
+    readonly display?: ImageDisplay;  // omitted when Inline
+}
+
 export interface SerializedRun
 {
-    readonly t: string;      // text (empty for a field — its text is recomputed)
-    readonly b?: boolean;    // bold
-    readonly i?: boolean;    // italic
-    readonly u?: boolean;    // underline
-    readonly f?: FieldKind;  // field key (§ Slice 6) — present iff this run is a Field
+    readonly t: string;          // text (empty for a field / image)
+    readonly b?: boolean;        // bold
+    readonly i?: boolean;        // italic
+    readonly u?: boolean;        // underline
+    readonly f?: FieldKind;      // field key (§ Slice 6) — present iff this run is a Field
+    readonly img?: SerializedImage;  // present iff this inline is an ImageInline
 }
 
 export interface SerializedParagraph
@@ -48,6 +62,18 @@ export function serializeFlowDocument(doc: FlowDocument): SerializedDoc
         const runs: SerializedRun[] = [];
         for (const inline of p.Inlines.ToArray())
         {
+            if (inline instanceof ImageInline)
+            {
+                const src = inline.Source;
+                if (src === undefined) continue;   // nothing to persist
+                const img: { uri: string; w?: number; h?: number; stretch?: Stretch; display?: ImageDisplay } = { uri: src.Uri };
+                if (inline.Width  !== undefined)          img.w = inline.Width;
+                if (inline.Height !== undefined)          img.h = inline.Height;
+                if (inline.Stretch !== Stretch.Uniform)   img.stretch = inline.Stretch;
+                if (inline.Display !== ImageDisplay.Inline) img.display = inline.Display;
+                runs.push({ t: '', img });
+                continue;
+            }
             if (!(inline instanceof Run)) continue;
             // A Field persists its key, not its resolved text (recomputed on
             // load by the owner). Check Field first — it extends Run.
@@ -75,6 +101,13 @@ export function deserializeFlowDocument(data: SerializedDoc): FlowDocument
         if (sp.align !== undefined) p.TextAlignment = sp.align;
         for (const sr of sp.runs)
         {
+            if (sr.img !== undefined)
+            {
+                p.Inlines.Add(new ImageInline(new BitmapImage(sr.img.uri), {
+                    width: sr.img.w, height: sr.img.h, stretch: sr.img.stretch, display: sr.img.display,
+                }));
+                continue;
+            }
             const run = sr.f !== undefined ? new Field(sr.f) : new Run(sr.t);
             if (sr.b === true) run.FontWeight      = FontWeight.Bold;
             if (sr.i === true) run.FontStyle       = FontStyle.Italic;

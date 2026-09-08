@@ -1,6 +1,6 @@
-﻿import { Brush, FontFamily, FontStyle, FontWeight, TextDecorations } from '../../visual-engine/index.js';
+﻿import { Brush, FontFamily, FontStyle, FontWeight, type ImageSource, type Stretch, TextDecorations } from '../../visual-engine/index.js';
 import { type Inline } from './text-element.js';
-import { Run, Span } from './inlines.js';
+import { Run, Span, ImageInline, type ImageDisplay } from './inlines.js';
 import { Paragraph } from './paragraph.js';
 import { FlowDocument } from './flow-document.js';
 import { type BlockCollection } from './block.js';
@@ -56,14 +56,16 @@ function styledRun(text: string, s: Style): Run
 }
 
 /** Flatten a paragraph to a flat list of styled Runs (idempotent). Spans
- *  collapse into per-Run DPs; empty runs are dropped. Leaves a paragraph
- *  of only top-level Runs. */
+ *  collapse into per-Run DPs; empty runs are dropped. ImageInlines are kept
+ *  in place as atomic non-text inlines (they don't participate in the text
+ *  offset model, but survive editing + re-render). Leaves a paragraph of
+ *  top-level Runs interleaved with any ImageInlines. */
 export function NormalizeParagraph(p: Paragraph): void
 {
-    // Already flat (only Runs)? nothing to do.
-    if (p.Inlines.ToArray().every((i) => i instanceof Run)) return;
+    // Already flat (only Runs and Images)? nothing to do.
+    if (p.Inlines.ToArray().every((i) => i instanceof Run || i instanceof ImageInline)) return;
 
-    const flat: Run[] = [];
+    const flat: Inline[] = [];
     const walk = (inlines: readonly Inline[], ctx: Style): void =>
     {
         for (const el of inlines)
@@ -79,6 +81,11 @@ export function NormalizeParagraph(p: Paragraph): void
                 if (own.foreground !== undefined) merged.foreground = own.foreground;
                 merged.decorations |= own.decorations;
                 if (el.Text.length > 0) flat.push(styledRun(el.Text, merged));
+            }
+            else if (el instanceof ImageInline)
+            {
+                // Atomic — kept as-is (identity preserved) at its position.
+                flat.push(el);
             }
             else if (el instanceof Span)
             {
@@ -97,7 +104,7 @@ export function NormalizeParagraph(p: Paragraph): void
     walk(p.Inlines.ToArray(), { ...BLANK });
 
     p.Inlines.Clear();
-    for (const r of flat) p.Inlines.Add(r);
+    for (const el of flat) p.Inlines.Add(el);
 }
 
 // ── Container helpers ─────────────────────────────────────────────────
@@ -150,6 +157,52 @@ export function InsertText(_doc: FlowDocument, ptr: TextPointer, text: string): 
     const run = at.slot.run;
     run.Text = run.Text.slice(0, at.index) + text + run.Text.slice(at.index);
     return new TextPointer(ptr.Paragraph, ptr.Offset + text.length);
+}
+
+/** Insert an image inline at a pointer, splitting the caret run so the image
+ *  lands between the two halves. The image is atomic (not part of the text
+ *  offset space), so the returned caret keeps the same offset — it now sits
+ *  just before the image. Returns the (unchanged-offset) caret. */
+export function InsertImage(
+    _doc: FlowDocument, ptr: TextPointer, source: ImageSource,
+    opts?: { width?: number; height?: number; stretch?: Stretch; display?: ImageDisplay },
+): TextPointer
+{
+    NormalizeParagraph(ptr.Paragraph);
+    const img = new ImageInline(source, opts);
+    const at = ResolveOffset(ptr.Paragraph, ptr.Offset);
+    if (at === undefined)
+    {
+        // Empty paragraph — the image is the sole inline.
+        ptr.Paragraph.Inlines.Add(img);
+        return ptr.Clone();
+    }
+    const run = at.slot.run;
+    const idx = ptr.Paragraph.Inlines.IndexOf(run);
+    if (at.index <= 0)
+    {
+        ptr.Paragraph.Inlines.Insert(idx, img);                 // before the run
+    }
+    else if (at.index >= run.Text.length)
+    {
+        ptr.Paragraph.Inlines.Insert(idx + 1, img);             // after the run
+    }
+    else
+    {
+        // Straddles — split the run and drop the image between the halves.
+        const right = styledRun(run.Text.slice(at.index), runStyle(run));
+        run.Text = run.Text.slice(0, at.index);
+        ptr.Paragraph.Inlines.Insert(idx + 1, img);
+        ptr.Paragraph.Inlines.Insert(idx + 2, right);
+    }
+    return ptr.Clone();
+}
+
+/** Remove an image inline from its paragraph. */
+export function RemoveImage(_doc: FlowDocument, image: ImageInline): void
+{
+    const p = image.Parent;
+    if (p instanceof Paragraph) p.Inlines.Remove(image);
 }
 
 // ── Deletion ──────────────────────────────────────────────────────────
