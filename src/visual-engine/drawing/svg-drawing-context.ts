@@ -302,11 +302,25 @@ function formatNumber(n: number): string
     return n.toString();
 }
 
+// Brush.Opacity multiplies whatever alpha is already in the paint
+// (SolidColorBrush.Color.A). SVG carries it as a separate fill-opacity /
+// stroke-opacity attribute — the omnibus `opacity` would also dim the stroke,
+// which isn't the intent. Mirrors svg-dom-drawing-context's applyBrushOpacity
+// so the string-emitting export path matches the live DOM renderer; returns
+// undefined (no attribute) when the brush is fully opaque.
+function opacityAttr(brush: Brush | undefined, attr: 'fill-opacity' | 'stroke-opacity'): string | undefined
+{
+    if (brush === undefined || brush.Opacity >= 1) return undefined;
+    return `${attr}="${formatNumber(Math.max(0, brush.Opacity))}"`;
+}
+
 function fillAttr(brush: Brush | undefined): string
 {
     if (brush instanceof SolidColorBrush)
     {
-        return `fill="${brush.Color.ToCss()}"`;
+        const op = opacityAttr(brush, 'fill-opacity');
+        const fill = `fill="${brush.Color.ToCss()}"`;
+        return op !== undefined ? `${fill} ${op}` : fill;
     }
     // Gradients / ImageBrush land later; for now treat unknown brushes as
     // no fill so the slot stays transparent rather than defaulting to
@@ -322,6 +336,8 @@ function strokeAttrs(pen: Pen | undefined): string[]
         `stroke="${pen.Brush.Color.ToCss()}"`,
         `stroke-width="${formatNumber(pen.Thickness)}"`,
     ];
+    const strokeOpacity = opacityAttr(pen.Brush, 'stroke-opacity');
+    if (strokeOpacity !== undefined) attrs.push(strokeOpacity);
     // Pen.DashStyle.Dashes are multipliers of Thickness (WPF
     // semantics). Multiply on the way out so SVG sees absolute
     // user-space lengths.
@@ -351,7 +367,9 @@ function fillAttrForText(brush: Brush | undefined): string
 {
     if (brush instanceof SolidColorBrush)
     {
-        return `fill="${brush.Color.ToCss()}"`;
+        const op = opacityAttr(brush, 'fill-opacity');
+        const fill = `fill="${brush.Color.ToCss()}"`;
+        return op !== undefined ? `${fill} ${op}` : fill;
     }
     return `fill="rgb(0,0,0)"`;
 }

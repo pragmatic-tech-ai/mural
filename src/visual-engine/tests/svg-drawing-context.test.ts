@@ -143,3 +143,45 @@ describe('SvgDrawingContext.DrawGeometry', () => {
         assert.equal(dc.ToFragment(), '');
     });
 });
+
+// Regression: Brush.Opacity (the Format Shape transparency slider, distinct
+// from Color.A) was dropped on SVG export — the exported fill/stroke came out
+// fully opaque even though the live canvas honoured it. The export DC must emit
+// fill-opacity / stroke-opacity like svg-dom-drawing-context does.
+describe('SvgDrawingContext — Brush.Opacity', () => {
+    test('a fill brush with Opacity < 1 emits fill-opacity', () => {
+        const brush = new SolidColorBrush(Color.Red);
+        brush.Opacity = 0.5;
+        const dc = new SvgDrawingContext();
+        dc.DrawRectangle(brush, undefined, new Rect(0, 0, 10, 10));
+        const out = dc.ToFragment();
+        assert.ok(out.includes('fill="rgb(255,0,0)"'), 'colour still emitted');
+        assert.ok(out.includes('fill-opacity="0.5"'), `fill-opacity dropped: ${out}`);
+    });
+
+    test('a stroke pen brush with Opacity < 1 emits stroke-opacity', () => {
+        const pen = new Pen(new SolidColorBrush(Color.Black), 2);
+        pen.Brush.Opacity = 0.25;
+        const dc = new SvgDrawingContext();
+        dc.DrawRectangle(undefined, pen, new Rect(0, 0, 10, 10));
+        const out = dc.ToFragment();
+        assert.ok(out.includes('stroke-opacity="0.25"'), `stroke-opacity dropped: ${out}`);
+    });
+
+    test('a fully-opaque brush emits no opacity attribute', () => {
+        const dc = new SvgDrawingContext();
+        dc.DrawRectangle(new SolidColorBrush(Color.Green), undefined, new Rect(0, 0, 10, 10));
+        const out = dc.ToFragment();
+        assert.equal(out.includes('fill-opacity'), false);
+    });
+
+    test('Color.A and Brush.Opacity compose — rgba colour plus fill-opacity', () => {
+        const brush = new SolidColorBrush(new Color(255, 0, 0, 128));
+        brush.Opacity = 0.5;
+        const dc = new SvgDrawingContext();
+        dc.DrawRectangle(brush, undefined, new Rect(0, 0, 10, 10));
+        const out = dc.ToFragment();
+        assert.ok(out.includes('fill="rgba(255,0,0,0.5019607843137255)"'), `colour alpha lost: ${out}`);
+        assert.ok(out.includes('fill-opacity="0.5"'), `brush opacity lost: ${out}`);
+    });
+});
