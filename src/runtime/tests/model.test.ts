@@ -4940,12 +4940,23 @@ describe('AddPropertyChangedListener name resolution', () =>
         assert.deepEqual(seen, ['Hi']);
     });
 
-    test('subscribing by an unregistered name throws a named diagnostic, not a TypeError', () =>
+    test('subscribing by an unregistered name falls back to the base Observable INPC store', () =>
     {
+        // A non-DP name is no longer an error — MuralBase extends Observable, so
+        // the listener attaches to the base name-keyed store. A plain getter/setter
+        // that fires RaisePropertyChanged is thus observable exactly like on a plain
+        // Observable VM (this is what lets a binding read a plain property on a
+        // MuralBase source). Registered DP names still route through the EVD path.
         const w = new Widget();
-        assert.throws(
-            () => w.AddPropertyChangedListener('Nope', () => {}),
-            /No dependency property named 'Nope' is registered on 'Widget'\./,
-        );
+        const seen: unknown[] = [];
+        const cb = (_o: unknown, _n: unknown, _old: unknown, nv: unknown): void => { seen.push(nv); };
+        assert.doesNotThrow(() => w.AddPropertyChangedListener('plain', cb));
+        (w as unknown as { RaisePropertyChanged(n: string, o: unknown, v: unknown): void }).RaisePropertyChanged('plain', undefined, 'v1');
+        assert.deepEqual(seen, ['v1']);
+
+        // Removing the same callback stops delivery.
+        w.RemovePropertyChangedListener('plain', cb);
+        (w as unknown as { RaisePropertyChanged(n: string, o: unknown, v: unknown): void }).RaisePropertyChanged('plain', 'v1', 'v2');
+        assert.deepEqual(seen, ['v1']);
     });
 });

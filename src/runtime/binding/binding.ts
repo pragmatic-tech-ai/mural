@@ -3,7 +3,7 @@ import { bindsTwoWayByDefault } from '../metadata.js';
 import { MuralBase } from '../model.js';
 import { Observable } from '../observable.js';
 import type { PropertyKey } from '../model.js';
-import { resolveKey } from '../model-internals.js';
+import { findDescriptor, resolveKey } from '../model-internals.js';
 import { ObservableCollection } from '../observable-collection.js';
 import { observe_array, subscribe_array } from '../observable-array.js';
 import type { PropertyDescriptor } from '../property-descriptor.js';
@@ -234,16 +234,26 @@ class PropertyPath
     // `(Owner.Property)` attached-property syntax. Returns undefined when
     // the explicit owner class is unknown to `MuralBase.find_class` — silently
     // bails the binding rather than throwing.
+    // Returns undefined (rather than throwing) when the name isn't a registered
+    // dependency property, so callers can fall back to reading it as a plain JS
+    // property on the source (which, for a MuralBase, still carries Observable INPC).
     private static resolve_segment_key(
         model: MuralBase,
         segment: PropertyPathSegment,
     ): PropertyKey<unknown> | undefined
     {
         const ownerName = segment.OwnerName;
-        if (ownerName === undefined) return resolveKey(model, undefined, segment.PropertyName);
+        if (ownerName === undefined)
+        {
+            return findDescriptor(model.constructor, segment.PropertyName) !== undefined
+                ? resolveKey(model, undefined, segment.PropertyName)
+                : undefined;
+        }
         const owner = MuralBase.find_class(ownerName);
         if (owner === undefined) return undefined;
-        return resolveKey(model, owner, segment.PropertyName);
+        return findDescriptor(owner, segment.PropertyName) !== undefined
+            ? resolveKey(model, owner, segment.PropertyName)
+            : undefined;
     }
 
     // Reads `segment` from `current` via the typed-key API when `current`
@@ -256,8 +266,9 @@ class PropertyPath
         if (current instanceof MuralBase)
         {
             const key = PropertyPath.resolve_segment_key(current, segment);
-            if (key === undefined) return undefined;
-            return current.get_property_value(key);
+            if (key !== undefined) return current.get_property_value(key);
+            // Not a dependency property — fall through to the plain-property read
+            // below (a plain field / getter on the MuralBase).
         }
         if (current instanceof ObservableCollection)
         {
@@ -275,13 +286,10 @@ class PropertyPath
         if (parent instanceof MuralBase)
         {
             const key = PropertyPath.resolve_segment_key(parent, segment);
-            if (key === undefined) return;
-            parent.set_property_value(key, value);
+            if (key !== undefined) { parent.set_property_value(key, value); return; }
+            // Not a dependency property — fall through to the plain setter below.
         }
-        else
-        {
-            parent[segment.PropertyName] = value;
-        }
+        parent[segment.PropertyName] = value;
     }
 
     // Attaches the path's onChanged listener to `current` for `segment`,
@@ -310,18 +318,24 @@ class PropertyPath
         if (current instanceof MuralBase)
         {
             const key = PropertyPath.resolve_segment_key(current, segment);
-            if (key === undefined) return undefined;
-            segment.MuralBase = current;
-            segment.ResolvedKey = key;
-            current.AddPropertyChangedListener(key, this.onChangedBound);
-            return current.get_property_value(key);
+            if (key !== undefined)
+            {
+                segment.MuralBase = current;
+                segment.ResolvedKey = key;
+                current.AddPropertyChangedListener(key, this.onChangedBound);
+                return current.get_property_value(key);
+            }
+            // Not a dependency property — fall through to the plain Observable
+            // branch below (MuralBase extends Observable), subscribing to the
+            // property NAME via the base INPC store.
         }
-        // A PLAIN Observable (MuralBase already handled above, so this is a
-        // non-MuralBase INotifyPropertyChanged source). No descriptor — key
-        // reactivity off the property NAME. Read stays a bracket access,
-        // which invokes the subclass getter.
+        // A plain-property Observable source (a non-MuralBase VM, OR a MuralBase
+        // whose bound name isn't a DP). No descriptor — key reactivity off the
+        // property NAME. Read stays a bracket access, which invokes the getter.
         if (current instanceof Observable)
         {
+            segment.MuralBase = undefined;
+            segment.ResolvedKey = undefined;
             segment.ObservableSource = current;
             segment.ObservableName = segment.PropertyName;
             current.AddPropertyChangedListener(segment.PropertyName, this.onChangedBound);

@@ -450,17 +450,15 @@ export class MuralBase extends Observable
     // instance's class via `find_descriptor`; an unregistered name throws
     // a named diagnostic rather than building `new PropertyKey(undefined)`
     // and faulting on a later `.descriptor` access.
-    private resolve_listener_key(nameOrKey: string | PropertyKey<unknown>): PropertyKey<unknown>
+    // Resolves the `string | PropertyKey` argument of the notification overloads
+    // to its PropertyDescriptor, or undefined when a STRING name isn't a registered
+    // dependency property. A non-DP name is no longer an error: the caller falls
+    // back to the base Observable name-keyed INPC store, so plain getter/setter
+    // properties on a MuralBase are observable exactly like on a plain Observable.
+    private resolve_listener_descriptor(nameOrKey: string | PropertyKey<unknown>): PropertyDescriptor | undefined
     {
-        if (typeof nameOrKey !== 'string') return nameOrKey;
-        const descriptor = MuralBase.find_descriptor(this.constructor, nameOrKey);
-        if (descriptor === undefined)
-        {
-            throw new Error(
-                `No dependency property named '${nameOrKey}' is registered on '${this.constructor.name}'.`,
-            );
-        }
-        return new PropertyKey(descriptor);
+        if (typeof nameOrKey !== 'string') return nameOrKey.descriptor;
+        return MuralBase.find_descriptor(this.constructor, nameOrKey);
     }
 
     public override AddPropertyChangedListener(
@@ -468,8 +466,17 @@ export class MuralBase extends Observable
         callback: PropertyChangeCallback,
     ): void
     {
-        const key = this.resolve_listener_key(nameOrKey);
-        this.ensure_effective_value_for(key.descriptor).AddChangeListener(callback);
+        const descriptor = this.resolve_listener_descriptor(nameOrKey);
+        if (descriptor === undefined)
+        {
+            // A plain (non-DP) property name — subscribe via the base Observable
+            // INPC store so a getter/setter that calls RaisePropertyChanged stays
+            // reactive, exactly as on a plain Observable VM (a binding to a plain
+            // property on a MuralBase source relies on this).
+            super.AddPropertyChangedListener(nameOrKey as string, callback);
+            return;
+        }
+        this.ensure_effective_value_for(descriptor).AddChangeListener(callback);
     }
 
     public override RemovePropertyChangedListener(
@@ -477,9 +484,13 @@ export class MuralBase extends Observable
         callback: PropertyChangeCallback,
     ): void
     {
-        const key = this.resolve_listener_key(nameOrKey);
-        const composed = key.descriptor.ComposedKey;
-        this.property_values.get(composed)?.RemoveChangeListener(callback);
+        const descriptor = this.resolve_listener_descriptor(nameOrKey);
+        if (descriptor === undefined)
+        {
+            super.RemovePropertyChangedListener(nameOrKey as string, callback);
+            return;
+        }
+        this.property_values.get(descriptor.ComposedKey)?.RemoveChangeListener(callback);
     }
 
     public ClearValue<T>(key: PropertyKey<T>): void
