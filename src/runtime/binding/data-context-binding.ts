@@ -202,7 +202,9 @@ class DataContextBindingImpl extends Binding
             const seg = segments[i]!;
             if (cur instanceof MuralBase)
             {
-                cur = cur.get_property_value(resolveKey(cur, undefined, seg));
+                cur = MuralBase.HasProperty(cur.constructor, seg)
+                    ? cur.get_property_value(resolveKey(cur, undefined, seg))
+                    : (cur as unknown as Record<string, unknown>)[seg];
             }
             else if (cur !== null && typeof cur === 'object')
             {
@@ -220,7 +222,18 @@ class DataContextBindingImpl extends Binding
         const lastSeg = segments[segments.length - 1]!;
         if (cur instanceof MuralBase)
         {
-            cur.set_property_value(resolveKey(cur, undefined, lastSeg), back);
+            // A registered DP writes through the DP store; a non-DP name writes
+            // through the plain setter (which is expected to raise INPC), so a
+            // MuralBase VM's plain two-way property round-trips like a plain
+            // Observable one.
+            if (MuralBase.HasProperty(cur.constructor, lastSeg))
+            {
+                cur.set_property_value(resolveKey(cur, undefined, lastSeg), back);
+            }
+            else
+            {
+                (cur as unknown as Record<string, unknown>)[lastSeg] = back;
+            }
         }
         else if (cur !== null && typeof cur === 'object')
         {
@@ -291,13 +304,16 @@ class DataContextBindingImpl extends Binding
             this.sourceCallback   = () => { this.watcher.Value = this.walkPath(dc); };
             dc.AddPropertyChangedListener(key, this.sourceCallback);
         }
-        else if (!(dc instanceof MuralBase) && dc instanceof Observable)
+        else if (dc instanceof Observable)
         {
-            // PLAIN Observable DataContext only — a MuralBase is also an
-            // Observable, but it took (or intentionally skipped, when the
-            // first segment isn't a DP on it) the key branch above. Subscribe
-            // by property NAME; walkPath's bracket fallthrough reads it via
-            // the subclass getter.
+            // A plain Observable VM, OR a MuralBase whose first segment is a
+            // plain (non-DP) property — both subscribe by NAME. MuralBase is
+            // also an Observable, and its AddPropertyChangedListener falls back
+            // to the Observable INPC store for a non-DP name (mural >= 0.46.16),
+            // so a getter/setter that raises RaisePropertyChanged stays
+            // reactive. Before this a MuralBase whose segment wasn't a DP fell
+            // through BOTH branches and got no subscription — .mu `$plain`
+            // bindings against a ServiceBase panel never updated.
             this.currentSource     = dc;
             this.currentSourceName = first;
             this.sourceCallback    = () => { this.watcher.Value = this.walkPath(dc); };
@@ -320,8 +336,15 @@ class DataContextBindingImpl extends Binding
             if (cur === undefined || cur === null) return undefined;
             if (cur instanceof MuralBase)
             {
-                if (!MuralBase.HasProperty(cur.constructor, seg)) return undefined;
-                cur = cur.get_property_value(resolveKey(cur, undefined, seg));
+                // A registered DP reads through the DP store; a non-DP name
+                // falls through to a plain property read (a getter/field on the
+                // subclass), mirroring the core binding engine so a MuralBase VM
+                // (e.g. a ServiceBase capability panel) can expose bindable
+                // commands / lists / state as plain members with no dependency-
+                // property boilerplate (mural >= 0.46.19).
+                cur = MuralBase.HasProperty(cur.constructor, seg)
+                    ? cur.get_property_value(resolveKey(cur, undefined, seg))
+                    : (cur as unknown as Record<string, unknown>)[seg];
             }
             else if (typeof cur === 'object')
             {

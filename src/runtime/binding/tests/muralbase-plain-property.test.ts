@@ -1,6 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { Binding, BindingMode } from '../binding.js';
+import { DataContextBinding } from '../data-context-binding.js';
 import { MuralBase } from '../../model.js';
 import { TextBlock } from '../../../basic/text-block.js';
 import { resolveKey } from '../../model-internals.js';
@@ -92,5 +93,60 @@ describe('Binding reads plain properties on a MuralBase source', () => {
         vm.label = 'x';
         assert.equal(seen, 'x');
         vm.RemovePropertyChangedListener('label', () => {});   // wrong cb → no-op, must not throw
+    });
+});
+
+// `.mu` `$property` bindings compile to DataContextBinding, which has its OWN
+// path resolver (separate from `new Binding` above). Before this fix that
+// resolver only read registered dependency properties on a MuralBase source and
+// returned undefined for a plain field/getter — so a ServiceBase capability
+// panel exposing its commands/lists/state as plain members bound to nothing
+// (every $-binding resolved undefined; the panel's buttons did nothing).
+describe('DataContextBinding reads plain properties on a MuralBase DataContext', () => {
+    function setText(tb: TextBlock, binding: Binding): void {
+        tb.set_property_value(resolveKey(tb, undefined, 'Text'), binding);
+    }
+    function setDataContext(tb: TextBlock, vm: unknown): void {
+        tb.set_property_value(resolveKey(tb, undefined, 'DataContext'), vm);
+    }
+
+    test('reads a plain readonly field (not a dependency property)', () => {
+        const vm = new MbVM('start', 'the-tag');
+        const tb = new TextBlock();
+        setDataContext(tb, vm);
+        setText(tb, DataContextBinding(tb, 'tag'));
+        assert.equal(tb.Text, 'the-tag');
+    });
+
+    test('reacts to a plain getter/setter that raises INPC', () => {
+        const vm = new MbVM('start', 't');
+        const tb = new TextBlock();
+        setDataContext(tb, vm);
+        setText(tb, DataContextBinding(tb, 'label'));
+        assert.equal(tb.Text, 'start');
+        vm.label = 'updated';
+        assert.equal(tb.Text, 'updated');   // subscription fired via Observable INPC
+    });
+
+    test('two-way: a target edit writes back through the plain setter', () => {
+        const vm = new MbVM('start', 't');
+        const tb = new TextBlock();
+        setDataContext(tb, vm);
+        setText(tb, DataContextBinding(tb, 'label'));
+        // Force TwoWay (a .mu `$label` on a two-way target upgrades likewise).
+        tb.set_property_value(resolveKey(tb, undefined, 'Text'), new Binding(vm as unknown as never, 'label', BindingMode.TwoWay));
+        tb.set_property_value(resolveKey(tb, undefined, 'Text'), 'edited');
+        assert.equal(vm.label, 'edited');
+    });
+
+    test('a plain field set AFTER the binding still resolves on DataContext arrival', () => {
+        // Mirrors the panel lifecycle: the binding is installed while the
+        // container's DataContext is briefly the wrong VM, then swapped to the
+        // service. The DataContext change must re-resolve the plain field.
+        const tb = new TextBlock();
+        setText(tb, DataContextBinding(tb, 'tag'));
+        assert.equal(tb.Text, undefined);
+        setDataContext(tb, new MbVM('start', 'arrived'));
+        assert.equal(tb.Text, 'arrived');
     });
 });
