@@ -642,12 +642,25 @@ export class ComboBox extends Selector
                 // Forward into the popup's ItemsControl — it owns the
                 // container materialization for the dropdown rows.
                 this._popupList.Items = (newValue as readonly unknown[] | undefined) ?? [];
-                // Items changed → re-evaluate the selection at the
-                // current SelectedIndex. Mirrors WPF's behaviour of
-                // preserving SelectedIndex and pulling SelectedItem out
-                // of the new collection. Selector.applySelectedIndex
-                // does the cross-sync + listener fire for us.
-                this.applySelectedIndex(this.SelectedIndex);
+                // Items changed → re-resolve the selection against the new
+                // collection. Prefer the retained SelectedItem (survives
+                // list (re)population / async load, and a selection set
+                // before the items arrived) so `SelectedItem=$Vm` bound
+                // ahead of `ItemsSource=$Coll` restores once the items land;
+                // fall back to SelectedIndex only when no item is held.
+                // Re-resolving via applySelectedIndex(-1) here would instead
+                // clear a detached SelectedItem (and push undefined through
+                // a TwoWay binding). Selector.applySelected* does the
+                // cross-sync + listener fire for us.
+                const held = this.SelectedItem;
+                if (held !== undefined && held !== null) this.applySelectedItem(held);
+                else if (this.SelectedIndex >= 0) this.applySelectedIndex(this.SelectedIndex);
+                // else: nothing is selected yet. Do NOT call
+                // applySelectedIndex(-1) — it writes SelectedItem=undefined
+                // through the DP, and when a TwoWay `SelectedItem=$Vm`
+                // binding is still resolving (its DataContext arrived this
+                // same tick, ItemsSource first), that write pushes undefined
+                // back and DESTROYS the VM value before the binding reads it.
                 this.refreshSelectionText();
                 break;
             case 'IsDropDownOpen':

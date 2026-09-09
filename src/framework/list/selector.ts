@@ -735,15 +735,26 @@ export class Selector extends ItemsControl
     {
         const idx   = this.resolveIndexOf(item);
         const value = this.projectValue(item);
-        const normalisedItem = idx < 0 ? undefined : item;
-        if (normalisedItem === undefined)
+        // An explicit clear (undefined/null) drops the selection; a
+        // concrete item is RETAINED even when it isn't currently in Items.
+        // The latter is the "detached selection" state — the item was set
+        // before the collection was populated (a TwoWay `SelectedItem=$Vm`
+        // resolving before `ItemsSource=$Coll`), or Items is being
+        // repopulated. Coercing SelectedItem to undefined there would push
+        // undefined back through a TwoWay binding and DESTROY the bound VM
+        // value (the box then shows only the placeholder). Instead we keep
+        // the item, seed _selectedData so the recycle / re-resolve hook
+        // re-selects it once a matching container materializes, and leave
+        // SelectedIndex at -1 until the item appears in the collection.
+        const cleared = item === undefined || item === null;
+        if (cleared)
         {
             this.setSelectedContainers([]);
             this._anchor = undefined;
         }
         else
         {
-            const container = this.containerForItem(normalisedItem);
+            const container = idx >= 0 ? this.containerForItem(item) : undefined;
             if (container !== undefined)
             {
                 this.setSelectedContainers([container]);
@@ -751,15 +762,18 @@ export class Selector extends ItemsControl
             }
             else
             {
+                // Item set but no realized container — virtualized row OR
+                // an item not (yet) in Items. Retain it via _selectedData.
                 for (const c of this._selectedContainers) Selector.SetIsSelected(c, false);
                 this._selectedContainers.clear();
                 this._selectedData.clear();
-                this._selectedData.add(normalisedItem);
+                this._selectedData.add(item);
                 this._anchor = undefined;
             }
         }
         this.withSuppressedSelectionSync(() => {
-            if (normalisedItem !== item) this.SelectedItem = normalisedItem;
+            // SelectedItem keeps the value the caller set — only the index
+            // normalises to -1 when the item isn't currently resolvable.
             this.SelectedIndex = idx;
             this.SelectedValue = value;
         });
