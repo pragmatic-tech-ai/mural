@@ -341,12 +341,42 @@ function buildShape(
             return undefined;
     }
 
+    // Fold SVG opacity into the paints. `opacity` composites the whole element
+    // (fill AND stroke); `fill-opacity` / `stroke-opacity` scale each channel.
+    // A fully-transparent channel (e.g. the `fill="white" fill-opacity="0"`
+    // full-canvas placeholder rect Figma/Fluent exports prepend) becomes no
+    // paint at all, so it stops rendering as an opaque background square; a
+    // partial value rides on the Color's alpha so semi-transparent shapes
+    // convert faithfully.
+    const elementOpacity = parseOpacity(attrs.get('opacity'));
     return {
         Geometry:    geometry,
-        Fill:        fill,
-        Stroke:      stroke,
+        Fill:        applyOpacity(fill,   parseOpacity(attrs.get('fill-opacity'))   * elementOpacity),
+        Stroke:      applyOpacity(stroke, parseOpacity(attrs.get('stroke-opacity')) * elementOpacity),
         StrokeWidth: strokeWidth,
     };
+}
+
+// Parse an SVG opacity attribute (`opacity` / `fill-opacity` / `stroke-opacity`)
+// to a 0..1 factor, clamped; a missing / non-numeric value is fully opaque (1).
+function parseOpacity(s: string | undefined): number
+{
+    if (s === undefined) return 1;
+    const n = parseFloat(s);
+    if (!Number.isFinite(n)) return 1;
+    return Math.max(0, Math.min(1, n));
+}
+
+// Apply an opacity factor to a paint: >= 1 leaves it untouched, <= 0 drops it
+// to "no paint" (an invisible shape contributes nothing), and a partial value
+// scales an authored Color's alpha. The currentColor sentinel can't carry an
+// alpha, so a partial factor leaves it as-is (it recolours to Foreground).
+function applyOpacity(paint: IconPaint, factor: number): IconPaint
+{
+    if (factor >= 1) return paint;
+    if (factor <= 0) return undefined;
+    if (paint === undefined || paint === CURRENT_COLOR) return paint;
+    return paint.WithAlpha(Math.round(paint.A * factor));
 }
 
 // ── Attribute + token helpers ────────────────────────────────────────

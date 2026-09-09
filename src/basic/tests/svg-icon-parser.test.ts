@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import { parseSvgIcon } from '../svg-icon-parser.js';
 import { CURRENT_COLOR } from '../icon.js';
+import { Color } from '../../visual-engine/primitives.js';
 
 // A shape filled by a gradient reference resolves to the gradient's first stop
 // color (a faithful solid stand-in) instead of the CURRENT_COLOR sentinel — the
@@ -55,4 +56,41 @@ test('a self-closing <g/> (empty group) does not swallow following shapes', () =
     const icon = parseSvgIcon(svg);
     assert.equal(icon.Shapes.length, 1);
     assert.equal(icon.Shapes[0]!.Fill?.R, 0xff);
+});
+
+// ── Opacity ──────────────────────────────────────────────────────────
+// Figma / Fluent exports (e.g. Microsoft's copilotstudio.svg) prepend a
+// full-canvas `fill="white" fill-opacity="0"` placeholder rect. Without
+// opacity handling it converted to an opaque white background square behind
+// the icon (a Foreground-coloured silhouette when Recolor=true). It must
+// contribute no paint.
+test('a fill-opacity="0" placeholder rect contributes no fill (no background square)', () => {
+    const svg = '<svg viewBox="0 0 48 48"><rect width="48" height="48" fill="white" fill-opacity="0.0" /></svg>';
+    const icon = parseSvgIcon(svg);
+    assert.equal(icon.Shapes.length, 1);
+    assert.equal(icon.Shapes[0]!.Fill, undefined);   // no paint → renders nothing
+});
+
+test('a partial fill-opacity rides on the fill Color alpha', () => {
+    const svg = '<svg viewBox="0 0 10 10"><path d="M0 0h10v10H0Z" fill="#ffffff" fill-opacity="0.7" /></svg>';
+    const fill = parseSvgIcon(svg).Shapes[0]!.Fill;
+    assert.ok(fill instanceof Color, 'fill stays a solid Color');
+    assert.equal(fill.A, 179);   // round(255 * 0.7)
+    assert.equal(fill.R, 255);   // colour channels untouched
+});
+
+test('element opacity multiplies both fill and stroke', () => {
+    const svg = '<svg viewBox="0 0 10 10"><path d="M0 0h10v10H0Z" fill="#ff0000" stroke="#00ff00" stroke-width="1" opacity="0.5" /></svg>';
+    const s = parseSvgIcon(svg).Shapes[0]!;
+    assert.ok(s.Fill instanceof Color && s.Stroke instanceof Color);
+    assert.equal(s.Fill.A, 128);     // round(255 * 0.5)
+    assert.equal(s.Stroke.A, 128);
+});
+
+test('stroke-opacity="0" drops the stroke but keeps the fill', () => {
+    const svg = '<svg viewBox="0 0 10 10"><path d="M0 0h10v10H0Z" fill="#123456" stroke="#000000" stroke-width="2" stroke-opacity="0" /></svg>';
+    const s = parseSvgIcon(svg).Shapes[0]!;
+    assert.ok(s.Fill instanceof Color);
+    assert.equal(s.Fill.R, 0x12);
+    assert.equal(s.Stroke, undefined);
 });
