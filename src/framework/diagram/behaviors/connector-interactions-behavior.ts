@@ -1358,35 +1358,15 @@ export function attachConnectorInteractions(diagram: Diagram): () => void
         // target on EndCreate / EndDragOverTarget still uses cursor →
         // findFigureAtCanvasPoint + getPortAtCanvasPoint, so hover-show
         // and drop-pick stay in lockstep.
-        const fig  = findFigureAtCanvasPoint(diagram, cursor);
-        // Only the side nearest the cursor is shown — recompute it on
-        // every move so the highlighted edge tracks the pointer around
-        // the figure. Re-arrange when EITHER the figure or the chosen
-        // side changes (the side flips as the cursor crosses the figure's
-        // diagonals); re-subscribe only when the figure itself changes.
-        const side = fig !== undefined ? pickSideOfFigure(fig, cursor) : undefined;
-        const figChanged = fig !== state.hoveredFigure;
-        if (figChanged)
-        {
-            state.hoveredFigure = fig;
-            syncHoverSubscription(fig);
-        }
-        if (figChanged || side !== state.hoverSide)
-        {
-            state.hoverSide = side;
-            sideAdornerVisual?.InvalidateArrange();
-        }
-
-        // Connector hover for the halo. Skip during active gestures and
-        // when the cursor is over a Figure (figures sit on top of
-        // connectors in z-order; the user is clearly targeting the
-        // figure, not whichever connector happens to pass underneath).
-        // Halo is non-hit-test, so args.Source is the connector itself
-        // when the cursor is over its painted path — no halo-tag
-        // fallback needed, and a cursor that leaves the connector
-        // immediately reverts conn → undefined which hides the halo.
+        // Connector hover for the halo, driven by the ACTUAL topmost hit —
+        // args.Source respects z-order (it IS the connector's painted path
+        // when the connector paints above an overlapping figure, and the
+        // figure when the figure is on top). This is why the halo must be
+        // resolved from args.Source, not gated on "no figure bbox here":
+        // a connector brought in front of a shape still overlaps the shape's
+        // bbox, but it is the hit and should show its halo.
         let conn: Connector | undefined = undefined;
-        if (state.activeGesture === undefined && fig === undefined)
+        if (state.activeGesture === undefined)
         {
             conn = findConnectorAncestor(args.Source);
             // The segment pads shown with the halo are hit-test-visible, so
@@ -1405,6 +1385,33 @@ export function attachConnectorInteractions(diagram: Diagram): () => void
             // as noise.
             if (conn !== undefined && diagram.IsConnectorSelected(conn)) conn = undefined;
         }
+
+        // Figure hover (side bars / port handles) — near-detection by bbox.
+        // Suppress it while idle when a connector is the topmost hit: the
+        // connector sits above the figure there, so the user is targeting the
+        // connector, not the figure beneath it. During an active gesture the
+        // figure hover stays live so drag-create target handles still appear.
+        const fig = (state.activeGesture === undefined && conn !== undefined)
+            ? undefined
+            : findFigureAtCanvasPoint(diagram, cursor);
+        // Only the side nearest the cursor is shown — recompute it on
+        // every move so the highlighted edge tracks the pointer around
+        // the figure. Re-arrange when EITHER the figure or the chosen
+        // side changes (the side flips as the cursor crosses the figure's
+        // diagonals); re-subscribe only when the figure itself changes.
+        const side = fig !== undefined ? pickSideOfFigure(fig, cursor) : undefined;
+        const figChanged = fig !== state.hoveredFigure;
+        if (figChanged)
+        {
+            state.hoveredFigure = fig;
+            syncHoverSubscription(fig);
+        }
+        if (figChanged || side !== state.hoverSide)
+        {
+            state.hoverSide = side;
+            sideAdornerVisual?.InvalidateArrange();
+        }
+
         if (conn !== state.hoveredConnector)
         {
             state.hoveredConnector = conn;
