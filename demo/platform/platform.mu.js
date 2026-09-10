@@ -32,6 +32,7 @@ import { LoadingIndicatorDemo } from "../demos/loading-indicator/loading-indicat
 import { MenuDemo } from "../demos/menu/menu.mu.js";
 import { NavigationRailDemo } from "../demos/navigation-rail/navigation-rail.mu.js";
 import { PenEditorDemo } from "../demos/pen-editor/pen-editor.mu.js";
+import { PropertyGridDemo } from "../demos/property-grid/property-grid.mu.js";
 import { RibbonDemo } from "../demos/ribbon/ribbon.mu.js";
 import { RichTextBlockDemo } from "../demos/rich-text-block/rich-text-block.mu.js";
 import { RichTextEditorDemo } from "../demos/rich-text-editor/rich-text-editor.mu.js";
@@ -123,6 +124,7 @@ export const app = (() => {
     for (const [_k, _v] of TopAppBarDemo.Clone().Entries()) _rd1.Set(_k, _v);
     for (const [_k, _v] of TreeViewDemo.Clone().Entries()) _rd1.Set(_k, _v);
     for (const [_k, _v] of WordToolboxDemo.Clone().Entries()) _rd1.Set(_k, _v);
+    for (const [_k, _v] of PropertyGridDemo.Clone().Entries()) _rd1.Set(_k, _v);
     const _tmpl2 = new DataTemplate((_data) => {
         const _textBlock3 = new TextBlock();
         _textBlock3.set_property_value(TextBlock.TextKey, DataContextBinding(_textBlock3, "Label"));

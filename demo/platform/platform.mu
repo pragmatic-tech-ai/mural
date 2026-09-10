@@ -97,6 +97,7 @@ import ToolBarDemo from "../demos/tool-bar/tool-bar.mu.js"
 import TopAppBarDemo from "../demos/top-app-bar/top-app-bar.mu.js"
 import TreeViewDemo from "../demos/tree-view/tree-view.mu.js"
 import WordToolboxDemo from "../demos/word-toolbox/word-toolbox.mu.js"
+import PropertyGridDemo from "../demos/property-grid/property-grid.mu.js"
 
 Application [ Theme = Material, Scheme = MaterialLight ] {
     .services: {
@@ -172,6 +173,7 @@ Application [ Theme = Material, Scheme = MaterialLight ] {
         merge TopAppBarDemo
         merge TreeViewDemo
         merge WordToolboxDemo
+        merge PropertyGridDemo
 
         // A demo list row — the group's ListBox renders each DemoVM through this
         // implicit-by-type template. DemoVM is the one DemoGroupService.Demos

@@ -288,3 +288,9 @@ export {
     attachConnectorEditAdorner,
 } from './diagram/behaviors/connector-edit-adorner.js';
 export { DiagramLayer, DiagramLayersPanel } from './diagram/diagram-layers-panel.js';
+
+// ── Property grid ────────────────────────────────────────────────────
+export { PropertyGrid } from './property-grid/property-grid.js';
+export { GridProperty, PropertyKind, type GridPropertyOptions } from './property-grid/grid-property.js';
+export { PropertyItem, PropertyCategory } from './property-grid/property-item.js';
+export { DpPropertyBag, MapPropertyBag, type IPropertyBag, type PropertyAccessor } from './property-grid/property-bag.js';
