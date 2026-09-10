@@ -51,6 +51,13 @@ export {
     type ValueConverter,
 } from './binding/index.js';
 export { Observable } from './observable.js';
+// Storage IO subsystem lives in todl-runtime (zero-dep); re-exported here so
+// consumers already importing '@pragmatic-tech-ai/mural/runtime' need no second
+// import path. Canonical source: @pragmatic-tech-ai/todl-runtime.
+export {
+    type IStorage, type StorageEntry, type ILocalFileAccess,
+    isLocalFileAccess, compareStorageEntries, FakeStorage, copyTree,
+} from '@pragmatic-tech-ai/todl-runtime';
 export { MuralBase, PropertyKey } from './model.js';
 export { Freezable, cloneFreezableValue } from './freezable.js';
 export { Behavior } from '../visual-engine/behavior.js';
