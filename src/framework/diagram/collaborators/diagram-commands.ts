@@ -35,8 +35,9 @@ import {
 import { TextAlignment } from '../../../visual-engine/index.js';
 import { TextPlacement } from '../shape-text.js';
 import { primaryFormatTarget } from '../behaviors/format-painter-behavior.js';
-import { Panel } from '../../../runtime/index.js';
+import { Panel, Visual } from '../../../runtime/index.js';
 import { Figure } from '../figure.js';
+import { Connector } from '../connector.js';
 import { ZOrderMode, reorderZ, type ZAccess } from '../commands/zorder.js';
 
 // Internal collaborator owned by Diagram. Owns the default RelayCommand
@@ -100,16 +101,17 @@ export class DiagramCommands
                 { Text: 'Align Center', Description: 'Center selected shapes horizontally on a shared vertical axis.' }));
     }
 
-    // Panel.ZIndex accessor over figures — the wrapper for the pure zorder math.
-    private static readonly Z: ZAccess<Figure> = {
-        get: (f) => Panel.GetZIndex(f),
-        set: (f, z) => Panel.SetZIndex(f, z),
+    // Panel.ZIndex accessor over any Visual — the wrapper for the pure zorder
+    // math. Figures and connectors share one z-space on the diagram canvas.
+    private static readonly Z: ZAccess<Visual> = {
+        get: (v) => Panel.GetZIndex(v),
+        set: (v, z) => Panel.SetZIndex(v, z),
     };
 
     private _installZOrderCommands(): void
     {
         const Diagram = this._diagram.constructor as typeof import('../diagram.js').Diagram;
-        const canReorder = (): boolean => this._selectedFigures().length >= 1;
+        const canReorder = (): boolean => this._selectedReorderables().length >= 1;
 
         this._install(Diagram.BringToFrontCommandKey, 'BringToFront',
             new RelayCommand(() => this._reorder(ZOrderMode.Front), canReorder,
@@ -125,31 +127,39 @@ export class DiagramCommands
                 { Text: 'Send Backward', Description: 'Move the selected shape(s) one step toward the back.' }));
     }
 
-    // Selected top-level figures (ignore connectors / content nodes / nested members).
-    private _selectedFigures(): Figure[]
+    // Selected top-level figures plus selected connectors — the visuals a
+    // z-order command may restack. Connectors share the canvas with the
+    // top-level figures, so they reorder in one unified stack. (Content nodes
+    // and nested group members are excluded via selectedTopLevel / the Figure
+    // filter.)
+    private _selectedReorderables(): Visual[]
     {
-        return selectedTopLevel(this._diagram.SelectedItems).filter((i): i is Figure => i instanceof Figure);
+        const figs = selectedTopLevel(this._diagram.SelectedItems)
+            .filter((i): i is Figure => i instanceof Figure);
+        return [...figs, ...this._diagram.SelectedConnectors];
     }
 
-    // Group the selection by visual parent (the figures Canvas, or a container's
-    // child host) and reorder each parent's figure children independently, so z
-    // is scoped per parent.
+    // Group the selection by visual parent (the canvas, or a container's child
+    // host) and reorder each parent's Figure+Connector children independently,
+    // so z is scoped per parent. Cap/label visuals are excluded — they mirror
+    // their connector's z (see DiagramConnectorsMaterializer).
     private _reorder(mode: ZOrderMode): void
     {
-        const figs = this._selectedFigures();
-        if (figs.length === 0) return;
-        const byParent = new Map<Panel, Figure[]>();
-        for (const f of figs)
+        const targets = this._selectedReorderables();
+        if (targets.length === 0) return;
+        const byParent = new Map<Panel, Visual[]>();
+        for (const t of targets)
         {
-            const parent = f.GetVisualParent();
+            const parent = t.GetVisualParent();
             if (!(parent instanceof Panel)) continue;
             let group = byParent.get(parent);
             if (group === undefined) { group = []; byParent.set(parent, group); }
-            group.push(f);
+            group.push(t);
         }
         for (const [parent, selected] of byParent)
         {
-            const siblings = [...parent.Children].filter((c): c is Figure => c instanceof Figure);
+            const siblings = [...parent.Children].filter(
+                (c): c is Visual => c instanceof Figure || c instanceof Connector);
             reorderZ(mode, selected, siblings, DiagramCommands.Z);
         }
     }
