@@ -280,7 +280,10 @@ describe('PropertyGrid — editor selector per-kind DP', () => {
 
     test('selector returns undefined when no template is set for the kind', () => {
         const grid = new PropertyGrid();
-        // No templates set
+        // Explicitly clear the default-style-provided template so the
+        // selector's fallback path (returns undefined for an unregistered
+        // kind) is exercised regardless of the active theme style.
+        grid.TextEditorTemplate = undefined;
         grid.Descriptors = [GridProperty.text('name')];
         grid.Target = makeBag(['name']);
 

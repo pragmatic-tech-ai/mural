@@ -35,6 +35,19 @@ export class PropertyGrid extends ItemsControl
             PropertyGrid, 'Target', undefined, MetaData.None,
         );
 
+    // ── EditorTemplateSelector DP ────────────────────────────────────
+    // Holds the bound selector function. Exposed as a registered DP so
+    // that `$$EditorTemplateSelector` (TemplateBinding) inside a
+    // ControlTemplate body can subscribe to it — TemplateBinding requires
+    // a registered DP; plain getters are not reachable by the binding
+    // system. Seeded unconditionally in the ctor so the value is always
+    // a live bound function that reads the current per-kind template DPs
+    // on each call.
+    public static readonly EditorTemplateSelectorKey =
+        MuralBase.RegisterProperty<ItemTemplateSelector | undefined>(
+            PropertyGrid, 'EditorTemplateSelector', undefined, MetaData.None,
+        );
+
     // ── Per-kind editor-template DPs ─────────────────────────────────
     // Set by the default Style (Task 7). Exposed as plain DPs so Style
     // Setters can write them and tests can write them directly.
@@ -91,19 +104,22 @@ export class PropertyGrid extends ItemsControl
     constructor()
     {
         super();
-        // Apply the default Style (task 7 will provide it). If no Style is
+        // Seed the EditorTemplateSelector DP with a bound selector function.
+        // The function captures `this` so it always reads the current
+        // per-kind template DPs on every call. The DP holds this value so
+        // TemplateBinding (`$$EditorTemplateSelector`) can subscribe to it
+        // inside Task 7's ControlTemplate body. Use set_property_value
+        // directly (getter-only property; no setter needed on the public API).
+        this.set_property_value(
+            PropertyGrid.EditorTemplateSelectorKey,
+            (item: unknown): DataTemplate | undefined =>
+                this.selectEditorTemplate(item as PropertyItem),
+        );
+
+        // Apply the default Style (Task 7 provides it). If no Style is
         // present in the current theme (e.g., during unit tests without the
         // task-7 template), applyDefaultStyle() is a no-op.
         this.applyDefaultStyle();
-
-        // Install the editor-template selector on the inherited
-        // ItemTemplateSelector DP so that ItemsControl's
-        // GetContainerForItemOverride uses it when the outer items are
-        // PropertyCategory. Task 7's inner ItemsControl should bind its own
-        // ItemTemplateSelector to PropertyGrid.EditorTemplateSelector.
-        // (The outer selector receives PropertyCategory; the inner receives
-        //  PropertyItem — they are different. We leave the outer selector
-        //  undefined here and let Task 7 set it via the template.)
     }
 
     // ── Descriptors ───────────────────────────────────────────────────
@@ -210,17 +226,18 @@ export class PropertyGrid extends ItemsControl
     //   2. If item.IsReadOnly, return ReadOnlyEditorTemplate.
     //   3. Return the per-kind DP template.
     //
-    // Exposed as a getter returning a bound function so Task 7's inner
-    // ItemsControl can bind `ItemTemplateSelector` to this property:
-    //   `ItemTemplateSelector = $PropertyGrid.EditorTemplateSelector`
+    // The value is stored in the `EditorTemplateSelectorKey` DP (seeded
+    // in the ctor) so that Task 7's inner ItemsControl template can bind
+    // to it via `$$EditorTemplateSelector` — TemplateBinding requires a
+    // registered DP. Tests call `grid.EditorTemplateSelector(item)`.
     //
-    // Tests call `grid.EditorTemplateSelector(item)` directly.
+    // Getter returns `ItemTemplateSelector` (non-optional) because the
+    // ctor always seeds the DP; the DP type is `| undefined` only to
+    // satisfy RegisterProperty's generic (which forbids non-nullable
+    // function types as default values).
     public get EditorTemplateSelector(): ItemTemplateSelector
     {
-        // Return a stable bound function. Recreating it per-call is cheap and
-        // avoids storing state in the closure — each call sees the current DPs.
-        return (item: unknown): DataTemplate | undefined =>
-            this.selectEditorTemplate(item as PropertyItem);
+        return this.get_property_value(PropertyGrid.EditorTemplateSelectorKey) as ItemTemplateSelector;
     }
 
     private selectEditorTemplate(item: PropertyItem): DataTemplate | undefined

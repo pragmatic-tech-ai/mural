@@ -33,6 +33,7 @@ resources MuralFramework {
     import Tabs from "../framework/tabs/tabs.template.mu.js"
     import ThemeSelectors from "../framework/theme-selector/theme-selector.template.mu.js"
     import Toggles from "../framework/toggles/toggles.template.mu.js"
+    import PropertyGrids from "../framework/property-grid/property-grid.template.mu.js"
     import ToolBars from "../framework/tool-bar/tool-bar.template.mu.js"
     import Tooltips from "../framework/tooltips/tooltips.template.mu.js"
     import TopAppBars from "../framework/top-app-bar/top-app-bar.template.mu.js"

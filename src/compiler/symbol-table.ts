@@ -447,6 +447,13 @@ const ENTRIES: ReadonlyArray<readonly [string, string]> = [
     ['RibbonGallery',           '@pragmatic-tech-ai/mural/framework/surface.js'],
     ['RibbonGalleryPopupList',  '@pragmatic-tech-ai/mural/framework/surface.js'],
 
+    // ── PropertyGrid family ─────────────────────────────────────────
+    // View-model types used as DataTemplate DataType targets in the
+    // property-grid default template.
+    ['PropertyGrid',         '@pragmatic-tech-ai/mural/framework/property-grid/property-grid.js'],
+    ['PropertyItem',         '@pragmatic-tech-ai/mural/framework/property-grid/property-item.js'],
+    ['PropertyCategory',     '@pragmatic-tech-ai/mural/framework/property-grid/property-item.js'],
+
     // ── Framework layer ─────────────────────────────────────────────
     // Templated-control base class. Sits between runtime's `Visual`
     // and the concrete control surface (ContentControl, ItemsControl,
