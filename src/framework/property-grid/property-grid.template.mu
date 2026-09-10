@@ -11,20 +11,29 @@
 //                               rows.
 //   • ItemTemplate            — @PropertyCategoryTemplate, a DataTemplate that
 //                               renders each PropertyCategory: a collapsible header
-//                               (ClickableBorder acting as a toggle) + an inner
-//                               ItemsControl for the PropertyItem rows inside that
-//                               category.
+//                               (ToggleButton) + an inner ItemsControl for the
+//                               PropertyItem rows inside that category.
 //   • Seven editor-template DPs — one per PropertyKind (+ ReadOnly).  Each holds a
 //                               keyed DataTemplate (see below) so tests and
 //                               programmatic overrides can replace individual editors.
 //
-// Editor dispatch
-// ───────────────
-// The inner ItemsControl uses @PropertyItemDispatchTemplate as its ItemTemplate.
-// That DataTemplate renders ALL seven editors overlaid in one Grid cell (all
-// initially Collapsed) and uses DataTriggers (`when ($Descriptor.Kind = 'text')`)
-// to show exactly the right editor for each row.  This avoids the need for
-// AncestorBinding (not available in .mu markup) or ItemTemplateSelector threading.
+// Editor dispatch — real ItemTemplateSelector (structural, per-row)
+// ─────────────────────────────────────────────────────────────────
+// The inner ItemsControl binds `ItemTemplateSelector = $EditorSelector`, where
+// EditorSelector is the grid's own `EditorTemplateSelector` resolver, injected
+// onto each PropertyCategory by PropertyGrid.rebuildGroups.  (The inner control
+// is authored inside a DataTemplate, so the templated parent — the grid — is not
+// reachable via TemplateBinding; carrying the resolver on the data item is the
+// way to thread it in this .mu dialect.)  ItemsControl.GetContainerForItemOverride
+// calls the selector per item and instantiates ONLY the returned DataTemplate, so:
+//
+//   • Exactly ONE editor exists per row (no overlaid widgets).
+//   • No hidden two-way binding can write back to $Value — a non-enum row never
+//     instantiates the ComboBox, a boolean row never instantiates a Text editor.
+//   • Read-only wins over kind, and unknown/non-readonly kinds fall back to the
+//     read-only editor — both handled inside the resolver
+//     (PropertyGrid.selectEditorTemplate), so dispatch is mutually exclusive
+//     AND total.
 //
 // Merged into MuralFramework via an `import` clause in
 // src/resources/framework.resources.mu.
@@ -132,109 +141,15 @@ resources PropertyGrids {
         }
     }
 
-    // ── PropertyItemDispatchTemplate ──────────────────────────────────
-    //
-    // A single DataTemplate that renders ALL seven editor widgets in one Grid
-    // cell (overlaid, initially Collapsed) and uses DataTriggers to show exactly
-    // the right editor for each PropertyItem row.
-    //
-    // Dispatch order in the triggers below matches PropertyGrid.selectEditorTemplate:
-    //   1. IsReadOnly  → show the read-only TextBlock pair.
-    //   2. Kind = 'text'       → TextBox
-    //   3. Kind = 'multiline'  → multi-line TextBox
-    //   4. Kind = 'number'     → TextBox
-    //   5. Kind = 'boolean'    → Checkbox
-    //   6. Kind = 'enum'       → ComboBox
-    //   7. Kind = 'color'      → TextBox
-    // (Unknown kinds also land on ReadOnly via the IsReadOnly branch.)
-    DataTemplate x:key="PropertyItemDispatchTemplate" [DataType = PropertyItem] {
-        DockPanel {
-            // Label column — always visible regardless of kind.
-            TextBlock x:name="PART_Label"
-                [ DockPanel.Dock      = Left,
-                  Text                = $Descriptor.DisplayName,
-                  VerticalAlignment   = Center,
-                  Width               = 120 ]
-
-            // Editor stack — all seven overlaid in a Grid cell.  Every editor
-            // starts Collapsed; the DataTriggers below reveal exactly one.
-            Grid {
-                // Text editor (kind = 'text')
-                TextBox x:name="PART_TextEditor"
-                    [ Text            = $Value,
-                      Visibility      = Collapsed ]
-
-                // Number editor (kind = 'number')
-                TextBox x:name="PART_NumberEditor"
-                    [ Text            = $Value,
-                      Visibility      = Collapsed ]
-
-                // Boolean editor (kind = 'boolean')
-                Checkbox x:name="PART_BooleanEditor"
-                    [ IsChecked       = $Value,
-                      VerticalAlignment = Center,
-                      Visibility      = Collapsed ]
-
-                // Enum editor (kind = 'enum')
-                ComboBox x:name="PART_EnumEditor"
-                    [ ItemsSource     = $Descriptor.EnumOptions,
-                      SelectedItem    = $Value,
-                      Visibility      = Collapsed ]
-
-                // Multiline editor (kind = 'multiline')
-                TextBox x:name="PART_MultilineEditor"
-                    [ Text            = $Value,
-                      AcceptsReturn   = true,
-                      MinHeight       = 60,
-                      Visibility      = Collapsed ]
-
-                // Color editor (kind = 'color')
-                TextBox x:name="PART_ColorEditor"
-                    [ Text            = $Value,
-                      Visibility      = Collapsed ]
-
-                // ReadOnly editor — shown when IsReadOnly or unknown kind
-                TextBlock x:name="PART_ReadOnlyEditor"
-                    [ Text            = $Value,
-                      VerticalAlignment = Center,
-                      Visibility      = Collapsed ]
-            }
-        }
-
-        // ── DataTriggers: show one editor, hide the rest ──────────────
-        //
-        // IsReadOnly takes precedence over all kind triggers.
-        when ( $IsReadOnly = true ) {
-            PART_ReadOnlyEditor.Visibility = Visible;
-        }
-        when ( $Descriptor.Kind = "text" ) {
-            PART_TextEditor.Visibility = Visible;
-        }
-        when ( $Descriptor.Kind = "number" ) {
-            PART_NumberEditor.Visibility = Visible;
-        }
-        when ( $Descriptor.Kind = "boolean" ) {
-            PART_BooleanEditor.Visibility = Visible;
-        }
-        when ( $Descriptor.Kind = "enum" ) {
-            PART_EnumEditor.Visibility = Visible;
-        }
-        when ( $Descriptor.Kind = "multiline" ) {
-            PART_MultilineEditor.Visibility = Visible;
-        }
-        when ( $Descriptor.Kind = "color" ) {
-            PART_ColorEditor.Visibility = Visible;
-        }
-    }
-
     // ── PropertyCategoryTemplate ──────────────────────────────────────
     //
     // Renders one PropertyCategory: a collapsible header + the PropertyItem rows.
     //
     //   • Header — a ToggleButton bound two-way to IsExpanded.  Clicking the header
     //              flips IsExpanded on the PropertyCategory (BindsTwoWayByDefault).
-    //   • Body   — an ItemsControl over PropertyCategory.Items, using the dispatch
-    //              template above.  Collapsed when IsExpanded is false.
+    //   • Body   — an ItemsControl over PropertyCategory.Items whose
+    //              ItemTemplateSelector is the grid's per-row editor resolver.
+    //              Collapsed when IsExpanded is false.
     DataTemplate x:key="PropertyCategoryTemplate" [DataType = PropertyCategory] {
         StackPanel [ Orientation = Vertical ] {
             // Category header — ToggleButton.IsChecked is BindsTwoWayByDefault, so
@@ -249,12 +164,16 @@ resources PropertyGrids {
             }
 
             // PropertyItem rows — inner ItemsControl.
-            // ItemsPanel is required: without it, rebuildContainers bails
-            // and no row containers are generated.
+            //   • ItemTemplateSelector = $EditorSelector — the grid's own
+            //     resolver, injected onto this PropertyCategory by
+            //     PropertyGrid.rebuildGroups.  Each row instantiates ONLY the
+            //     DataTemplate the selector returns (structural per-row dispatch).
+            //   • ItemsPanel is required: without it, rebuildContainers bails
+            //     and no row containers are generated.
             ItemsControl x:name="PART_ItemsHost"
-                [ ItemsSource         = $Items,
-                  ItemTemplate        = @PropertyItemDispatchTemplate,
-                  ItemsPanel          = @DefaultPropertyItemsPanel ]
+                [ ItemsSource          = $Items,
+                  ItemTemplateSelector = $EditorSelector,
+                  ItemsPanel           = @DefaultPropertyItemsPanel ]
         }
 
         // Collapse the body when the category is folded.
@@ -290,8 +209,9 @@ resources PropertyGrids {
     // ── PropertyGrid default Style ────────────────────────────────────
     //
     // Wires the template + per-kind editor DPs.  The seven DataTemplate DPs
-    // are set to the keyed templates above; Task-6's EditorTemplateSelector
-    // reads these DPs to resolve the right editor per item.
+    // are set to the keyed templates above; the grid's EditorTemplateSelector
+    // reads these DPs to resolve the right editor per row (EditorTemplateKey →
+    // IsReadOnly → per-kind, unknown kind → ReadOnly).
     Style [TargetType = PropertyGrid] {
         Template                 = @DefaultPropertyGrid;
         ItemsPanel               = @DefaultPropertyGridPanel;

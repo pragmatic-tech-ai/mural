@@ -1,6 +1,15 @@
 import { Observable } from '../../runtime/index.js';
 import { GridProperty } from './grid-property.js';
 import { type IPropertyBag } from './property-bag.js';
+import { type DataTemplate } from '../../basic/templates/data-template.js';
+
+/**
+ * Editor-template resolver: given a `PropertyItem`, return the `DataTemplate`
+ * that should render its editor row.  This is the same shape as
+ * `ItemsControl.ItemTemplateSelector`; the property grid's own selector
+ * resolves EditorTemplateKey → IsReadOnly → per-kind template.
+ */
+export type EditorTemplateResolver = (item: PropertyItem) => DataTemplate | undefined;
 
 /**
  * Row view-model for a single property in the property grid.
@@ -65,10 +74,25 @@ export class PropertyCategory extends Observable {
     readonly Items: readonly PropertyItem[];
     private _isExpanded: boolean = true;
 
-    constructor(header: string, items: readonly PropertyItem[]) {
+    /**
+     * The property grid's editor-template resolver, injected at build time so
+     * the inner rows `ItemsControl` (authored inside a DataTemplate, where the
+     * templated parent — the grid — is not reachable via TemplateBinding) can
+     * bind `ItemTemplateSelector = $EditorSelector` and instantiate ONLY the
+     * selected editor per row.  Set once by `PropertyGrid.rebuildGroups`; never
+     * mutated afterward, so a plain readonly field (no INPC needed).
+     */
+    readonly EditorSelector: EditorTemplateResolver | undefined;
+
+    constructor(
+        header: string,
+        items: readonly PropertyItem[],
+        editorSelector?: EditorTemplateResolver,
+    ) {
         super();
         this.Header = header;
         this.Items = items;
+        this.EditorSelector = editorSelector;
     }
 
     public get IsExpanded(): boolean {

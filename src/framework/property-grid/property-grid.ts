@@ -35,19 +35,6 @@ export class PropertyGrid extends ItemsControl
             PropertyGrid, 'Target', undefined, MetaData.None,
         );
 
-    // ── EditorTemplateSelector DP ────────────────────────────────────
-    // Holds the bound selector function. Exposed as a registered DP so
-    // that `$$EditorTemplateSelector` (TemplateBinding) inside a
-    // ControlTemplate body can subscribe to it — TemplateBinding requires
-    // a registered DP; plain getters are not reachable by the binding
-    // system. Seeded unconditionally in the ctor so the value is always
-    // a live bound function that reads the current per-kind template DPs
-    // on each call.
-    public static readonly EditorTemplateSelectorKey =
-        MuralBase.RegisterProperty<ItemTemplateSelector | undefined>(
-            PropertyGrid, 'EditorTemplateSelector', undefined, MetaData.None,
-        );
-
     // ── Per-kind editor-template DPs ─────────────────────────────────
     // Set by the default Style (Task 7). Exposed as plain DPs so Style
     // Setters can write them and tests can write them directly.
@@ -101,21 +88,18 @@ export class PropertyGrid extends ItemsControl
     // disposed when Descriptors or Target changes.
     private _liveItems: PropertyItem[] = [];
 
+    // Stable bound editor-template resolver. Built once and reused so every
+    // PropertyCategory receives the SAME function reference (identity matters
+    // for binding equality). Captures `this`, so it always reads the current
+    // per-kind template DPs at call time — even if the default Style is applied
+    // (which sets those DPs) after construction.
+    private readonly _editorSelector: ItemTemplateSelector =
+        (item: unknown): DataTemplate | undefined =>
+            this.selectEditorTemplate(item as PropertyItem);
+
     constructor()
     {
         super();
-        // Seed the EditorTemplateSelector DP with a bound selector function.
-        // The function captures `this` so it always reads the current
-        // per-kind template DPs on every call. The DP holds this value so
-        // TemplateBinding (`$$EditorTemplateSelector`) can subscribe to it
-        // inside Task 7's ControlTemplate body. Use set_property_value
-        // directly (getter-only property; no setter needed on the public API).
-        this.set_property_value(
-            PropertyGrid.EditorTemplateSelectorKey,
-            (item: unknown): DataTemplate | undefined =>
-                this.selectEditorTemplate(item as PropertyItem),
-        );
-
         // Apply the default Style (Task 7 provides it). If no Style is
         // present in the current theme (e.g., during unit tests without the
         // task-7 template), applyDefaultStyle() is a no-op.
@@ -224,20 +208,17 @@ export class PropertyGrid extends ItemsControl
     //   1. If item.Descriptor.EditorTemplateKey is set, look it up in the
     //      logical-tree resource chain (TryFindResource). If found, return it.
     //   2. If item.IsReadOnly, return ReadOnlyEditorTemplate.
-    //   3. Return the per-kind DP template.
+    //   3. Return the per-kind DP template (unknown kinds → ReadOnly).
     //
-    // The value is stored in the `EditorTemplateSelectorKey` DP (seeded
-    // in the ctor) so that Task 7's inner ItemsControl template can bind
-    // to it via `$$EditorTemplateSelector` — TemplateBinding requires a
-    // registered DP. Tests call `grid.EditorTemplateSelector(item)`.
-    //
-    // Getter returns `ItemTemplateSelector` (non-optional) because the
-    // ctor always seeds the DP; the DP type is `| undefined` only to
-    // satisfy RegisterProperty's generic (which forbids non-nullable
-    // function types as default values).
+    // Returns the stable bound resolver so callers get a consistent function
+    // reference. `rebuildGroups` injects this into each PropertyCategory so the
+    // inner rows ItemsControl can bind `ItemTemplateSelector = $EditorSelector`
+    // and instantiate ONLY the selected editor per row (structural dispatch —
+    // no overlaid editors, no additive triggers). Tests also call
+    // `grid.EditorTemplateSelector(item)` directly.
     public get EditorTemplateSelector(): ItemTemplateSelector
     {
-        return this.get_property_value(PropertyGrid.EditorTemplateSelectorKey) as ItemTemplateSelector;
+        return this._editorSelector;
     }
 
     private selectEditorTemplate(item: PropertyItem): DataTemplate | undefined
@@ -324,8 +305,14 @@ export class PropertyGrid extends ItemsControl
             this._liveItems.push(item);
         }
 
+        // Inject the grid's editor-template resolver into every category so the
+        // inner rows ItemsControl (authored in the PropertyCategoryTemplate
+        // DataTemplate, where the grid is not reachable via TemplateBinding) can
+        // bind `ItemTemplateSelector = $EditorSelector` and instantiate ONLY the
+        // selected editor per row — no overlaid editors, no additive triggers.
+        const selector = this.EditorTemplateSelector;
         const categories: PropertyCategory[] = categoryOrder.map(
-            header => new PropertyCategory(header, categoryMap.get(header)!),
+            header => new PropertyCategory(header, categoryMap.get(header)!, selector),
         );
 
         this.setItemsSource(categories);

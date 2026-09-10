@@ -2,6 +2,7 @@ import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { initTestApp } from '../../../basic/tests/test-app.js';
 import { DataTemplate } from '../../../basic/templates/data-template.js';
+import { Border } from '../../../basic/border.js';
 import { PropertyGrid } from '../property-grid.js';
 import { GridProperty, PropertyKind } from '../grid-property.js';
 import { PropertyItem, PropertyCategory } from '../property-item.js';
@@ -46,10 +47,16 @@ function makeSpyBag(name: string, initial: unknown): {
     return { bag: new MapPropertyBag(accessors), disposerCalled: () => disposed };
 }
 
-function makeTemplate(id: string): DataTemplate {
-    return new DataTemplate(() => {
-        throw new Error(`Template ${id} applied — not expected in unit tests`);
-    });
+// A distinct, renderable DataTemplate used purely as an identity marker for
+// selector-resolution assertions (`grid.EditorTemplateSelector(item) === tmpl`).
+// It must produce a real Visual rather than throw: with Task-7's default Style
+// applied by initTestApp(), the grid renders eagerly on Descriptors/Target set,
+// and its per-row ItemTemplateSelector dispatch actually APPLIES the resolved
+// template. A throwing factory would explode during that legitimate render;
+// a benign Border keeps these tests focused on selector identity while
+// tolerating the real dispatch path.
+function makeTemplate(_id: string): DataTemplate {
+    return new DataTemplate(() => new Border());
 }
 
 // ---------------------------------------------------------------------------
