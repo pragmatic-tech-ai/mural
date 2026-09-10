@@ -26,6 +26,7 @@ import { MatrixTransform } from '../../../visual-engine/drawing/transform.js';
 import { Border, Shape } from '../../../basic/index.js';
 import { SelectionMode } from '../../list/list-box.js';
 import { Connector } from '../connector.js';
+import { ShapeText } from '../shape-text.js';
 import { routePoints } from '../route-waypoint.js';
 import { ConnectorCreateBehavior } from './connector-create-behavior.js';
 import { ConnectorEditAdorner, segmentIsHorizontal } from './connector-edit-adorner.js';
@@ -804,6 +805,39 @@ export function findConnectorAncestor(visual: unknown): Connector | undefined
     return undefined;
 }
 
+// Resolve the connector the pointer is targeting: its painted path (a direct
+// visual ancestor) OR its LABEL. The label is a hit-test-visible ShapeText that
+// the connectors materializer mounts as a SIBLING of the connector (not a
+// child), so an ancestor walk alone misses it — match it against the live
+// connectors by LabelInstance. Z-order-correct for free: the materializer
+// mirrors the label's ZIndex to the connector's, so a label under a figure is
+// occluded (args.Source is the figure) and never resolves here.
+// Exported for the label-hit regression test only — NOT part of the package's
+// public surface (no barrel re-exports this module).
+export function connectorFromSource(diagram: Diagram, source: unknown): Connector | undefined
+{
+    const direct = findConnectorAncestor(source);
+    if (direct !== undefined) return direct;
+    // Find the ShapeText the pointer is inside, if any (one ancestor walk).
+    let label: ShapeText | undefined = undefined;
+    for (let cur = source as Visual | undefined; cur !== undefined && cur !== null;
+         cur = (cur as { GetVisualParent?(): Visual | undefined }).GetVisualParent?.())
+    {
+        if (cur instanceof ShapeText) { label = cur; break; }
+    }
+    if (label === undefined) return undefined;
+    // Match it against the live connectors' mounted labels. (A figure's own
+    // label is also a ShapeText but matches no connector → correctly ignored.)
+    const connectors = diagram.Connectors;
+    if (connectors === undefined) return undefined;
+    for (let i = 0; i < connectors.Count; i++)
+    {
+        const item = connectors.Get(i);
+        if (item instanceof Connector && item.LabelInstance === label) return item;
+    }
+    return undefined;
+}
+
 function localPosition(args: PointerEventArgs, diagram: Diagram): Point
 {
     // Diagram.HostToContent sums the panel's ArrangedRect chain (already
@@ -1230,7 +1264,7 @@ export function attachConnectorInteractions(diagram: Diagram): () => void
         // shared editor off the freshly-selected connector(s); the editor
         // already broadcasts back to both populations via FormatMirror's
         // _strokeTargets union.
-        const conn = findConnectorAncestor(args.Source);
+        const conn = connectorFromSource(diagram, args.Source);
         if (conn !== undefined)
         {
             const mode = diagram.SelectionMode;
@@ -1368,7 +1402,7 @@ export function attachConnectorInteractions(diagram: Diagram): () => void
         let conn: Connector | undefined = undefined;
         if (state.activeGesture === undefined)
         {
-            conn = findConnectorAncestor(args.Source);
+            conn = connectorFromSource(diagram, args.Source);
             // The segment pads shown with the halo are hit-test-visible, so
             // reaching for one makes the PAD the event source — which has no
             // Connector ancestor and would otherwise clear the hover and
