@@ -6,7 +6,6 @@ import { ItemsPanelTemplate } from '../../../basic/panels/items-panel-template.j
 import { Canvas } from '../../../basic/panels/canvas.js';
 import { Diagram } from '../diagram.js';
 import { DiagramDocument } from '../diagram-document.js';
-import { DiagramLayersPanel } from '../diagram-layers-panel.js';
 import { ConnectorEndpoint } from '../connector-endpoint.js';
 
 // The node Figures ARE the Diagram's containers (Diagram.GetContainerForItemOverride
@@ -20,15 +19,6 @@ import { ConnectorEndpoint } from '../connector-endpoint.js';
 function layout(d: Diagram): void
 {
     d.ItemsPanel = new ItemsPanelTemplate(() => new Canvas());
-    d.Measure(new Size(400, 400));
-    d.Arrange(new Rect(0, 0, 400, 400));
-}
-
-// Connectors mount into a DiagramLayersPanel's connectors layer (the real
-// canvas panel), so the connector-reparent case needs one.
-function layoutLayered(d: Diagram): void
-{
-    d.ItemsPanel = new ItemsPanelTemplate(() => new DiagramLayersPanel());
     d.Measure(new Size(400, 400));
     d.Arrange(new Rect(0, 0, 400, 400));
 }
@@ -61,7 +51,7 @@ describe('Diagram — a document shown in a second Diagram after the first is di
     // Connectors take a SEPARATE mount path (DiagramConnectorsMaterializer), so
     // the same shared-Visual pinning bites there too: a Connector item IS its
     // Visual, owned by the document, and a discarded Diagram leaves it (plus its
-    // caps/label) pinned to the old connectors layer.
+    // caps/label) pinned to the old canvas.
     test('re-showing a document with a connector does not throw on the connector mount', () => {
         const doc = new DiagramDocument();
         const a = doc.CreateNode('rectangle', 40, 40);
@@ -77,14 +67,14 @@ describe('Diagram — a document shown in a second Diagram after the first is di
         const show = (d: Diagram): void =>
         {
             (d as unknown as { ItemsSource: unknown }).ItemsSource = doc.Nodes;
-            layoutLayered(d);
+            layout(d);
             (d as unknown as { Connectors: unknown }).Connectors = doc.Connectors;
             d.Measure(new Size(400, 400));
             d.Arrange(new Rect(0, 0, 400, 400));
         };
 
         const first = new Diagram();
-        show(first);   // mounts the connector into first's connectors layer
+        show(first);   // mounts the connector into first's canvas
 
         // Discard `first` without teardown (the tab-swap scenario).
 

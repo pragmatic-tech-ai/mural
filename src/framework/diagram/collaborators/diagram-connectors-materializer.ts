@@ -4,14 +4,13 @@
     type Visual,
 } from '../../../runtime/index.js';
 import { Connector } from '../connector.js';
-import { DiagramLayer, DiagramLayersPanel } from '../diagram-layers-panel.js';
 import type { Diagram } from '../diagram.js';
 
 // Internal collaborator owned by Diagram. Materializes one Visual per
 // entry in Diagram.Connectors via ConnectorTemplate (or the built-in
 // `new Connector()` fallback), tracks the item → Visual mapping, and
-// mounts each one into the connectors layer of Diagram's ItemsPanel
-// when that panel is a DiagramLayersPanel.
+// mounts each one onto Diagram's ItemsPanel (a single Canvas). Connectors,
+// their caps and their label are all added as siblings of the figures.
 //
 // Diagram listens to its own Connectors / ConnectorTemplate DPs and
 // forwards changes via the public _on* methods — the collaborator
@@ -133,7 +132,6 @@ export class DiagramConnectorsMaterializer
     {
         if (!(visual instanceof Connector)) return;
         const label = visual.LabelInstance;
-        DiagramLayersPanel.SetLayer(label, DiagramLayer.Connectors);
         this._mountCap(label);
         this._mountedLabels.set(item, label);
     }
@@ -191,9 +189,6 @@ export class DiagramConnectorsMaterializer
         for (const cap of desired)
         {
             if (prev.includes(cap)) continue;
-            // Route to the connectors layer (behind figures), same as the
-            // connector line itself.
-            DiagramLayersPanel.SetLayer(cap, DiagramLayer.Connectors);
             this._mountCap(cap);
         }
         if (desired.length === 0) this._mountedCaps.delete(item);
@@ -202,30 +197,31 @@ export class DiagramConnectorsMaterializer
 
     private _mountCap(cap: Visual): void
     {
-        const panel = this._diagram.ItemsPanelInstance;
-        if (panel === undefined) return;
-        if (panel instanceof DiagramLayersPanel)
-        {
-            if (panel.ConnectorsLayer.Children.IndexOf(cap) !== -1) return;
-            this._reclaim(cap);
-            panel.AddChild(cap);
-            return;
-        }
-        if ((panel as { Children?: { IndexOf?(v: Visual): number } }).Children?.IndexOf?.(cap) !== -1) return;
-        this._reclaim(cap);
-        (panel as { AddChild?(v: Visual): void }).AddChild?.(cap);
+        this._addToPanel(cap);
     }
 
     private _unmountCap(cap: Visual): void
     {
+        this._removeFromPanel(cap);
+    }
+
+    // Add a connector / cap / label visual to the diagram canvas once.
+    // Reclaims a Visual still parented to a discarded prior diagram's panel
+    // (tab-swap reuse) before AddChild's single-parent guard would reject it.
+    private _addToPanel(visual: Visual): void
+    {
+        const panel = this._diagram.ItemsPanelInstance;
+        if (panel === undefined) return;          // wait for layout — _mountPending re-runs
+        if (panel.Children.IndexOf(visual) !== -1) return;
+        this._reclaim(visual);
+        panel.AddChild(visual);
+    }
+
+    private _removeFromPanel(visual: Visual): void
+    {
         const panel = this._diagram.ItemsPanelInstance;
         if (panel === undefined) return;
-        if (panel instanceof DiagramLayersPanel)
-        {
-            panel.RemoveChild(cap);
-            return;
-        }
-        (panel as { RemoveChild?(v: Visual): void }).RemoveChild?.(cap);
+        panel.RemoveChild(visual);
     }
 
     private _instantiate(item: MuralBase): Visual
@@ -246,31 +242,12 @@ export class DiagramConnectorsMaterializer
             visual = template !== undefined ? template.Apply(item) : new Connector();
             visual.DataContext = item;
         }
-        // Mark this visual for the connectors layer; DiagramLayersPanel
-        // reads the attached property at AddChild time and routes to
-        // the inner connectors Canvas.
-        DiagramLayersPanel.SetLayer(visual, DiagramLayer.Connectors);
         return visual;
     }
 
     private _mount(visual: Visual): void
     {
-        const panel = this._diagram.ItemsPanelInstance;
-        if (panel === undefined) return;          // wait for layout
-        if (panel instanceof DiagramLayersPanel)
-        {
-            // Don't double-add. Already-mounted visuals are no-ops.
-            if (panel.ConnectorsLayer.Children.IndexOf(visual) !== -1) return;
-            this._reclaim(visual);
-            panel.AddChild(visual);
-            return;
-        }
-        // Non-layered panel fallback — add at the panel's tail.
-        // Connectors end up co-mingled with figure containers; the
-        // consumer wanting layered z-order opts into DiagramLayersPanel.
-        if ((panel as { Children?: { IndexOf?(v: Visual): number } }).Children?.IndexOf?.(visual) !== -1) return;
-        this._reclaim(visual);
-        (panel as { AddChild?(v: Visual): void }).AddChild?.(visual);
+        this._addToPanel(visual);
     }
 
     // Reclaim a shared connector / cap / label Visual from a now-discarded prior
@@ -313,14 +290,7 @@ export class DiagramConnectorsMaterializer
 
     private _unmount(visual: Visual): void
     {
-        const panel = this._diagram.ItemsPanelInstance;
-        if (panel === undefined) return;
-        if (panel instanceof DiagramLayersPanel)
-        {
-            panel.RemoveChild(visual);
-            return;
-        }
-        (panel as { RemoveChild?(v: Visual): void }).RemoveChild?.(visual);
+        this._removeFromPanel(visual);
     }
 
     private _clearAll(): void

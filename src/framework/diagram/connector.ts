@@ -217,12 +217,11 @@ export class Connector extends Shape
     // dropped when it clears. Tests inspect these to verify the
     // cap pipeline produced the expected visual + transform.
     //
-    // Not wired into Connector's visual tree in v1 — the overlay-child
-    // attachment that puts the cap visually on the diagram is a
-    // follow-up step (along with the connectors-layer in the
-    // DiagramLayersPanel). For now the pipeline computes the
-    // shortened Geometry, the cap's RenderTransform, and the cap's
-    // Canvas.Left / Top — but doesn't mount the cap anywhere.
+    // These cap visuals are mounted onto the diagram canvas as siblings
+    // of the connector by the DiagramConnectorsMaterializer, which also
+    // keeps their ZIndex in step with the connector's. The pipeline here
+    // computes the shortened Geometry, the cap's RenderTransform, and the
+    // cap's Canvas.Left / Top.
     private _sourceCapInstance: Visual | undefined = undefined;
     private _targetCapInstance: Visual | undefined = undefined;
     public get SourceCapInstance(): Visual | undefined { return this._sourceCapInstance; }

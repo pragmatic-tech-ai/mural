@@ -397,9 +397,8 @@ export class Diagram extends Selector implements RigidConnectorDragHost
     // population on the same canvas. The DiagramConnectorsMaterializer
     // collaborator (constructed below) listens to collection events
     // and materializes one Visual per entry via ConnectorTemplate (or
-    // the built-in default = `new Connector()`), parenting each into
-    // the DiagramLayersPanel's connectors layer when the ItemsPanel
-    // is layered. See § 3.5 of
+    // the built-in default = `new Connector()`), parenting each onto the
+    // diagram canvas (behind the figures by default). See § 3.5 of
     // [docs/connectors.md](../../../docs/connectors.md).
     public static readonly ConnectorsKey = MuralBase.RegisterProperty<ObservableCollection<MuralBase> | undefined>(
         Diagram, 'Connectors', undefined, MetaData.None);

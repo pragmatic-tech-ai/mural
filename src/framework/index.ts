@@ -287,7 +287,6 @@ export {
     ConnectorEditAdorner,
     attachConnectorEditAdorner,
 } from './diagram/behaviors/connector-edit-adorner.js';
-export { DiagramLayer, DiagramLayersPanel } from './diagram/diagram-layers-panel.js';
 
 // ── Property grid ────────────────────────────────────────────────────
 export { PropertyGrid } from './property-grid/property-grid.js';
