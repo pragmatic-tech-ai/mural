@@ -2,6 +2,7 @@
     type CollectionChange,
     type MuralBase,
     type Visual,
+    Panel,
 } from '../../../runtime/index.js';
 import { Connector } from '../connector.js';
 import type { Diagram } from '../diagram.js';
@@ -134,6 +135,8 @@ export class DiagramConnectorsMaterializer
         const label = visual.LabelInstance;
         this._mountCap(label);
         this._mountedLabels.set(item, label);
+        // The label must land on the connector's current z-layer.
+        this._mirrorZToDecor(item);
     }
 
     private _teardownLabel(item: MuralBase): void
@@ -161,13 +164,30 @@ export class DiagramConnectorsMaterializer
         if (!(visual instanceof Connector)) return;
         const connector = visual;
         const onCaps = (): void => this._syncCaps(item, connector);
+        const onZ    = (): void => this._mirrorZToDecor(item);
         connector.AddPropertyChangedListener(Connector.SourceCapTemplateKey, onCaps);
         connector.AddPropertyChangedListener(Connector.TargetCapTemplateKey, onCaps);
+        connector.AddPropertyChangedListener(Panel.ZIndexKey, onZ);
         this._capUnsubs.set(item, () => {
             connector.RemovePropertyChangedListener(Connector.SourceCapTemplateKey, onCaps);
             connector.RemovePropertyChangedListener(Connector.TargetCapTemplateKey, onCaps);
+            connector.RemovePropertyChangedListener(Panel.ZIndexKey, onZ);
         });
         this._syncCaps(item, connector);
+    }
+
+    // Keep a connector's mounted caps + label at the same ZIndex as the
+    // connector, so a z-order command that restacks the connector moves the
+    // whole assembly. Driven by the connector's own ZIndex change (wired in
+    // _wireCaps) and re-applied whenever caps/label (re)mount.
+    private _mirrorZToDecor(item: MuralBase): void
+    {
+        const visual = this._visuals.get(item);
+        if (!(visual instanceof Connector)) return;
+        const z = Panel.GetZIndex(visual);
+        for (const cap of this._mountedCaps.get(item) ?? []) Panel.SetZIndex(cap, z);
+        const label = this._mountedLabels.get(item);
+        if (label !== undefined) Panel.SetZIndex(label, z);
     }
 
     private _syncCaps(item: MuralBase, connector: Connector): void
@@ -193,6 +213,8 @@ export class DiagramConnectorsMaterializer
         }
         if (desired.length === 0) this._mountedCaps.delete(item);
         else this._mountedCaps.set(item, desired);
+        // Newly mounted caps must land on the connector's current z-layer.
+        this._mirrorZToDecor(item);
     }
 
     private _mountCap(cap: Visual): void
@@ -248,6 +270,11 @@ export class DiagramConnectorsMaterializer
     private _mount(visual: Visual): void
     {
         this._addToPanel(visual);
+        // Stamp the behind-figures default only while the z is still unset (0);
+        // a connector already reordered (non-zero z) keeps its place across a
+        // re-mount (tab reuse / _mountPending).
+        if (visual instanceof Connector && Panel.GetZIndex(visual) === 0)
+            Panel.SetZIndex(visual, Connector.DefaultZIndex);
     }
 
     // Reclaim a shared connector / cap / label Visual from a now-discarded prior

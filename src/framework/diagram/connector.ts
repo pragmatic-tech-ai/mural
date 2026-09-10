@@ -108,6 +108,12 @@ export class Connector extends Shape
         MuralBase.OverrideMetadata(Connector, Element.DefaultStyleKeyKey, { default_value: Connector });
     }
 
+    // Default z-order for a materialized connector and its caps/label: below
+    // the figure default (0) so a pristine connector paints behind figures. A
+    // z-order command overrides this by renumbering the unified figure+connector
+    // stack; the DiagramConnectorsMaterializer keeps caps/label in step.
+    public static readonly DefaultZIndex = -1;
+
     public static readonly SourceKey      = MuralBase.RegisterProperty<ConnectorEndpoint | undefined>(
         Connector, 'Source',      undefined,             MetaData.None);
     public static readonly TargetKey      = MuralBase.RegisterProperty<ConnectorEndpoint | undefined>(
