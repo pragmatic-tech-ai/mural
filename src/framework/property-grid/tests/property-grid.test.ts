@@ -482,3 +482,52 @@ describe('PropertyGrid — static DP keys and accessors', () => {
         assert.strictEqual(grid.TextEditorTemplate, tmpl);
     });
 });
+
+// ---------------------------------------------------------------------------
+// (e) Unmount disposal — live items disposed when the grid leaves the tree
+// ---------------------------------------------------------------------------
+//
+// The framework's AddUnloadedListener fires on every visual-tree detach edge.
+// Headless tests cannot drive a real parent-removal detach, so we invoke the
+// same path via the _forceDetachedForTest() seam (mirroring the pattern
+// used by ToolboxVisualPresenter and its tests).
+
+describe('PropertyGrid — unmount disposes live PropertyItems', () => {
+    beforeEach(() => { initTestApp(); });
+
+    test('live PropertyItem observer is disposed when the grid is detached from the visual tree', () => {
+        const grid = new PropertyGrid();
+        const { bag, disposerCalled: disposed } = makeSpyBag('name', 'hello');
+
+        grid.Descriptors = [GridProperty.text('name')];
+        grid.Target = bag;
+
+        // Confirm the item is live — the observer disposer has NOT fired yet.
+        assert.ok(!disposed(), 'observer must still be active before detach');
+
+        // Drive the same code path the AddUnloadedListener fires on detach.
+        (grid as unknown as { _forceDetachedForTest(): void })._forceDetachedForTest();
+
+        assert.ok(disposed(), 'observer disposer must have run when the grid is detached');
+    });
+
+    test('a subsequent rebuild after detach still works (disposeLiveItems is idempotent)', () => {
+        const grid = new PropertyGrid();
+        const { bag: bag1, disposerCalled: disposed1 } = makeSpyBag('name', 'first');
+        const { bag: bag2, disposerCalled: disposed2 } = makeSpyBag('name', 'second');
+
+        grid.Descriptors = [GridProperty.text('name')];
+        grid.Target = bag1;
+
+        // Simulate detach (clears live items).
+        (grid as unknown as { _forceDetachedForTest(): void })._forceDetachedForTest();
+        assert.ok(disposed1(), 'bag1 observer disposed on detach');
+
+        // Re-attach by assigning a new target — rebuildGroups is called
+        // again and should not throw even though _liveItems was cleared.
+        grid.Target = bag2;
+        const cats = grid.ItemsSource as PropertyCategory[];
+        assert.equal(cats[0]!.Items[0]!.Value, 'second', 'new item is live after re-build');
+        assert.ok(!disposed2(), 'bag2 observer is still active (not yet detached)');
+    });
+});

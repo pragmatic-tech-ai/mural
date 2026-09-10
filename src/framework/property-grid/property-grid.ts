@@ -104,7 +104,16 @@ export class PropertyGrid extends ItemsControl
         // present in the current theme (e.g., during unit tests without the
         // task-7 template), applyDefaultStyle() is a no-op.
         this.applyDefaultStyle();
+        // Dispose live PropertyItem observers when the grid leaves the visual
+        // tree so that subscriptions do not outlive the control's lifetime.
+        this.AddUnloadedListener(() => this.disposeLiveItems());
     }
+
+    // ── Test-only seam ───────────────────────────────────────────────────
+    // Headless tests cannot drive a real visual-tree detach edge; this
+    // method invokes the same disposeLiveItems() path the unload listener
+    // calls, matching the pattern used by ToolboxVisualPresenter.
+    public _forceDetachedForTest(): void { this.disposeLiveItems(); }
 
     // ── Descriptors ───────────────────────────────────────────────────
 

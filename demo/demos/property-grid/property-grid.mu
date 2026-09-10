@@ -36,10 +36,14 @@ resources PropertyGridDemo {
 
                 // ── Body ───────────────────────────────────────────
                 Border [ Fill = @SurfaceContainerLow, Padding = (20,20,20,20) ] {
-                    StackPanel [ Orientation = Horizontal ] {
+                    Grid {
+                        ColumnDefinitions {
+                            ColumnDefinition [ Width = GridLength.Star ]
+                            ColumnDefinition [ Width = GridLength.Star ]
+                        }
 
                         // Left pane — DP bag
-                        StackPanel [ Orientation = Vertical, Margin = (0,0,24,0) ] {
+                        StackPanel [ Orientation = Vertical, Grid.Column = 0, Margin = (0,0,12,0) ] {
                             TextBlock
                                 [ Text       = "DpPropertyBag",
                                   FontSize   = 13,
@@ -48,12 +52,11 @@ resources PropertyGridDemo {
                                   Margin     = (0,0,0,8) ]
                             PropertyGrid
                                 [ Descriptors = $DpDescriptors,
-                                  Target      = $DpTarget,
-                                  Width       = 280 ]
+                                  Target      = $DpTarget ]
                         }
 
                         // Right pane — Map bag
-                        StackPanel [ Orientation = Vertical ] {
+                        StackPanel [ Orientation = Vertical, Grid.Column = 1, Margin = (12,0,0,0) ] {
                             TextBlock
                                 [ Text       = "MapPropertyBag",
                                   FontSize   = 13,
@@ -62,8 +65,7 @@ resources PropertyGridDemo {
                                   Margin     = (0,0,0,8) ]
                             PropertyGrid
                                 [ Descriptors = $MapDescriptors,
-                                  Target      = $MapTarget,
-                                  Width       = 280 ]
+                                  Target      = $MapTarget ]
                         }
                     }
                 }
