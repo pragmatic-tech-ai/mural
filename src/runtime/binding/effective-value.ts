@@ -4,7 +4,7 @@ import type { MuralBase } from '../model.js';
 import type { PropertyDescriptor } from '../property-descriptor.js';
 import { Validation } from './validation.js';
 import { Signal } from '@pragmatic-tech-ai/todl-runtime';
-import type { PropertyChangedEventArgs } from '@pragmatic-tech-ai/todl-runtime';
+import type { Disposable, PropertyChangedEventArgs } from '@pragmatic-tech-ai/todl-runtime';
 import { readServiceScope } from './service-scope.js';
 import { Application } from '../application.js';
 import { SettingSourceKey, type ISettingSource } from '../services/setting-source.js';
@@ -123,6 +123,7 @@ export class EffectiveValueDescriptor
 
     private owner: MuralBase;
     private source: PropertyValueSource = PropertyValueSource.Default;
+    private setting_subscription: Disposable | undefined;
 
     constructor(propertyDescriptor: PropertyDescriptor, owner: MuralBase)
     {
@@ -152,9 +153,32 @@ export class EffectiveValueDescriptor
         const provider = readServiceScope(this.owner) ?? Application.current?.Services;
         const src = provider?.get(SettingSourceKey) as ISettingSource | undefined;
         if (src === undefined) return { has: false, value: undefined };
+        this.ensureSettingSubscription(src, binding.key);
         const raw = src.Get(binding.key);
         if (raw === undefined) return { has: false, value: undefined };
         return { has: true, value: binding.convert !== undefined ? binding.convert(raw) : raw };
+    }
+
+    private ensureSettingSubscription(src: ISettingSource, key: string): void
+    {
+        if (this.setting_subscription !== undefined) return;
+        this.setting_subscription = src.Changed(key).subscribe((args) => this.onSettingChanged(args));
+    }
+
+    private onSettingChanged(args: PropertyChangedEventArgs): void
+    {
+        if (this.source !== PropertyValueSource.SettingValue) return; // masked — pull covers it
+        const binding = this.property_descriptor.SettingValue;
+        if (binding === undefined) return;
+        const oldEff = this.apply_coerce(binding.convert !== undefined ? binding.convert(args.oldValue) : args.oldValue);
+        const newEff = this.value; // re-resolves current setting value (post convert + coerce)
+        if (oldEff !== newEff) this.OnPropertyChange(oldEff, newEff);
+    }
+
+    public teardown(): void
+    {
+        this.setting_subscription?.dispose();
+        this.setting_subscription = undefined;
     }
 
     OnPropertyChange(old_value: any, new_value: any): void

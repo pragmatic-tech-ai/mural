@@ -616,6 +616,9 @@ export class MuralBase extends Observable
         // whole EVD. Reach through the same path effective-value uses
         // internally so binding lifecycle stays consistent.
         evd.ClearValue();
+        // Release any setting-change subscription held by this EVD so
+        // the ISettingSource doesn't keep the dead slot alive.
+        evd.teardown();
         this.property_values.delete(key);
         return true;
     }
