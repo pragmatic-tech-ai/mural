@@ -6,6 +6,7 @@ import { resolveKey } from '../model-internals.js';
 import { Application } from '../application.js';
 import type { ServiceToken } from '../services/service-provider.js';
 import type { Visual } from '../../visual-engine/visual.js';
+import { readServiceScope } from './service-scope.js';
 
 // Watcher MuralBase — same shape as DataContextWatcher: a MuralBase with a
 // single registered Value property. Bindings feed their resolved value
@@ -350,14 +351,3 @@ export function ServiceBinding(target: MuralBase, token: ServiceToken<unknown>, 
         { target, property: 'ServiceScope' });
 }
 
-// Reads the target's inherited `ServiceScope` by name — structurally, so
-// the runtime binding layer needn't import the Element class that owns the
-// DP. Returns a provider-shaped value (anything with `get`) or undefined.
-function readServiceScope(target: MuralBase): Provider | undefined
-{
-    if (!MuralBase.HasProperty(target.constructor, 'ServiceScope')) return undefined;
-    const v = target.get_property_value(resolveKey(target, undefined, 'ServiceScope'));
-    return (v !== undefined && typeof (v as Provider).get === 'function') ? v as Provider : undefined;
-}
-
-interface Provider { get(token: ServiceToken<unknown>): unknown; }
