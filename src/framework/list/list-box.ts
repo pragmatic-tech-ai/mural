@@ -8,6 +8,7 @@
 import { ContentControl } from '../base/content-control.js';
 import { Border } from '../../basic/border.js';
 import { findDataTemplateForType } from '../../basic/templates/data-template.js';
+import { DataTemplateSelector } from '../../basic/templates/data-template-selector.js';
 import { Selector } from './selector.js';
 import { StackPanel } from '../../basic/panels/stack-panel.js';
 import { Orientation } from '../../basic/panels/orientation.js';
@@ -179,7 +180,7 @@ export class ListBox extends Selector
         // (ItemTemplate = a title+close row) rendered each open
         // DiagramDocument as a whole Diagram, double-attaching the doc's
         // node Figures the content region already hosts (throw on attach).
-        const tmpl = this.ItemTemplateSelector?.(item) ?? this.ItemTemplate;
+        const tmpl = DataTemplateSelector.resolve(this.ItemTemplateSelector, item, this) ?? this.ItemTemplate;
         if (tmpl !== undefined)
         {
             const v = tmpl.Apply(item);

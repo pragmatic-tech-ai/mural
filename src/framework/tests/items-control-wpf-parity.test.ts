@@ -12,7 +12,7 @@ import {
     type DrawingContext,
 } from '../../runtime/index.js';
 import { resolveKey } from '../../runtime/model-internals.js';
-import { AlternationConverter, ContentPresenter, DataTemplate, StackPanel } from '../../basic/index.js';
+import { AlternationConverter, ContentPresenter, DataTemplate, DataTemplateSelector, StackPanel } from '../../basic/index.js';
 import { ItemsControl } from '@pragmatic-tech-ai/mural/framework';
 
 // Tiny container with a registered DP so the per-item style picker
@@ -35,7 +35,7 @@ class TestIC extends ItemsControl
 {
     public override GetContainerForItemOverride(item: unknown): Visual
     {
-        const tmpl = this.ItemTemplateSelector?.(item) ?? this.ItemTemplate;
+        const tmpl = DataTemplateSelector.resolve(this.ItemTemplateSelector, item, this) ?? this.ItemTemplate;
         if (tmpl === undefined) throw new Error('test fixture: no template');
         return tmpl.Apply(item);
     }

@@ -16,6 +16,8 @@ import { Control } from './control.js';
 import { CollectionViewGroup } from '../../basic/collections/collection-view-group.js';
 import { ContentPresenter } from '../../basic/templates/content-presenter.js';
 import { DataTemplate } from '../../basic/templates/data-template.js';
+import { DataTemplateSelector, type TemplateSelection } from '../../basic/templates/data-template-selector.js';
+import { StyleSelector, type StyleSelection } from '../../basic/templates/style-selector.js';
 import { TextBlock } from '../../basic/text-block.js';
 import { GroupStyle } from '../../basic/collections/group-style.js';
 
@@ -151,9 +153,9 @@ export class ItemsControl extends Control
     public static readonly ItemsKey                      = MuralBase.RegisterProperty<readonly unknown[] | ObservableCollection<unknown> | CollectionView | undefined>(ItemsControl, 'Items',                      undefined, MetaData.Measure | MetaData.IsAnimationProhibited);
     public static readonly ItemsSourceKey                = MuralBase.RegisterProperty<unknown>(                                                                       ItemsControl, 'ItemsSource',                undefined, MetaData.Measure | MetaData.IsAnimationProhibited);
     public static readonly ItemTemplateKey               = MuralBase.RegisterProperty<DataTemplate | undefined>(                                                      ItemsControl, 'ItemTemplate',               undefined, MetaData.Measure);
-    public static readonly ItemTemplateSelectorKey       = MuralBase.RegisterProperty<ItemTemplateSelector | undefined>(                                              ItemsControl, 'ItemTemplateSelector',       undefined, MetaData.Measure);
+    public static readonly ItemTemplateSelectorKey       = MuralBase.RegisterProperty<TemplateSelection | undefined>(                                                 ItemsControl, 'ItemTemplateSelector',       undefined, MetaData.Measure);
     public static readonly ItemContainerStyleKey         = MuralBase.RegisterProperty<Style | undefined>(                                                             ItemsControl, 'ItemContainerStyle',         undefined, MetaData.Measure);
-    public static readonly ItemContainerStyleSelectorKey = MuralBase.RegisterProperty<ItemContainerStyleSelector | undefined>(                                        ItemsControl, 'ItemContainerStyleSelector', undefined, MetaData.Measure);
+    public static readonly ItemContainerStyleSelectorKey = MuralBase.RegisterProperty<StyleSelection | undefined>(                                                    ItemsControl, 'ItemContainerStyleSelector', undefined, MetaData.Measure);
     public static readonly ItemsPanelKey                 = MuralBase.RegisterProperty<ItemsPanelTemplate | ItemsPanelFactory | undefined>(                            ItemsControl, 'ItemsPanel',                 undefined, MetaData.Measure);
     // Template DP is inherited from Control (the optional chrome wrapper
     // that hosts the items panel inside an ItemsPresenter).
@@ -536,7 +538,7 @@ export class ItemsControl extends Control
         // TextBlock. WPF parity — every data row has a stable outer
         // container even when ItemTemplate changes.
         const cp = new ContentPresenter();
-        const tmpl = this.ItemTemplateSelector?.(item) ?? this.ItemTemplate
+        const tmpl = DataTemplateSelector.resolve(this.ItemTemplateSelector, item, this) ?? this.ItemTemplate
                    ?? this.buildDisplayMemberTemplate();
         cp.ContentTemplate = tmpl;
         cp.Content         = item;
@@ -621,7 +623,7 @@ export class ItemsControl extends Control
         // Per-item style picker takes precedence over the single
         // ItemContainerStyle DP. WPF parity — same precedence as
         // ItemTemplateSelector over ItemTemplate.
-        const style = this.ItemContainerStyleSelector?.(item, container)
+        const style = StyleSelector.resolve(this.ItemContainerStyleSelector, item, container)
                    ?? this.ItemContainerStyle;
         if (style !== undefined)
         {
@@ -762,7 +764,7 @@ export class ItemsControl extends Control
                 {
                     const c    = this._containers[i]!;
                     const item = this._generator.ItemFromContainer(c);
-                    const style = selector?.(item, c) ?? fallback;
+                    const style = StyleSelector.resolve(selector, item, c) ?? fallback;
                     if (style !== undefined) this.applyContainerStyle(c, style);
                     else                     this.clearContainerStyle(c);
                 }
@@ -947,12 +949,12 @@ export class ItemsControl extends Control
     // Per-item template selector — queried before ItemTemplate by
     // GetContainerForItemOverride. Lets a heterogeneous Items
     // collection render different visuals per data type.
-    public get ItemTemplateSelector(): ItemTemplateSelector | undefined
+    public get ItemTemplateSelector(): TemplateSelection | undefined
     {
         return this.get_property_value(ItemsControl.ItemTemplateSelectorKey);
     }
 
-    public set ItemTemplateSelector(value: ItemTemplateSelector | undefined)
+    public set ItemTemplateSelector(value: TemplateSelection | undefined)
     {
         // Side effect (rebuild) handled in OnPropertyChanged — see
         // ItemTemplate above for the rationale.
@@ -977,12 +979,12 @@ export class ItemsControl extends Control
     // Per-item style picker — consulted before ItemContainerStyle.
     // Lets a heterogeneous Items collection style each row differently
     // based on its data without authoring separate ItemContainerStyles.
-    public get ItemContainerStyleSelector(): ItemContainerStyleSelector | undefined
+    public get ItemContainerStyleSelector(): StyleSelection | undefined
     {
         return this.get_property_value(ItemsControl.ItemContainerStyleSelectorKey);
     }
 
-    public set ItemContainerStyleSelector(value: ItemContainerStyleSelector | undefined)
+    public set ItemContainerStyleSelector(value: StyleSelection | undefined)
     {
         // Side effect (re-apply styles across realized containers
         // under the new picker) handled in OnPropertyChanged.

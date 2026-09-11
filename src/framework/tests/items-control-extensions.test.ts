@@ -13,7 +13,7 @@ import {
     type DrawingContext,
 } from '../../runtime/index.js';
 import { resolveKey } from '../../runtime/model-internals.js';
-import { DataTemplate, HierarchicalDataTemplate, type ItemTemplateSelector } from '../../basic/index.js';
+import { DataTemplate, DataTemplateSelector, HierarchicalDataTemplate, type ItemTemplateSelector } from '../../basic/index.js';
 import { ItemsControl } from '@pragmatic-tech-ai/mural/framework';
 
 // Tiny container — registered DP `Tag` lets ItemContainerStyle drive a
@@ -42,7 +42,7 @@ class TestIC extends ItemsControl
 {
     public override GetContainerForItemOverride(item: unknown): Visual
     {
-        const tmpl = this.ItemTemplateSelector?.(item) ?? this.ItemTemplate;
+        const tmpl = DataTemplateSelector.resolve(this.ItemTemplateSelector, item, this) ?? this.ItemTemplate;
         if (tmpl === undefined)
         {
             throw new Error('test fixture: no template');
@@ -237,6 +237,34 @@ describe('ItemsControl — ItemTemplateSelector', () => {
         const after = ic.Generator.ContainerFromItem('x')!;
         assert.notEqual(before, after);
         assert.ok(after instanceof TagA);
+    });
+
+    // The DP now accepts a DataTemplateSelector OBJECT as well as a function
+    // (markup can only author the object). Same per-item behaviour + fallback.
+    test('accepts a DataTemplateSelector object (union with the function form)', () => {
+        const tplA = new DataTemplate(d => new TagA(d));
+        const tplB = new DataTemplate(d => new TagB(d));
+        const tplDefault = new DataTemplate(d => new Leaf(d));
+
+        class PickSelector extends DataTemplateSelector {
+            public SelectTemplate(item: unknown): DataTemplate | undefined {
+                if (item === 'A') return tplA;
+                if (item === 'B') return tplB;
+                return undefined;   // → ItemTemplate fallback
+            }
+        }
+
+        const ic = new TestIC();
+        ic.ItemTemplate = tplDefault;
+        ic.ItemTemplateSelector = new PickSelector();
+        ic.ItemsPanel = () => new TestPanel();
+        ic.Items = ['A', 'B', 'C'];
+
+        assert.ok(ic.Generator.ContainerFromItem('A') instanceof TagA);
+        assert.ok(ic.Generator.ContainerFromItem('B') instanceof TagB);
+        const c = ic.Generator.ContainerFromItem('C')!;
+        assert.ok(c instanceof Leaf);
+        assert.ok(!(c instanceof TagA));
     });
 });
 

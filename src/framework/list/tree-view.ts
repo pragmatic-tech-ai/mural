@@ -15,6 +15,7 @@ import { RectangleGeometry, type Geometry } from '../../visual-engine/index.js';
 import { Shape } from '../../basic/shapes/shape.js';
 import { Border } from '../../basic/border.js';
 import { DataTemplate, HierarchicalDataTemplate } from '../../basic/templates/data-template.js';
+import { DataTemplateSelector } from '../../basic/templates/data-template-selector.js';
 import { HeaderedItemsControl } from '../base/headered-items-control.js';
 import { ItemsControl } from '../base/items-control.js';
 import { ScrollViewer } from '../surfaces/scroll-viewer.js';
@@ -1110,7 +1111,7 @@ function bindTreeItem(tvi: TreeViewItem, item: unknown, owner: ItemsControl): vo
 function resolveItemTemplate(owner: ItemsControl, item: unknown): DataTemplate | undefined
 {
     if (item instanceof Visual) return undefined;
-    return owner.ItemTemplateSelector?.(item) ?? owner.ItemTemplate;
+    return DataTemplateSelector.resolve(owner.ItemTemplateSelector, item, owner) ?? owner.ItemTemplate;
 }
 
 // The header content for a row: the applied template's Visual (with its
