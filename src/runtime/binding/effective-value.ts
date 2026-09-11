@@ -1,7 +1,7 @@
 ﻿import { Binding, BindingMode } from './binding.js';
 import { isAnimationProhibited, isNotDataBindable } from '../metadata.js';
 import type { MuralBase } from '../model.js';
-import type { PropertyDescriptor } from '../property-descriptor.js';
+import type { PropertyDescriptor, SettingValue } from '../property-descriptor.js';
 import { Validation } from './validation.js';
 import { Signal } from '@pragmatic-tech-ai/todl-runtime';
 import type { Disposable, PropertyChangedEventArgs } from '@pragmatic-tech-ai/todl-runtime';
@@ -142,21 +142,36 @@ export class EffectiveValueDescriptor
             : PropertyValueSource.Default;
     }
 
+    // Pure static resolver used by both the EVD (which then also subscribes)
+    // and the MuralBase no-EVD read path. Returns the resolved ISettingSource
+    // (for the caller to subscribe if it wants) plus whether a value was found.
+    // No side effects — safe to call without creating an EVD or subscription.
+    public static resolveSetting(
+        owner: MuralBase,
+        binding: SettingValue,
+    ): { src: ISettingSource | undefined; has: boolean; value: unknown }
+    {
+        const provider = readServiceScope(owner) ?? Application.current?.Services;
+        const src = provider?.get(SettingSourceKey) as ISettingSource | undefined;
+        if (src === undefined) return { src: undefined, has: false, value: undefined };
+        const raw = src.Get(binding.key);
+        if (raw === undefined) return { src, has: false, value: undefined };
+        return { src, has: true, value: binding.convert !== undefined ? binding.convert(raw) : raw };
+    }
+
     // Resolves the current setting value from the ambient ISettingSource.
     // Falls back through readServiceScope (per-element scope) then
     // Application.current.Services (app-wide root). Returns { has: false }
     // when no source is registered or the key has no stored value.
+    // Also lazily subscribes to the setting's change signal so future
+    // mutations are reflected via OnPropertyChange.
     private resolveSettingValue(): { has: boolean; value: unknown }
     {
         const binding = this.property_descriptor.SettingValue;
         if (binding === undefined) return { has: false, value: undefined };
-        const provider = readServiceScope(this.owner) ?? Application.current?.Services;
-        const src = provider?.get(SettingSourceKey) as ISettingSource | undefined;
-        if (src === undefined) return { has: false, value: undefined };
-        this.ensureSettingSubscription(src, binding.key);
-        const raw = src.Get(binding.key);
-        if (raw === undefined) return { has: false, value: undefined };
-        return { has: true, value: binding.convert !== undefined ? binding.convert(raw) : raw };
+        const r = EffectiveValueDescriptor.resolveSetting(this.owner, binding);
+        if (r.src !== undefined) this.ensureSettingSubscription(r.src, binding.key);
+        return { has: r.has, value: r.value };
     }
 
     private ensureSettingSubscription(src: ISettingSource, key: string): void

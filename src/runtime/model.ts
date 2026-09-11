@@ -532,7 +532,14 @@ export class MuralBase extends Observable
     public GetValueSource<T>(key: PropertyKey<T>): PropertyValueSource
     {
         const composed = key.descriptor.ComposedKey;
-        return this.property_values.get(composed)?.Source ?? PropertyValueSource.Default;
+        const evd = this.property_values.get(composed);
+        if (evd !== undefined) return evd.Source;
+        // No-EVD path: a setting-bound descriptor reports SettingValue as its
+        // floor source regardless of whether the setting currently has a value
+        // (matches the EVD path, where lowestSource() = SettingValue for bound
+        // descriptors and the value falls to default only inside the tier).
+        if (key.descriptor.SettingValue !== undefined) return PropertyValueSource.SettingValue;
+        return PropertyValueSource.Default;
     }
 
     // Pin a value on the Animated slot. Animation overrides Binding /
@@ -567,10 +574,23 @@ export class MuralBase extends Observable
         if (evd !== undefined) return evd.value;
         // Default-value fallback walks this instance's class chain so
         // MuralBase.OverrideMetadata on a subclass is honored. The key's
-        // own descriptor is the root-owner registration â€” fine as the
+        // own descriptor is the root-owner registration — fine as the
         // last-resort fallback when no subclass override exists.
         const descriptor = MuralBase.find_descriptor(this.constructor, key.descriptor.Name)
                         ?? key.descriptor;
+        // No-EVD setting path: if the descriptor is bound to a setting,
+        // resolve it statically (no subscription, no EVD created) so an
+        // unobserved cold read still picks up the setting value.
+        const binding = descriptor.SettingValue;
+        if (binding !== undefined)
+        {
+            const r = EffectiveValueDescriptor.resolveSetting(this, binding);
+            if (r.has)
+            {
+                const coerce = descriptor.CoerceValue;
+                return (coerce !== undefined ? coerce(this, r.value) : r.value) as T;
+            }
+        }
         return this.resolve_default(descriptor);
     }
 
