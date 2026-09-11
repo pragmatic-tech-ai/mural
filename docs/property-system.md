@@ -145,15 +145,23 @@ LocalValue       — explicitly set via set_property_value
 TriggerValue     — applied by an active PropertyTrigger (see styles.md)
 StyleValue       — applied by a Style's Setter (see styles.md)
 InheritedValue   — inherited from an ancestor's MetaData.Inherits property
+SettingValue     — sourced from an application setting bound at registration
 Default          — descriptor's default_value
 ```
 
 The Trigger / Style tiers (between Local and Inherited) come from the
 styling system. A locally-set value or an active Binding always
 shadows a styled value; styled values shadow inherited values;
-inherited shadows default. See [styles.md](styles.md) for how Styles
-push values into the StyleValue slot and how PropertyTriggers push
-into the TriggerValue slot.
+inherited shadows the setting value; the setting value shadows default.
+See [styles.md](styles.md) for how Styles push values into the StyleValue
+slot and how PropertyTriggers push into the TriggerValue slot.
+
+The `SettingValue` tier lets a property draw its value from an
+application setting (opt in with the `{ key, convert? }` registration
+argument). The subscription that keeps it reactive is demand-driven — it
+lives only while the property is observed — for the lifetime rationale
+(and the rejected finalization alternative) see
+[setting-backed-dp-subscriptions.md](setting-backed-dp-subscriptions.md).
 
 Read the current source with `GetValueSource`:
 

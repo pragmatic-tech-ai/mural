@@ -113,7 +113,16 @@ export class EffectiveValueDescriptor
     // User-facing change channel: consumers subscribe via ChangedSignal() and
     // own the returned Disposable. Held as a Signal so change notification
     // rides the runtime's one subscribe/emit primitive.
-    private readonly changed = new Signal<PropertyChangedEventArgs>();
+    //
+    // The signal's demand hooks drive the setting subscription (§ setting-backed
+    // DP lifetime): a setting-backed property holds its ISettingSource
+    // subscription only while it is actually observed. The first listener opens
+    // the subscription; the last one to leave closes it. See
+    // `Mural/docs/setting-backed-dp-subscriptions.md`.
+    private readonly changed = new Signal<PropertyChangedEventArgs>({
+        onFirstSubscriber: () => this.ensureSettingSubscriptionFromDemand(),
+        onLastUnsubscribe: () => this.releaseSettingSubscription(),
+    });
     // Reserved for the owning MuralBase to route every effective-value change
     // through its virtual OnPropertyChanged hook. Stored separately from the
     // `changed` Signal so user-facing subscriber counts stay clean. Carries
@@ -163,21 +172,50 @@ export class EffectiveValueDescriptor
     // Falls back through readServiceScope (per-element scope) then
     // Application.current.Services (app-wide root). Returns { has: false }
     // when no source is registered or the key has no stored value.
-    // Also lazily subscribes to the setting's change signal so future
-    // mutations are reflected via OnPropertyChange.
+    //
+    // Pure read: the setting subscription is demand-driven off the `changed`
+    // signal's listeners, not created here. The one exception is a guarded
+    // retry — if this property is already observed but has no live
+    // subscription (the ambient ISettingSource wasn't resolvable when the
+    // first listener attached), reading re-attempts the subscription.
     private resolveSettingValue(): { has: boolean; value: unknown }
     {
         const binding = this.property_descriptor.SettingValue;
         if (binding === undefined) return { has: false, value: undefined };
         const r = EffectiveValueDescriptor.resolveSetting(this.owner, binding);
-        if (r.src !== undefined) this.ensureSettingSubscription(r.src, binding.key);
+        if (r.src !== undefined && this.changed.subscriberCount > 0)
+        {
+            this.ensureSettingSubscription(r.src, binding.key);
+        }
         return { has: r.has, value: r.value };
+    }
+
+    // Demand entry point — fired by the `changed` signal when its first
+    // listener attaches. Opens the setting subscription iff the descriptor is
+    // setting-backed and the ambient ISettingSource is resolvable now. If it
+    // isn't yet, resolveSettingValue's guarded retry covers the race.
+    private ensureSettingSubscriptionFromDemand(): void
+    {
+        if (this.setting_subscription !== undefined) return;
+        const binding = this.property_descriptor.SettingValue;
+        if (binding === undefined) return;
+        const { src } = EffectiveValueDescriptor.resolveSetting(this.owner, binding);
+        if (src !== undefined) this.ensureSettingSubscription(src, binding.key);
     }
 
     private ensureSettingSubscription(src: ISettingSource, key: string): void
     {
         if (this.setting_subscription !== undefined) return;
         this.setting_subscription = src.Changed(key).subscribe((args) => this.onSettingChanged(args));
+    }
+
+    // Fired by the `changed` signal when its last listener leaves — the setting
+    // subscription has no consumer left, so release it. Also the shared core
+    // of teardown().
+    private releaseSettingSubscription(): void
+    {
+        this.setting_subscription?.dispose();
+        this.setting_subscription = undefined;
     }
 
     private onSettingChanged(args: PropertyChangedEventArgs): void
@@ -190,10 +228,13 @@ export class EffectiveValueDescriptor
         if (oldEff !== newEff) this.OnPropertyChange(oldEff, newEff);
     }
 
+    // Hard release on EVD removal (remove_via_descriptor). Idempotent with the
+    // demand path: normally the last-listener hook has already released the
+    // subscription, but a listener that outlives its EVD (or an EVD removed
+    // while masked) still gets cleaned up here.
     public teardown(): void
     {
-        this.setting_subscription?.dispose();
-        this.setting_subscription = undefined;
+        this.releaseSettingSubscription();
     }
 
     OnPropertyChange(old_value: any, new_value: any): void
