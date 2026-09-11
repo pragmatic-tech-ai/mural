@@ -44,13 +44,17 @@ export {
     TemplateBinding,
     Validation,
     type BindingOptions,
-    type PropertyChangeCallback,
+    type PropertyChangedEventArgs,
     type ValidationError,
     type ValidationResult,
     type ValidationRule,
     type ValueConverter,
 } from './binding/index.js';
 export { Observable } from './observable.js';
+// Signal / Disposable live in todl-runtime (zero-dep); re-exported here so
+// consumers subscribing to a `PropertyChanged(name)` change channel can type
+// the returned subscription without a second import path.
+export { Signal, type Disposable } from '@pragmatic-tech-ai/todl-runtime';
 // Storage IO subsystem lives in todl-runtime (zero-dep); re-exported here so
 // consumers already importing '@pragmatic-tech-ai/mural/runtime' need no second
 // import path. Canonical source: @pragmatic-tech-ai/todl-runtime.

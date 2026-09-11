@@ -1,4 +1,4 @@
-﻿import { MuralBase, type PropertyKey } from '../../../runtime/index.js';
+﻿import { MuralBase, type PropertyKey, type Disposable } from '../../../runtime/index.js';
 import {
     Brush,
     Color,
@@ -81,9 +81,9 @@ export class FormatMirror
 {
     private readonly _diagram: Diagram;
 
-    // Per-pen-property listeners attached to the current FormatStroke
+    // Per-pen-property subscriptions attached to the current FormatStroke
     // instance. Detach + reattach on every FormatStroke DP change.
-    private readonly _strokeListeners: Array<{ key: PropertyKey<unknown>; handler: () => void }> = [];
+    private readonly _strokeListeners: Disposable[] = [];
     private _attachedPen: Pen | undefined = undefined;
 
     private _seedingFormat = false;
@@ -104,30 +104,30 @@ export class FormatMirror
         // honored upstream by the hover-halo behavior, so the seed
         // here only ever picks from ONE population at a time.
         diagram.AddConnectorSelectionChangedListener(() => this._seedFromSelection());
-        diagram.AddPropertyChangedListener(Diagram.SelectionFormatFillKey,   () => this._broadcastFill());
-        diagram.AddPropertyChangedListener(Diagram.SelectionFormatStrokeKey, () => this._onFormatStrokeChanged());
+        diagram.PropertyChanged(Diagram.SelectionFormatFillKey).subscribe(  () => this._broadcastFill());
+        diagram.PropertyChanged(Diagram.SelectionFormatStrokeKey).subscribe(() => this._onFormatStrokeChanged());
         // Cap channel — same seed/broadcast shape as Fill/Stroke, but
         // targets only selected connectors' Source/TargetCapTemplate DPs.
-        diagram.AddPropertyChangedListener(Diagram.SelectionFormatSourceCapKey, () => this._broadcastCap(ConnectorEnd.Source));
-        diagram.AddPropertyChangedListener(Diagram.SelectionFormatTargetCapKey, () => this._broadcastCap(ConnectorEnd.Target));
+        diagram.PropertyChanged(Diagram.SelectionFormatSourceCapKey).subscribe(() => this._broadcastCap(ConnectorEnd.Source));
+        diagram.PropertyChanged(Diagram.SelectionFormatTargetCapKey).subscribe(() => this._broadcastCap(ConnectorEnd.Target));
         // Per-end cap size rides the same seed/broadcast shape as the cap
         // templates, targeting each selected connector's Source/TargetCapScale.
-        diagram.AddPropertyChangedListener(Diagram.SelectionFormatSourceCapScaleKey, () => this._broadcastCapScale(ConnectorEnd.Source));
-        diagram.AddPropertyChangedListener(Diagram.SelectionFormatTargetCapScaleKey, () => this._broadcastCapScale(ConnectorEnd.Target));
+        diagram.PropertyChanged(Diagram.SelectionFormatSourceCapScaleKey).subscribe(() => this._broadcastCapScale(ConnectorEnd.Source));
+        diagram.PropertyChanged(Diagram.SelectionFormatTargetCapScaleKey).subscribe(() => this._broadcastCapScale(ConnectorEnd.Target));
         // Text-format channel — paragraph alignment + label placement,
         // seeded from the first selected shape and broadcast onto every
         // selected shape's Text.
-        diagram.AddPropertyChangedListener(Diagram.SelectionTextAlignmentKey, () => this._broadcastTextAlignment());
-        diagram.AddPropertyChangedListener(Diagram.SelectionTextPlacementKey, () => this._broadcastTextPlacement());
+        diagram.PropertyChanged(Diagram.SelectionTextAlignmentKey).subscribe(() => this._broadcastTextAlignment());
+        diagram.PropertyChanged(Diagram.SelectionTextPlacementKey).subscribe(() => this._broadcastTextPlacement());
         // Character-style channel — font family / size / colour + the four
         // decoration booleans, broadcast onto every selected shape's label.
-        diagram.AddPropertyChangedListener(Diagram.SelectionFontFamilyKey,   () => this._broadcast((t, d) => t.ApplyFontFamily(d.SelectionFontFamily)));
-        diagram.AddPropertyChangedListener(Diagram.SelectionFontSizeKey,     () => this._broadcast((t, d) => t.ApplyFontSize(d.SelectionFontSize)));
-        diagram.AddPropertyChangedListener(Diagram.SelectionFontColorHexKey, () => this._broadcast((t, d) => t.ApplyForeground(hexToBrush(d.SelectionFontColorHex))));
-        diagram.AddPropertyChangedListener(Diagram.SelectionBoldKey,          () => this._broadcast((t, d) => t.ApplyBold(d.SelectionBold)));
-        diagram.AddPropertyChangedListener(Diagram.SelectionItalicKey,        () => this._broadcast((t, d) => t.ApplyItalic(d.SelectionItalic)));
-        diagram.AddPropertyChangedListener(Diagram.SelectionUnderlineKey,     () => this._broadcast((t, d) => t.ApplyUnderline(d.SelectionUnderline)));
-        diagram.AddPropertyChangedListener(Diagram.SelectionStrikethroughKey, () => this._broadcast((t, d) => t.ApplyStrikethrough(d.SelectionStrikethrough)));
+        diagram.PropertyChanged(Diagram.SelectionFontFamilyKey).subscribe(  () => this._broadcast((t, d) => t.ApplyFontFamily(d.SelectionFontFamily)));
+        diagram.PropertyChanged(Diagram.SelectionFontSizeKey).subscribe(    () => this._broadcast((t, d) => t.ApplyFontSize(d.SelectionFontSize)));
+        diagram.PropertyChanged(Diagram.SelectionFontColorHexKey).subscribe(() => this._broadcast((t, d) => t.ApplyForeground(hexToBrush(d.SelectionFontColorHex))));
+        diagram.PropertyChanged(Diagram.SelectionBoldKey).subscribe(          () => this._broadcast((t, d) => t.ApplyBold(d.SelectionBold)));
+        diagram.PropertyChanged(Diagram.SelectionItalicKey).subscribe(        () => this._broadcast((t, d) => t.ApplyItalic(d.SelectionItalic)));
+        diagram.PropertyChanged(Diagram.SelectionUnderlineKey).subscribe(     () => this._broadcast((t, d) => t.ApplyUnderline(d.SelectionUnderline)));
+        diagram.PropertyChanged(Diagram.SelectionStrikethroughKey).subscribe( () => this._broadcast((t, d) => t.ApplyStrikethrough(d.SelectionStrikethrough)));
 
         // Keep the toolbar's Toggles-presentation buttons in sync with the
         // selection's text state. Their IsChecked is `= $IsActive`, which the
@@ -140,11 +140,11 @@ export class FormatMirror
         // radio group). Pulse on every toggle-backing DP change so RefreshActive
         // States re-reads all of them.
         const pulseRequery = (): void => CommandManager.InvalidateRequerySuggested();
-        diagram.AddPropertyChangedListener(Diagram.SelectionTextAlignmentKey, pulseRequery);
-        diagram.AddPropertyChangedListener(Diagram.SelectionBoldKey,          pulseRequery);
-        diagram.AddPropertyChangedListener(Diagram.SelectionItalicKey,        pulseRequery);
-        diagram.AddPropertyChangedListener(Diagram.SelectionUnderlineKey,     pulseRequery);
-        diagram.AddPropertyChangedListener(Diagram.SelectionStrikethroughKey, pulseRequery);
+        diagram.PropertyChanged(Diagram.SelectionTextAlignmentKey).subscribe(pulseRequery);
+        diagram.PropertyChanged(Diagram.SelectionBoldKey).subscribe(          pulseRequery);
+        diagram.PropertyChanged(Diagram.SelectionItalicKey).subscribe(        pulseRequery);
+        diagram.PropertyChanged(Diagram.SelectionUnderlineKey).subscribe(     pulseRequery);
+        diagram.PropertyChanged(Diagram.SelectionStrikethroughKey).subscribe( pulseRequery);
     }
 
     private _leaves(): MuralBase[]
@@ -493,19 +493,16 @@ export class FormatMirror
         this._attachedPen = pen;
         for (const key of PEN_KEYS)
         {
-            const handler = (): void => this._broadcastStrokeProp(key);
-            pen.AddPropertyChangedListener(key, handler);
-            this._strokeListeners.push({ key, handler });
+            this._strokeListeners.push(
+                pen.PropertyChanged(key).subscribe(() => this._broadcastStrokeProp(key)),
+            );
         }
     }
 
     private _detachStrokeListeners(): void
     {
         if (this._attachedPen === undefined) return;
-        for (const { key, handler } of this._strokeListeners)
-        {
-            this._attachedPen.RemovePropertyChangedListener(key, handler);
-        }
+        for (const sub of this._strokeListeners) sub.dispose();
         this._strokeListeners.length = 0;
         this._attachedPen = undefined;
     }

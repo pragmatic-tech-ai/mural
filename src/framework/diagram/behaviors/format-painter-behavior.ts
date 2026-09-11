@@ -1,4 +1,4 @@
-import { type KeyEventArgs, Key, type PointerEventArgs } from '../../../runtime/index.js';
+import { type KeyEventArgs, Key, type PointerEventArgs, type Disposable } from '../../../runtime/index.js';
 import { captureFormat, applyFormat, type FormatBundle, type FormatTarget } from '../collaborators/format-bundle.js';
 import { Figure } from '../figure.js';
 import { findFigureAncestor, findConnectorAncestor } from './connector-interactions-behavior.js';
@@ -117,7 +117,7 @@ export function attachFormatPainter(diagram: Diagram): () => void
             diagram.Cursor = undefined;
         }
     };
-    diagram.AddPropertyChangedListener(D.FormatPainterActiveKey, onActiveChanged);
+    const activeSub: Disposable = diagram.PropertyChanged(D.FormatPainterActiveKey).subscribe(onActiveChanged);
 
     const handlers: FormatPainterHandlers = {
         OnPreviewPointerDown(raw: unknown): void
@@ -147,7 +147,7 @@ export function attachFormatPainter(diagram: Diagram): () => void
     return (): void =>
     {
         diagram._setFormatPainterHandlers(undefined);
-        diagram.RemovePropertyChangedListener(D.FormatPainterActiveKey, onActiveChanged);
+        activeSub.dispose();
         painter.End();
         diagram.Cursor = undefined;
     };

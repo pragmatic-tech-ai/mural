@@ -150,7 +150,7 @@ describe('Phase 3e — Is*Changed via DP notifications (WPF parity)', () => {
         // change-listener API. IsFocused is the keyboard-focus DP.
         const el = new Focusable();
         const seen: boolean[] = [];
-        el.AddPropertyChangedListener(Element.IsFocusedKey, () => seen.push(el.IsFocused));
+        el.PropertyChanged(Element.IsFocusedKey).subscribe(() => seen.push(el.IsFocused));
         const im = new InputManager();
         im.SetFocus(el);
         im.SetFocus(undefined);

@@ -4,6 +4,7 @@
     Panel,
     Visibility,
     Element, type PropertyDescriptor,
+    type Disposable,
 } from '../../runtime/index.js';
 import { resolveKey } from '../../runtime/model-internals.js';
 import { Brush, Pen } from '../../visual-engine/index.js';
@@ -118,7 +119,7 @@ export class ShapeFormatControl extends TemplatedControl
     private _targetCapCombo: ComboBox   | undefined;
     private _sourceCapScale: SliderSpinEdit | undefined;
     private _targetCapScale: SliderSpinEdit | undefined;
-    private _partListeners: Array<() => void> = [];
+    private _partListeners: Disposable[] = [];
 
     constructor()
     {
@@ -157,10 +158,7 @@ export class ShapeFormatControl extends TemplatedControl
                 try { this.Fill = fe.Fill; } finally { this._syncing = false; }
             };
             const key = resolveKey(fe, undefined, 'Fill');
-            fe.AddPropertyChangedListener(key, handler);
-            this._partListeners.push(() => {
-                fe.RemovePropertyChangedListener(key, handler);
-            });
+            this._partListeners.push(fe.PropertyChanged(key).subscribe(handler));
         }
 
         if (this._penEditor !== undefined)
@@ -174,10 +172,7 @@ export class ShapeFormatControl extends TemplatedControl
                 try { this.Stroke = pe.Pen; } finally { this._syncing = false; }
             };
             const key = resolveKey(pe, undefined, 'Pen');
-            pe.AddPropertyChangedListener(key, handler);
-            this._partListeners.push(() => {
-                pe.RemovePropertyChangedListener(key, handler);
-            });
+            this._partListeners.push(pe.PropertyChanged(key).subscribe(handler));
         }
     }
 
@@ -312,8 +307,7 @@ export class ShapeFormatControl extends TemplatedControl
             try { set(edit.Value); } finally { this._syncing = false; }
         };
         const key = resolveKey(edit, undefined, 'Value');
-        edit.AddPropertyChangedListener(key, handler);
-        this._partListeners.push(() => edit.RemovePropertyChangedListener(key, handler));
+        this._partListeners.push(edit.PropertyChanged(key).subscribe(handler));
     }
 
     private populateCapCombos(): void
@@ -359,8 +353,7 @@ export class ShapeFormatControl extends TemplatedControl
             try { set(sel !== undefined ? sel.Template : undefined); } finally { this._syncing = false; }
         };
         const key = resolveKey(combo, undefined, 'SelectedItem');
-        combo.AddPropertyChangedListener(key, handler);
-        this._partListeners.push(() => combo.RemovePropertyChangedListener(key, handler));
+        this._partListeners.push(combo.PropertyChanged(key).subscribe(handler));
     }
 
     // Select the option whose Template IS the given template (identity —

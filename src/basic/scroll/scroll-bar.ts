@@ -175,7 +175,7 @@ export class ScrollBar extends TemplatedControl
         // declaratively from the DefaultScrollBar template's
         // `when(PART_Thumb.IsMouseOver)` trigger — no imperative brush
         // refresh.
-        this._thumb.AddPropertyChangedListener(Element.IsMouseOverKey, () => {
+        this._thumb.PropertyChanged(Element.IsMouseOverKey).subscribe(() => {
             if (this._thumb.IsMouseOver) this.pulseActivity();
         });
         // Auto-hide reaction to programmatic scroll. The Value DP
@@ -186,15 +186,15 @@ export class ScrollBar extends TemplatedControl
         // writes from ScrollViewer.ArrangeOverride on every layout
         // pass), and pulsing on those would re-show the bar every
         // frame regardless of real activity.
-        this.AddPropertyChangedListener(ScrollBar.ValueKey, (_o, _n, oldV, newV) => {
-            if (oldV !== newV) this.pulseActivity();
+        this.PropertyChanged(ScrollBar.ValueKey).subscribe(({ oldValue, newValue }) => {
+            if (oldValue !== newValue) this.pulseActivity();
         });
 
         // Lazy-evaluate the initial visibility state. When IsAutoHide
         // is false (the default) we stay opaque forever. When true,
         // start in the faded state and wait for activity.
         if (this.IsAutoHide) this.fadeOut();
-        this.AddPropertyChangedListener(ScrollBar.IsAutoHideKey, () => {
+        this.PropertyChanged(ScrollBar.IsAutoHideKey).subscribe(() => {
             if (this.IsAutoHide) this.fadeOut();
             else                 this.fadeIn();
         });

@@ -22,7 +22,7 @@ export class CounterVM extends MuralBase {
         const inc = new RelayCommand(() => { this.Count = Math.min(10, this.Count + this.Step); }, () => this.Count < 10);
         this.set_property_value(CounterVM.IncrementKey, inc);
         this.set_property_value(CounterVM.ResetKey, new RelayCommand(() => { this.Count = 0; }));
-        this.AddPropertyChangedListener(CounterVM.CountKey, () => {
+        this.PropertyChanged(CounterVM.CountKey).subscribe(() => {
             inc.RaiseCanExecuteChanged();
         });
     }

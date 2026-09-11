@@ -147,7 +147,7 @@ describe('Group — rigid translate', () => {
         const g = freshGroup([a]);
 
         let bboxRefires = 0;
-        g.AddPropertyChangedListener(Group.LeftKey, () => bboxRefires++);
+        g.PropertyChanged(Group.LeftKey).subscribe(() => bboxRefires++);
         g.Translate(0, 0);
         assert.equal(bboxRefires, 0);
         assert.equal(a.Left, 10);
@@ -164,7 +164,7 @@ describe('Group — rigid translate', () => {
         const g = freshGroup([a, b, c]);
 
         let leftFires = 0;
-        g.AddPropertyChangedListener(Group.LeftKey, () => leftFires++);
+        g.PropertyChanged(Group.LeftKey).subscribe(() => leftFires++);
         g.Translate(7, 0);
         assert.equal(leftFires, 1, 'bbox Left must fire exactly once per Translate');
         assert.equal(a.Left, 7);

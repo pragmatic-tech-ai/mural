@@ -4,7 +4,7 @@ import { MuralBase } from '../model.js';
 import { Observable } from '../observable.js';
 import type { PropertyKey } from '../model.js';
 import { resolveKey } from '../model-internals.js';
-import type { PropertyChangeCallback } from './effective-value.js';
+import type { Disposable } from '@pragmatic-tech-ai/todl-runtime';
 import type { PropertyDescriptor } from '../property-descriptor.js';
 import type { Visual } from '../../visual-engine/visual.js';
 
@@ -56,22 +56,14 @@ class DataContextBindingImpl extends Binding
     private readonly watcher: DataContextWatcher;
     private readonly target:  Visual;
     private readonly pathStr: string;
-    private readonly dcCallback: PropertyChangeCallback;
+    private readonly dcCallback: () => void;
+    private dcSubscription:     Disposable | undefined;
 
-    // The source we're currently subscribed to for property changes on
-    // the first path segment, the callback we registered, and the key
-    // we registered it under. Cleared on each refresh so we can detach
-    // cleanly without re-resolving the descriptor.
-    //
-    // Typed `Observable` (the common base) so both mechanisms typecheck: a
-    // MuralBase source keys off `currentSourceKey` (its RemovePropertyChanged
-    // Listener widened to PropertyKey), a plain Observable source keys off
-    // `currentSourceName` (Observable's name-based overload). Exactly one of
-    // the two keys is set at a time.
-    private currentSource:      Observable | undefined;
-    private sourceCallback:     PropertyChangeCallback | undefined;
-    private currentSourceKey:   PropertyKey<unknown> | undefined;
-    private currentSourceName:  string | undefined;
+    // The source-side change-channel subscription on the first path segment.
+    // Disposed on each refresh so we detach cleanly before re-resolving. One
+    // Disposable covers both source shapes — a MuralBase source (subscribed by
+    // descriptor key) and a plain Observable source (subscribed by name).
+    private sourceSubscription: Disposable | undefined;
     // Cached at construction — `'DataContext'` resolves on every Visual,
     // and the binding listens to it for its entire lifetime.
     private readonly dataContextKey: PropertyKey<unknown>;
@@ -121,14 +113,15 @@ class DataContextBindingImpl extends Binding
             this.watcher.Value = target;
             return;
         }
-        target.AddPropertyChangedListener(this.dataContextKey, this.dcCallback);
+        this.dcSubscription = target.PropertyChanged(this.dataContextKey).subscribe(this.dcCallback);
         this.refresh();
     }
 
     public override dispose(): void
     {
         super.dispose();
-        this.target.RemovePropertyChangedListener(this.dataContextKey, this.dcCallback);
+        this.dcSubscription?.dispose();
+        this.dcSubscription = undefined;
         this.unsubscribeSource();
     }
 
@@ -244,24 +237,8 @@ class DataContextBindingImpl extends Binding
 
     private unsubscribeSource(): void
     {
-        if (this.currentSource !== undefined && this.sourceCallback !== undefined)
-        {
-            // MuralBase source → remove by descriptor key (its widened
-            // overload). Plain Observable source → remove by property name.
-            if (this.currentSourceKey !== undefined)
-            {
-                (this.currentSource as MuralBase)
-                    .RemovePropertyChangedListener(this.currentSourceKey, this.sourceCallback);
-            }
-            else if (this.currentSourceName !== undefined)
-            {
-                this.currentSource.RemovePropertyChangedListener(this.currentSourceName, this.sourceCallback);
-            }
-        }
-        this.currentSource      = undefined;
-        this.sourceCallback     = undefined;
-        this.currentSourceKey   = undefined;
-        this.currentSourceName  = undefined;
+        this.sourceSubscription?.dispose();
+        this.sourceSubscription = undefined;
     }
 
     private firstSegment(): string
@@ -299,10 +276,7 @@ class DataContextBindingImpl extends Binding
         if (dc instanceof MuralBase && MuralBase.HasProperty(dc.constructor, first))
         {
             const key = resolveKey(dc, undefined, first);
-            this.currentSource    = dc;
-            this.currentSourceKey = key;
-            this.sourceCallback   = () => { this.watcher.Value = this.walkPath(dc); };
-            dc.AddPropertyChangedListener(key, this.sourceCallback);
+            this.sourceSubscription = dc.PropertyChanged(key).subscribe(() => { this.watcher.Value = this.walkPath(dc); });
         }
         else if (dc instanceof Observable)
         {
@@ -314,10 +288,7 @@ class DataContextBindingImpl extends Binding
             // reactive. Before this a MuralBase whose segment wasn't a DP fell
             // through BOTH branches and got no subscription — .mu `$plain`
             // bindings against a ServiceBase panel never updated.
-            this.currentSource     = dc;
-            this.currentSourceName = first;
-            this.sourceCallback    = () => { this.watcher.Value = this.walkPath(dc); };
-            dc.AddPropertyChangedListener(first, this.sourceCallback);
+            this.sourceSubscription = dc.PropertyChanged(first).subscribe(() => { this.watcher.Value = this.walkPath(dc); });
         }
         this.watcher.Value = this.walkPath(dc);
     }

@@ -2,6 +2,7 @@
     MuralBase,
     Rect,
     type PropertyKey,
+    type Disposable,
 } from '../../../runtime/index.js';
 import { findDescriptor, resolveKey } from '../../../runtime/model-internals.js';
 import { HorizontalAnchor, VerticalAnchor, type SelectionSource } from '../../../basic/index.js';
@@ -84,9 +85,9 @@ export class DiagramSelectionSource implements SelectionSource
             Diagram.SelectionHeightKey,
             Diagram.SelectionCountKey,
         ];
-        for (const k of keys) this._diagram.AddPropertyChangedListener(k, listener);
+        const subs: Disposable[] = keys.map(k => this._diagram.PropertyChanged(k).subscribe(listener));
         return (): void => {
-            for (const k of keys) this._diagram.RemovePropertyChangedListener(k, listener);
+            for (const s of subs) s.dispose();
         };
     }
 

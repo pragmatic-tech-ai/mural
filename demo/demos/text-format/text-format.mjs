@@ -40,10 +40,10 @@ function attachFormatBridge(view, vm) {
         TextFormatVM.UnderlineKey,
         TextFormatVM.ColorHexKey,
     ];
-    for (const k of keys) vm.AddPropertyChangedListener(k, apply);
+    const disposers = keys.map(k => vm.PropertyChanged(k).subscribe(apply));
 
     return function detach() {
-        for (const k of keys) vm.RemovePropertyChangedListener(k, apply);
+        for (const d of disposers) d.dispose();
     };
 }
 

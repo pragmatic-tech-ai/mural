@@ -4,6 +4,7 @@
     Point,
     Element, Visual,
     type PropertyDescriptor,
+    type Disposable,
 } from '../../runtime/index.js';
 import { resolveKey } from '../../runtime/model-internals.js';
 import {
@@ -484,10 +485,8 @@ export class BrushPicker extends TemplatedControl
                 this.updatePreviewBrush();
             };
             const key = resolveKey(cp, undefined, 'Color');
-            cp.AddPropertyChangedListener(key, handler);
-            this._popupListeners.push(() => {
-                cp.RemovePropertyChangedListener(key, handler);
-            });
+            const sub: Disposable = cp.PropertyChanged(key).subscribe(handler);
+            this._popupListeners.push(() => sub.dispose());
         };
         wireColor('PART_SolidColor',         () => this.SolidColor,         c => { this.SolidColor         = c; });
         wireColor('PART_LinearStart',        () => this.LinearStartColor,   c => { this.LinearStartColor   = c; });
@@ -519,10 +518,8 @@ export class BrushPicker extends TemplatedControl
                 this.updatePreviewBrush();
             };
             const key = resolveKey(s, undefined, 'Value');
-            s.AddPropertyChangedListener(key, handler);
-            this._popupListeners.push(() => {
-                s.RemovePropertyChangedListener(key, handler);
-            });
+            const sub: Disposable = s.PropertyChanged(key).subscribe(handler);
+            this._popupListeners.push(() => sub.dispose());
         };
         wireSlider('PART_LinearAngle',   () => this.LinearAngle,    v => { this.LinearAngle   = v; });
         wireSlider('PART_RadialCenterX', () => this.RadialCenterX,  v => { this.RadialCenterX = v; });
@@ -562,10 +559,8 @@ export class BrushPicker extends TemplatedControl
                 this.updatePreviewBrush();
             };
             const key = resolveKey(kindCombo, undefined, 'SelectedItem');
-            kindCombo.AddPropertyChangedListener(key, handler);
-            this._popupListeners.push(() => {
-                kindCombo.RemovePropertyChangedListener(key, handler);
-            });
+            const sub: Disposable = kindCombo.PropertyChanged(key).subscribe(handler);
+            this._popupListeners.push(() => sub.dispose());
         }
     }
 }

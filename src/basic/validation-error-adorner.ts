@@ -7,6 +7,7 @@ import {
     Validation,
     Visual,
     type DrawingContext,
+    type Disposable,
 } from '../runtime/index.js';
 import { Pen, SolidColorBrush } from '../visual-engine/index.js';
 
@@ -34,7 +35,7 @@ const DEFAULT_ERROR_THICKNESS = 1.5;
 // tooltip-bubble below).
 export class ValidationErrorAdorner extends Adorner
 {
-    private _propertyListener: (() => void) | undefined;
+    private _sub: Disposable | undefined;
     private _brush:     SolidColorBrush | undefined;
     private _thickness: number;
 
@@ -58,11 +59,8 @@ export class ValidationErrorAdorner extends Adorner
         // schedules a repaint that runs through the standard flush
         // convergence loop. No throttle needed — HasError flips at
         // input-event cadence, far below render-budget pressure.
-        const cb = (): void => { this.InvalidateVisual(); };
-        adornedElement.AddPropertyChangedListener(Validation.HasErrorKey, cb);
-        this._propertyListener = (): void => {
-            adornedElement.RemovePropertyChangedListener(Validation.HasErrorKey, cb);
-        };
+        this._sub = adornedElement.PropertyChanged(Validation.HasErrorKey).subscribe(
+            () => { this.InvalidateVisual(); });
     }
 
     // Dispose hook — symmetric with the behavior detach contract.
@@ -71,8 +69,8 @@ export class ValidationErrorAdorner extends Adorner
     // own Detach(child) — same idea, different signature.
     public Dispose(): void
     {
-        this._propertyListener?.();
-        this._propertyListener = undefined;
+        this._sub?.dispose();
+        this._sub = undefined;
     }
 
     // Convenience for the common case: locate the layer, install the

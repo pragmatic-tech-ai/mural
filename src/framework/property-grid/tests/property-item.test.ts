@@ -67,7 +67,7 @@ describe('PropertyItem — external bag change raises PropertyChanged("Value")',
         const item = new PropertyItem(desc, bag);
 
         const events: string[] = [];
-        item.AddPropertyChangedListener('Value', (_owner, name) => { events.push(name); });
+        item.PropertyChanged('Value').subscribe(({ property }) => { events.push(property); });
 
         bag.SetValue('x', 99);
         assert.deepEqual(events, ['Value']);
@@ -80,7 +80,7 @@ describe('PropertyItem — external bag change raises PropertyChanged("Value")',
         const item = new PropertyItem(desc, bag);
 
         let count = 0;
-        item.AddPropertyChangedListener('Value', () => { count++; });
+        item.PropertyChanged('Value').subscribe(() => { count++; });
 
         bag.SetValue('x', 1);
         bag.SetValue('x', 2);
@@ -95,8 +95,8 @@ describe('PropertyItem — external bag change raises PropertyChanged("Value")',
         const item = new PropertyItem(desc, bag);
 
         let capturedNew: unknown;
-        item.AddPropertyChangedListener('Value', (_owner, _name, _old, newVal) => {
-            capturedNew = newVal;
+        item.PropertyChanged('Value').subscribe(({ newValue }) => {
+            capturedNew = newValue;
         });
 
         bag.SetValue('x', 77);
@@ -187,7 +187,7 @@ describe('PropertyItem — Dispose unsubscribes', () => {
         const item = new PropertyItem(desc, bag);
 
         let count = 0;
-        item.AddPropertyChangedListener('Value', () => { count++; });
+        item.PropertyChanged('Value').subscribe(() => { count++; });
 
         bag.SetValue('z', 1);
         assert.equal(count, 1);
@@ -259,7 +259,7 @@ describe('PropertyCategory — IsExpanded reactive property', () => {
     test('setting IsExpanded raises PropertyChanged("IsExpanded")', () => {
         const cat = new PropertyCategory('G', []);
         const events: string[] = [];
-        cat.AddPropertyChangedListener('IsExpanded', (_owner, name) => { events.push(name); });
+        cat.PropertyChanged('IsExpanded').subscribe(({ property }) => { events.push(property); });
         cat.IsExpanded = false;
         assert.deepEqual(events, ['IsExpanded']);
     });
@@ -267,7 +267,7 @@ describe('PropertyCategory — IsExpanded reactive property', () => {
     test('setting IsExpanded to the same value does NOT raise PropertyChanged', () => {
         const cat = new PropertyCategory('G', []);
         let count = 0;
-        cat.AddPropertyChangedListener('IsExpanded', () => { count++; });
+        cat.PropertyChanged('IsExpanded').subscribe(() => { count++; });
         cat.IsExpanded = true; // same as default
         assert.equal(count, 0);
     });
@@ -275,7 +275,7 @@ describe('PropertyCategory — IsExpanded reactive property', () => {
     test('toggling back fires a second notification', () => {
         const cat = new PropertyCategory('G', []);
         let count = 0;
-        cat.AddPropertyChangedListener('IsExpanded', () => { count++; });
+        cat.PropertyChanged('IsExpanded').subscribe(() => { count++; });
         cat.IsExpanded = false;
         cat.IsExpanded = true;
         assert.equal(count, 2);
@@ -285,9 +285,9 @@ describe('PropertyCategory — IsExpanded reactive property', () => {
         const cat = new PropertyCategory('G', []);
         let capturedOld: unknown;
         let capturedNew: unknown;
-        cat.AddPropertyChangedListener('IsExpanded', (_owner, _name, oldVal, newVal) => {
-            capturedOld = oldVal;
-            capturedNew = newVal;
+        cat.PropertyChanged('IsExpanded').subscribe(({ oldValue, newValue }) => {
+            capturedOld = oldValue;
+            capturedNew = newValue;
         });
         cat.IsExpanded = false;
         assert.equal(capturedOld, true);

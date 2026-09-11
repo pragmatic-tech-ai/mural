@@ -1,8 +1,7 @@
 ﻿import { Binding, type ValueConverter } from './binding.js';
-import type { PropertyChangeCallback } from './effective-value.js';
+import type { Disposable } from '@pragmatic-tech-ai/todl-runtime';
 import { MetaData } from '../metadata.js';
 import { MuralBase } from '../model.js';
-import type { PropertyKey } from '../model.js';
 import { resolveKey } from '../model-internals.js';
 import { Application } from '../application.js';
 import type { ServiceToken } from '../services/service-provider.js';
@@ -43,8 +42,8 @@ class FixedSourceBinding extends Binding
     private readonly sourceThunk: () => MuralBase | undefined;
     private readonly pathStr:     string;
 
-    private nameSource:     MuralBase | undefined;
-    private sourceCallback: PropertyChangeCallback | undefined;
+    private nameSource:         MuralBase | undefined;
+    private sourceSubscription: Disposable | undefined;
     private disposed = false;
     // The forward-ref retry (activate) fires at most once. One microtask
     // defers past the current synchronous factory run — the entire forward-ref
@@ -66,9 +65,7 @@ class FixedSourceBinding extends Binding
     // so it passes none. The Service case watches the target's inherited
     // `ServiceScope` — re-parenting the subtree under a different provider
     // must rebind to that provider's service. See reresolve().
-    private rebindTarget:   MuralBase | undefined;
-    private rebindKey:      PropertyKey<unknown> | undefined;
-    private rebindCallback: PropertyChangeCallback | undefined;
+    private rebindSubscription: Disposable | undefined;
 
     constructor(
         source:    MuralBase | (() => MuralBase | undefined),
@@ -92,10 +89,7 @@ class FixedSourceBinding extends Binding
         if (rebind !== undefined && MuralBase.HasProperty(rebind.target.constructor, rebind.property))
         {
             const key = resolveKey(rebind.target, undefined, rebind.property);
-            this.rebindTarget   = rebind.target;
-            this.rebindKey      = key;
-            this.rebindCallback = () => this.reresolve();
-            rebind.target.AddPropertyChangedListener(key, this.rebindCallback);
+            this.rebindSubscription = rebind.target.PropertyChanged(key).subscribe(() => this.reresolve());
         }
     }
 
@@ -182,13 +176,8 @@ class FixedSourceBinding extends Binding
         this.disposed = true;
         super.dispose();
         this.unsubscribeSource();
-        if (this.rebindTarget !== undefined && this.rebindKey !== undefined && this.rebindCallback !== undefined)
-        {
-            this.rebindTarget.RemovePropertyChangedListener(this.rebindKey, this.rebindCallback);
-            this.rebindTarget   = undefined;
-            this.rebindKey      = undefined;
-            this.rebindCallback = undefined;
-        }
+        this.rebindSubscription?.dispose();
+        this.rebindSubscription = undefined;
     }
 
     // TwoWay writeback: when the target DP is mutated, push the new
@@ -256,10 +245,6 @@ class FixedSourceBinding extends Binding
         return dot < 0 ? this.pathStr : this.pathStr.substring(0, dot);
     }
 
-    // Resolved at subscribeSource() time; reused by unsubscribeSource()
-    // so detach doesn't re-walk the descriptor map.
-    private sourceKey: PropertyKey<unknown> | undefined;
-
     private subscribeSource(): void
     {
         const src = this.nameSource;
@@ -273,18 +258,13 @@ class FixedSourceBinding extends Binding
         const first = this.firstSegment();
         if (!MuralBase.HasProperty(src.constructor, first)) return;
         const key = resolveKey(src, undefined, first);
-        this.sourceKey      = key;
-        this.sourceCallback = () => { this.watcher.Value = this.walkPath(src); };
-        src.AddPropertyChangedListener(key, this.sourceCallback);
+        this.sourceSubscription = src.PropertyChanged(key).subscribe(() => { this.watcher.Value = this.walkPath(src); });
     }
 
     private unsubscribeSource(): void
     {
-        if (this.sourceCallback === undefined || this.sourceKey === undefined) return;
-        if (this.nameSource === undefined) return;
-        this.nameSource.RemovePropertyChangedListener(this.sourceKey, this.sourceCallback);
-        this.sourceCallback = undefined;
-        this.sourceKey      = undefined;
+        this.sourceSubscription?.dispose();
+        this.sourceSubscription = undefined;
     }
 
     private walkPath(root: unknown): unknown

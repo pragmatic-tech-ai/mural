@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { Observable, MuralBase, MetaData } from '../index.js';
+import { Observable, MuralBase, MetaData, type Disposable } from '../index.js';
 
 // A plain Observable subclass: real typed field + getter/setter + notify.
 class Loc extends Observable {
@@ -18,7 +18,7 @@ test('Observable notifies by name on setter change', () => {
   const l = new Loc();
   assert.equal(l.label, '');
   const seen: Array<[string, unknown]> = [];
-  l.AddPropertyChangedListener('label', (_o, name, _old, nv) => seen.push([name, nv]));
+  l.PropertyChanged('label').subscribe(({ newValue }) => seen.push(['label', newValue]));
   l.label = 'Azure';
   assert.equal(l.label, 'Azure');
   assert.deepEqual(seen, [['label', 'Azure']]);
@@ -27,7 +27,7 @@ test('Observable notifies by name on setter change', () => {
 test('setting an equal value fires nothing', () => {
   const l = new Loc();
   let fired = 0;
-  l.AddPropertyChangedListener('label', () => { fired++; });
+  l.PropertyChanged('label').subscribe(() => { fired++; });
   l.label = '';            // equal to default; setter guards
   assert.equal(fired, 0);
 });
@@ -40,9 +40,8 @@ test('an unsubscribed Observable allocates no listener map', () => {
 test('RemovePropertyChangedListener stops delivery', () => {
   const l = new Loc();
   let fired = 0;
-  const cb = (): void => { fired++; };
-  l.AddPropertyChangedListener('label', cb);
-  l.RemovePropertyChangedListener('label', cb);
+  const sub: Disposable = l.PropertyChanged('label').subscribe(() => { fired++; });
+  sub.dispose();
   l.label = 'x';
   assert.equal(fired, 0);
 });
@@ -82,7 +81,7 @@ test('unwritten field reads its declared initializer', () => {
 test('setter receiving an equal value fires no notification', () => {
   const p = new Point();
   let fired = 0;
-  p.AddPropertyChangedListener('x', () => { fired++; });
+  p.PropertyChanged('x').subscribe(() => { fired++; });
   p.x = 0; // equal to initializer; guard fires nothing
   assert.equal(fired, 0);
   p.x = 5;
@@ -94,8 +93,8 @@ test('notify fires exactly once per real change with (owner, name, old, new) ari
   const p = new Point();
   type Evt = [owner: unknown, name: string, oldv: unknown, newv: unknown];
   const events: Evt[] = [];
-  p.AddPropertyChangedListener('x', (owner, name, oldv, newv) => {
-    events.push([owner, name, oldv, newv]);
+  p.PropertyChanged('x').subscribe(({ owner, property, oldValue, newValue }) => {
+    events.push([owner, property, oldValue, newValue]);
   });
   p.x = 7;
   assert.equal(events.length, 1);
@@ -110,8 +109,8 @@ test('two independent names notify independently', () => {
   const p = new Point();
   const xEvents: string[] = [];
   const yEvents: string[] = [];
-  p.AddPropertyChangedListener('x', (_o, name) => xEvents.push(name));
-  p.AddPropertyChangedListener('y', (_o, name) => yEvents.push(name));
+  p.PropertyChanged('x').subscribe(({ property }) => xEvents.push(property));
+  p.PropertyChanged('y').subscribe(({ property }) => yEvents.push(property));
   p.x = 3;
   p.y = 4;
   p.y = 8;
@@ -119,14 +118,17 @@ test('two independent names notify independently', () => {
   assert.deepEqual(yEvents, ['y', 'y']);
 });
 
-test('subscribing the same callback twice delivers twice (array semantics, no dedup)', () => {
+test('subscribing the same callback twice delivers once (Signal Set semantics, dedup)', () => {
+  // The change channel is a Signal, whose subscribers live in a Set — so
+  // subscribing the SAME function reference twice is idempotent and fires once.
+  // (Distinct closures are distinct subscribers and each fire, as usual.)
   const p = new Point();
   let count = 0;
   const cb = (): void => { count++; };
-  p.AddPropertyChangedListener('x', cb);
-  p.AddPropertyChangedListener('x', cb);
+  p.PropertyChanged('x').subscribe(cb);
+  p.PropertyChanged('x').subscribe(cb);
   p.x = 1;
-  assert.equal(count, 2);
+  assert.equal(count, 1);
 });
 
 // ---------------------------------------------------------------------------

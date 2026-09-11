@@ -1,9 +1,8 @@
 ﻿import { Binding, BindingMode, type ValueConverter } from './binding.js';
 import { MetaData } from '../metadata.js';
 import { MuralBase } from '../model.js';
-import type { PropertyKey } from '../model.js';
 import { resolveKey } from '../model-internals.js';
-import type { PropertyChangeCallback } from './effective-value.js';
+import type { Disposable } from '@pragmatic-tech-ai/todl-runtime';
 import type { Visual } from '../../visual-engine/visual.js';
 
 // Internal watcher MuralBase — same shape as AncestorWatcher: holds the
@@ -35,31 +34,29 @@ class SelfWatcher extends MuralBase
 class SelfBindingImpl extends Binding
 {
     private readonly watcher:  SelfWatcher;
-    private readonly target:   Visual;
-    private readonly key:      PropertyKey<unknown>;
-    private readonly callback: PropertyChangeCallback;
+    private readonly callback: () => void;
+    private subscription:      Disposable | undefined;
 
     constructor(target: Visual, ownerType: Function, property: string, converter?: ValueConverter)
     {
         const watcher = new SelfWatcher();
         super(watcher, 'Value', BindingMode.OneWay, converter !== undefined ? { converter } : undefined);
         this.watcher = watcher;
-        this.target  = target;
 
         const key = resolveKey(target, ownerType, property);
-        this.key      = key;
         this.callback = () =>
         {
             this.watcher.Value = target.get_property_value(key);
         };
-        target.AddPropertyChangedListener(key, this.callback);
+        this.subscription = target.PropertyChanged(key).subscribe(this.callback);
         this.watcher.Value = target.get_property_value(key);
     }
 
     public override dispose(): void
     {
         super.dispose();
-        this.target.RemovePropertyChangedListener(this.key, this.callback);
+        this.subscription?.dispose();
+        this.subscription = undefined;
     }
 }
 

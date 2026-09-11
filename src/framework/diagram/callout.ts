@@ -1,4 +1,4 @@
-﻿import { MetaData, MuralBase, type PropertyDescriptor } from '../../runtime/index.js';
+﻿import { MetaData, MuralBase, type PropertyDescriptor, type Disposable } from '../../runtime/index.js';
 import { resolveKey } from '../../runtime/model-internals.js';
 import { pathGeometryFromSvgD, type PathGeometry, Point } from '../../visual-engine/index.js';
 import { Figure, registerFigureKind } from './figure.js';
@@ -64,6 +64,7 @@ export class Callout extends TextNode
         Callout, 'LeaderGeometry', undefined, MetaData.None);
 
     private _trackedTarget: ILeaderTarget | undefined = undefined;
+    private _targetSubs: Disposable[] = [];
     private readonly _onTargetMoved = (): void => { this._updateLeader(); };
 
     public get LeaderTargetNode(): ILeaderTarget | undefined
@@ -93,14 +94,10 @@ export class Callout extends TextNode
      *  Detach(child). */
     public DetachLeader(): void
     {
-        const prev = this._trackedTarget;
-        if (prev !== undefined)
+        if (this._trackedTarget !== undefined)
         {
-            for (const name of TARGET_TRACK)
-            {
-                const key = resolveKey(prev, undefined, name);
-                prev.RemovePropertyChangedListener(key, this._onTargetMoved);
-            }
+            for (const sub of this._targetSubs) sub.dispose();
+            this._targetSubs = [];
             this._trackedTarget = undefined;
         }
     }
@@ -133,14 +130,10 @@ export class Callout extends TextNode
     /** (Re)subscribe to the target's geometry DPs so the leader follows it. */
     private _retrackTarget(): void
     {
-        const prev = this._trackedTarget;
-        if (prev !== undefined)
+        if (this._trackedTarget !== undefined)
         {
-            for (const name of TARGET_TRACK)
-            {
-                const key = resolveKey(prev, undefined, name);
-                prev.RemovePropertyChangedListener(key, this._onTargetMoved);
-            }
+            for (const sub of this._targetSubs) sub.dispose();
+            this._targetSubs = [];
         }
 
         const t = this.get_property_value(Callout.LeaderTargetNodeKey);
@@ -150,7 +143,7 @@ export class Callout extends TextNode
             for (const name of TARGET_TRACK)
             {
                 const key = resolveKey(t, undefined, name);
-                t.AddPropertyChangedListener(key, this._onTargetMoved);
+                this._targetSubs.push(t.PropertyChanged(key).subscribe(this._onTargetMoved));
             }
         }
     }

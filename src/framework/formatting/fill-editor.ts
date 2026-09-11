@@ -6,6 +6,7 @@
     Visibility,
     Element, Visual,
     type PropertyDescriptor,
+    type Disposable,
 } from '../../runtime/index.js';
 import { resolveKey } from '../../runtime/model-internals.js';
 import {
@@ -173,10 +174,10 @@ export class FillEditor extends TemplatedControl
     // label/editor 2-column layout. We only touch Visibility from
     // here, so the narrower interface is enough.
     private _opacityRow:     Panel      | undefined;
-    // Listeners for parts inside the swappable body. Drained on every
+    // Subscriptions for parts inside the swappable body. Drained on every
     // body re-apply so we don't leak handlers on the prior body's
     // ColorPickers / Sliders.
-    private _bodyListeners: Array<() => void> = [];
+    private _bodyListeners: Disposable[] = [];
     // Re-seed closures for the body's controls — one per part, each pushing the
     // current mirror-DP value into its control. Run at wire time AND after every
     // external Fill decompose (reseedBody) so the body reflects the CURRENT fill
@@ -184,7 +185,7 @@ export class FillEditor extends TemplatedControl
     // the body template was applied. Without this the pickers/sliders were
     // wired one-way (seed once, listen for user edits) and went stale on reselect.
     private _bodySeeds: Array<() => void> = [];
-    // Tab listeners + opacity listener — installed once at template
+    // Tab + opacity teardown closures — installed once at template
     // apply time. Stored separately so a BodyTemplate swap doesn't
     // tear them down.
     private _persistentListeners: Array<() => void> = [];
@@ -367,10 +368,8 @@ export class FillEditor extends TemplatedControl
                 this.Fill = this.buildFillForVariant();
             };
             const key = resolveKey(s, undefined, 'Value');
-            s.AddPropertyChangedListener(key, handler);
-            this._persistentListeners.push(() => {
-                s.RemovePropertyChangedListener(key, handler);
-            });
+            const sub = s.PropertyChanged(key).subscribe(handler);
+            this._persistentListeners.push(() => sub.dispose());
         }
     }
 
@@ -408,7 +407,7 @@ export class FillEditor extends TemplatedControl
     {
         const host = this._bodyHost;
         if (host === undefined) return;
-        for (const dispose of this._bodyListeners) dispose();
+        for (const sub of this._bodyListeners) sub.dispose();
         this._bodyListeners = [];
         this._bodySeeds = [];
         host.SetChild(undefined);
@@ -467,10 +466,7 @@ export class FillEditor extends TemplatedControl
                 this.Fill = this.buildFillForVariant();
             };
             const key = resolveKey(cp, undefined, 'Color');
-            cp.AddPropertyChangedListener(key, handler);
-            this._bodyListeners.push(() => {
-                cp.RemovePropertyChangedListener(key, handler);
-            });
+            this._bodyListeners.push(cp.PropertyChanged(key).subscribe(handler));
         };
         wireColor('PART_SolidColor',        () => this.SolidColor,        c => { this.SolidColor        = c; });
         wireColor('PART_LinearStart',       () => this.LinearStartColor,  c => { this.LinearStartColor  = c; });
@@ -500,10 +496,7 @@ export class FillEditor extends TemplatedControl
                 this.Fill = this.buildFillForVariant();
             };
             const key = resolveKey(s, undefined, 'Value');
-            s.AddPropertyChangedListener(key, handler);
-            this._bodyListeners.push(() => {
-                s.RemovePropertyChangedListener(key, handler);
-            });
+            this._bodyListeners.push(s.PropertyChanged(key).subscribe(handler));
         };
         wireSlider('PART_LinearAngle',   () => this.LinearAngle,   v => { this.LinearAngle   = v; });
         wireSlider('PART_RadialCenterX', () => this.RadialCenterX, v => { this.RadialCenterX = v; });
@@ -535,10 +528,7 @@ export class FillEditor extends TemplatedControl
                 this.Fill = this.buildFillForVariant();
             };
             const key = resolveKey(kindCombo, undefined, 'SelectedItem');
-            kindCombo.AddPropertyChangedListener(key, handler);
-            this._bodyListeners.push(() => {
-                kindCombo.RemovePropertyChangedListener(key, handler);
-            });
+            this._bodyListeners.push(kindCombo.PropertyChanged(key).subscribe(handler));
         }
 
         const uriBox = find<TextBox>('PART_PictureUri');
@@ -557,10 +547,7 @@ export class FillEditor extends TemplatedControl
                 this.Fill = this.buildFillForVariant();
             };
             const key = resolveKey(uriBox, undefined, 'Text');
-            uriBox.AddPropertyChangedListener(key, handler);
-            this._bodyListeners.push(() => {
-                uriBox.RemovePropertyChangedListener(key, handler);
-            });
+            this._bodyListeners.push(uriBox.PropertyChanged(key).subscribe(handler));
         }
 
         const stretchCombo = find<ComboBox>('PART_PictureStretch');
@@ -584,10 +571,7 @@ export class FillEditor extends TemplatedControl
                 this.Fill = this.buildFillForVariant();
             };
             const key = resolveKey(stretchCombo, undefined, 'SelectedItem');
-            stretchCombo.AddPropertyChangedListener(key, handler);
-            this._bodyListeners.push(() => {
-                stretchCombo.RemovePropertyChangedListener(key, handler);
-            });
+            this._bodyListeners.push(stretchCombo.PropertyChanged(key).subscribe(handler));
         }
     }
 

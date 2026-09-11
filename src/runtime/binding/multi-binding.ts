@@ -3,7 +3,7 @@ import { MetaData } from '../metadata.js';
 import { MuralBase } from '../model.js';
 import type { PropertyKey } from '../model.js';
 import { resolveKey } from '../model-internals.js';
-import type { PropertyChangeCallback } from './effective-value.js';
+import type { Disposable } from '@pragmatic-tech-ai/todl-runtime';
 import type { Visual } from '../../visual-engine/visual.js';
 
 // Watcher MuralBase carrying the converter's combined output. Same pattern
@@ -41,18 +41,15 @@ class MultiBindingImpl extends Binding
     private readonly target:    Visual;
     private readonly paths:     ReadonlyArray<string>;
     private readonly multiConverter: (...values: unknown[]) => unknown;
-    private readonly dcCallback: PropertyChangeCallback;
+    private readonly dcCallback: () => void;
+    private dcSubscription:     Disposable | undefined;
     // Cached at construction — `'DataContext'` resolves on every Visual,
     // and the binding listens to it for its entire lifetime.
     private readonly dataContextKey: PropertyKey<unknown>;
 
-    // For each path, the MuralBase we're currently subscribed to on its
-    // first segment, the callback we installed, and the key we
-    // registered it under. Cleared on every refresh so re-resolution
-    // is idempotent.
-    private currentSources:     (MuralBase | undefined)[];
-    private sourceCallbacks:    (PropertyChangeCallback | undefined)[];
-    private currentSourceKeys:  (PropertyKey<unknown> | undefined)[];
+    // Per-path first-segment change-channel subscriptions. Disposed on every
+    // refresh so re-resolution is idempotent.
+    private sourceSubscriptions: (Disposable | undefined)[];
 
     constructor(
         target:    Visual,
@@ -67,19 +64,18 @@ class MultiBindingImpl extends Binding
         this.paths     = paths;
         this.multiConverter = converter;
         this.dataContextKey = resolveKey(target, undefined, 'DataContext');
-        this.currentSources    = new Array(paths.length).fill(undefined);
-        this.sourceCallbacks   = new Array(paths.length).fill(undefined);
-        this.currentSourceKeys = new Array(paths.length).fill(undefined);
+        this.sourceSubscriptions = new Array(paths.length).fill(undefined);
 
         this.dcCallback = () => this.refresh();
-        target.AddPropertyChangedListener(this.dataContextKey, this.dcCallback);
+        this.dcSubscription = target.PropertyChanged(this.dataContextKey).subscribe(this.dcCallback);
         this.refresh();
     }
 
     public override dispose(): void
     {
         super.dispose();
-        this.target.RemovePropertyChangedListener(this.dataContextKey, this.dcCallback);
+        this.dcSubscription?.dispose();
+        this.dcSubscription = undefined;
         this.unsubscribeAll();
     }
 
@@ -87,16 +83,8 @@ class MultiBindingImpl extends Binding
     {
         for (let i = 0; i < this.paths.length; i++)
         {
-            const src = this.currentSources[i];
-            const cb  = this.sourceCallbacks[i];
-            const key = this.currentSourceKeys[i];
-            if (src !== undefined && cb !== undefined && key !== undefined)
-            {
-                src.RemovePropertyChangedListener(key, cb);
-            }
-            this.currentSources[i]    = undefined;
-            this.sourceCallbacks[i]   = undefined;
-            this.currentSourceKeys[i] = undefined;
+            this.sourceSubscriptions[i]?.dispose();
+            this.sourceSubscriptions[i] = undefined;
         }
     }
 
@@ -122,11 +110,7 @@ class MultiBindingImpl extends Binding
             {
                 const first = firstSegment(path);
                 const key = resolveKey(dc, undefined, first);
-                const cb: PropertyChangeCallback = () => this.recompute();
-                dc.AddPropertyChangedListener(key, cb);
-                this.currentSources[i]    = dc;
-                this.sourceCallbacks[i]   = cb;
-                this.currentSourceKeys[i] = key;
+                this.sourceSubscriptions[i] = dc.PropertyChanged(key).subscribe(() => this.recompute());
             }
         }
 

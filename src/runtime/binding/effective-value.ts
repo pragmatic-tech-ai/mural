@@ -3,15 +3,16 @@ import { isAnimationProhibited, isNotDataBindable } from '../metadata.js';
 import type { MuralBase } from '../model.js';
 import type { PropertyDescriptor } from '../property-descriptor.js';
 import { Validation } from './validation.js';
-import type { PropertyChangeCallback } from '@pragmatic-tech-ai/todl-runtime';
+import { Signal } from '@pragmatic-tech-ai/todl-runtime';
+import type { PropertyChangedEventArgs } from '@pragmatic-tech-ai/todl-runtime';
 
-// The public change callback now lives with `Observable` in
+// The property-change payload now lives with `Observable` in
 // @pragmatic-tech-ai/todl-runtime — its `owner` is typed `Observable`, the common
 // base of a plain Observable source and a MuralBase. Re-exported here so
 // consumers keep importing it from `@pragmatic-tech-ai/mural/runtime`. Treat
 // `owner` as an opaque notifying identity; it is NOT guaranteed to be a
 // `MuralBase`, so do not reach for the DP surface on it.
-export type { PropertyChangeCallback };
+export type { PropertyChangedEventArgs };
 
 // Internal callback used by MuralBase to route invalidation / inheritance.
 // Carries the PropertyDescriptor directly so MuralBase.OnPropertyChanged
@@ -105,10 +106,13 @@ export class EffectiveValueDescriptor
     private has_inherited_value: boolean = false;
 
     private property_descriptor: PropertyDescriptor;
-    private changeListeners: Array<PropertyChangeCallback> = [];
+    // User-facing change channel: consumers subscribe via ChangedSignal() and
+    // own the returned Disposable. Held as a Signal so change notification
+    // rides the runtime's one subscribe/emit primitive.
+    private readonly changed = new Signal<PropertyChangedEventArgs>();
     // Reserved for the owning MuralBase to route every effective-value change
-    // through its virtual OnPropertyChanged hook. Stored separately from
-    // changeListeners so user-facing listener counts stay clean. Carries
+    // through its virtual OnPropertyChanged hook. Stored separately from the
+    // `changed` Signal so user-facing subscriber counts stay clean. Carries
     // the descriptor (not just a name) so cross-class property changes
     // can be dispatched without re-lookup.
     private internal_callback: InternalPropertyChangeCallback | undefined;
@@ -130,9 +134,12 @@ export class EffectiveValueDescriptor
         // properties can be routed without re-lookup; user listeners get
         // the simple property name for ergonomic context.
         this.internal_callback?.(this.owner, this.property_descriptor, old_value, new_value);
-        this.changeListeners.forEach(
-            listener => { listener(this.owner, this.property_descriptor.Name, old_value, new_value); },
-        );
+        this.changed.emit({
+            owner:    this.owner,
+            property: this.property_descriptor.Name,
+            oldValue: old_value,
+            newValue: new_value,
+        });
     }
 
     SetInternalCallback(cb: InternalPropertyChangeCallback): void
@@ -140,18 +147,13 @@ export class EffectiveValueDescriptor
         this.internal_callback = cb;
     }
 
-    AddChangeListener(callback: PropertyChangeCallback): void
+    // The user-facing change channel for this property. Subscribe to observe
+    // effective-value changes; dispose the returned subscription to detach.
+    // Excludes the internal MuralBase routing callback, so subscriberCount
+    // reflects only user-facing listeners.
+    ChangedSignal(): Signal<PropertyChangedEventArgs>
     {
-        this.changeListeners.push(callback);
-    }
-
-    RemoveChangeListener(callback: PropertyChangeCallback): void
-    {
-        const index = this.changeListeners.indexOf(callback);
-        if (index >= 0)
-        {
-            this.changeListeners.splice(index, 1);
-        }
+        return this.changed;
     }
 
     // Reports the effective source. When a CoerceValue callback is

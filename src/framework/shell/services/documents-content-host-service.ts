@@ -4,6 +4,7 @@
     MuralBase,
     ObservableCollection,
     RelayCommand,
+    type Disposable,
     type IServiceProvider,
     type PropertyDescriptor,
 } from '../../../runtime/index.js';
@@ -118,9 +119,9 @@ export class DocumentsContentHostService extends ContentHostService
     public static readonly SaveAllCommandKey = MuralBase.RegisterProperty<ICommand>(
         DocumentsContentHostService, 'SaveAllCommand', undefined as unknown as ICommand, MetaData.None);
 
-    // Per-open-document IsDirty unsubscribe thunks, keyed by document, so the
+    // Per-open-document IsDirty subscriptions, keyed by document, so the
     // aggregation reconciles as the open set changes.
-    private readonly dirtySubs = new Map<IDocument, () => void>();
+    private readonly dirtySubs = new Map<IDocument, Disposable>();
 
     constructor(provider: IServiceProvider)
     {
@@ -313,9 +314,9 @@ export class DocumentsContentHostService extends ContentHostService
     private reconcileDirtySubscriptions(): void
     {
         const open = new Set(this.OpenDocuments);
-        for (const [doc, unsub] of this.dirtySubs)
+        for (const [doc, sub] of this.dirtySubs)
         {
-            if (!open.has(doc)) { unsub(); this.dirtySubs.delete(doc); }
+            if (!open.has(doc)) { sub.dispose(); this.dirtySubs.delete(doc); }
         }
         for (const doc of open)
         {
@@ -327,9 +328,8 @@ export class DocumentsContentHostService extends ContentHostService
             if (doc instanceof MuralBase && findDescriptor(doc.constructor, 'IsDirty') !== undefined)
             {
                 const key = resolveKey(doc, undefined, 'IsDirty');
-                const cb = (): void => this.recomputeDirty();
-                doc.AddPropertyChangedListener(key, cb);
-                this.dirtySubs.set(doc, () => doc.RemovePropertyChangedListener(key, cb));
+                const sub = doc.PropertyChanged(key).subscribe((): void => this.recomputeDirty());
+                this.dirtySubs.set(doc, sub);
             }
         }
         this.recomputeDirty();
@@ -417,7 +417,7 @@ export class DocumentsContentHostService extends ContentHostService
     {
         this.extendedCommandsUnsub?.();
         this.extendedCommandsUnsub = undefined;
-        for (const unsub of this.dirtySubs.values()) unsub();
+        for (const sub of this.dirtySubs.values()) sub.dispose();
         this.dirtySubs.clear();
         super.Dispose();
     }

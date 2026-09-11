@@ -1,5 +1,5 @@
 ﻿import { MuralBase } from '../runtime/model.js';
-import type { Observable } from '../runtime/observable.js';
+import type { Disposable } from '@pragmatic-tech-ai/todl-runtime';
 import type { PropertyDescriptor } from '../runtime/property-descriptor.js';
 import { findDescriptor, propertyValues } from '../runtime/model-internals.js';
 import { inherits } from '../runtime/metadata.js';
@@ -43,7 +43,6 @@ import {
 } from '../runtime/style.js';
 import type {
     EffectiveValueDescriptor,
-    PropertyChangeCallback,
 } from '../runtime/binding/effective-value.js';
 import type { Element, ElementCtor } from './element.js';
 import type { ITriggerHost } from './trigger-host.js';
@@ -57,8 +56,9 @@ import type { ITriggerHost } from './trigger-host.js';
 // approach carried.
 interface WritebackEntry
 {
-    readonly evd:      EffectiveValueDescriptor;
-    readonly listener: PropertyChangeCallback;
+    // The EVD change-channel subscription installed for TwoWay writeback;
+    // disposed in UnapplySetter to detach before the tier slot is cleared.
+    readonly sub: Disposable;
 }
 
 // Friend-interface for the EVD ensure-helper on Visual that
@@ -294,17 +294,13 @@ export class StyleApplicator
             // from being interpreted as a target-driven write and looping.
             const writebackEnabled = binding.mode === BindingMode.TwoWay
                                   || binding.mode === BindingMode.OneWayToSource;
-            let targetListener: PropertyChangeCallback | undefined;
+            let targetSub: Disposable | undefined;
             if (writebackEnabled)
             {
-                targetListener = (
-                    _owner: Observable, _propertyName: string,
-                    _oldValue: unknown, newValue: unknown,
-                ): void => {
+                targetSub = evd.ChangedSignal().subscribe(({ newValue }): void => {
                     if (suppressTargetListener) return;
                     binding.set_value(newValue);
-                };
-                evd.AddChangeListener(targetListener);
+                });
             }
 
             const bindings = tier === SetterTier.Style
@@ -316,12 +312,12 @@ export class StyleApplicator
             // Symbol-keyed slot, which silently clobbered when the same
             // Setter's Binding was reused across tiers. Per-tier keying
             // makes the per-tier storage explicit.
-            if (targetListener !== undefined)
+            if (targetSub !== undefined)
             {
                 const writeback = tier === SetterTier.Style
                     ? (this._styleSetterWriteback   ??= new Map())
                     : (this._triggerSetterWriteback ??= new Map());
-                writeback.set(setter, { evd, listener: targetListener });
+                writeback.set(setter, { sub: targetSub });
             }
         }
         else
@@ -355,7 +351,7 @@ export class StyleApplicator
             const wb = writeback?.get(setter);
             if (wb !== undefined)
             {
-                wb.evd.RemoveChangeListener(wb.listener);
+                wb.sub.dispose();
                 writeback?.delete(setter);
             }
         }

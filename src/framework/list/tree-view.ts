@@ -267,7 +267,7 @@ export class TreeView extends Selector
         // post-ctor) must re-materialize the root panel. Re-assigning a FRESH
         // factory forces ItemsControl to tear down the old panel and build the
         // new (virtualizing ⇄ plain) kind.
-        this.AddPropertyChangedListener(TreeView.IsVirtualizingKey, () => {
+        this.PropertyChanged(TreeView.IsVirtualizingKey).subscribe(() => {
             this.ItemsPanel = () => this.createRootPanel();
         });
         // Hierarchical trees use Extended-mode semantics by default

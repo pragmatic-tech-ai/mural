@@ -3,7 +3,7 @@ import { MetaData } from '../metadata.js';
 import { MuralBase } from '../model.js';
 import type { PropertyKey } from '../model.js';
 import { resolveKey } from '../model-internals.js';
-import type { PropertyChangeCallback } from './effective-value.js';
+import type { Disposable } from '@pragmatic-tech-ai/todl-runtime';
 import type { Visual } from '../../visual-engine/visual.js';
 
 // Internal MuralBase that holds the converter's combined output. Same shape
@@ -47,10 +47,12 @@ class MultiTemplateBindingImpl extends Binding
     private readonly watcher:         MultiTemplatedParentWatcher;
     private readonly templatedParent: Visual;
     private readonly combine:         (...values: unknown[]) => unknown;
-    private readonly callback:        PropertyChangeCallback;
-    // Resolved per source property at construction; listener add (in
-    // ctor) and remove (in dispose) both use these cached keys. Saves a
-    // class-hierarchy walk per property change.
+    private readonly callback:        () => void;
+    // One change-channel subscription per watched property; disposed on
+    // teardown.
+    private readonly subscriptions:   Disposable[] = [];
+    // Resolved per source property at construction; used to install the
+    // per-property subscriptions and to re-read all N values on recompute.
     private readonly keys:            readonly PropertyKey<unknown>[];
 
     constructor(
@@ -72,7 +74,7 @@ class MultiTemplateBindingImpl extends Binding
         this.callback = () => this.recompute();
         for (const key of this.keys)
         {
-            templatedParent.AddPropertyChangedListener(key, this.callback);
+            this.subscriptions.push(templatedParent.PropertyChanged(key).subscribe(this.callback));
         }
         // Initial value — same eager-fill pattern TemplateBinding uses
         // so consumers see the converted result before the first source
@@ -89,10 +91,11 @@ class MultiTemplateBindingImpl extends Binding
     public override dispose(): void
     {
         super.dispose();
-        for (const key of this.keys)
+        for (const sub of this.subscriptions)
         {
-            this.templatedParent.RemovePropertyChangedListener(key, this.callback);
+            sub.dispose();
         }
+        this.subscriptions.length = 0;
     }
 }
 

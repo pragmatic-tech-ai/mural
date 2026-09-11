@@ -1,5 +1,6 @@
 ﻿import {
     type CollectionChange,
+    type Disposable,
     type MuralBase,
     type Visual,
     Panel,
@@ -165,14 +166,12 @@ export class DiagramConnectorsMaterializer
         const connector = visual;
         const onCaps = (): void => this._syncCaps(item, connector);
         const onZ    = (): void => this._mirrorZToDecor(item);
-        connector.AddPropertyChangedListener(Connector.SourceCapTemplateKey, onCaps);
-        connector.AddPropertyChangedListener(Connector.TargetCapTemplateKey, onCaps);
-        connector.AddPropertyChangedListener(Panel.ZIndexKey, onZ);
-        this._capUnsubs.set(item, () => {
-            connector.RemovePropertyChangedListener(Connector.SourceCapTemplateKey, onCaps);
-            connector.RemovePropertyChangedListener(Connector.TargetCapTemplateKey, onCaps);
-            connector.RemovePropertyChangedListener(Panel.ZIndexKey, onZ);
-        });
+        const subs: Disposable[] = [
+            connector.PropertyChanged(Connector.SourceCapTemplateKey).subscribe(onCaps),
+            connector.PropertyChanged(Connector.TargetCapTemplateKey).subscribe(onCaps),
+            connector.PropertyChanged(Panel.ZIndexKey).subscribe(onZ),
+        ];
+        this._capUnsubs.set(item, () => { for (const s of subs) s.dispose(); });
         this._syncCaps(item, connector);
     }
 

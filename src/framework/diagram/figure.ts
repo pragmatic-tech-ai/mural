@@ -460,9 +460,9 @@ export class Figure extends ContentControl implements ISideEndpointHost
         // Keep live {field} tokens resolved (§ Slice 6) and honour GrowShape
         // auto-fit (§ Slice 7) when the label's text / document / mode change;
         // geometry-driven field refresh rides OnPropertyChanged below.
-        this.Text.AddPropertyChangedListener(ShapeText.DocumentKey, this._onLabelChanged);
-        this.Text.AddPropertyChangedListener(ShapeText.ContentKey,  this._onLabelChanged);
-        this.Text.AddPropertyChangedListener(ShapeText.AutoFitKey,  this._onLabelChanged);
+        this.Text.PropertyChanged(ShapeText.DocumentKey).subscribe(this._onLabelChanged);
+        this.Text.PropertyChanged(ShapeText.ContentKey).subscribe(this._onLabelChanged);
+        this.Text.PropertyChanged(ShapeText.AutoFitKey).subscribe(this._onLabelChanged);
         this._refreshLabelFields();
         this._applyAutoFit();
     }

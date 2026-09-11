@@ -160,7 +160,7 @@ export class SpinEdit extends TemplatedControl
         // explicitly (Local on the inner TextBox) so a `TextBlock.FontSize=…`
         // on the SpinEdit actually resizes the value text. No-ops until the
         // consumer sets one — the TextBox's own Style default stands.
-        this.AddPropertyChangedListener(TextBlock.FontSizeKey, () => {
+        this.PropertyChanged(TextBlock.FontSizeKey).subscribe(() => {
             this._textBox.FontSize = this.get_property_value(TextBlock.FontSizeKey) as number;
         });
 
@@ -192,8 +192,8 @@ export class SpinEdit extends TemplatedControl
         {
             this.set_property_value_with_key(SpinEdit._IsEditHoveredPriv, this._textBox.IsMouseOver);
         };
-        this._textBox.AddPropertyChangedListener(Element.IsFocusedKey,   forwardFocus);
-        this._textBox.AddPropertyChangedListener(Element.IsMouseOverKey, forwardHover);
+        this._textBox.PropertyChanged(Element.IsFocusedKey).subscribe(forwardFocus);
+        this._textBox.PropertyChanged(Element.IsMouseOverKey).subscribe(forwardHover);
         forwardFocus();
         forwardHover();
 
@@ -202,25 +202,22 @@ export class SpinEdit extends TemplatedControl
         this.syncTextFromValue();
         // Reformat the display on every Value change — button click,
         // arrow / Page key, programmatic write.
-        this.AddPropertyChangedListener(SpinEdit.ValueKey, () => {
+        this.PropertyChanged(SpinEdit.ValueKey).subscribe(() => {
             this.syncTextFromValue();
         });
-        // Blur commits whatever the user typed. The listener gets
-        // (model, property, oldVal, newVal); we care only about
+        // Blur commits whatever the user typed. We care only about
         // false→true transitions of IsFocused going OUT.
-        this._textBox.AddPropertyChangedListener(Element.IsFocusedKey,
-            (_m, _p, _ov, nv) => {
-                if (nv === false) this.commitText();
-            });
+        this._textBox.PropertyChanged(Element.IsFocusedKey).subscribe(({ newValue }) => {
+            if (newValue === false) this.commitText();
+        });
 
         // ── IsReadOnly forwarding ───────────────────────────────────
         // Match the inner TextBox so the display can't be typed into
         // either. Forwarded on every change (incl. the initial value).
         this._textBox.IsReadOnly = this.IsReadOnly;
-        this.AddPropertyChangedListener(SpinEdit.IsReadOnlyKey,
-            (_m, _p, _ov, nv) => {
-                this._textBox.IsReadOnly = nv as boolean;
-            });
+        this.PropertyChanged(SpinEdit.IsReadOnlyKey).subscribe(({ newValue }) => {
+            this._textBox.IsReadOnly = newValue as boolean;
+        });
     }
 
     // ── Public DPs ─────────────────────────────────────────────────

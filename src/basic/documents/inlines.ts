@@ -1,4 +1,4 @@
-﻿import { MetaData, MuralBase, type PropertyDescriptor, Visual } from '../../runtime/index.js';
+﻿import { MetaData, MuralBase, type PropertyDescriptor, type Disposable, Visual } from '../../runtime/index.js';
 import { FontStyle, FontWeight, ImageSource, Stretch, TextDecorations } from '../../visual-engine/index.js';
 import { Inline, type InlineHost } from './text-element.js';
 import { InlineCollection } from './inline-collection.js';
@@ -130,7 +130,7 @@ export class ImageInline extends Inline
         ImageInline, 'Display', ImageDisplay.Inline, MetaData.None);
 
     // Re-layout when the source's intrinsic size becomes known.
-    private _naturalSizeOff: (() => void) | undefined;
+    private _naturalSizeSub: Disposable | undefined;
 
     constructor(source?: ImageSource, opts?: { width?: number; height?: number; stretch?: Stretch; display?: ImageDisplay })
     {
@@ -177,14 +177,13 @@ export class ImageInline extends Inline
         super.OnPropertyChanged(d, o, n);
         if (d === ImageInline.SourceKey.descriptor)
         {
-            this._naturalSizeOff?.();
-            this._naturalSizeOff = undefined;
+            this._naturalSizeSub?.dispose();
+            this._naturalSizeSub = undefined;
             const src = n as ImageSource | undefined;
             if (src !== undefined)
             {
-                const cb = (): void => this.invalidateTree();
-                src.AddPropertyChangedListener(ImageSource.NaturalSizeKey, cb);
-                this._naturalSizeOff = () => src.RemovePropertyChangedListener(ImageSource.NaturalSizeKey, cb);
+                this._naturalSizeSub = src.PropertyChanged(ImageSource.NaturalSizeKey).subscribe(
+                    () => this.invalidateTree());
             }
         }
     }

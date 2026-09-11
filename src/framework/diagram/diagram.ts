@@ -18,6 +18,7 @@
     hasModifier,
     ModifierKeys,
     type WheelEventArgs,
+    type Disposable,
 } from '../../runtime/index.js';
 import { NodeViewModel } from './node-view-model.js';
 import type { DataTemplate } from '../../basic/templates/data-template.js';
@@ -1884,13 +1885,13 @@ export class Diagram extends Selector implements RigidConnectorDragHost
         };
         feed();
         const scroll = this.ScrollHost;
-        this.AddPropertyChangedListener(Diagram.ZoomKey, feed);
-        scroll?.AddPropertyChangedListener(ScrollViewer.HorizontalOffsetKey, feed);
-        scroll?.AddPropertyChangedListener(ScrollViewer.VerticalOffsetKey, feed);
+        const zoomSub: Disposable = this.PropertyChanged(Diagram.ZoomKey).subscribe(feed);
+        const hOffSub: Disposable | undefined = scroll?.PropertyChanged(ScrollViewer.HorizontalOffsetKey).subscribe(feed);
+        const vOffSub: Disposable | undefined = scroll?.PropertyChanged(ScrollViewer.VerticalOffsetKey).subscribe(feed);
         this._rulerCameraDetach = (): void => {
-            this.RemovePropertyChangedListener(Diagram.ZoomKey, feed);
-            scroll?.RemovePropertyChangedListener(ScrollViewer.HorizontalOffsetKey, feed);
-            scroll?.RemovePropertyChangedListener(ScrollViewer.VerticalOffsetKey, feed);
+            zoomSub.dispose();
+            hOffSub?.dispose();
+            vOffSub?.dispose();
         };
     }
 

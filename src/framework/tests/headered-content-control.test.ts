@@ -59,7 +59,7 @@ describe('HeaderedContentControl — base DPs', () => {
         new Application();
         const p = new Probe();
         let fired = 0;
-        p.AddPropertyChangedListener(HeaderedContentControl.HeaderKey, () => fired++);
+        p.PropertyChanged(HeaderedContentControl.HeaderKey).subscribe(() => fired++);
         p.Header = 'one';
         p.Header = 'two';
         assert.equal(fired, 2);

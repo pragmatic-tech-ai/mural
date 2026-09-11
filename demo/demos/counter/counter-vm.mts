@@ -30,7 +30,7 @@ export class CounterVM extends MuralBase
         this.set_property_value(CounterVM.IncrementKey, inc);
         this.set_property_value(CounterVM.ResetKey,
             new RelayCommand(() => { this.Count = 0; }));
-        this.AddPropertyChangedListener(CounterVM.CountKey, () => {
+        this.PropertyChanged(CounterVM.CountKey).subscribe(() => {
             inc.RaiseCanExecuteChanged();
         });
     }

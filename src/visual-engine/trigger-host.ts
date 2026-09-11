@@ -94,9 +94,9 @@ export class TriggerHost implements ITriggerHost
             this.applyTransition(trigger, matched, isInitial);
         };
         const onChange = (): void => { evaluate(false); };
-        target.AddPropertyChangedListener(key, onChange);
+        const sub = target.PropertyChanged(key).subscribe(onChange);
         (this._triggerSubscriptions ??= new Map()).set(trigger, () => {
-            target.RemovePropertyChangedListener(key, onChange);
+            sub.dispose();
         });
         evaluate(true);
     }
@@ -120,8 +120,8 @@ export class TriggerHost implements ITriggerHost
         const unsubs: Array<() => void> = [];
         for (const key of keys)
         {
-            target.AddPropertyChangedListener(key, onChange);
-            unsubs.push(() => { target.RemovePropertyChangedListener(key, onChange); });
+            const sub = target.PropertyChanged(key).subscribe(onChange);
+            unsubs.push(() => { sub.dispose(); });
         }
         (this._triggerSubscriptions ??= new Map()).set(trigger, () => { for (const u of unsubs) u(); });
         evaluate(true);

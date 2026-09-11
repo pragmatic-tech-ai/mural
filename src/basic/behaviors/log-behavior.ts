@@ -2,8 +2,7 @@
     Behavior,
     MetaData,
     MuralBase,
-    type PropertyChangeCallback,
-    type PropertyKey,
+    type Disposable,
     type Visual,
 } from '../../runtime/index.js';
 import { resolveKey } from '../../runtime/model-internals.js';
@@ -45,19 +44,16 @@ export class LogBehavior extends Behavior
     public get Tag():  string | undefined { return this.get_property_value(LogBehavior.TagKey); }
     public set Tag(v: string | undefined) { this.set_property_value(LogBehavior.TagKey, v); }
 
-    private _host:     Visual | undefined;
-    private _callback: PropertyChangeCallback | undefined;
-    private _key:      PropertyKey<unknown> | undefined;
+    private _sub: Disposable | undefined;
 
     public override OnAttached(visual: Visual): void
     {
         const prop = this.Property;
         if (prop === undefined || prop.length === 0) return;
-        this._host = visual;
-        this._key  = resolveKey(visual, undefined, prop);
+        const key       = resolveKey(visual, undefined, prop);
         const tag       = this.Tag !== undefined ? `${this.Tag} ` : '';
         const className = visual.constructor.name;
-        const cb: PropertyChangeCallback = (_m, _name, oldValue, newValue) =>
+        this._sub = visual.PropertyChanged(key).subscribe(({ oldValue, newValue }) =>
         {
             // Stringify carefully — DPs hold Visuals, Brushes, etc. that
             // print awkwardly when concatenated. For primitives a plain
@@ -66,22 +62,13 @@ export class LogBehavior extends Behavior
             console.log(
                 `[LogBehavior ${tag}]${className}.${prop}: ${formatValue(oldValue)} → ${formatValue(newValue)}`,
             );
-        };
-        this._callback = cb;
-        visual.AddPropertyChangedListener(this._key, cb);
+        });
     }
 
     public override OnDetached(_visual: Visual): void
     {
-        if (this._host !== undefined
-            && this._callback !== undefined
-            && this._key !== undefined)
-        {
-            this._host.RemovePropertyChangedListener(this._key, this._callback);
-        }
-        this._host     = undefined;
-        this._callback = undefined;
-        this._key      = undefined;
+        this._sub?.dispose();
+        this._sub = undefined;
     }
 }
 

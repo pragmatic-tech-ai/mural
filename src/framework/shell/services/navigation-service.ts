@@ -131,8 +131,8 @@ export class NavigationService extends ServiceBase
             new RelayCommand(() => { this.SidePaneVisible = !this.SidePaneVisible; }, undefined,
                 { Text: 'Toggle Panel', Description: 'Show or hide the side panel.' }));
         // Keep ActiveService in lock-step with the selection.
-        this.AddPropertyChangedListener(
-            NavigationService.SelectedItemKey, () => this.syncActiveService());
+        this.PropertyChanged(NavigationService.SelectedItemKey).subscribe(
+            () => this.syncActiveService());
     }
 
     public get Items(): ObservableCollection<unknown>

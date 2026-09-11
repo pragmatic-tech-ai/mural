@@ -1,5 +1,6 @@
 ﻿import {
     type CollectionChange,
+    type Disposable,
     type ICommand,
     MetaData,
     MuralBase,
@@ -307,7 +308,9 @@ export class DiagramDocument extends MuralBase implements DiagramMutator, IDocum
     private _syncingFromView = false;
     // The view we're currently mirroring state from — kept so we can detach.
     private _mirrorView: Diagram | undefined;
-    private readonly _onViewMirrorChanged = (): void => this._pullFromView();
+    // Signal subscriptions for the five mirrored view properties — disposed when
+    // the view is swapped out in _rebindViewMirror.
+    private _mirrorViewSubs: Disposable[] = [];
 
     // The view whose ContainerBound signal we're subscribed to (kept so we can
     // detach on ActiveView change). When a Figure container binds to a content
@@ -342,15 +345,15 @@ export class DiagramDocument extends MuralBase implements DiagramMutator, IDocum
         // Fill/Stroke tracking _wireNodeDirty does for a geometric Figure).
         const keys = (['Left', 'Top', 'Width', 'Height', 'Rotation', 'Fill', 'Stroke'] as const)
             .map(n => resolveKey(container, undefined, n));
-        for (const k of keys) container.AddPropertyChangedListener(k, onEdited);
+        const keySubs = keys.map(k => container.PropertyChanged(k).subscribe(onEdited));
         // In-place Stroke-pen tracking, rewired on a Stroke reference swap.
         let offPen = this._wirePenDirty(container.Stroke, onEdited);
         const strokeKey = resolveKey(container, undefined, 'Stroke');
         const rewirePen = (): void => { offPen(); offPen = this._wirePenDirty(container.Stroke, onEdited); };
-        container.AddPropertyChangedListener(strokeKey, rewirePen);
+        const strokeSub = container.PropertyChanged(strokeKey).subscribe(rewirePen);
         this._containerDirtyTeardown.set(item, () => {
-            for (const k of keys) container.RemovePropertyChangedListener(k, onEdited);
-            container.RemovePropertyChangedListener(strokeKey, rewirePen);
+            for (const sub of keySubs) sub.dispose();
+            strokeSub.dispose();
             offPen();
         });
     }
@@ -516,14 +519,14 @@ export class DiagramDocument extends MuralBase implements DiagramMutator, IDocum
         const names = (['Left', 'Top', 'Width', 'Height', 'Fill', 'Stroke'] as const)
             .filter(n => MuralBase.HasProperty(ctor, n));
         const keys = names.map(n => resolveKey(node, undefined, n));
-        for (const k of keys) node.AddPropertyChangedListener(k, onEdited);
+        const keySubs = keys.map(k => node.PropertyChanged(k).subscribe(onEdited));
 
         // A content VM (an arch node) carries no Fill/Stroke/geometry of its own —
         // its persisted style lives in its own DPs (e.g. the label text style). The
         // standard keys above find nothing to watch on it, so let a node declare
         // the extra style keys whose edit should dirty the document.
         const extraKeys = (node as { DirtyStyleKeys?: () => PropertyKey<unknown>[] }).DirtyStyleKeys?.() ?? [];
-        for (const k of extraKeys) node.AddPropertyChangedListener(k, onEdited);
+        const extraSubs = extraKeys.map(k => node.PropertyChanged(k).subscribe(onEdited));
 
         // In-place Stroke-pen tracking, rewired on a Stroke reference swap.
         const strokeHost = node as { Stroke?: Pen };
@@ -531,12 +534,12 @@ export class DiagramDocument extends MuralBase implements DiagramMutator, IDocum
         const rewirePen = (): void => { offPen(); offPen = this._wirePenDirty(strokeHost.Stroke, onEdited); };
         const hasStroke = MuralBase.HasProperty(ctor, 'Stroke');
         const strokeKey = hasStroke ? resolveKey(node, undefined, 'Stroke') : undefined;
-        if (strokeKey !== undefined) node.AddPropertyChangedListener(strokeKey, rewirePen);
+        const strokeSub = strokeKey !== undefined ? node.PropertyChanged(strokeKey).subscribe(rewirePen) : undefined;
 
         return () => {
-            for (const k of keys) node.RemovePropertyChangedListener(k, onEdited);
-            for (const k of extraKeys) node.RemovePropertyChangedListener(k, onEdited);
-            if (strokeKey !== undefined) node.RemovePropertyChangedListener(strokeKey, rewirePen);
+            for (const sub of keySubs) sub.dispose();
+            for (const sub of extraSubs) sub.dispose();
+            strokeSub?.dispose();
             offPen();
             // Content-VM nodes also carry a container-geometry dirty listener
             // (wired in _onContainerBound) — drop it when the node is removed.
@@ -548,11 +551,11 @@ export class DiagramDocument extends MuralBase implements DiagramMutator, IDocum
     private _wirePenDirty(pen: Pen | undefined, onEdited: () => void): () => void
     {
         if (pen === undefined) return () => {};
-        pen.AddPropertyChangedListener(Pen.BrushKey,     onEdited);
-        pen.AddPropertyChangedListener(Pen.ThicknessKey, onEdited);
+        const brushSub     = pen.PropertyChanged(Pen.BrushKey).subscribe(onEdited);
+        const thicknessSub = pen.PropertyChanged(Pen.ThicknessKey).subscribe(onEdited);
         return () => {
-            pen.RemovePropertyChangedListener(Pen.BrushKey,     onEdited);
-            pen.RemovePropertyChangedListener(Pen.ThicknessKey, onEdited);
+            brushSub.dispose();
+            thicknessSub.dispose();
         };
     }
 
@@ -564,25 +567,25 @@ export class DiagramDocument extends MuralBase implements DiagramMutator, IDocum
     private _wireConnectorDirty(conn: Connector): () => void
     {
         const onEdited = (): void => this._markDirty();
-        conn.AddPropertyChangedListener(Connector.WaypointsKey,   onEdited);
-        conn.AddPropertyChangedListener(Connector.RoutingModeKey, onEdited);
-        conn.AddPropertyChangedListener(Connector.SourceKey,      onEdited);
-        conn.AddPropertyChangedListener(Connector.TargetKey,      onEdited);
+        const waypointsSub   = conn.PropertyChanged(Connector.WaypointsKey).subscribe(onEdited);
+        const routingModeSub = conn.PropertyChanged(Connector.RoutingModeKey).subscribe(onEdited);
+        const sourceSub      = conn.PropertyChanged(Connector.SourceKey).subscribe(onEdited);
+        const targetSub      = conn.PropertyChanged(Connector.TargetKey).subscribe(onEdited);
 
         let offSrc = this._wireEndpointDirty(conn.Source, onEdited);
         let offTgt = this._wireEndpointDirty(conn.Target, onEdited);
         const rewireSrc = (): void => { offSrc(); offSrc = this._wireEndpointDirty(conn.Source, onEdited); };
         const rewireTgt = (): void => { offTgt(); offTgt = this._wireEndpointDirty(conn.Target, onEdited); };
-        conn.AddPropertyChangedListener(Connector.SourceKey, rewireSrc);
-        conn.AddPropertyChangedListener(Connector.TargetKey, rewireTgt);
+        const rewireSrcSub = conn.PropertyChanged(Connector.SourceKey).subscribe(rewireSrc);
+        const rewireTgtSub = conn.PropertyChanged(Connector.TargetKey).subscribe(rewireTgt);
 
         return () => {
-            conn.RemovePropertyChangedListener(Connector.WaypointsKey,   onEdited);
-            conn.RemovePropertyChangedListener(Connector.RoutingModeKey, onEdited);
-            conn.RemovePropertyChangedListener(Connector.SourceKey,      onEdited);
-            conn.RemovePropertyChangedListener(Connector.TargetKey,      onEdited);
-            conn.RemovePropertyChangedListener(Connector.SourceKey,      rewireSrc);
-            conn.RemovePropertyChangedListener(Connector.TargetKey,      rewireTgt);
+            waypointsSub.dispose();
+            routingModeSub.dispose();
+            sourceSub.dispose();
+            targetSub.dispose();
+            rewireSrcSub.dispose();
+            rewireTgtSub.dispose();
             offSrc(); offTgt();
         };
     }
@@ -590,13 +593,12 @@ export class DiagramDocument extends MuralBase implements DiagramMutator, IDocum
     private _wireEndpointDirty(ep: ConnectorEndpoint | undefined, onEdited: () => void): () => void
     {
         if (ep === undefined) return () => {};
-        const keys = [
-            ConnectorEndpoint.NodeKey,
-            ConnectorEndpoint.FreePointKey,
-            ConnectorEndpoint.PortNameKey,
+        const subs = [
+            ep.PropertyChanged(ConnectorEndpoint.NodeKey).subscribe(onEdited),
+            ep.PropertyChanged(ConnectorEndpoint.FreePointKey).subscribe(onEdited),
+            ep.PropertyChanged(ConnectorEndpoint.PortNameKey).subscribe(onEdited),
         ];
-        for (const k of keys) ep.AddPropertyChangedListener(k, onEdited);
-        return () => { for (const k of keys) ep.RemovePropertyChangedListener(k, onEdited); };
+        return () => { for (const sub of subs) sub.dispose(); };
     }
 
     // ── ICommandTarget surface — the diagram as a command dispatch target ──
@@ -655,24 +657,21 @@ export class DiagramDocument extends MuralBase implements DiagramMutator, IDocum
     // commands clear.
     private _rebindViewMirror(view: Diagram | undefined): void
     {
-        if (this._mirrorView !== undefined)
-        {
-            this._mirrorView.RemovePropertyChangedListener(Diagram.SelectionFontFamilyKey,   this._onViewMirrorChanged);
-            this._mirrorView.RemovePropertyChangedListener(Diagram.SelectionFontSizeKey,     this._onViewMirrorChanged);
-            this._mirrorView.RemovePropertyChangedListener(Diagram.SelectionFontColorHexKey, this._onViewMirrorChanged);
-            this._mirrorView.RemovePropertyChangedListener(Diagram.ConnectorsModePinnedKey,  this._onViewMirrorChanged);
-            this._mirrorView.RemovePropertyChangedListener(Diagram.FormatPainterActiveKey,   this._onViewMirrorChanged);
-        }
+        for (const sub of this._mirrorViewSubs) sub.dispose();
+        this._mirrorViewSubs = [];
         this._mirrorView = view;
         this.set_property_value(DiagramDocument.IncreaseFontSizeCommandKey, view?.IncreaseFontSizeCommand);
         this.set_property_value(DiagramDocument.DecreaseFontSizeCommandKey, view?.DecreaseFontSizeCommand);
         if (view !== undefined)
         {
-            view.AddPropertyChangedListener(Diagram.SelectionFontFamilyKey,   this._onViewMirrorChanged);
-            view.AddPropertyChangedListener(Diagram.SelectionFontSizeKey,     this._onViewMirrorChanged);
-            view.AddPropertyChangedListener(Diagram.SelectionFontColorHexKey, this._onViewMirrorChanged);
-            view.AddPropertyChangedListener(Diagram.ConnectorsModePinnedKey,  this._onViewMirrorChanged);
-            view.AddPropertyChangedListener(Diagram.FormatPainterActiveKey,   this._onViewMirrorChanged);
+            const onChanged = (): void => this._pullFromView();
+            this._mirrorViewSubs = [
+                view.PropertyChanged(Diagram.SelectionFontFamilyKey).subscribe(onChanged),
+                view.PropertyChanged(Diagram.SelectionFontSizeKey).subscribe(onChanged),
+                view.PropertyChanged(Diagram.SelectionFontColorHexKey).subscribe(onChanged),
+                view.PropertyChanged(Diagram.ConnectorsModePinnedKey).subscribe(onChanged),
+                view.PropertyChanged(Diagram.FormatPainterActiveKey).subscribe(onChanged),
+            ];
             this._pullFromView();
         }
     }

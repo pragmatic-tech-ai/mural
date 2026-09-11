@@ -3,6 +3,7 @@
     MuralBase,
     Visibility,
     Element, type PropertyDescriptor,
+    type Disposable,
 } from '../../runtime/index.js';
 import { resolveKey } from '../../runtime/model-internals.js';
 import {
@@ -97,10 +98,10 @@ export class PenEditor extends TemplatedControl
     }
 
     private _syncing = false;
-    // Per-instance listener bound to the current Pen's property
+    // Per-instance subscriptions bound to the current Pen's property
     // changes. Re-installed in seedFromPen so a Pen swap detaches the
-    // listener from the prior Pen and attaches a fresh one.
-    private _penListeners: Array<() => void> = [];
+    // subscription from the prior Pen and attaches a fresh one.
+    private _penListeners: Disposable[] = [];
     private _brushEditor:     FillEditor  | undefined;
     private _thicknessSlider: Slider      | undefined;
     private _thicknessRead:   TextBlock   | undefined;
@@ -113,7 +114,7 @@ export class PenEditor extends TemplatedControl
     // in the row Visibility=Collapsed, the Grid's Auto-sized row height
     // contracts to 0 and the row visually disappears.
     private _miterLabel:      TextBlock   | undefined;
-    private _partListeners: Array<() => void> = [];
+    private _partListeners: Disposable[] = [];
 
     constructor()
     {
@@ -162,10 +163,7 @@ export class PenEditor extends TemplatedControl
                 this.pushToPen('Brush');
             };
             const key = resolveKey(fe, undefined, 'Fill');
-            fe.AddPropertyChangedListener(key, handler);
-            this._partListeners.push(() => {
-                fe.RemovePropertyChangedListener(key, handler);
-            });
+            this._partListeners.push(fe.PropertyChanged(key).subscribe(handler));
         }
 
         const wireSlider = (
@@ -188,10 +186,7 @@ export class PenEditor extends TemplatedControl
                 pushPen();
             };
             const key = resolveKey(slider, undefined, 'Value');
-            slider.AddPropertyChangedListener(key, handler);
-            this._partListeners.push(() => {
-                slider.RemovePropertyChangedListener(key, handler);
-            });
+            this._partListeners.push(slider.PropertyChanged(key).subscribe(handler));
         };
 
         wireSlider(
@@ -228,10 +223,7 @@ export class PenEditor extends TemplatedControl
                 pushPen();
             };
             const key = resolveKey(combo, undefined, 'SelectedItem');
-            combo.AddPropertyChangedListener(key, handler);
-            this._partListeners.push(() => {
-                combo.RemovePropertyChangedListener(key, handler);
-            });
+            this._partListeners.push(combo.PropertyChanged(key).subscribe(handler));
         };
 
         wireOptionCombo(
@@ -406,10 +398,7 @@ export class PenEditor extends TemplatedControl
                 finally { this._syncing = false; }
             };
             const key = resolveKey(pen, undefined, prop);
-            pen.AddPropertyChangedListener(key, handler);
-            this._penListeners.push(() => {
-                pen.RemovePropertyChangedListener(key, handler);
-            });
+            this._penListeners.push(pen.PropertyChanged(key).subscribe(handler));
         };
         wire('Brush',      () => { this.Brush      = pen.Brush; });
         wire('Thickness',  () => { this.Thickness  = pen.Thickness; });
@@ -421,7 +410,7 @@ export class PenEditor extends TemplatedControl
 
     private detachPenListeners(): void
     {
-        for (const dispose of this._penListeners) dispose();
+        for (const sub of this._penListeners) sub.dispose();
         this._penListeners = [];
     }
 }

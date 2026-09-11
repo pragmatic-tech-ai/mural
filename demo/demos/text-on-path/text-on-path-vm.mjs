@@ -52,7 +52,7 @@ export class TextOnPathVM extends MuralBase {
         // Two-way bridge — when the picker assigns a new
         // SelectedPathOption, mirror its Key onto PathKey so the
         // behavior's PathKey listener wakes up.
-        this.AddPropertyChangedListener(TextOnPathVM.SelectedPathOptionKey, (_m, _p, _o, n) => {
+        this.PropertyChanged(TextOnPathVM.SelectedPathOptionKey).subscribe(({ newValue: n }) => {
             if (n !== undefined) {
                 this.set_property_value(TextOnPathVM.PathKeyKey, n.Key);
             }

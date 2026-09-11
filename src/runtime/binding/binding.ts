@@ -1,4 +1,5 @@
-﻿import type { PropertyChangeCallback } from './effective-value.js';
+﻿import type { PropertyChangedEventArgs } from './effective-value.js';
+import type { Disposable } from '@pragmatic-tech-ai/todl-runtime';
 import { bindsTwoWayByDefault } from '../metadata.js';
 import { MuralBase } from '../model.js';
 import { Observable } from '../observable.js';
@@ -28,9 +29,13 @@ class PropertyPathSegment
     private ownerName: string | undefined;
     private object: MuralBase | undefined;
     private collectionUnsub: (() => void) | undefined;
-    // Cached at attach_and_step time so detach can RemovePropertyChangedListener
-    // against the same key the listener was registered with — without
-    // re-resolving the descriptor through the class-hierarchy walk.
+    // The change-channel subscription for this segment, captured at
+    // attach_and_step time. Disposing it detaches the onChanged handler from
+    // whichever channel the segment subscribed to (MuralBase key OR plain-
+    // Observable name) — no need to re-derive source/key at detach.
+    private subscription: Disposable | undefined;
+    // Cached at attach_and_step time so re-resolution can reuse the same key
+    // without re-walking the class hierarchy for the descriptor.
     private resolvedKey: PropertyKey<unknown> | undefined;
     // Set when the segment is attached to a PLAIN Observable (non-MuralBase)
     // source. A MuralBase source uses the `object`/`resolvedKey` (key) path
@@ -68,6 +73,16 @@ class PropertyPathSegment
     get CollectionUnsub(): (() => void) | undefined
     {
         return this.collectionUnsub;
+    }
+
+    set Subscription(sub: Disposable | undefined)
+    {
+        this.subscription = sub;
+    }
+
+    get Subscription(): Disposable | undefined
+    {
+        return this.subscription;
     }
 
     set ResolvedKey(key: PropertyKey<unknown> | undefined)
@@ -120,7 +135,7 @@ class PropertyPath
 {
     readonly path: string;
     private readonly segments: ReadonlyArray<PropertyPathSegment>;
-    private readonly onChangedBound: PropertyChangeCallback;
+    private readonly onChangedBound: (args: PropertyChangedEventArgs) => void;
     private resolvedValue: any;
     private onValueChanged: ((old_value: any, new_value: any) => void) | undefined;
     // Fires when the resolved-leaf value is a collection (Observable
@@ -322,7 +337,7 @@ class PropertyPath
             {
                 segment.MuralBase = current;
                 segment.ResolvedKey = key;
-                current.AddPropertyChangedListener(key, this.onChangedBound);
+                segment.Subscription = current.PropertyChanged(key).subscribe(this.onChangedBound);
                 return current.get_property_value(key);
             }
             // Not a dependency property — fall through to the plain Observable
@@ -338,7 +353,7 @@ class PropertyPath
             segment.ResolvedKey = undefined;
             segment.ObservableSource = current;
             segment.ObservableName = segment.PropertyName;
-            current.AddPropertyChangedListener(segment.PropertyName, this.onChangedBound);
+            segment.Subscription = current.PropertyChanged(segment.PropertyName).subscribe(this.onChangedBound);
             return (current as unknown as Record<string, unknown>)[segment.PropertyName];
         }
         if (current instanceof ObservableCollection)
@@ -376,17 +391,13 @@ class PropertyPath
             segment.CollectionUnsub = undefined;
             return;
         }
-        // Plain-Observable teardown — mirror the name-based subscribe from
-        // attach_and_step. Mutually exclusive with the MuralBase key path.
-        if (segment.ObservableSource !== undefined && segment.ObservableName !== undefined)
-        {
-            segment.ObservableSource.RemovePropertyChangedListener(segment.ObservableName, this.onChangedBound);
-            segment.ObservableSource = undefined;
-            segment.ObservableName = undefined;
-            return;
-        }
-        if (segment.MuralBase === undefined || segment.ResolvedKey === undefined) return;
-        segment.MuralBase.RemovePropertyChangedListener(segment.ResolvedKey, this.onChangedBound);
+        // Property-change teardown. One Disposable tears down whichever
+        // channel the segment subscribed to — a MuralBase key OR a plain-
+        // Observable name — so no source/key re-derivation is needed here.
+        segment.Subscription?.dispose();
+        segment.Subscription = undefined;
+        segment.ObservableSource = undefined;
+        segment.ObservableName = undefined;
         segment.ResolvedKey = undefined;
     }
 
@@ -471,8 +482,11 @@ class PropertyPath
         }
     }
 
-    OnChanged(model: Observable, property: string, _old_value: any, new_value: any): void
+    OnChanged(args: PropertyChangedEventArgs): void
     {
+        const model = args.owner;
+        const property = args.property;
+        const new_value = args.newValue;
         for (let i = 0; i < this.segments.length; i++)
         {
             const seg_i = this.segments[i];

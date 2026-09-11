@@ -218,7 +218,7 @@ export class TemplatePropertyTrigger
             }
             initial = false;
         };
-        source.AddPropertyChangedListener(key, evaluate);
+        source.PropertyChanged(key).subscribe(evaluate);
         evaluate();
     }
 }

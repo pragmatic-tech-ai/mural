@@ -348,8 +348,7 @@ export class DiagramSettings
             svc.Contribute(DiagramSettings.Definitions());
             for (const key of ALL_KEYS)
             {
-                svc.GetSetting(key)?.AddPropertyChangedListener(
-                    Setting.ValueKey, DiagramSettings._emit);
+                svc.GetSetting(key)?.PropertyChanged(Setting.ValueKey).subscribe(DiagramSettings._emit);
             }
         }
         return svc;

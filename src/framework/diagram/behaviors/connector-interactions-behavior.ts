@@ -11,6 +11,7 @@
     type ObservableCollection,
     type CollectionChange,
     type MuralBase,
+    type Disposable,
     hasModifier,
     ModifierKeys,
 } from '../../../runtime/index.js';
@@ -986,6 +987,7 @@ export function attachConnectorInteractions(diagram: Diagram): () => void
     // state.hoveredFigure so detach can run after state has already
     // been cleared.
     let subscribedHoverFigure: Figure | undefined = undefined;
+    let hoverFigureSubs: Disposable[] = [];
     const onHoveredFigureGeometryChanged = (): void => {
         sideAdornerVisual?.InvalidateArrange();
     };
@@ -993,19 +995,19 @@ export function attachConnectorInteractions(diagram: Diagram): () => void
         if (subscribedHoverFigure === next) return;
         if (subscribedHoverFigure !== undefined)
         {
-            subscribedHoverFigure.RemovePropertyChangedListener(Figure.LeftKey,   onHoveredFigureGeometryChanged);
-            subscribedHoverFigure.RemovePropertyChangedListener(Figure.TopKey,    onHoveredFigureGeometryChanged);
-            subscribedHoverFigure.RemovePropertyChangedListener(Visual.WidthKey,  onHoveredFigureGeometryChanged);
-            subscribedHoverFigure.RemovePropertyChangedListener(Visual.HeightKey, onHoveredFigureGeometryChanged);
+            for (const s of hoverFigureSubs) s.dispose();
+            hoverFigureSubs = [];
             subscribedHoverFigure.RemoveSideEndpointsChangedListener(onHoveredFigureGeometryChanged);
         }
         subscribedHoverFigure = next;
         if (next !== undefined)
         {
-            next.AddPropertyChangedListener(Figure.LeftKey,   onHoveredFigureGeometryChanged);
-            next.AddPropertyChangedListener(Figure.TopKey,    onHoveredFigureGeometryChanged);
-            next.AddPropertyChangedListener(Visual.WidthKey,  onHoveredFigureGeometryChanged);
-            next.AddPropertyChangedListener(Visual.HeightKey, onHoveredFigureGeometryChanged);
+            hoverFigureSubs = [
+                next.PropertyChanged(Figure.LeftKey).subscribe(onHoveredFigureGeometryChanged),
+                next.PropertyChanged(Figure.TopKey).subscribe(onHoveredFigureGeometryChanged),
+                next.PropertyChanged(Visual.WidthKey).subscribe(onHoveredFigureGeometryChanged),
+                next.PropertyChanged(Visual.HeightKey).subscribe(onHoveredFigureGeometryChanged),
+            ];
             // Re-arrange port markers when a connector registers /
             // unregisters on any side of the hovered figure — the slot
             // count drives the marker count.
@@ -1024,6 +1026,8 @@ export function attachConnectorInteractions(diagram: Diagram): () => void
     //   * Pen.ThicknessKey   — drives the clamp in makeHaloPen.
     let subscribedHoverConnector: Connector | undefined = undefined;
     let subscribedHoverPen:       Pen       | undefined = undefined;
+    let hoverConnectorSubs: Disposable[] = [];
+    let hoverPenSub: Disposable | undefined = undefined;
     const onHoveredConnectorChanged = (): void => {
         // Stroke swap: rebind the thickness listener against the new pen.
         const conn = subscribedHoverConnector;
@@ -1032,14 +1036,12 @@ export function attachConnectorInteractions(diagram: Diagram): () => void
             const nextPen = conn.Stroke;
             if (nextPen !== subscribedHoverPen)
             {
-                if (subscribedHoverPen !== undefined)
-                {
-                    subscribedHoverPen.RemovePropertyChangedListener(Pen.ThicknessKey, onHoveredConnectorChanged);
-                }
+                hoverPenSub?.dispose();
+                hoverPenSub = undefined;
                 subscribedHoverPen = nextPen;
                 if (subscribedHoverPen !== undefined)
                 {
-                    subscribedHoverPen.AddPropertyChangedListener(Pen.ThicknessKey, onHoveredConnectorChanged);
+                    hoverPenSub = subscribedHoverPen.PropertyChanged(Pen.ThicknessKey).subscribe(onHoveredConnectorChanged);
                 }
             }
         }
@@ -1052,23 +1054,23 @@ export function attachConnectorInteractions(diagram: Diagram): () => void
         if (subscribedHoverConnector === next) return;
         if (subscribedHoverConnector !== undefined)
         {
-            subscribedHoverConnector.RemovePropertyChangedListener(Shape.GeometryKey, onHoveredConnectorChanged);
-            subscribedHoverConnector.RemovePropertyChangedListener(Visual.StrokeKey,   onHoveredConnectorChanged);
-            if (subscribedHoverPen !== undefined)
-            {
-                subscribedHoverPen.RemovePropertyChangedListener(Pen.ThicknessKey, onHoveredConnectorChanged);
-                subscribedHoverPen = undefined;
-            }
+            for (const s of hoverConnectorSubs) s.dispose();
+            hoverConnectorSubs = [];
+            hoverPenSub?.dispose();
+            hoverPenSub = undefined;
+            subscribedHoverPen = undefined;
         }
         subscribedHoverConnector = next;
         if (next !== undefined)
         {
-            next.AddPropertyChangedListener(Shape.GeometryKey, onHoveredConnectorChanged);
-            next.AddPropertyChangedListener(Visual.StrokeKey,   onHoveredConnectorChanged);
+            hoverConnectorSubs = [
+                next.PropertyChanged(Shape.GeometryKey).subscribe(onHoveredConnectorChanged),
+                next.PropertyChanged(Visual.StrokeKey).subscribe(onHoveredConnectorChanged),
+            ];
             subscribedHoverPen = next.Stroke;
             if (subscribedHoverPen !== undefined)
             {
-                subscribedHoverPen.AddPropertyChangedListener(Pen.ThicknessKey, onHoveredConnectorChanged);
+                hoverPenSub = subscribedHoverPen.PropertyChanged(Pen.ThicknessKey).subscribe(onHoveredConnectorChanged);
             }
         }
     };

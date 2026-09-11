@@ -249,7 +249,7 @@ export class ScrollViewer extends ContentControl
             if (this._hScrollBar !== undefined) this._hScrollBar.IsAutoHide = v;
         };
         applyAutoHide();
-        this.AddPropertyChangedListener(ScrollViewer.IsAutoHideScrollBarsKey, applyAutoHide);
+        this.PropertyChanged(ScrollViewer.IsAutoHideScrollBarsKey).subscribe(applyAutoHide);
 
         // VSCode hover-to-show: while the pointer is anywhere over the scroll
         // region (IsMouseOver is true for the viewer when a descendant is
@@ -260,7 +260,7 @@ export class ScrollViewer extends ContentControl
             this._vScrollBar?.SetRegionActive(hovered);
             this._hScrollBar?.SetRegionActive(hovered);
         };
-        this.AddPropertyChangedListener(Element.IsMouseOverKey, forwardRegionHover);
+        this.PropertyChanged(Element.IsMouseOverKey).subscribe(forwardRegionHover);
     }
 
     public get IsAutoHideScrollBars(): boolean { return this.get_property_value(ScrollViewer.IsAutoHideScrollBarsKey); }

@@ -439,8 +439,8 @@ describe('ContentControl + ControlTemplate', () => {
         // Has() calls would find.
         const a = new Leaf();
         const b = new Leaf();
-        a.AddPropertyChangedListener(resolveKey(a, undefined, 'Tint'), () => {});  // keep `a` referenced
-        b.AddPropertyChangedListener(resolveKey(b, undefined, 'Tint'), () => {});
+        a.PropertyChanged(resolveKey(a, undefined, 'Tint')).subscribe(() => {});  // keep `a` referenced
+        b.PropertyChanged(resolveKey(b, undefined, 'Tint')).subscribe(() => {});
         // TryFindResource walks past `a` (which has no logical parent),
         // returns undefined. No allocation should have happened.
         assert.equal(a.TryFindResource('K'), undefined);

@@ -138,13 +138,13 @@ function attachBehaviors(view, vm) {
         [TextOnPathVM.PathColorHexKey,  updatePathColor],
         [TextOnPathVM.GlyphColorHexKey, updateGlyphColor],
     ];
-    for (const [key, h] of subs) vm.AddPropertyChangedListener(key, h);
+    const subDisposers = subs.map(([key, h]) => vm.PropertyChanged(key).subscribe(h));
 
     // Initial paint.
     updateBoth();
 
     return function detach() {
-        for (const [key, h] of subs) vm.RemovePropertyChangedListener(key, h);
+        for (const d of subDisposers) d.dispose();
         canvas.RemoveChild(pathView);
         canvas.RemoveChild(glyphView);
     };

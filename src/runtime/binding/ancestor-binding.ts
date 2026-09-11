@@ -1,9 +1,8 @@
 ﻿import { Binding, BindingMode } from './binding.js';
 import { MetaData } from '../metadata.js';
 import { MuralBase } from '../model.js';
-import type { PropertyKey } from '../model.js';
 import { resolveKey } from '../model-internals.js';
-import type { PropertyChangeCallback } from './effective-value.js';
+import type { Disposable } from '@pragmatic-tech-ai/todl-runtime';
 import type { Visual } from '../../visual-engine/visual.js';
 
 // Internal watcher MuralBase — same shape as DataContextWatcher /
@@ -33,11 +32,8 @@ class AncestorWatcher extends MuralBase
 class AncestorBindingImpl extends Binding
 {
     private readonly watcher:  AncestorWatcher;
-    private readonly ancestor: Visual | undefined;
-    private readonly callback: PropertyChangeCallback | undefined;
-    // Resolved at construction once the ancestor is found; used by both
-    // the change-listener subscription and the dispose-time removal.
-    private readonly key:      PropertyKey<unknown> | undefined;
+    private readonly callback: (() => void) | undefined;
+    private subscription:      Disposable | undefined;
 
     constructor(start: Visual, ancestorType: Function, property: string, level: number)
     {
@@ -62,14 +58,12 @@ class AncestorBindingImpl extends Binding
             }
             current = current.GetVisualParent();
         }
-        this.ancestor = found;
 
         if (found === undefined)
         {
             // No matching ancestor — watcher stays at undefined. Consumer
             // can rely on the outer Binding's fallbackValue.
             this.callback = undefined;
-            this.key      = undefined;
             return;
         }
 
@@ -77,24 +71,19 @@ class AncestorBindingImpl extends Binding
         // value. Subscription installs against the same key the
         // dispose-time removal will use.
         const key = resolveKey(found, undefined, property);
-        this.key      = key;
         this.callback = () =>
         {
             this.watcher.Value = found.get_property_value(key);
         };
-        found.AddPropertyChangedListener(key, this.callback);
+        this.subscription = found.PropertyChanged(key).subscribe(this.callback);
         this.watcher.Value = found.get_property_value(key);
     }
 
     public override dispose(): void
     {
         super.dispose();
-        if (this.ancestor !== undefined
-            && this.callback !== undefined
-            && this.key !== undefined)
-        {
-            this.ancestor.RemovePropertyChangedListener(this.key, this.callback);
-        }
+        this.subscription?.dispose();
+        this.subscription = undefined;
     }
 }
 

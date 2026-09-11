@@ -1,4 +1,4 @@
-import { Point, Rect, Size, AlignmentAxis, type Visual, type PersistentGuide } from '../../../runtime/index.js';
+import { Point, Rect, Size, AlignmentAxis, type Visual, type PersistentGuide, type Disposable } from '../../../runtime/index.js';
 import { Adorner } from '../../../visual-engine/index.js';
 import { Border } from '../../../basic/index.js';
 import { Diagram } from '../diagram.js';
@@ -22,6 +22,9 @@ export class PersistentGuidesAdorner extends Adorner
     private readonly _pool:    Border[] = [];
     private readonly _preview: Border;
     private readonly _onChange: () => void;
+    private readonly _guidesSub:       Disposable;
+    private readonly _selectedGuideSub: Disposable;
+    private readonly _guidePreviewSub:  Disposable;
 
     constructor(adornedElement: Visual, diagram: Diagram)
     {
@@ -44,9 +47,9 @@ export class PersistentGuidesAdorner extends Adorner
         this._preview.Opacity = PREVIEW_OPACITY;
         this.AttachVisual(this._preview);
         this._onChange = (): void => this.InvalidateArrange();
-        diagram.AddPropertyChangedListener(Diagram.GuidesKey, this._onChange);
-        diagram.AddPropertyChangedListener(Diagram.SelectedGuideKey, this._onChange);
-        diagram.AddPropertyChangedListener(Diagram.GuidePreviewKey, this._onChange);
+        this._guidesSub        = diagram.PropertyChanged(Diagram.GuidesKey).subscribe(this._onChange);
+        this._selectedGuideSub = diagram.PropertyChanged(Diagram.SelectedGuideKey).subscribe(this._onChange);
+        this._guidePreviewSub  = diagram.PropertyChanged(Diagram.GuidePreviewKey).subscribe(this._onChange);
     }
 
     public override get visualChildren(): Visual[] { return [...this._pool, this._preview]; }
@@ -116,8 +119,8 @@ export class PersistentGuidesAdorner extends Adorner
 
     public Dispose(): void
     {
-        this._diagram.RemovePropertyChangedListener(Diagram.GuidesKey, this._onChange);
-        this._diagram.RemovePropertyChangedListener(Diagram.SelectedGuideKey, this._onChange);
-        this._diagram.RemovePropertyChangedListener(Diagram.GuidePreviewKey, this._onChange);
+        this._guidesSub.dispose();
+        this._selectedGuideSub.dispose();
+        this._guidePreviewSub.dispose();
     }
 }

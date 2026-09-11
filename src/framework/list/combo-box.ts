@@ -476,7 +476,7 @@ export class ComboBox extends Selector
         // push from applyText doesn't loop).
         if (this._editText !== undefined)
         {
-            this._editText.AddPropertyChangedListener(TextBox.TextKey, () =>
+            this._editText.PropertyChanged(TextBox.TextKey).subscribe(() =>
             {
                 if (this._syncingText) return;
                 this._syncingText = true;
@@ -528,7 +528,7 @@ export class ComboBox extends Selector
         // ComboBox pushes onto the selection text (Local, beats the template's
         // own Local size), and the rows copy that same font — so the closed
         // box and the open list always match, controlled by one property.
-        this.AddPropertyChangedListener(TextBlock.FontSizeKey, () => this._forwardValueFont());
+        this.PropertyChanged(TextBlock.FontSizeKey).subscribe(() => this._forwardValueFont());
     }
 
     /** @internal — copy the closed selection's effective font onto a popup

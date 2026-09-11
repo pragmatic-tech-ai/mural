@@ -4,6 +4,7 @@ import {
     Rect,
     Size,
     type Visual,
+    type Disposable,
 } from '../../../runtime/index.js';
 import { Adorner, type Brush } from '../../../visual-engine/index.js';
 import { Border } from '../../../basic/index.js';
@@ -33,6 +34,7 @@ export class AlignmentGuidesAdorner extends Adorner
     private readonly _diagram: Diagram;
     private readonly _pool:    Border[] = [];
     private readonly _onChange: () => void;
+    private _sub: Disposable | undefined;
 
     constructor(adornedElement: Visual, diagram: Diagram)
     {
@@ -60,7 +62,7 @@ export class AlignmentGuidesAdorner extends Adorner
         }
 
         this._onChange = (): void => this.InvalidateArrange();
-        diagram.AddPropertyChangedListener(Diagram.AlignmentGuidesKey, this._onChange);
+        this._sub = diagram.PropertyChanged(Diagram.AlignmentGuidesKey).subscribe(this._onChange);
     }
 
     public override get visualChildren(): Visual[] { return this._pool.slice(); }
@@ -116,6 +118,7 @@ export class AlignmentGuidesAdorner extends Adorner
 
     public Dispose(): void
     {
-        this._diagram.RemovePropertyChangedListener(Diagram.AlignmentGuidesKey, this._onChange);
+        this._sub?.dispose();
+        this._sub = undefined;
     }
 }

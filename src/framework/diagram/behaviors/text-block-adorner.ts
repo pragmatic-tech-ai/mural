@@ -5,6 +5,7 @@ import {
     Rect,
     Size,
     Visual,
+    type Disposable,
 } from '../../../runtime/index.js';
 import { Adorner, Pen, RotateTransform, SolidColorBrush } from '../../../visual-engine/index.js';
 import { Border } from '../../../basic/index.js';
@@ -72,7 +73,8 @@ export class TextBlockAdorner extends Adorner
     // Selection tracking — the single adorned Figure + its ShapeText DP
     // unsubscribes (re-armed when the target changes).
     private _figure: Figure | undefined;
-    private _textUnsubs: Array<() => void> = [];
+    private _textUnsubs: Disposable[] = [];
+    private _diagramSubs: Disposable[] = [];
     private readonly _onChange = (): void => { this._retarget(); this.InvalidateArrange(); };
 
     // Drag state.
@@ -129,7 +131,7 @@ export class TextBlockAdorner extends Adorner
             Diagram.SelectionWidthKey, Diagram.SelectionHeightKey,
         ])
         {
-            this._diagram.AddPropertyChangedListener(k, this._onChange);
+            this._diagramSubs.push(this._diagram.PropertyChanged(k).subscribe(this._onChange));
         }
         this._retarget();
     }
@@ -222,7 +224,7 @@ export class TextBlockAdorner extends Adorner
         const target = count === 1 ? next : undefined;
         if (target === this._figure) return;
 
-        for (const u of this._textUnsubs) u();
+        for (const s of this._textUnsubs) s.dispose();
         this._textUnsubs = [];
         this._figure = target;
         if (target !== undefined)
@@ -234,8 +236,7 @@ export class TextBlockAdorner extends Adorner
             ];
             for (const k of keys)
             {
-                st.AddPropertyChangedListener(k, this._onChange);
-                this._textUnsubs.push((): void => st.RemovePropertyChangedListener(k, this._onChange));
+                this._textUnsubs.push(st.PropertyChanged(k).subscribe(this._onChange));
             }
         }
     }
@@ -319,14 +320,9 @@ export class TextBlockAdorner extends Adorner
     public Dispose(): void
     {
         this._diagram.RemoveSelectionChangedListener(this._onChange);
-        for (const k of [
-            Diagram.SelectionLeftKey, Diagram.SelectionTopKey,
-            Diagram.SelectionWidthKey, Diagram.SelectionHeightKey,
-        ])
-        {
-            this._diagram.RemovePropertyChangedListener(k, this._onChange);
-        }
-        for (const u of this._textUnsubs) u();
+        for (const s of this._diagramSubs) s.dispose();
+        this._diagramSubs = [];
+        for (const s of this._textUnsubs) s.dispose();
         this._textUnsubs = [];
         this._figure = undefined;
     }

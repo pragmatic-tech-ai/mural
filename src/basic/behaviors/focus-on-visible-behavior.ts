@@ -4,7 +4,7 @@
     MuralBase,
     Visibility,
     Visual,
-    type PropertyChangeCallback,
+    type Disposable,
 } from '../../runtime/index.js';
 
 // FocusOnVisibleBehavior — moves keyboard focus to its host the instant the
@@ -54,15 +54,13 @@ export class FocusOnVisibleBehavior extends Behavior
     public set SelectAll(v: boolean) { this.set_property_value(FocusOnVisibleBehavior.SelectAllKey, v); }
 
     private _visual:   Visual | undefined;
-    private _listener: PropertyChangeCallback | undefined;
+    private _sub:      Disposable | undefined;
     private _attached: (() => void) | undefined;
 
     public override OnAttached(visual: Visual): void
     {
         this._visual = visual;
-        const listener: PropertyChangeCallback = () => this.focusIfVisible();
-        this._listener = listener;
-        visual.AddPropertyChangedListener(Visual.VisibilityKey, listener);
+        this._sub = visual.PropertyChanged(Visual.VisibilityKey).subscribe(() => this.focusIfVisible());
         // Focus on every MOUNT edge — covers the stamped-on-demand editor,
         // whose host has no children and no live target at AddBehavior time.
         // Duck-typed (like SelectAll below) so the behavior stays decoupled from
@@ -81,16 +79,13 @@ export class FocusOnVisibleBehavior extends Behavior
 
     public override OnDetached(visual: Visual): void
     {
-        if (this._listener !== undefined)
-        {
-            visual.RemovePropertyChangedListener(Visual.VisibilityKey, this._listener);
-        }
+        this._sub?.dispose();
         const el = visual as unknown as ElementAttachSurface;
         if (this._attached !== undefined && typeof el.RemoveAttachedListener === 'function')
         {
             el.RemoveAttachedListener(this._attached);
         }
-        this._listener = undefined;
+        this._sub      = undefined;
         this._attached = undefined;
         this._visual   = undefined;
     }

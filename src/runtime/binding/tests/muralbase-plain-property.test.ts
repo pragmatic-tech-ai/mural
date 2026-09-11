@@ -47,7 +47,7 @@ describe('Binding reads plain properties on a MuralBase source', () => {
         const tb = new TextBlock();
         let pushes = 0;
         let lastText: unknown;
-        tb.AddPropertyChangedListener(resolveKey(tb, undefined, 'Text'), (_o, _p, _old, n) => { pushes++; lastText = n; });
+        tb.PropertyChanged(resolveKey(tb, undefined, 'Text')).subscribe(({ newValue }) => { pushes++; lastText = newValue; });
         tb.set_property_value(resolveKey(tb, undefined, 'Text'), new Binding(vm as unknown as never, 'label'));
 
         assert.equal(tb.Text, 'start');
@@ -61,7 +61,7 @@ describe('Binding reads plain properties on a MuralBase source', () => {
     test('two-way: a target-side edit writes back through the plain setter', () => {
         const vm = new MbVM('start', 't');
         const changes: Array<[unknown, unknown]> = [];
-        vm.AddPropertyChangedListener('label', (_o, _p, o, n) => { changes.push([o, n]); });
+        vm.PropertyChanged('label').subscribe(({ oldValue, newValue }) => { changes.push([oldValue, newValue]); });
 
         const tb = new TextBlock();
         tb.set_property_value(resolveKey(tb, undefined, 'Text'), new Binding(vm as unknown as never, 'label', BindingMode.TwoWay));
@@ -89,10 +89,10 @@ describe('Binding reads plain properties on a MuralBase source', () => {
     test('AddPropertyChangedListener on a plain name no longer throws (falls back to Observable INPC)', () => {
         const vm = new MbVM('start', 't');
         let seen: unknown;
-        assert.doesNotThrow(() => vm.AddPropertyChangedListener('label', (_o, _p, _old, n) => { seen = n; }));
+        const sub = vm.PropertyChanged('label').subscribe(({ newValue }) => { seen = newValue; });
         vm.label = 'x';
         assert.equal(seen, 'x');
-        vm.RemovePropertyChangedListener('label', () => {});   // wrong cb → no-op, must not throw
+        sub.dispose();
     });
 });
 

@@ -4,6 +4,7 @@
     MuralBase,
     Rect,
     Size,
+    type Disposable,
     type PointerEventArgs,
     type PropertyDescriptor,
 } from '../../runtime/index.js';
@@ -251,7 +252,7 @@ export class Connector extends Shape
     // → re-sync so filled caps (bound to $Brush) recolour too. In-place
     // brush-COLOUR mutation needs nothing here: the cap's Fill IS that
     // same brush instance, and Shape's own fill listener repaints it.
-    private _trackedCapPen: Pen | undefined = undefined;
+    private _capStrokeBrushSub: Disposable | undefined = undefined;
     private readonly _onCapStrokeBrushChanged = (): void => { this._resyncCapContexts(); };
 
     // Last resolved anchors from _scheduleRecompute. Edit-mode handle
@@ -289,14 +290,10 @@ export class Connector extends Shape
     // route stops a hair short of the glyphs rather than kissing them.
     private static readonly LabelGapMargin = 3;
 
-    // Tracked previous endpoint references so OnPropertyChanged can
-    // detach listeners from the OLD endpoint before re-attaching to
-    // the NEW one. _trackedSourceNode / _trackedTargetNode play the
-    // same role for the inner Node DP.
+    // Tracked previous endpoint references so OnPropertyChanged can detach
+    // listeners from the OLD endpoint before re-attaching to the NEW one.
     private _trackedSource:     ConnectorEndpoint | undefined = undefined;
     private _trackedTarget:     ConnectorEndpoint | undefined = undefined;
-    private _trackedSourceNode: MuralBase | undefined = undefined;
-    private _trackedTargetNode: MuralBase | undefined = undefined;
     // Ancestor containers whose Left/Top this connector watches, so a nested
     // endpoint re-routes when an ANCESTOR moves (its own Left/Top don't tick).
     // Refreshed whenever the endpoint node's own Left/Top ticks (reparent writes
@@ -337,8 +334,22 @@ export class Connector extends Shape
     private _labelOffsetY = 0;
     private readonly _onLabelContentChanged = (): void => { this._syncLabelHitTest(); this._placeLabel(); this._applyLabelGap(); this._refreshLabelFields(); };
 
-    // Bound callbacks — required for symmetric Add/Remove on the
-    // MuralBase PropertyChangedListener API.
+    // Stored subscriptions for endpoint, node-move, node-resize, and ancestor
+    // listeners. Each group is disposed when its tracked reference flips and
+    // re-subscribed for the new reference.
+    private _sourceSubs: Disposable[] = [];
+    private _targetSubs: Disposable[] = [];
+    private _sourceNodeMoveSubs: Disposable[] = [];
+    private _sourceNodeResizeSubs: Disposable[] = [];
+    private _targetNodeMoveSubs: Disposable[] = [];
+    private _targetNodeResizeSubs: Disposable[] = [];
+    private _sourceAncestorSubs: Disposable[] = [];
+    private _targetAncestorSubs: Disposable[] = [];
+
+    // Bound handlers — arrow functions kept as class fields so they can be
+    // passed as handler identity is no longer required for detach (the
+    // returned Disposable handles that), but the named fields keep the
+    // readable intent clear.
     private readonly _onSourceEndpointInputChanged = (): void => {
         this._reattachSourceNodeListener();
         this._reregisterSourceSide();
@@ -438,9 +449,9 @@ export class Connector extends Shape
     // plus the content/edit listeners that keep hit-testing + centring honest.
     private _wireLabel(label: ShapeText): void
     {
-        label.AddPropertyChangedListener(ShapeText.ContentKey,   this._onLabelContentChanged);
-        label.AddPropertyChangedListener(ShapeText.DocumentKey,  this._onLabelContentChanged);
-        label.AddPropertyChangedListener(ShapeText.IsEditingKey, this._onLabelContentChanged);
+        label.PropertyChanged(ShapeText.ContentKey).subscribe(this._onLabelContentChanged);
+        label.PropertyChanged(ShapeText.DocumentKey).subscribe(this._onLabelContentChanged);
+        label.PropertyChanged(ShapeText.IsEditingKey).subscribe(this._onLabelContentChanged);
 
         label.AddRoutedEventListener('PointerDown', ((args: PointerEventArgs) => {
             if (args.IsDoubleClick) { label.BeginEdit(); args.Handled = true; return; }
@@ -667,18 +678,13 @@ export class Connector extends Shape
     // Pen first; symmetric with the Shape-level Stroke subscription.
     private _reattachCapStrokeBrushListener(): void
     {
-        const prev = this._trackedCapPen;
-        if (prev !== undefined)
-        {
-            prev.RemovePropertyChangedListener(
-                resolveKey(prev, undefined, 'Brush'), this._onCapStrokeBrushChanged);
-        }
+        this._capStrokeBrushSub?.dispose();
+        this._capStrokeBrushSub = undefined;
         const pen = this.Stroke;
-        this._trackedCapPen = pen;
         if (pen !== undefined)
         {
-            pen.AddPropertyChangedListener(
-                resolveKey(pen, undefined, 'Brush'), this._onCapStrokeBrushChanged);
+            this._capStrokeBrushSub = pen.PropertyChanged(
+                resolveKey(pen, undefined, 'Brush')).subscribe(this._onCapStrokeBrushChanged);
         }
     }
 
@@ -687,48 +693,38 @@ export class Connector extends Shape
     // detaches en masse when the endpoint reference flips.
     private _reattachSourceEndpoint(): void
     {
-        const prev = this._trackedSource;
-        if (prev !== undefined)
-        {
-            prev.RemovePropertyChangedListener(ConnectorEndpoint.NodeKey,      this._onSourceEndpointInputChanged);
-            prev.RemovePropertyChangedListener(ConnectorEndpoint.FreePointKey, this._onSourceEndpointInputChanged);
-            prev.RemovePropertyChangedListener(ConnectorEndpoint.PortNameKey,  this._onSourceEndpointInputChanged);
-            prev.RemovePropertyChangedListener(ConnectorEndpoint.PortSideKey,  this._onSourceEndpointInputChanged);
-            prev.RemovePropertyChangedListener(ConnectorEndpoint.PortIndexKey, this._onSourceEndpointInputChanged);
-        }
+        for (const sub of this._sourceSubs) sub.dispose();
+        this._sourceSubs = [];
         this._trackedSource = this.Source;
         const cur = this._trackedSource;
         if (cur !== undefined)
         {
-            cur.AddPropertyChangedListener(ConnectorEndpoint.NodeKey,      this._onSourceEndpointInputChanged);
-            cur.AddPropertyChangedListener(ConnectorEndpoint.FreePointKey, this._onSourceEndpointInputChanged);
-            cur.AddPropertyChangedListener(ConnectorEndpoint.PortNameKey,  this._onSourceEndpointInputChanged);
-            cur.AddPropertyChangedListener(ConnectorEndpoint.PortSideKey,  this._onSourceEndpointInputChanged);
-            cur.AddPropertyChangedListener(ConnectorEndpoint.PortIndexKey, this._onSourceEndpointInputChanged);
+            this._sourceSubs = [
+                cur.PropertyChanged(ConnectorEndpoint.NodeKey).subscribe(this._onSourceEndpointInputChanged),
+                cur.PropertyChanged(ConnectorEndpoint.FreePointKey).subscribe(this._onSourceEndpointInputChanged),
+                cur.PropertyChanged(ConnectorEndpoint.PortNameKey).subscribe(this._onSourceEndpointInputChanged),
+                cur.PropertyChanged(ConnectorEndpoint.PortSideKey).subscribe(this._onSourceEndpointInputChanged),
+                cur.PropertyChanged(ConnectorEndpoint.PortIndexKey).subscribe(this._onSourceEndpointInputChanged),
+            ];
         }
         this._reattachSourceNodeListener();
     }
 
     private _reattachTargetEndpoint(): void
     {
-        const prev = this._trackedTarget;
-        if (prev !== undefined)
-        {
-            prev.RemovePropertyChangedListener(ConnectorEndpoint.NodeKey,      this._onTargetEndpointInputChanged);
-            prev.RemovePropertyChangedListener(ConnectorEndpoint.FreePointKey, this._onTargetEndpointInputChanged);
-            prev.RemovePropertyChangedListener(ConnectorEndpoint.PortNameKey,  this._onTargetEndpointInputChanged);
-            prev.RemovePropertyChangedListener(ConnectorEndpoint.PortSideKey,  this._onTargetEndpointInputChanged);
-            prev.RemovePropertyChangedListener(ConnectorEndpoint.PortIndexKey, this._onTargetEndpointInputChanged);
-        }
+        for (const sub of this._targetSubs) sub.dispose();
+        this._targetSubs = [];
         this._trackedTarget = this.Target;
         const cur = this._trackedTarget;
         if (cur !== undefined)
         {
-            cur.AddPropertyChangedListener(ConnectorEndpoint.NodeKey,      this._onTargetEndpointInputChanged);
-            cur.AddPropertyChangedListener(ConnectorEndpoint.FreePointKey, this._onTargetEndpointInputChanged);
-            cur.AddPropertyChangedListener(ConnectorEndpoint.PortNameKey,  this._onTargetEndpointInputChanged);
-            cur.AddPropertyChangedListener(ConnectorEndpoint.PortSideKey,  this._onTargetEndpointInputChanged);
-            cur.AddPropertyChangedListener(ConnectorEndpoint.PortIndexKey, this._onTargetEndpointInputChanged);
+            this._targetSubs = [
+                cur.PropertyChanged(ConnectorEndpoint.NodeKey).subscribe(this._onTargetEndpointInputChanged),
+                cur.PropertyChanged(ConnectorEndpoint.FreePointKey).subscribe(this._onTargetEndpointInputChanged),
+                cur.PropertyChanged(ConnectorEndpoint.PortNameKey).subscribe(this._onTargetEndpointInputChanged),
+                cur.PropertyChanged(ConnectorEndpoint.PortSideKey).subscribe(this._onTargetEndpointInputChanged),
+                cur.PropertyChanged(ConnectorEndpoint.PortIndexKey).subscribe(this._onTargetEndpointInputChanged),
+            ];
         }
         this._reattachTargetNodeListener();
     }
@@ -741,27 +737,19 @@ export class Connector extends Shape
     // not require Left / Top by name.
     private _reattachSourceNodeListener(): void
     {
-        const prev = this._trackedSourceNode;
-        if (prev !== undefined && MuralBase.HasProperty(prev.constructor, 'Left'))
-        {
-            prev.RemovePropertyChangedListener(resolveKey(prev, undefined, 'Left'), this._onSourceNodeMoved);
-            prev.RemovePropertyChangedListener(resolveKey(prev, undefined, 'Top'),  this._onSourceNodeMoved);
-        }
-        if (prev !== undefined
-            && MuralBase.HasProperty(prev.constructor, 'Width')
-            && MuralBase.HasProperty(prev.constructor, 'Height'))
-        {
-            prev.RemovePropertyChangedListener(resolveKey(prev, undefined, 'Width'),  this._onSourceNodeResized);
-            prev.RemovePropertyChangedListener(resolveKey(prev, undefined, 'Height'), this._onSourceNodeResized);
-        }
+        for (const sub of this._sourceNodeMoveSubs)   sub.dispose();
+        for (const sub of this._sourceNodeResizeSubs) sub.dispose();
+        this._sourceNodeMoveSubs   = [];
+        this._sourceNodeResizeSubs = [];
         const node = this.Source?.Node;
-        this._trackedSourceNode = node;
         if (node !== undefined
             && MuralBase.HasProperty(node.constructor, 'Left')
             && MuralBase.HasProperty(node.constructor, 'Top'))
         {
-            node.AddPropertyChangedListener(resolveKey(node, undefined, 'Left'), this._onSourceNodeMoved);
-            node.AddPropertyChangedListener(resolveKey(node, undefined, 'Top'),  this._onSourceNodeMoved);
+            this._sourceNodeMoveSubs = [
+                node.PropertyChanged(resolveKey(node, undefined, 'Left')).subscribe(this._onSourceNodeMoved),
+                node.PropertyChanged(resolveKey(node, undefined, 'Top')).subscribe(this._onSourceNodeMoved),
+            ];
         }
         // Resize reactivity: reroute (preserving waypoints) when the figure's
         // Width / Height change. Duck-typed like Left / Top — nodes without the
@@ -770,43 +758,39 @@ export class Connector extends Shape
             && MuralBase.HasProperty(node.constructor, 'Width')
             && MuralBase.HasProperty(node.constructor, 'Height'))
         {
-            node.AddPropertyChangedListener(resolveKey(node, undefined, 'Width'),  this._onSourceNodeResized);
-            node.AddPropertyChangedListener(resolveKey(node, undefined, 'Height'), this._onSourceNodeResized);
+            this._sourceNodeResizeSubs = [
+                node.PropertyChanged(resolveKey(node, undefined, 'Width')).subscribe(this._onSourceNodeResized),
+                node.PropertyChanged(resolveKey(node, undefined, 'Height')).subscribe(this._onSourceNodeResized),
+            ];
         }
         this._refreshSourceAncestorListeners();
     }
 
     private _reattachTargetNodeListener(): void
     {
-        const prev = this._trackedTargetNode;
-        if (prev !== undefined && MuralBase.HasProperty(prev.constructor, 'Left'))
-        {
-            prev.RemovePropertyChangedListener(resolveKey(prev, undefined, 'Left'), this._onTargetNodeMoved);
-            prev.RemovePropertyChangedListener(resolveKey(prev, undefined, 'Top'),  this._onTargetNodeMoved);
-        }
-        if (prev !== undefined
-            && MuralBase.HasProperty(prev.constructor, 'Width')
-            && MuralBase.HasProperty(prev.constructor, 'Height'))
-        {
-            prev.RemovePropertyChangedListener(resolveKey(prev, undefined, 'Width'),  this._onTargetNodeResized);
-            prev.RemovePropertyChangedListener(resolveKey(prev, undefined, 'Height'), this._onTargetNodeResized);
-        }
+        for (const sub of this._targetNodeMoveSubs)   sub.dispose();
+        for (const sub of this._targetNodeResizeSubs) sub.dispose();
+        this._targetNodeMoveSubs   = [];
+        this._targetNodeResizeSubs = [];
         const node = this.Target?.Node;
-        this._trackedTargetNode = node;
         if (node !== undefined
             && MuralBase.HasProperty(node.constructor, 'Left')
             && MuralBase.HasProperty(node.constructor, 'Top'))
         {
-            node.AddPropertyChangedListener(resolveKey(node, undefined, 'Left'), this._onTargetNodeMoved);
-            node.AddPropertyChangedListener(resolveKey(node, undefined, 'Top'),  this._onTargetNodeMoved);
+            this._targetNodeMoveSubs = [
+                node.PropertyChanged(resolveKey(node, undefined, 'Left')).subscribe(this._onTargetNodeMoved),
+                node.PropertyChanged(resolveKey(node, undefined, 'Top')).subscribe(this._onTargetNodeMoved),
+            ];
         }
         // Resize reactivity — see _reattachSourceNodeListener.
         if (node !== undefined
             && MuralBase.HasProperty(node.constructor, 'Width')
             && MuralBase.HasProperty(node.constructor, 'Height'))
         {
-            node.AddPropertyChangedListener(resolveKey(node, undefined, 'Width'),  this._onTargetNodeResized);
-            node.AddPropertyChangedListener(resolveKey(node, undefined, 'Height'), this._onTargetNodeResized);
+            this._targetNodeResizeSubs = [
+                node.PropertyChanged(resolveKey(node, undefined, 'Width')).subscribe(this._onTargetNodeResized),
+                node.PropertyChanged(resolveKey(node, undefined, 'Height')).subscribe(this._onTargetNodeResized),
+            ];
         }
         this._refreshTargetAncestorListeners();
     }
@@ -817,35 +801,31 @@ export class Connector extends Shape
     // node, so calling this from the node-moved handler is re-entrancy-safe).
     private _refreshSourceAncestorListeners(): void
     {
-        for (const anc of this._sourceAncestors)
-            if (MuralBase.HasProperty(anc.constructor, 'Left'))
-            {
-                anc.RemovePropertyChangedListener(resolveKey(anc, undefined, 'Left'), this._onSourceAncestorMoved);
-                anc.RemovePropertyChangedListener(resolveKey(anc, undefined, 'Top'),  this._onSourceAncestorMoved);
-            }
+        for (const sub of this._sourceAncestorSubs) sub.dispose();
+        this._sourceAncestorSubs = [];
         this._sourceAncestors = ancestorChain(this.Source?.Node);
         for (const anc of this._sourceAncestors)
             if (MuralBase.HasProperty(anc.constructor, 'Left'))
             {
-                anc.AddPropertyChangedListener(resolveKey(anc, undefined, 'Left'), this._onSourceAncestorMoved);
-                anc.AddPropertyChangedListener(resolveKey(anc, undefined, 'Top'),  this._onSourceAncestorMoved);
+                this._sourceAncestorSubs.push(
+                    anc.PropertyChanged(resolveKey(anc, undefined, 'Left')).subscribe(this._onSourceAncestorMoved),
+                    anc.PropertyChanged(resolveKey(anc, undefined, 'Top')).subscribe(this._onSourceAncestorMoved),
+                );
             }
     }
 
     private _refreshTargetAncestorListeners(): void
     {
-        for (const anc of this._targetAncestors)
-            if (MuralBase.HasProperty(anc.constructor, 'Left'))
-            {
-                anc.RemovePropertyChangedListener(resolveKey(anc, undefined, 'Left'), this._onTargetAncestorMoved);
-                anc.RemovePropertyChangedListener(resolveKey(anc, undefined, 'Top'),  this._onTargetAncestorMoved);
-            }
+        for (const sub of this._targetAncestorSubs) sub.dispose();
+        this._targetAncestorSubs = [];
         this._targetAncestors = ancestorChain(this.Target?.Node);
         for (const anc of this._targetAncestors)
             if (MuralBase.HasProperty(anc.constructor, 'Left'))
             {
-                anc.AddPropertyChangedListener(resolveKey(anc, undefined, 'Left'), this._onTargetAncestorMoved);
-                anc.AddPropertyChangedListener(resolveKey(anc, undefined, 'Top'),  this._onTargetAncestorMoved);
+                this._targetAncestorSubs.push(
+                    anc.PropertyChanged(resolveKey(anc, undefined, 'Left')).subscribe(this._onTargetAncestorMoved),
+                    anc.PropertyChanged(resolveKey(anc, undefined, 'Top')).subscribe(this._onTargetAncestorMoved),
+                );
             }
     }
 
@@ -917,63 +897,34 @@ export class Connector extends Shape
         this._trackedTargetFigure = undefined;
         this._trackedTargetSide   = undefined;
 
-        const src = this._trackedSource;
-        if (src !== undefined)
-        {
-            src.RemovePropertyChangedListener(ConnectorEndpoint.NodeKey,      this._onSourceEndpointInputChanged);
-            src.RemovePropertyChangedListener(ConnectorEndpoint.FreePointKey, this._onSourceEndpointInputChanged);
-            src.RemovePropertyChangedListener(ConnectorEndpoint.PortNameKey,  this._onSourceEndpointInputChanged);
-            src.RemovePropertyChangedListener(ConnectorEndpoint.PortSideKey,  this._onSourceEndpointInputChanged);
-            src.RemovePropertyChangedListener(ConnectorEndpoint.PortIndexKey, this._onSourceEndpointInputChanged);
-        }
+        for (const sub of this._sourceSubs) sub.dispose();
+        this._sourceSubs = [];
         this._trackedSource = undefined;
-        const tgt = this._trackedTarget;
-        if (tgt !== undefined)
-        {
-            tgt.RemovePropertyChangedListener(ConnectorEndpoint.NodeKey,      this._onTargetEndpointInputChanged);
-            tgt.RemovePropertyChangedListener(ConnectorEndpoint.FreePointKey, this._onTargetEndpointInputChanged);
-            tgt.RemovePropertyChangedListener(ConnectorEndpoint.PortNameKey,  this._onTargetEndpointInputChanged);
-            tgt.RemovePropertyChangedListener(ConnectorEndpoint.PortSideKey,  this._onTargetEndpointInputChanged);
-            tgt.RemovePropertyChangedListener(ConnectorEndpoint.PortIndexKey, this._onTargetEndpointInputChanged);
-        }
+
+        for (const sub of this._targetSubs) sub.dispose();
+        this._targetSubs = [];
         this._trackedTarget = undefined;
 
-        const sn = this._trackedSourceNode;
-        if (sn !== undefined && MuralBase.HasProperty(sn.constructor, 'Left'))
-        {
-            sn.RemovePropertyChangedListener(resolveKey(sn, undefined, 'Left'), this._onSourceNodeMoved);
-            sn.RemovePropertyChangedListener(resolveKey(sn, undefined, 'Top'),  this._onSourceNodeMoved);
-        }
-        this._trackedSourceNode = undefined;
-        const tn = this._trackedTargetNode;
-        if (tn !== undefined && MuralBase.HasProperty(tn.constructor, 'Left'))
-        {
-            tn.RemovePropertyChangedListener(resolveKey(tn, undefined, 'Left'), this._onTargetNodeMoved);
-            tn.RemovePropertyChangedListener(resolveKey(tn, undefined, 'Top'),  this._onTargetNodeMoved);
-        }
-        this._trackedTargetNode = undefined;
+        for (const sub of this._sourceNodeMoveSubs)   sub.dispose();
+        for (const sub of this._sourceNodeResizeSubs) sub.dispose();
+        this._sourceNodeMoveSubs   = [];
+        this._sourceNodeResizeSubs = [];
 
-        for (const anc of this._sourceAncestors)
-            if (MuralBase.HasProperty(anc.constructor, 'Left'))
-            {
-                anc.RemovePropertyChangedListener(resolveKey(anc, undefined, 'Left'), this._onSourceAncestorMoved);
-                anc.RemovePropertyChangedListener(resolveKey(anc, undefined, 'Top'),  this._onSourceAncestorMoved);
-            }
+        for (const sub of this._targetNodeMoveSubs)   sub.dispose();
+        for (const sub of this._targetNodeResizeSubs) sub.dispose();
+        this._targetNodeMoveSubs   = [];
+        this._targetNodeResizeSubs = [];
+
+        for (const sub of this._sourceAncestorSubs) sub.dispose();
+        this._sourceAncestorSubs = [];
         this._sourceAncestors = [];
-        for (const anc of this._targetAncestors)
-            if (MuralBase.HasProperty(anc.constructor, 'Left'))
-            {
-                anc.RemovePropertyChangedListener(resolveKey(anc, undefined, 'Left'), this._onTargetAncestorMoved);
-                anc.RemovePropertyChangedListener(resolveKey(anc, undefined, 'Top'),  this._onTargetAncestorMoved);
-            }
+
+        for (const sub of this._targetAncestorSubs) sub.dispose();
+        this._targetAncestorSubs = [];
         this._targetAncestors = [];
 
-        const pen = this._trackedCapPen;
-        if (pen !== undefined)
-        {
-            pen.RemovePropertyChangedListener(resolveKey(pen, undefined, 'Brush'), this._onCapStrokeBrushChanged);
-        }
-        this._trackedCapPen = undefined;
+        this._capStrokeBrushSub?.dispose();
+        this._capStrokeBrushSub = undefined;
     }
 
     // ── Port-slot reorder (position-based, driven by a segment drag) ──

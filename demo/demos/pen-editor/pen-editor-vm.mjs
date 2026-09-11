@@ -38,7 +38,7 @@ export class PenEditorDemoVM extends MuralBase {
     _installPenWatchers(pen) {
         const refresh = () => this._refreshReadouts();
         for (const key of [Pen.BrushKey, Pen.ThicknessKey, Pen.DashStyleKey, Pen.LineCapKey, Pen.LineJoinKey, Pen.MiterLimitKey]) {
-            pen.AddPropertyChangedListener(key, refresh);
+            pen.PropertyChanged(key).subscribe(refresh);
         }
     }
     _refreshReadouts() {

@@ -591,7 +591,7 @@ describe('EVD animation slot — coerce integration', () => {
         const clock = freshClock();
         const c = new Capped();
         const seen: number[] = [];
-        c.AddPropertyChangedListener(resolveKey(c, undefined, 'Value'), (_m, _p, _o, n) => { seen.push(n as number); });
+        c.PropertyChanged(resolveKey(c, undefined, 'Value')).subscribe(({ newValue }) => { seen.push(newValue as number); });
 
         // To = 200, Duration = 100. At t = 100 the timeline commits To,
         // which coerce clamps to 50. Listeners get the clamped value.

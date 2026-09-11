@@ -6,6 +6,7 @@
     Thickness,
     Element, Visual, Visibility, VerticalAlignment,
     type PropertyDescriptor,
+    type Disposable,
 } from '../../runtime/index.js';
 import { resolveKey } from '../../runtime/model-internals.js';
 import {
@@ -161,9 +162,9 @@ function wireSwatchHover(
         onPreview?.(sw.IsMouseOver);
     };
 
-    sw.AddPropertyChangedListener(Element.IsMouseOverKey, onHover);
+    const sub: Disposable = sw.PropertyChanged(Element.IsMouseOverKey).subscribe(onHover);
     return () => {
-        sw.RemovePropertyChangedListener(Element.IsMouseOverKey, onHover);
+        sub.dispose();
         clear();
     };
 }
@@ -732,10 +733,8 @@ export class ColorPicker extends TemplatedControl
                 const onHover = (): void => {
                     row.Fill = row.IsMouseOver ? hover : undefined;
                 };
-                row.AddPropertyChangedListener(Element.IsMouseOverKey, onHover);
-                this._galleryListeners.push(
-                    () => { row.RemovePropertyChangedListener(Element.IsMouseOverKey, onHover); },
-                );
+                const sub = row.PropertyChanged(Element.IsMouseOverKey).subscribe(onHover);
+                this._galleryListeners.push(() => sub.dispose());
             }
 
             const rowContent = new StackPanel();
@@ -959,10 +958,8 @@ export class ColorPicker extends TemplatedControl
                 apply();
             };
             const key = resolveKey(part, undefined, prop);
-            part.AddPropertyChangedListener(key, handler);
-            this._moreListeners.push(() => {
-                part.RemovePropertyChangedListener(key, handler);
-            });
+            const sub = part.PropertyChanged(key).subscribe(handler);
+            this._moreListeners.push(() => sub.dispose());
         };
 
         wire(this._rSlider,    'Value', () => { this.Red      = this._rSlider!.Value; });

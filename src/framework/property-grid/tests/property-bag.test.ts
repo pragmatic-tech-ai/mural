@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { MapPropertyBag, DpPropertyBag, type PropertyAccessor } from '../property-bag.js';
 import { initTestApp } from '../../../basic/tests/test-app.js';
 import { MuralBase, MetaData, PropertyKey, type CoerceValue } from '../../../runtime/index.js';
-import { Signal, type PropertyChangeCallback } from '@pragmatic-tech-ai/todl-runtime';
+import { Signal, type PropertyChangedEventArgs } from '@pragmatic-tech-ai/todl-runtime';
 
 // ---------------------------------------------------------------------------
 // Probe class for DpPropertyBag tests
@@ -97,7 +97,7 @@ describe('MapPropertyBag — bag-owned notification', () => {
 
 describe('MapPropertyBag — accessor.changed delegation', () => {
     test('Observe subscribes to accessor.changed when present', () => {
-        const changed = new Signal<PropertyChangeCallback>();
+        const changed = new Signal<PropertyChangedEventArgs>();
         const accessors = new Map<string, PropertyAccessor>([
             ['x', { id: () => 'x', displayName: () => 'x', get: () => 0, set: () => {}, changed }],
         ]);
@@ -105,13 +105,13 @@ describe('MapPropertyBag — accessor.changed delegation', () => {
         let notified = 0;
         bag.Observe('x').subscribe(() => { notified++; });
         // Simulate the external source firing
-        changed.emit(() => {});
+        changed.emit({ property: 'x', oldValue: 0, newValue: 0 });
         assert.equal(notified, 1);
     });
 
     test('SetValue does NOT double-fire when accessor supplies changed', () => {
         // The accessor owns notification; SetValue must not also fire bag listeners
-        const changed = new Signal<PropertyChangeCallback>();
+        const changed = new Signal<PropertyChangedEventArgs>();
         let stored = 0;
         const accessors = new Map<string, PropertyAccessor>([
             ['x', {
@@ -129,22 +129,22 @@ describe('MapPropertyBag — accessor.changed delegation', () => {
         bag.SetValue('x', 7);
         assert.equal(notified, 0, 'bag must not double-fire when accessor owns notification');
         // The accessor's own channel still works independently
-        changed.emit(() => {});
+        changed.emit({ property: 'x', oldValue: 0, newValue: 0 });
         assert.equal(notified, 1);
     });
 
     test('Observe unsubscribe from accessor.changed path removes listener', () => {
-        const changed = new Signal<PropertyChangeCallback>();
+        const changed = new Signal<PropertyChangedEventArgs>();
         const accessors = new Map<string, PropertyAccessor>([
             ['x', { id: () => 'x', displayName: () => 'x', get: () => 0, set: () => {}, changed }],
         ]);
         const bag = new MapPropertyBag(accessors);
         let notified = 0;
         const sub = bag.Observe('x').subscribe(() => { notified++; });
-        changed.emit(() => {});
+        changed.emit({ property: 'x', oldValue: 0, newValue: 0 });
         assert.equal(notified, 1);
         sub.dispose();
-        changed.emit(() => {});
+        changed.emit({ property: 'x', oldValue: 0, newValue: 0 });
         // After unsub the accessor's own source no longer drives our listener
         assert.equal(notified, 1);
     });

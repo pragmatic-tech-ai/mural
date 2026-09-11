@@ -1,7 +1,8 @@
 import { Binding } from './binding/binding.js';
 import { EffectiveValueDescriptor, PropertyValueSource } from './binding/effective-value.js';
-import type { InternalPropertyChangeCallback, PropertyChangeCallback } from './binding/effective-value.js';
+import type { InternalPropertyChangeCallback, PropertyChangedEventArgs } from './binding/effective-value.js';
 import { Observable } from './observable.js';
+import { Signal } from '@pragmatic-tech-ai/todl-runtime';
 import { PropertyDescriptor } from './property-descriptor.js';
 import type { CoerceValue, PropertyMetadata, ValidateTarget, ValidateValue } from './property-descriptor.js';
 import { inherits, type MetaData } from './metadata.js';
@@ -38,11 +39,12 @@ export class PropertyKey<T = unknown>
 // visual.ts) overrides it to route layout/render invalidation and property
 // value inheritance through the visual tree.
 //
-// MuralBase's notification surface (AddPropertyChangedListener /
-// RemovePropertyChangedListener) OVERRIDES Observable's virtual, widened to
-// `string | PropertyKey`, and routes through the EffectiveValueDescriptor
-// listeners — MuralBase does NOT use Observable's name-keyed `_listeners`
-// store or its `RaisePropertyChanged`; its notifications flow through the EVD system.
+// MuralBase's notification surface (`PropertyChanged`) OVERRIDES Observable's
+// virtual, widened to `string | PropertyKey`, and returns the change channel
+// from the EffectiveValueDescriptor — MuralBase does NOT use Observable's
+// name-keyed `_signals` store or its `RaisePropertyChanged` for registered
+// DPs; their notifications flow through the EVD system. A string naming a
+// plain (non-DP) property still falls through to the base Observable Signal.
 //
 // Property storage uses composite keys `${descriptor.RootOwner.name}.${name}`
 // uniformly. This lets any property registered on any class be set on
@@ -439,58 +441,36 @@ export class MuralBase extends Observable
 
     // Typed-key public API ---------------------------------------------
 
-    // Overrides Observable.AddPropertyChangedListener, widened to
-    // `string | PropertyKey`. A PropertyKey routes to the existing EVD
-    // listener-attach path (parity with the pre-split behavior); a string
-    // resolves via `find_descriptor(this.constructor, name)` to the key,
-    // then the same EVD path. MuralBase notifications flow through the EVD
-    // listeners — it does not use Observable's name-keyed listener store.
-    // Resolves the `string | PropertyKey` argument of the notification
-    // overloads to a `PropertyKey`. A string is looked up against this
-    // instance's class via `find_descriptor`; an unregistered name throws
-    // a named diagnostic rather than building `new PropertyKey(undefined)`
-    // and faulting on a later `.descriptor` access.
-    // Resolves the `string | PropertyKey` argument of the notification overloads
-    // to its PropertyDescriptor, or undefined when a STRING name isn't a registered
-    // dependency property. A non-DP name is no longer an error: the caller falls
-    // back to the base Observable name-keyed INPC store, so plain getter/setter
-    // properties on a MuralBase are observable exactly like on a plain Observable.
+    // Resolves the `string | PropertyKey` argument of `PropertyChanged` to its
+    // PropertyDescriptor, or undefined when a STRING name isn't a registered
+    // dependency property. A non-DP name is not an error: `PropertyChanged`
+    // falls back to the base Observable name-keyed Signal store, so plain
+    // getter/setter properties on a MuralBase are observable exactly like on a
+    // plain Observable.
     private resolve_listener_descriptor(nameOrKey: string | PropertyKey<unknown>): PropertyDescriptor | undefined
     {
         if (typeof nameOrKey !== 'string') return nameOrKey.descriptor;
         return MuralBase.find_descriptor(this.constructor, nameOrKey);
     }
 
-    public override AddPropertyChangedListener(
+    // Overrides Observable.PropertyChanged, widened to `string | PropertyKey`.
+    // A PropertyKey (or a string naming a registered DP) returns that
+    // property's EffectiveValueDescriptor change channel — created lazily on
+    // first access. A string naming a plain (non-DP) property falls through to
+    // the base Observable name-keyed Signal, so a getter/setter that calls
+    // RaisePropertyChanged stays reactive, exactly as on a plain Observable VM
+    // (a binding to a plain property on a MuralBase source relies on this).
+    // Consumers subscribe to the returned Signal and own the Disposable.
+    public override PropertyChanged(
         nameOrKey: string | PropertyKey<unknown>,
-        callback: PropertyChangeCallback,
-    ): void
+    ): Signal<PropertyChangedEventArgs>
     {
         const descriptor = this.resolve_listener_descriptor(nameOrKey);
         if (descriptor === undefined)
         {
-            // A plain (non-DP) property name — subscribe via the base Observable
-            // INPC store so a getter/setter that calls RaisePropertyChanged stays
-            // reactive, exactly as on a plain Observable VM (a binding to a plain
-            // property on a MuralBase source relies on this).
-            super.AddPropertyChangedListener(nameOrKey as string, callback);
-            return;
+            return super.PropertyChanged(nameOrKey as string);
         }
-        this.ensure_effective_value_for(descriptor).AddChangeListener(callback);
-    }
-
-    public override RemovePropertyChangedListener(
-        nameOrKey: string | PropertyKey<unknown>,
-        callback: PropertyChangeCallback,
-    ): void
-    {
-        const descriptor = this.resolve_listener_descriptor(nameOrKey);
-        if (descriptor === undefined)
-        {
-            super.RemovePropertyChangedListener(nameOrKey as string, callback);
-            return;
-        }
-        this.property_values.get(descriptor.ComposedKey)?.RemoveChangeListener(callback);
+        return this.ensure_effective_value_for(descriptor).ChangedSignal();
     }
 
     public ClearValue<T>(key: PropertyKey<T>): void

@@ -23,7 +23,7 @@ import {
     Rect,
     Thickness,
     type CoerceValue,
-    type PropertyChangeCallback,
+    type Disposable,
     type VisualHost,
     type DrawingContext,
     ObservableCollection,
@@ -286,7 +286,7 @@ describe('Binding — transitive paths across a graph of Models', () => {
         const { company, desk, ViewModel } = buildScene();
         const view = new ViewModel();
         const captures: Array<[unknown, unknown]> = [];
-        view.AddPropertyChangedListener(resolveKey(view, undefined, 'label'), (_m, _p, old_value, new_value) => { captures.push([old_value, new_value]); }, );
+        view.PropertyChanged(resolveKey(view, undefined, 'label')).subscribe(({ oldValue, newValue }) => { captures.push([oldValue, newValue]); });
 
         view.set_property_value(
             resolveKey(view, undefined, 'label'),
@@ -342,12 +342,11 @@ describe('TwoWay Bindings across a graph of Models', () => {
         );
 
         let fired = 0;
-        let captured: [MuralBase, string, unknown, unknown] | null = null;
-        const cb: PropertyChangeCallback = (m, p, o, n) => {
+        let captured: [unknown, string, unknown, unknown] | null = null;
+        const sub: Disposable = desk.PropertyChanged(resolveKey(desk, undefined, 'label')).subscribe(({ owner, property, oldValue, newValue }) => {
             fired++;
-            captured = [m, p, o, n];
-        };
-        desk.AddPropertyChangedListener(resolveKey(desk, undefined, 'label'), cb);
+            captured = [owner, property, oldValue, newValue];
+        });
 
         assert.equal(binding.set_value('renamed'), true);
         assert.equal(fired, 1);
@@ -355,6 +354,7 @@ describe('TwoWay Bindings across a graph of Models', () => {
         assert.equal(captured![1], 'label');
         assert.equal(captured![2], 'desk-1');
         assert.equal(captured![3], 'renamed');
+        sub.dispose();
     });
 
     test('TwoWay writeback is visible to a separate OneWay binding reading the same path', () => {
@@ -513,8 +513,8 @@ describe('Per-instance PropertyChanged listeners', () => {
 
         let aFires = 0;
         let bFires = 0;
-        a.AddPropertyChangedListener(resolveKey(a, undefined, 'label'), () => { aFires++; });
-        b.AddPropertyChangedListener(resolveKey(b, undefined, 'label'), () => { bFires++; });
+        a.PropertyChanged(resolveKey(a, undefined, 'label')).subscribe(() => { aFires++; });
+        b.PropertyChanged(resolveKey(b, undefined, 'label')).subscribe(() => { bFires++; });
 
         a.set_property_value(resolveKey(a, undefined, 'label'), 'a-changed');
         assert.equal(aFires, 1);
@@ -532,13 +532,10 @@ describe('Per-instance PropertyChanged listeners', () => {
 
         let aFires = 0;
         let bFires = 0;
-        const aCb: PropertyChangeCallback = () => { aFires++; };
-        const bCb: PropertyChangeCallback = () => { bFires++; };
+        const aSub: Disposable = a.PropertyChanged(resolveKey(a, undefined, 'label')).subscribe(() => { aFires++; });
+        b.PropertyChanged(resolveKey(b, undefined, 'label')).subscribe(() => { bFires++; });
 
-        a.AddPropertyChangedListener(resolveKey(a, undefined, 'label'), aCb);
-        b.AddPropertyChangedListener(resolveKey(b, undefined, 'label'), bCb);
-
-        a.RemovePropertyChangedListener(resolveKey(a, undefined, 'label'), aCb);
+        aSub.dispose();
 
         a.set_property_value(resolveKey(a, undefined, 'label'), 'a-changed');
         b.set_property_value(resolveKey(b, undefined, 'label'), 'b-changed');
@@ -553,8 +550,8 @@ describe('Per-instance PropertyChanged listeners', () => {
         const { Desk } = buildScene();
         const desk = new Desk();
 
-        let captured: [MuralBase, string, unknown, unknown] | null = null;
-        desk.AddPropertyChangedListener(resolveKey(desk, undefined, 'label'), (m, p, o, n) => { captured = [m, p, o, n]; });
+        let captured: [unknown, string, unknown, unknown] | null = null;
+        desk.PropertyChanged(resolveKey(desk, undefined, 'label')).subscribe(({ owner, property, oldValue, newValue }) => { captured = [owner, property, oldValue, newValue]; });
 
         desk.set_property_value(resolveKey(desk, undefined, 'label'), 'first-set');
         assert.notEqual(captured, null);
@@ -568,7 +565,7 @@ describe('Per-instance PropertyChanged listeners', () => {
         const { Desk } = buildScene();
         const desk = new Desk();
         assert.throws(
-            () => desk.AddPropertyChangedListener(resolveKey(desk, undefined, 'nope'), () => {}),
+            () => desk.PropertyChanged(resolveKey(desk, undefined, 'nope')).subscribe(() => {}),
             /not found in model 'Desk'/,
         );
     });
@@ -577,9 +574,9 @@ describe('Per-instance PropertyChanged listeners', () => {
         const { Desk } = buildScene();
         const desk = new Desk();
         const order: number[] = [];
-        desk.AddPropertyChangedListener(resolveKey(desk, undefined, 'label'), () => { order.push(1); });
-        desk.AddPropertyChangedListener(resolveKey(desk, undefined, 'label'), () => { order.push(2); });
-        desk.AddPropertyChangedListener(resolveKey(desk, undefined, 'label'), () => { order.push(3); });
+        desk.PropertyChanged(resolveKey(desk, undefined, 'label')).subscribe(() => { order.push(1); });
+        desk.PropertyChanged(resolveKey(desk, undefined, 'label')).subscribe(() => { order.push(2); });
+        desk.PropertyChanged(resolveKey(desk, undefined, 'label')).subscribe(() => { order.push(3); });
 
         desk.set_property_value(resolveKey(desk, undefined, 'label'), 'fire');
         assert.deepEqual(order, [1, 2, 3]);
@@ -594,7 +591,7 @@ describe('Push-style binding notification on bound consumers', () => {
         const { company, department, Manager, Office, Desk, ViewModel } = buildScene();
         const view = new ViewModel();
         const captures: Array<[unknown, unknown]> = [];
-        view.AddPropertyChangedListener(resolveKey(view, undefined, 'label'), (_m, _p, o, n) => { captures.push([o, n]); }, );
+        view.PropertyChanged(resolveKey(view, undefined, 'label')).subscribe(({ oldValue, newValue }) => { captures.push([oldValue, newValue]); });
 
         view.set_property_value(
             resolveKey(view, undefined, 'label'),
@@ -620,7 +617,7 @@ describe('Push-style binding notification on bound consumers', () => {
         const { company, manager, ViewModel } = buildScene();
         const view = new ViewModel();
         const captures: Array<[unknown, unknown]> = [];
-        view.AddPropertyChangedListener(resolveKey(view, undefined, 'label'), (_m, _p, o, n) => { captures.push([o, n]); }, );
+        view.PropertyChanged(resolveKey(view, undefined, 'label')).subscribe(({ oldValue, newValue }) => { captures.push([oldValue, newValue]); });
 
         view.set_property_value(
             resolveKey(view, undefined, 'label'),
@@ -641,7 +638,7 @@ describe('Push-style binding notification on bound consumers', () => {
         const { company, department, Manager, Office, Desk, ViewModel } = buildScene();
         const view = new ViewModel();
         let fires = 0;
-        view.AddPropertyChangedListener(resolveKey(view, undefined, 'label'), () => { fires++; });
+        view.PropertyChanged(resolveKey(view, undefined, 'label')).subscribe(() => { fires++; });
 
         view.set_property_value(
             resolveKey(view, undefined, 'label'),
@@ -668,8 +665,8 @@ describe('Push-style binding notification on bound consumers', () => {
         const viewB = new ViewModel();
         let aFires = 0;
         let bFires = 0;
-        viewA.AddPropertyChangedListener(resolveKey(viewA, undefined, 'label'), () => { aFires++; });
-        viewB.AddPropertyChangedListener(resolveKey(viewB, undefined, 'label'), () => { bFires++; });
+        viewA.PropertyChanged(resolveKey(viewA, undefined, 'label')).subscribe(() => { aFires++; });
+        viewB.PropertyChanged(resolveKey(viewB, undefined, 'label')).subscribe(() => { bFires++; });
 
         viewA.set_property_value(
             resolveKey(viewA, undefined, 'label'),
@@ -691,7 +688,7 @@ describe('Push-style binding notification on bound consumers', () => {
         const { company, desk, ViewModel } = buildScene();
         const view = new ViewModel();
         let fires = 0;
-        view.AddPropertyChangedListener(resolveKey(view, undefined, 'label'), () => { fires++; });
+        view.PropertyChanged(resolveKey(view, undefined, 'label')).subscribe(() => { fires++; });
 
         view.set_property_value(
             resolveKey(view, undefined, 'label'),
@@ -715,7 +712,7 @@ describe('Push-style binding notification on bound consumers', () => {
         const { company, ViewModel } = buildScene();
         const view = new ViewModel();
         const captures: Array<[unknown, unknown]> = [];
-        view.AddPropertyChangedListener(resolveKey(view, undefined, 'label'), (_m, _p, o, n) => { captures.push([o, n]); }, );
+        view.PropertyChanged(resolveKey(view, undefined, 'label')).subscribe(({ oldValue, newValue }) => { captures.push([oldValue, newValue]); });
 
         const binding = new Binding(
             company,
@@ -755,9 +752,9 @@ function listener_count(model: MuralBase, property: string): number
     if (owner === undefined) return 0;
     const key = `${owner.name}.${property}`;
     const props = (model as unknown as {
-        property_values: Map<string, { changeListeners: Array<unknown> }>;
+        property_values: Map<string, { ChangedSignal(): { subscriberCount: number } }>;
     }).property_values;
-    return props.get(key)?.changeListeners.length ?? 0;
+    return props.get(key)?.ChangedSignal().subscriberCount ?? 0;
 }
 
 // Test-side accessor for Visual's protected `visualParent` getter.
@@ -868,7 +865,7 @@ describe('Binding / PropertyPath disposal', () => {
         const { company, desk, ViewModel } = buildScene();
         const view = new ViewModel();
         let fires = 0;
-        view.AddPropertyChangedListener(resolveKey(view, undefined, 'label'), () => { fires++; });
+        view.PropertyChanged(resolveKey(view, undefined, 'label')).subscribe(() => { fires++; });
 
         const binding = new Binding(
             company,
@@ -954,7 +951,7 @@ describe('ClearValue and GetValueSource', () => {
     test('GetValueSource stays Default after AddPropertyChangedListener (no value set yet)', () => {
         const { Desk } = buildScene();
         const desk = new Desk();
-        desk.AddPropertyChangedListener(resolveKey(desk, undefined, 'label'), () => {});
+        desk.PropertyChanged(resolveKey(desk, undefined, 'label')).subscribe(() => {});
         // Listener creates an EVD lazily at Default priority; the source
         // should still report Default until something is actually set.
         assert.equal(desk.GetValueSource(resolveKey(desk, undefined, 'label')), PropertyValueSource.Default);
@@ -977,7 +974,7 @@ describe('ClearValue and GetValueSource', () => {
         desk.set_property_value(resolveKey(desk, undefined, 'items'), 42);
 
         const captures: Array<[unknown, unknown]> = [];
-        desk.AddPropertyChangedListener(resolveKey(desk, undefined, 'items'), (_m, _p, o, n) => { captures.push([o, n]); }, );
+        desk.PropertyChanged(resolveKey(desk, undefined, 'items')).subscribe(({ oldValue, newValue }) => { captures.push([oldValue, newValue]); });
 
         desk.ClearValue(resolveKey(desk, undefined, 'items'));
         assert.equal(captures.length, 1);
@@ -989,7 +986,7 @@ describe('ClearValue and GetValueSource', () => {
         const { Desk } = buildScene();
         const desk = new Desk();
         let fires = 0;
-        desk.AddPropertyChangedListener(resolveKey(desk, undefined, 'label'), () => { fires++; });
+        desk.PropertyChanged(resolveKey(desk, undefined, 'label')).subscribe(() => { fires++; });
 
         desk.ClearValue(resolveKey(desk, undefined, 'label'));
         assert.equal(fires, 0);
@@ -1076,8 +1073,8 @@ describe('Property inheritance and metadata override', () => {
         const desk = new Desk();
         let deskFires = 0;
         let furnitureFires = 0;
-        desk.AddPropertyChangedListener(resolveKey(desk, undefined, 'label'), () => { deskFires++; });
-        furniture.AddPropertyChangedListener(resolveKey(furniture, undefined, 'label'), () => { furnitureFires++; });
+        desk.PropertyChanged(resolveKey(desk, undefined, 'label')).subscribe(() => { deskFires++; });
+        furniture.PropertyChanged(resolveKey(furniture, undefined, 'label')).subscribe(() => { furnitureFires++; });
 
         desk.set_property_value(resolveKey(desk, undefined, 'label'), 'x');
         assert.equal(deskFires, 1);
@@ -1319,7 +1316,7 @@ describe('Visual invalidation routing', () => {
         MuralBase.RegisterProperty(TestVisual, 'count', 7, MetaData.Render);
         const v = new TestVisual();
         let listener_fires = 0;
-        v.AddPropertyChangedListener(resolveKey(v, undefined, 'count'), () => { listener_fires++; });
+        v.PropertyChanged(resolveKey(v, undefined, 'count')).subscribe(() => { listener_fires++; });
         assert.equal(v.get_property_value(resolveKey(v, undefined, 'count')), 7);
         v.set_property_value(resolveKey(v, undefined, 'count'), 42);
         assert.equal(v.get_property_value(resolveKey(v, undefined, 'count')), 42);
@@ -1386,7 +1383,7 @@ describe('Visual invalidation routing', () => {
         MuralBase.RegisterProperty(TestVisual, 'count', 0, MetaData.Render);
         const v = new TestVisual();
         let user_fires = 0;
-        v.AddPropertyChangedListener(resolveKey(v, undefined, 'count'), () => { user_fires++; });
+        v.PropertyChanged(resolveKey(v, undefined, 'count')).subscribe(() => { user_fires++; });
 
         // listener_count counts only user-facing listeners, not the
         // internal callback the MuralBase uses to route onPropertyChanged.
@@ -1747,7 +1744,7 @@ describe('Property value inheritance', () => {
         root.AddChild(child);
 
         const captures: Array<[unknown, unknown]> = [];
-        child.AddPropertyChangedListener(resolveKey(child, undefined, 'fontSize'), (_m, _p, o, n) => { captures.push([o, n]); }, );
+        child.PropertyChanged(resolveKey(child, undefined, 'fontSize')).subscribe(({ oldValue, newValue }) => { captures.push([oldValue, newValue]); });
 
         root.set_property_value(resolveKey(root, undefined, 'fontSize'), 16);
         assert.equal(captures.length, 1);
@@ -1978,8 +1975,8 @@ describe('Cross-class / attached properties', () => {
         const target = new MuralBase();
         let fooFires = 0;
         let barFires = 0;
-        target.AddPropertyChangedListener(resolveKey(target, Foo, 'value'), () => { fooFires++; });
-        target.AddPropertyChangedListener(resolveKey(target, Bar, 'value'), () => { barFires++; });
+        target.PropertyChanged(resolveKey(target, Foo, 'value')).subscribe(() => { fooFires++; });
+        target.PropertyChanged(resolveKey(target, Bar, 'value')).subscribe(() => { barFires++; });
 
         target.set_property_value(resolveKey(target, Foo, 'value'), 1);
         assert.equal(fooFires, 1);
@@ -2035,7 +2032,7 @@ describe('Cross-class / attached properties', () => {
 
         const consumer = new MuralBase();
         const captures: Array<[unknown, unknown]> = [];
-        consumer.AddPropertyChangedListener(resolveKey(consumer, TextBlock, 'fontSize'), (_m, _p, o, n) => { captures.push([o, n]); }, );
+        consumer.PropertyChanged(resolveKey(consumer, TextBlock, 'fontSize')).subscribe(({ oldValue, newValue }) => { captures.push([oldValue, newValue]); });
 
         consumer.set_property_value(resolveKey(consumer, TextBlock, 'fontSize'), new Binding(source, 'value'));
         assert.equal(captures.length, 1);
@@ -2109,7 +2106,7 @@ describe('Target-side writeback through TwoWay / OneWayToSource bindings', () =>
         );
 
         const captures: Array<[unknown, unknown]> = [];
-        view.AddPropertyChangedListener(resolveKey(view, undefined, 'label'), (_m, _p, o, n) => { captures.push([o, n]); }, );
+        view.PropertyChanged(resolveKey(view, undefined, 'label')).subscribe(({ oldValue, newValue }) => { captures.push([oldValue, newValue]); });
 
         view.set_property_value(resolveKey(view, undefined, 'label'), 'typed-by-user');
         assert.equal(captures.length, 1);
@@ -2126,7 +2123,7 @@ describe('Target-side writeback through TwoWay / OneWayToSource bindings', () =>
         );
 
         let sourceFires = 0;
-        desk.AddPropertyChangedListener(resolveKey(desk, undefined, 'label'), () => { sourceFires++; });
+        desk.PropertyChanged(resolveKey(desk, undefined, 'label')).subscribe(() => { sourceFires++; });
 
         view.set_property_value(resolveKey(view, undefined, 'label'), 'typed-by-user');
         assert.equal(sourceFires, 1);
@@ -2274,7 +2271,7 @@ describe('PropertyPath attached-property syntax', () => {
 
         const view = new ViewModel();
         const captures: Array<[unknown, unknown]> = [];
-        view.AddPropertyChangedListener(resolveKey(view, undefined, 'echoed'), (_m, _p, o, n) => { captures.push([o, n]); }, );
+        view.PropertyChanged(resolveKey(view, undefined, 'echoed')).subscribe(({ oldValue, newValue }) => { captures.push([oldValue, newValue]); });
 
         view.set_property_value(resolveKey(view, undefined, 'echoed'), new Binding(button, '(Grid.Row)'));
         assert.equal(captures.length, 1);
@@ -2402,7 +2399,7 @@ describe('Read-only properties', () => {
         const key = MuralBase.RegisterReadOnlyProperty(Widget, 'actualWidth', 0, MetaData.None);
         const w = new Widget();
         const captures: Array<[unknown, unknown]> = [];
-        w.AddPropertyChangedListener(resolveKey(w, undefined, 'actualWidth'), (_m, _p, o, n) => { captures.push([o, n]); }, );
+        w.PropertyChanged(resolveKey(w, undefined, 'actualWidth')).subscribe(({ oldValue, newValue }) => { captures.push([oldValue, newValue]); });
 
         w.set_property_value_with_key(key, 100);
         assert.equal(captures.length, 1);
@@ -2540,7 +2537,7 @@ describe('Typed PropertyKey<T>', () => {
         const widthKey = MuralBase.RegisterProperty<number>(Widget, 'width', 0, MetaData.None);
         const w = new Widget();
         const captures: Array<[unknown, unknown]> = [];
-        w.AddPropertyChangedListener(widthKey, (_m, _p, o, n) => { captures.push([o, n]); });
+        w.PropertyChanged(widthKey).subscribe(({ oldValue, newValue }) => { captures.push([oldValue, newValue]); });
 
         w.set_property_value(widthKey, 7);            // typed write
         w.set_property_value(resolveKey(w, undefined, 'width'), 8);              // string-keyed write — same DP
@@ -2554,11 +2551,10 @@ describe('Typed PropertyKey<T>', () => {
         const widthKey = MuralBase.RegisterProperty<number>(Widget, 'width', 0, MetaData.None);
         const w = new Widget();
         const captures: Array<[unknown, unknown]> = [];
-        const cb: PropertyChangeCallback = (_m, _p, o, n) => { captures.push([o, n]); };
-        w.AddPropertyChangedListener(widthKey, cb);
+        const sub: Disposable = w.PropertyChanged(widthKey).subscribe(({ oldValue, newValue }) => { captures.push([oldValue, newValue]); });
 
         w.set_property_value(widthKey, 1);
-        w.RemovePropertyChangedListener(widthKey, cb);
+        sub.dispose();
         w.set_property_value(widthKey, 2);
 
         assert.equal(captures.length, 1);
@@ -2632,7 +2628,7 @@ describe('Binding pipeline — FallbackValue / TargetNullValue', () => {
         MuralBase.RegisterProperty(View, 'echoed', '', MetaData.None);
         const view = new View();
         const captures: Array<[unknown, unknown]> = [];
-        view.AddPropertyChangedListener(resolveKey(view, undefined, 'echoed'), (_m, _p, o, n) => { captures.push([o, n]); }, );
+        view.PropertyChanged(resolveKey(view, undefined, 'echoed')).subscribe(({ oldValue, newValue }) => { captures.push([oldValue, newValue]); });
 
         view.set_property_value(
             resolveKey(view, undefined, 'echoed'),
@@ -2744,7 +2740,7 @@ describe('Binding pipeline — ValueConverter', () => {
         MuralBase.RegisterProperty(View, 'echoed', 0, MetaData.None);
         const view = new View();
         let fires = 0;
-        view.AddPropertyChangedListener(resolveKey(view, undefined, 'echoed'), () => { fires++; });
+        view.PropertyChanged(resolveKey(view, undefined, 'echoed')).subscribe(() => { fires++; });
 
         view.set_property_value(
             resolveKey(view, undefined, 'echoed'),
@@ -3964,7 +3960,7 @@ describe('Coerce on every effective-value recomputation', () => {
         }
         const s = new Slider();
         const captures: Array<[unknown, unknown]> = [];
-        s.AddPropertyChangedListener(resolveKey(s, undefined, 'Value'), (_m, _p, o, n) => { captures.push([o, n]); });
+        s.PropertyChanged(resolveKey(s, undefined, 'Value')).subscribe(({ oldValue, newValue }) => { captures.push([oldValue, newValue]); });
 
         s.set_property_value(resolveKey(s, undefined, 'Value'), 100);  // clamped
         assert.equal(captures.length, 1);
@@ -3983,7 +3979,7 @@ describe('Coerce on every effective-value recomputation', () => {
         src.set_property_value(resolveKey(src, undefined, 'Raw'), 5);
         const sink = new Sink();
         const captures: Array<[unknown, unknown]> = [];
-        sink.AddPropertyChangedListener(resolveKey(sink, undefined, 'Value'), (_m, _p, o, n) => { captures.push([o, n]); });
+        sink.PropertyChanged(resolveKey(sink, undefined, 'Value')).subscribe(({ oldValue, newValue }) => { captures.push([oldValue, newValue]); });
 
         sink.set_property_value(resolveKey(sink, undefined, 'Value'), new Binding(src, 'Raw'));
         // Install fires with (default 0, resolved 5) — both within range, no clamp.
@@ -4097,7 +4093,7 @@ describe('Binding — INotifyCollectionChanged through PropertyPath', () => {
 
         const view = new ViewModel();
         const captures: Array<unknown> = [];
-        view.AddPropertyChangedListener(resolveKey(view, undefined, 'label'), (_m, _p, _o, n) => { captures.push(n); });
+        view.PropertyChanged(resolveKey(view, undefined, 'label')).subscribe(({ newValue }) => { captures.push(newValue); });
         view.set_property_value(resolveKey(view, undefined, 'label'), new Binding(dept, 'managers[1].office.desk.label'));
         assert.equal(captures.length, 1);  // install fire
 
@@ -4181,7 +4177,7 @@ describe('Binding — INotifyCollectionChanged through PropertyPath', () => {
 
         const view = new ViewModel();
         const captures: Array<unknown> = [];
-        view.AddPropertyChangedListener(resolveKey(view, undefined, 'managers'), (_m, _p, _o, n) => { captures.push(n); });
+        view.PropertyChanged(resolveKey(view, undefined, 'managers')).subscribe(({ newValue }) => { captures.push(newValue); });
         view.set_property_value(resolveKey(view, undefined, 'managers'), new Binding(holder, 'managers'));
         assert.equal(captures.length, 1);  // install fire
         assert.equal(captures[0], collection);
@@ -4212,7 +4208,7 @@ describe('Binding — INotifyCollectionChanged through PropertyPath', () => {
 
         // Mutating the OLD collection now does nothing observable.
         const captures: Array<unknown> = [];
-        view.AddPropertyChangedListener(resolveKey(view, undefined, 'label'), (_m, _p, _o, n) => { captures.push(n); });
+        view.PropertyChanged(resolveKey(view, undefined, 'label')).subscribe(({ newValue }) => { captures.push(newValue); });
         collA.SetAt(1, makeManager('a-1-orphaned'));
         assert.equal(captures.length, 0, 'old collection is detached');
 
@@ -4935,7 +4931,7 @@ describe('AddPropertyChangedListener name resolution', () =>
     {
         const w = new Widget();
         const seen: string[] = [];
-        w.AddPropertyChangedListener('Caption', (_o, _n, _old, nv) => seen.push(nv as string));
+        w.PropertyChanged('Caption').subscribe(({ newValue }) => seen.push(newValue as string));
         w.set_property_value(Widget.CaptionKey, 'Hi');
         assert.deepEqual(seen, ['Hi']);
     });
@@ -4949,13 +4945,15 @@ describe('AddPropertyChangedListener name resolution', () =>
         // MuralBase source). Registered DP names still route through the EVD path.
         const w = new Widget();
         const seen: unknown[] = [];
-        const cb = (_o: unknown, _n: unknown, _old: unknown, nv: unknown): void => { seen.push(nv); };
-        assert.doesNotThrow(() => w.AddPropertyChangedListener('plain', cb));
+        let plainSub: Disposable;
+        assert.doesNotThrow(() => {
+            plainSub = w.PropertyChanged('plain').subscribe(({ newValue }) => { seen.push(newValue); });
+        });
         (w as unknown as { RaisePropertyChanged(n: string, o: unknown, v: unknown): void }).RaisePropertyChanged('plain', undefined, 'v1');
         assert.deepEqual(seen, ['v1']);
 
-        // Removing the same callback stops delivery.
-        w.RemovePropertyChangedListener('plain', cb);
+        // Disposing the subscription stops delivery.
+        plainSub!.dispose();
         (w as unknown as { RaisePropertyChanged(n: string, o: unknown, v: unknown): void }).RaisePropertyChanged('plain', 'v1', 'v2');
         assert.deepEqual(seen, ['v1']);
     });

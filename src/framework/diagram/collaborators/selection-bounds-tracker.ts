@@ -1,4 +1,4 @@
-﻿import { MuralBase } from '../../../runtime/index.js';
+﻿import { MuralBase, type Disposable } from '../../../runtime/index.js';
 import { findDescriptor, resolveKey } from '../../../runtime/model-internals.js';
 import { diagramSpaceRect, type SpatialNode } from '../coordinate-space.js';
 import type { Diagram } from '../diagram.js';
@@ -90,16 +90,13 @@ export class SelectionBoundsTracker
         const wKey    = resolveKey(item, undefined, 'Width');
         const hKey    = resolveKey(item, undefined, 'Height');
         const handler = (): void => this._recompute();
-        item.AddPropertyChangedListener(leftKey, handler);
-        item.AddPropertyChangedListener(topKey,  handler);
-        item.AddPropertyChangedListener(wKey,    handler);
-        item.AddPropertyChangedListener(hKey,    handler);
-        return (): void => {
-            item.RemovePropertyChangedListener(leftKey, handler);
-            item.RemovePropertyChangedListener(topKey,  handler);
-            item.RemovePropertyChangedListener(wKey,    handler);
-            item.RemovePropertyChangedListener(hKey,    handler);
-        };
+        const subs: Disposable[] = [
+            item.PropertyChanged(leftKey).subscribe(handler),
+            item.PropertyChanged(topKey).subscribe(handler),
+            item.PropertyChanged(wKey).subscribe(handler),
+            item.PropertyChanged(hKey).subscribe(handler),
+        ];
+        return (): void => { for (const s of subs) s.dispose(); };
     }
 
     private _recompute(): void

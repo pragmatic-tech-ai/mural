@@ -3,7 +3,7 @@ import { MetaData } from '../metadata.js';
 import { MuralBase } from '../model.js';
 import type { PropertyKey } from '../model.js';
 import { resolveKey } from '../model-internals.js';
-import type { PropertyChangeCallback } from './effective-value.js';
+import type { Disposable } from '@pragmatic-tech-ai/todl-runtime';
 import type { Visual } from '../../visual-engine/visual.js';
 
 // Internal MuralBase that mirrors the templated parent's watched property.
@@ -34,10 +34,10 @@ class TemplateBindingImpl extends Binding
 {
     private readonly watcher:         TemplatedParentWatcher;
     private readonly templatedParent: Visual;
-    private readonly callback:        PropertyChangeCallback;
-    // Resolved once at construction; both AddPropertyChangedListener
-    // (the lifetime-of-binding subscription) and the dispose-time
-    // RemovePropertyChangedListener use the same key.
+    private readonly callback:        () => void;
+    private subscription:             Disposable | undefined;
+    // Resolved once at construction; used to install the change-channel
+    // subscription and (via set_value) to write back to the templated parent.
     private readonly key:             PropertyKey<unknown>;
 
     constructor(templatedParent: Visual, property: string)
@@ -59,14 +59,15 @@ class TemplateBindingImpl extends Binding
         {
             this.watcher.Value = templatedParent.get_property_value(this.key);
         };
-        templatedParent.AddPropertyChangedListener(this.key, this.callback);
+        this.subscription = templatedParent.PropertyChanged(this.key).subscribe(this.callback);
         this.watcher.Value = templatedParent.get_property_value(this.key);
     }
 
     public override dispose(): void
     {
         super.dispose();
-        this.templatedParent.RemovePropertyChangedListener(this.key, this.callback);
+        this.subscription?.dispose();
+        this.subscription = undefined;
     }
 
     // TwoWay writeback: when the target DP changes and the EVD asks the binding

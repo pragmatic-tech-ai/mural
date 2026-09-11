@@ -56,7 +56,7 @@ export class StatusBarVM extends MuralBase {
         }));
         // Refresh Remove's CanExecute whenever the count changes so its
         // chrome dims / undims live.
-        this.AddPropertyChangedListener(StatusBarVM.ItemCountKey, () => {
+        this.PropertyChanged(StatusBarVM.ItemCountKey).subscribe(() => {
             removeCmd.RaiseCanExecuteChanged();
         });
     }

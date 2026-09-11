@@ -4,9 +4,9 @@
     ObservableCollection,
     Element, Visual,
     type CollectionChange,
+    type Disposable,
     type PropertyDescriptor,
 } from '../../runtime/index.js';
-import type { PropertyChangeCallback } from '../../runtime/binding/effective-value.js';
 import { Border } from '../../basic/border.js';
 import { StackPanel } from '../../basic/panels/stack-panel.js';
 import { TemplatedControl } from '../../basic/templated-control.js';
@@ -126,7 +126,7 @@ export class TopAppBar extends TemplatedControl
     private _titleText:    TextBlock  | undefined;
     private _actionsStack: StackPanel | undefined;
     private _actionsSubscription:      (() => void) | undefined;
-    private _scrollSourceSubscription: (() => void) | undefined;
+    private _scrollSourceSubscription: Disposable   | undefined;
 
     constructor()
     {
@@ -272,7 +272,7 @@ export class TopAppBar extends TemplatedControl
     // source's resting state without waiting for the first change.
     private rebindScrollSource(_prev: ScrollViewer | undefined, next: ScrollViewer | undefined): void
     {
-        this._scrollSourceSubscription?.();
+        this._scrollSourceSubscription?.dispose();
         this._scrollSourceSubscription = undefined;
 
         if (next === undefined)
@@ -284,20 +284,9 @@ export class TopAppBar extends TemplatedControl
         // Initial pull from the source's current state.
         this.writeIsScrolled(next.IsScrolled);
 
-        const callback: PropertyChangeCallback = (
-            _model, _name, _oldValue, newValue,
-        ): void =>
-        {
-            this.writeIsScrolled(newValue as boolean);
-        };
-        next.AddPropertyChangedListener(ScrollViewer.IsScrolledKey, callback);
-        // AddPropertyChangedListener doesn't return an unsubscribe
-        // thunk — build one that flips the wire back via the symmetric
-        // Remove* call.
-        this._scrollSourceSubscription = (): void =>
-        {
-            next.RemovePropertyChangedListener(ScrollViewer.IsScrolledKey, callback);
-        };
+        this._scrollSourceSubscription = next.PropertyChanged(ScrollViewer.IsScrolledKey).subscribe(
+            ({ newValue }): void => { this.writeIsScrolled(newValue as boolean); },
+        );
     }
 
     private writeIsScrolled(v: boolean): void

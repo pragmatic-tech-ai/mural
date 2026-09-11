@@ -7,7 +7,7 @@ import { PropertyGrid } from '../property-grid.js';
 import { GridProperty, PropertyKind } from '../grid-property.js';
 import { PropertyItem, PropertyCategory } from '../property-item.js';
 import { MapPropertyBag, type PropertyAccessor } from '../property-bag.js';
-import { Signal, type PropertyChangeCallback } from '@pragmatic-tech-ai/todl-runtime';
+import { Signal, type PropertyChangedEventArgs } from '@pragmatic-tech-ai/todl-runtime';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -39,7 +39,7 @@ function makeSpyBag(name: string, initial: unknown): {
     // disposes that subscription on unobserve, so "the observer was disposed" is
     // exactly "the signal has no subscribers left" (checked only after a
     // subscription has been established, which every caller does via Target).
-    const changed = new Signal<PropertyChangeCallback>();
+    const changed = new Signal<PropertyChangedEventArgs>();
     const accessors = new Map<string, PropertyAccessor>([
         [name, {
             id: () => name,

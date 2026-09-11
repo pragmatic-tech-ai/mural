@@ -83,8 +83,8 @@ describe('Selector — attached IsSelected DP', () => {
     test('attached IsSelected fires PropertyChanged listeners on each write', () => {
         const v = new Border();
         let last: boolean | undefined;
-        v.AddPropertyChangedListener(Selector.IsSelectedKey, (_o, _n, _old, value) => {
-            last = value as boolean;
+        v.PropertyChanged(Selector.IsSelectedKey).subscribe(({ newValue }) => {
+            last = newValue as boolean;
         });
         Selector.SetIsSelected(v, true);
         assert.equal(last, true);

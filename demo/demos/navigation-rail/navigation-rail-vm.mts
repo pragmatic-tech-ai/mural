@@ -21,7 +21,7 @@ export class NavigationRailVM extends MuralBase
             'Home', 'Search', 'Library', 'Settings',
         ]);
         this.set_property_value(NavigationRailVM.DestinationsKey, destinations);
-        this.AddPropertyChangedListener(NavigationRailVM.SelectedItemKey, () => {
+        this.PropertyChanged(NavigationRailVM.SelectedItemKey).subscribe(() => {
             this.ActiveLabel = this.SelectedItem ?? '';
         });
     }

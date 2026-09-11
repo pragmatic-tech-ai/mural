@@ -31,8 +31,8 @@ function attachBehaviors(view, vm) {
             } catch { /* partial hex during typing */ }
         };
         apply();
-        vm.AddPropertyChangedListener(key, apply);
-        cleanups.push(() => vm.RemovePropertyChangedListener(key, apply));
+        const sub = vm.PropertyChanged(key).subscribe(apply);
+        cleanups.push(() => sub.dispose());
     }
 
     return function detach() {

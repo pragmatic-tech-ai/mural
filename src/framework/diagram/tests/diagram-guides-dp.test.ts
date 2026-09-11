@@ -11,7 +11,7 @@ describe('Diagram guide DPs', () => {
         assert.deepEqual(d.Guides, []);
         const g: PersistentGuide[] = [{ axis: AlignmentAxis.X, position: 120, glued: [] }];
         let fired = 0;
-        d.AddPropertyChangedListener(Diagram.GuidesKey, () => { fired++; });
+        d.PropertyChanged(Diagram.GuidesKey).subscribe(() => { fired++; });
         d.Guides = g;
         assert.equal(d.Guides.length, 1);
         assert.equal(fired, 1);
@@ -28,7 +28,7 @@ describe('Diagram guide DPs', () => {
         const d = new Diagram();
         assert.equal(d.GuidePreview, undefined);
         let fired = 0;
-        d.AddPropertyChangedListener(Diagram.GuidePreviewKey, () => { fired++; });
+        d.PropertyChanged(Diagram.GuidePreviewKey).subscribe(() => { fired++; });
         d.GuidePreview = { axis: AlignmentAxis.Y, position: 42 };
         assert.equal(d.GuidePreview?.position, 42);
         assert.equal(fired, 1);

@@ -133,8 +133,8 @@ export class ToolbarService extends ServiceBase
         if (host instanceof DocumentsContentHostService)
         {
             this._host = host;
-            host.AddPropertyChangedListener(
-                DocumentsContentHostService.ActiveDocumentKey, () => this.OnActiveDocumentChanged());
+            host.PropertyChanged(DocumentsContentHostService.ActiveDocumentKey).subscribe(
+                () => this.OnActiveDocumentChanged());
         }
 
         // Bridge the global requery pulse to our VM commands.

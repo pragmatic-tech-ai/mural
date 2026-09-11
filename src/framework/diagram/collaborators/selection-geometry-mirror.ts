@@ -1,4 +1,4 @@
-import { Visual } from '../../../runtime/index.js';
+import { Visual, type Disposable } from '../../../runtime/index.js';
 import type { Diagram } from '../diagram.js';
 import { Figure } from '../figure.js';
 
@@ -38,15 +38,15 @@ export class SelectionGeometryMirror
         const D = diagram.constructor as typeof import('../diagram.js').Diagram;
         diagram.AddSelectionChangedListener(() => this._retarget());
         // Edits flowing IN from the inspector → write to the Figure.
-        diagram.AddPropertyChangedListener(D.SelectedShapeLeftKey,     () => this._writeBack('Left'));
-        diagram.AddPropertyChangedListener(D.SelectedShapeTopKey,      () => this._writeBack('Top'));
-        diagram.AddPropertyChangedListener(D.SelectedShapeWidthKey,    () => this._writeBack('Width'));
-        diagram.AddPropertyChangedListener(D.SelectedShapeHeightKey,   () => this._writeBack('Height'));
-        diagram.AddPropertyChangedListener(D.SelectedShapeRotationKey, () => this._writeBack('Rotation'));
+        diagram.PropertyChanged(D.SelectedShapeLeftKey).subscribe(     () => this._writeBack('Left'));
+        diagram.PropertyChanged(D.SelectedShapeTopKey).subscribe(      () => this._writeBack('Top'));
+        diagram.PropertyChanged(D.SelectedShapeWidthKey).subscribe(    () => this._writeBack('Width'));
+        diagram.PropertyChanged(D.SelectedShapeHeightKey).subscribe(   () => this._writeBack('Height'));
+        diagram.PropertyChanged(D.SelectedShapeRotationKey).subscribe( () => this._writeBack('Rotation'));
         // Per-shape editor intents (lock aspect, position anchor) also mirror
         // to/from the Figure so they are per-shape and persist.
-        diagram.AddPropertyChangedListener(D.SelectedShapeLockAspectKey, () => this._writeBack('LockAspect'));
-        diagram.AddPropertyChangedListener(D.SelectedShapeAnchorKey,     () => this._writeBack('Anchor'));
+        diagram.PropertyChanged(D.SelectedShapeLockAspectKey).subscribe(() => this._writeBack('LockAspect'));
+        diagram.PropertyChanged(D.SelectedShapeAnchorKey).subscribe(    () => this._writeBack('Anchor'));
         this._retarget();
     }
 
@@ -73,8 +73,8 @@ export class SelectionGeometryMirror
             const keys = [Figure.LeftKey, Figure.TopKey, Visual.WidthKey, Visual.HeightKey,
                           Figure.RotationKey, Figure.BaseWidthKey, Figure.BaseHeightKey,
                           Figure.LockAspectRatioKey, Figure.PositionFromKey];
-            keys.forEach(k => f.AddPropertyChangedListener(k, seed));
-            this._figureUnsub = (): void => keys.forEach(k => f.RemovePropertyChangedListener(k, seed));
+            const subs: Disposable[] = keys.map(k => f.PropertyChanged(k).subscribe(seed));
+            this._figureUnsub = (): void => { for (const s of subs) s.dispose(); };
             this._seed(f);
         }
     }

@@ -39,7 +39,7 @@ describe('Binding observes a plain Observable source', () => {
         // is missing until the Observable branch subscribes.
         let pushes = 0;
         let lastText: unknown;
-        tb.AddPropertyChangedListener(resolveKey(tb, undefined, 'Text'), (_o, _p, _old, n) => { pushes++; lastText = n; });
+        tb.PropertyChanged(resolveKey(tb, undefined, 'Text')).subscribe(({ newValue }) => { pushes++; lastText = newValue; });
 
         tb.set_property_value(
             resolveKey(tb, undefined, 'Text'),
@@ -75,7 +75,7 @@ describe('Binding observes a plain Observable source', () => {
     test('two-way: a target-side edit writes back through the setter', () => {
         const vm = new LabelVM('start');
         const changes: Array<[unknown, unknown]> = [];
-        vm.AddPropertyChangedListener('label', (_o, _p, o, n) => { changes.push([o, n]); });
+        vm.PropertyChanged('label').subscribe(({ oldValue, newValue }) => { changes.push([oldValue, newValue]); });
 
         const tb = new TextBlock();
         tb.set_property_value(

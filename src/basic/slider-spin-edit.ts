@@ -56,16 +56,16 @@ export class SliderSpinEdit extends TemplatedControl
         // Value push so both clamp consistently. Re-forward on change so a
         // bound Minimum / Maximum (etc.) keeps the children in step.
         this.forwardRange();
-        this.AddPropertyChangedListener(SliderSpinEdit.MinimumKey,       () => this.forwardRange());
-        this.AddPropertyChangedListener(SliderSpinEdit.MaximumKey,       () => this.forwardRange());
-        this.AddPropertyChangedListener(SliderSpinEdit.SmallChangeKey,   () => this.forwardRange());
-        this.AddPropertyChangedListener(SliderSpinEdit.LargeChangeKey,   () => this.forwardRange());
-        this.AddPropertyChangedListener(SliderSpinEdit.DecimalPlacesKey, () => this.forwardRange());
+        this.PropertyChanged(SliderSpinEdit.MinimumKey).subscribe(       () => this.forwardRange());
+        this.PropertyChanged(SliderSpinEdit.MaximumKey).subscribe(       () => this.forwardRange());
+        this.PropertyChanged(SliderSpinEdit.SmallChangeKey).subscribe(   () => this.forwardRange());
+        this.PropertyChanged(SliderSpinEdit.LargeChangeKey).subscribe(   () => this.forwardRange());
+        this.PropertyChanged(SliderSpinEdit.DecimalPlacesKey).subscribe( () => this.forwardRange());
 
         // Unit label — collapse when empty so a unit-less combo shows no
         // trailing gap.
         this.refreshUnit();
-        this.AddPropertyChangedListener(SliderSpinEdit.UnitKey, () => this.refreshUnit());
+        this.PropertyChanged(SliderSpinEdit.UnitKey).subscribe(() => this.refreshUnit());
 
         // ── Two-way Value sync ──────────────────────────────────────
         // Seed the children from the current Value, then keep all three in
@@ -73,18 +73,18 @@ export class SliderSpinEdit extends TemplatedControl
         // also snaps the OTHER child (and the slider itself, to the rounded
         // Value) within one guarded pass.
         this.pushToChildren();
-        this.AddPropertyChangedListener(SliderSpinEdit.ValueKey, () => {
+        this.PropertyChanged(SliderSpinEdit.ValueKey).subscribe(() => {
             if (this._sync) return;
             this._sync = true;
             try { this.pushToChildren(); } finally { this._sync = false; }
         });
-        this._slider.AddPropertyChangedListener(Slider.ValueKey, () => {
+        this._slider.PropertyChanged(Slider.ValueKey).subscribe(() => {
             if (this._sync) return;
             this._sync = true;
             try { this.Value = this._slider.Value; this.pushToChildren(); }
             finally { this._sync = false; }
         });
-        this._spin.AddPropertyChangedListener(SpinEdit.ValueKey, () => {
+        this._spin.PropertyChanged(SpinEdit.ValueKey).subscribe(() => {
             if (this._sync) return;
             this._sync = true;
             try { this.Value = this._spin.Value; this.pushToChildren(); }

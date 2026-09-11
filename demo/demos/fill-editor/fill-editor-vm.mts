@@ -36,7 +36,7 @@ export class FillEditorDemoVM extends MuralBase
         // we re-summarise. We don't subscribe to brush-internal
         // properties; the editor builds a NEW Brush on every gesture
         // (variant swap, color edit) so a Fill listener is enough.
-        this.AddPropertyChangedListener(FillEditorDemoVM.FillKey, () => this._refreshSummary());
+        this.PropertyChanged(FillEditorDemoVM.FillKey).subscribe(() => this._refreshSummary());
     }
 
     _refreshSummary(): void {

@@ -140,7 +140,7 @@ export class ApplicationSettings extends ServiceBase
             ? ApplicationSettings.fromStorable(definition, this._persisted[definition.Key])
             : definition.Default;
         const setting = new Setting(definition, initial);
-        setting.AddPropertyChangedListener(Setting.ValueKey, () => this.persist());
+        setting.PropertyChanged(Setting.ValueKey).subscribe(() => this.persist());
         this._byKey.set(definition.Key, setting);
         this.Settings.Add(setting);
     }

@@ -13,7 +13,7 @@
 export {
     EffectiveValueDescriptor,
     PropertyValueSource,
-    type PropertyChangeCallback,
+    type PropertyChangedEventArgs,
 } from './effective-value.js';
 export {
     Binding,

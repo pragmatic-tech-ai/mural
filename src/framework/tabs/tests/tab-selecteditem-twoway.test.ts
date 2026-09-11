@@ -113,7 +113,7 @@ describe('TabItem — click writes back through a TwoWay SelectedItem binding', 
 
         // Record every value the bound ActiveDocument takes on from here.
         const seen: (Doc | undefined)[] = [];
-        shell.AddPropertyChangedListener(Shell.ActiveDocumentKey, () => seen.push(shell.ActiveDocument));
+        shell.PropertyChanged(Shell.ActiveDocumentKey).subscribe(() => seen.push(shell.ActiveDocument));
 
         // Mimic host.Open(b): add to the bound collection, then activate it. The
         // Add re-pushes the SAME collection instance through the ItemsSource
