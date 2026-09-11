@@ -7,6 +7,7 @@ import { PanelDockService } from './services/panel-dock-service.js';
 import { DialogService } from './services/dialog-service.js';
 import { StatusService } from './services/status-service.js';
 import { ApplicationSettings } from './services/application-settings-service.js';
+import { SettingSourceKey } from '../../runtime/index.js';
 import { ThemeServiceKey, ThemeServiceInstance } from './services/theme-service.js';
 import { DocumentTypeRegistry } from './documents/document-type-registry.js';
 import { ProjectFactoryRegistry } from './projects/project-factory-registry.js';
@@ -133,6 +134,7 @@ export class EditorShell extends ShellBase
         {
             const root = Application.current?.Services ?? this.Services;
             root.register(ApplicationSettings.Key, (p) => new ApplicationSettings(p));
+            root.register(SettingSourceKey, (p) => p.getRequired(ApplicationSettings.Key));
         }
         // Provide the theme service by default: the global ThemeManager registered
         // AS the IThemeService contract (a singleton instance — ThemeManager is a

@@ -6,7 +6,10 @@
     ObservableCollection,
     ServiceBase,
     ServiceKey,
+    Signal,
     type IServiceProvider,
+    type PropertyChangedEventArgs,
+    type ISettingSource,
 } from '../../../runtime/index.js';
 import { SolidColorBrush } from '../../../visual-engine/index.js';
 import { ShellModule } from '../module.js';
@@ -45,7 +48,7 @@ export const SettingsStoreKey = new ServiceKey<ISettingsStore>('SettingsStore');
 // `Settings` is a DP-backed ObservableCollection so a settings pane binds
 // `ItemsSource = $Settings`; `_byKey` gives O(1) Get/Set. Auto-registered by
 // EditorShell (like NavigationService), so any shell app gets it for free.
-export class ApplicationSettings extends ServiceBase
+export class ApplicationSettings extends ServiceBase implements ISettingSource
 {
     public static readonly Key = new ServiceKey<ApplicationSettings>('ApplicationSettings');
 
@@ -56,6 +59,7 @@ export class ApplicationSettings extends ServiceBase
     private readonly _byKey = new Map<string, Setting>();
     private readonly _store: ISettingsStore | undefined;
     private readonly _persisted: Record<string, unknown>;
+    private readonly _emptyChanged = new Map<string, Signal<PropertyChangedEventArgs>>();
 
     constructor(provider: IServiceProvider)
     {
@@ -117,6 +121,30 @@ export class ApplicationSettings extends ServiceBase
     public GetSetting(key: string): Setting | undefined
     {
         return this._byKey.get(key);
+    }
+
+    // ISettingSource: a Signal that fires whenever the named setting's Value
+    // changes. Routes through the Setting's own Value DP change channel so the
+    // subscriber receives exactly the same notification that a binding would.
+    // For an unknown key (no Setting yet registered) returns a stable empty
+    // Signal cached per key — a safety fallback, since definitions are normally
+    // contributed before any bound read.
+    public Changed(key: string): Signal<PropertyChangedEventArgs>
+    {
+        const setting = this.GetSetting(key);
+        if (setting !== undefined) return setting.PropertyChanged(Setting.ValueKey);
+        return this.emptyChangedFor(key);
+    }
+
+    private emptyChangedFor(key: string): Signal<PropertyChangedEventArgs>
+    {
+        let signal = this._emptyChanged.get(key);
+        if (signal === undefined)
+        {
+            signal = new Signal<PropertyChangedEventArgs>();
+            this._emptyChanged.set(key, signal);
+        }
+        return signal;
     }
 
     // Contribute definitions from a NON-module source — a framework component
