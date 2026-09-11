@@ -1,4 +1,5 @@
 import { MuralBase, PropertyKey } from '../../runtime/index.js';
+import { Signal, type PropertyChangeCallback } from '@pragmatic-tech-ai/todl-runtime';
 
 export interface IPropertyBag {
     GetValue(name: string): unknown;
@@ -7,11 +8,24 @@ export interface IPropertyBag {
     Observe(name: string, onChanged: () => void): () => void;
 }
 
-export interface PropertyAccessor {
+/** The read side of a property accessor: pull the current value. */
+export interface IReadOnlyPropertyAccessor {
     get(): unknown;
-    set?(value: unknown): void;
-    observe?(onChanged: () => void): () => void;
 }
+
+/**
+ * A writable, self-observable accessor. `set` writes the value; `changed`, when
+ * present, is the accessor's own change channel — the bag subscribes to it
+ * instead of owning notification, and skips its own emit on `SetValue` so a
+ * value change fires exactly once.
+ */
+export interface IPropertyAccessor extends IReadOnlyPropertyAccessor {
+    set(value: unknown): void;
+    changed?: Signal<PropertyChangeCallback>;
+}
+
+/** An accessor is either read-only (`get`) or writable (`get` + `set` [+ `changed`]). */
+export type PropertyAccessor = IReadOnlyPropertyAccessor | IPropertyAccessor;
 
 export class MapPropertyBag implements IPropertyBag {
     private readonly _accessors: ReadonlyMap<string, PropertyAccessor>;
@@ -27,21 +41,26 @@ export class MapPropertyBag implements IPropertyBag {
 
     public SetValue(name: string, value: unknown): void {
         const accessor = this.entry(name);
-        accessor.set?.(value);
-        // Only fire bag-owned listeners when the accessor does NOT own notifications
-        if (accessor.observe === undefined) {
+        if (!MapPropertyBag.isWritable(accessor)) {
+            return;
+        }
+        accessor.set(value);
+        // Only fire bag-owned listeners when the accessor does NOT own a change
+        // channel — otherwise notification arrives through accessor.changed.
+        if (accessor.changed === undefined) {
             this.notify(name);
         }
     }
 
     public IsReadOnly(name: string): boolean {
-        return this.entry(name).set === undefined;
+        return !MapPropertyBag.isWritable(this.entry(name));
     }
 
     public Observe(name: string, onChanged: () => void): () => void {
         const accessor = this.entry(name);
-        if (accessor.observe !== undefined) {
-            return accessor.observe(onChanged);
+        if (MapPropertyBag.isWritable(accessor) && accessor.changed !== undefined) {
+            const subscription = accessor.changed.subscribe(() => { onChanged(); });
+            return () => { subscription.dispose(); };
         }
         return this.registerListener(name, onChanged);
     }
@@ -52,6 +71,11 @@ export class MapPropertyBag implements IPropertyBag {
             throw new Error(`MapPropertyBag: unknown property '${name}'`);
         }
         return accessor;
+    }
+
+    // Narrow to the writable shape: a settable accessor exposes a `set` method.
+    private static isWritable(accessor: PropertyAccessor): accessor is IPropertyAccessor {
+        return typeof (accessor as IPropertyAccessor).set === 'function';
     }
 
     private notify(name: string): void {

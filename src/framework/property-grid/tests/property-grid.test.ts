@@ -7,6 +7,7 @@ import { PropertyGrid } from '../property-grid.js';
 import { GridProperty, PropertyKind } from '../grid-property.js';
 import { PropertyItem, PropertyCategory } from '../property-item.js';
 import { MapPropertyBag, type PropertyAccessor } from '../property-bag.js';
+import { Signal, type PropertyChangeCallback } from '@pragmatic-tech-ai/todl-runtime';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -32,19 +33,19 @@ function makeSpyBag(name: string, initial: unknown): {
     disposerCalled: () => boolean;
 } {
     let stored = initial;
-    let listenerSet: (() => void) | undefined;
-    let disposed = false;
+    // The accessor's own change channel. The bag subscribes to it on Observe and
+    // disposes that subscription on unobserve, so "the observer was disposed" is
+    // exactly "the signal has no subscribers left" (checked only after a
+    // subscription has been established, which every caller does via Target).
+    const changed = new Signal<PropertyChangeCallback>();
     const accessors = new Map<string, PropertyAccessor>([
         [name, {
             get: () => stored,
             set: (v) => { stored = v; },
-            observe: (cb) => {
-                listenerSet = cb;
-                return () => { disposed = true; listenerSet = undefined; };
-            },
+            changed,
         }],
     ]);
-    return { bag: new MapPropertyBag(accessors), disposerCalled: () => disposed };
+    return { bag: new MapPropertyBag(accessors), disposerCalled: () => !changed.hasSubscribers };
 }
 
 // A distinct, renderable DataTemplate used purely as an identity marker for

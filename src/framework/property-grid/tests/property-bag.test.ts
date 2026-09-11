@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { MapPropertyBag, DpPropertyBag, type PropertyAccessor } from '../property-bag.js';
 import { initTestApp } from '../../../basic/tests/test-app.js';
 import { MuralBase, MetaData, PropertyKey, type CoerceValue } from '../../../runtime/index.js';
+import { Signal, type PropertyChangeCallback } from '@pragmatic-tech-ai/todl-runtime';
 
 // ---------------------------------------------------------------------------
 // Probe class for DpPropertyBag tests
@@ -63,7 +64,7 @@ describe('MapPropertyBag — IsReadOnly', () => {
 });
 
 describe('MapPropertyBag — bag-owned notification', () => {
-    test('SetValue fires bag-owned listeners when accessor has no observe', () => {
+    test('SetValue fires bag-owned listeners when accessor has no changed signal', () => {
         let stored = 0;
         const accessors = new Map<string, PropertyAccessor>([
             ['v', { get: () => stored, set: (val) => { stored = val as number; } }],
@@ -94,71 +95,54 @@ describe('MapPropertyBag — bag-owned notification', () => {
     });
 });
 
-describe('MapPropertyBag — accessor.observe delegation', () => {
-    test('Observe uses accessor.observe when present', () => {
-        let externalUnsub: (() => void) | null = null;
-        let externalCb: (() => void) | null = null;
+describe('MapPropertyBag — accessor.changed delegation', () => {
+    test('Observe subscribes to accessor.changed when present', () => {
+        const changed = new Signal<PropertyChangeCallback>();
         const accessors = new Map<string, PropertyAccessor>([
-            ['x', {
-                get: () => 0,
-                observe: (cb) => {
-                    externalCb = cb;
-                    externalUnsub = () => { externalCb = null; };
-                    return externalUnsub;
-                },
-            }],
+            ['x', { get: () => 0, set: () => {}, changed }],
         ]);
         const bag = new MapPropertyBag(accessors);
         let notified = 0;
         bag.Observe('x', () => { notified++; });
         // Simulate the external source firing
-        externalCb?.();
+        changed.emit(() => {});
         assert.equal(notified, 1);
     });
 
-    test('SetValue does NOT double-fire when accessor supplies observe', () => {
+    test('SetValue does NOT double-fire when accessor supplies changed', () => {
         // The accessor owns notification; SetValue must not also fire bag listeners
-        let externalCb: (() => void) | null = null;
+        const changed = new Signal<PropertyChangeCallback>();
         let stored = 0;
         const accessors = new Map<string, PropertyAccessor>([
             ['x', {
                 get: () => stored,
                 set: (v) => { stored = v as number; },
-                observe: (cb) => {
-                    externalCb = cb;
-                    return () => { externalCb = null; };
-                },
+                changed,
             }],
         ]);
         const bag = new MapPropertyBag(accessors);
         let notified = 0;
         bag.Observe('x', () => { notified++; });
-        // SetValue calls set() but must NOT fire bag's own emitter (accessor.observe owns it)
+        // SetValue calls set() but must NOT fire bag's own emitter (accessor.changed owns it)
         bag.SetValue('x', 7);
         assert.equal(notified, 0, 'bag must not double-fire when accessor owns notification');
         // The accessor's own channel still works independently
-        externalCb?.();
+        changed.emit(() => {});
         assert.equal(notified, 1);
     });
 
-    test('Observe unsubscribe from accessor.observe path removes listener', () => {
-        let externalCb: (() => void) | null = null;
+    test('Observe unsubscribe from accessor.changed path removes listener', () => {
+        const changed = new Signal<PropertyChangeCallback>();
         const accessors = new Map<string, PropertyAccessor>([
-            ['x', {
-                get: () => 0,
-                observe: (cb) => {
-                    externalCb = cb;
-                    return () => { externalCb = null; };
-                },
-            }],
+            ['x', { get: () => 0, set: () => {}, changed }],
         ]);
         const bag = new MapPropertyBag(accessors);
         let notified = 0;
         const unsub = bag.Observe('x', () => { notified++; });
-        externalCb?.();
+        changed.emit(() => {});
         assert.equal(notified, 1);
         unsub();
-        externalCb?.();
+        changed.emit(() => {});
         // After unsub the accessor's own source no longer drives our listener
         assert.equal(notified, 1);
     });
