@@ -76,10 +76,10 @@ export class PropertyGridVM extends MuralBase {
             Status: 'Active',
         };
         const accessors = new Map([
-            ['Name', { get: () => data['Name'], set: v => { data['Name'] = v; } }],
-            ['Priority', { get: () => data['Priority'], set: v => { data['Priority'] = v; } }],
-            ['Archived', { get: () => data['Archived'], set: v => { data['Archived'] = v; } }],
-            ['Status', { get: () => data['Status'], set: v => { data['Status'] = v; } }],
+            ['Name', { id: () => 'Name', displayName: () => 'Name', get: () => data['Name'], set: v => { data['Name'] = v; } }],
+            ['Priority', { id: () => 'Priority', displayName: () => 'Priority', get: () => data['Priority'], set: v => { data['Priority'] = v; } }],
+            ['Archived', { id: () => 'Archived', displayName: () => 'Archived', get: () => data['Archived'], set: v => { data['Archived'] = v; } }],
+            ['Status', { id: () => 'Status', displayName: () => 'Status', get: () => data['Status'], set: v => { data['Status'] = v; } }],
         ]);
         const bag = new MapPropertyBag(accessors);
         const descs = Object.freeze([

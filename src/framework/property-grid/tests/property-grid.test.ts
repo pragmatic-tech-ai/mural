@@ -19,6 +19,8 @@ function makeBag(names: string[], values: Record<string, unknown> = {}): MapProp
     for (const name of names) {
         stored[name] = values[name] ?? '';
         accessors.set(name, {
+            id: () => name,
+            displayName: () => name,
             get: () => stored[name],
             set: (v) => { stored[name] = v; },
         });
@@ -40,6 +42,8 @@ function makeSpyBag(name: string, initial: unknown): {
     const changed = new Signal<PropertyChangeCallback>();
     const accessors = new Map<string, PropertyAccessor>([
         [name, {
+            id: () => name,
+            displayName: () => name,
             get: () => stored,
             set: (v) => { stored = v; },
             changed,

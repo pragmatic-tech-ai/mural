@@ -105,8 +105,12 @@ export class PropertyGrid extends ItemsControl
         // task-7 template), applyDefaultStyle() is a no-op.
         this.applyDefaultStyle();
         // Dispose live PropertyItem observers when the grid leaves the visual
-        // tree so that subscriptions do not outlive the control's lifetime.
-        this.AddUnloadedListener(() => this.disposeLiveItems());
+        // tree so that subscriptions do not outlive the control's lifetime, and
+        // release the bag's own source listeners (e.g. DpPropertyBag's DP bridges).
+        this.AddUnloadedListener(() => {
+            this.disposeLiveItems();
+            this.Target?.dispose();
+        });
     }
 
     // ── Test-only seam ───────────────────────────────────────────────────
@@ -271,6 +275,11 @@ export class PropertyGrid extends ItemsControl
     ): void
     {
         super.OnPropertyChanged(descriptor, oldValue, newValue);
+        if (descriptor.Name === 'Target')
+        {
+            // The replaced bag's Observe wired listeners on its source; release them.
+            (oldValue as IPropertyBag | undefined)?.dispose();
+        }
         if (descriptor.Name === 'Descriptors' || descriptor.Name === 'Target')
         {
             this.rebuildGroups();

@@ -1,15 +1,25 @@
 import { MuralBase, PropertyKey } from '../../runtime/index.js';
-import { Signal, type PropertyChangeCallback } from '@pragmatic-tech-ai/todl-runtime';
+import { Signal, type PropertyChangeCallback, type Disposable } from '@pragmatic-tech-ai/todl-runtime';
 
-export interface IPropertyBag {
+/**
+ * A named collection of properties. Iterating a bag yields `[name, accessor]`
+ * entries for every property it holds; `Observe` hands back a property's change
+ * `Signal` (the caller subscribes and disposes the returned `Disposable`).
+ * `Disposable`: `dispose()` releases any listeners the bag wired on external sources.
+ */
+export interface IPropertyBag extends Iterable<[string, IReadOnlyPropertyAccessor]>, Disposable {
     GetValue(name: string): unknown;
     SetValue(name: string, value: unknown): void;
     IsReadOnly(name: string): boolean;
-    Observe(name: string, onChanged: () => void): () => void;
+    Observe(name: string): Signal<PropertyChangeCallback>;
 }
 
-/** The read side of a property accessor: pull the current value. */
+/** The read side of a property accessor: its identity and current value. */
 export interface IReadOnlyPropertyAccessor {
+    /** The property's stable name (the key it is registered under). */
+    id(): string;
+    /** A human-readable label for the property, shown to the user. */
+    displayName(): string;
     get(): unknown;
 }
 
@@ -29,10 +39,16 @@ export type PropertyAccessor = IReadOnlyPropertyAccessor | IPropertyAccessor;
 
 export class MapPropertyBag implements IPropertyBag {
     private readonly _accessors: ReadonlyMap<string, PropertyAccessor>;
-    private readonly _listeners: Map<string, Set<() => void>> = new Map();
+    // Bag-owned change channels, one per name, for accessors that do NOT carry
+    // their own `changed` Signal. Created lazily on first Observe.
+    private readonly _signals: Map<string, Signal<PropertyChangeCallback>> = new Map();
 
     constructor(accessors: ReadonlyMap<string, PropertyAccessor>) {
         this._accessors = accessors;
+    }
+
+    public *[Symbol.iterator](): Iterator<[string, IReadOnlyPropertyAccessor]> {
+        yield* this._accessors;
     }
 
     public GetValue(name: string): unknown {
@@ -45,10 +61,10 @@ export class MapPropertyBag implements IPropertyBag {
             return;
         }
         accessor.set(value);
-        // Only fire bag-owned listeners when the accessor does NOT own a change
+        // Fire the bag-owned channel only when the accessor does NOT own a change
         // channel — otherwise notification arrives through accessor.changed.
         if (accessor.changed === undefined) {
-            this.notify(name);
+            this._signals.get(name)?.emit(() => {});
         }
     }
 
@@ -56,13 +72,27 @@ export class MapPropertyBag implements IPropertyBag {
         return !MapPropertyBag.isWritable(this.entry(name));
     }
 
-    public Observe(name: string, onChanged: () => void): () => void {
+    // Drop the bag-owned change channels. Accessor-owned `changed` Signals are
+    // not ours to dispose, so they are left untouched.
+    public dispose(): void {
+        this._signals.clear();
+    }
+
+    public Observe(name: string): Signal<PropertyChangeCallback> {
         const accessor = this.entry(name);
         if (MapPropertyBag.isWritable(accessor) && accessor.changed !== undefined) {
-            const subscription = accessor.changed.subscribe(() => { onChanged(); });
-            return () => { subscription.dispose(); };
+            return accessor.changed;
         }
-        return this.registerListener(name, onChanged);
+        return this.signalFor(name);
+    }
+
+    private signalFor(name: string): Signal<PropertyChangeCallback> {
+        let signal = this._signals.get(name);
+        if (signal === undefined) {
+            signal = new Signal<PropertyChangeCallback>();
+            this._signals.set(name, signal);
+        }
+        return signal;
     }
 
     private entry(name: string): PropertyAccessor {
@@ -77,29 +107,6 @@ export class MapPropertyBag implements IPropertyBag {
     private static isWritable(accessor: PropertyAccessor): accessor is IPropertyAccessor {
         return typeof (accessor as IPropertyAccessor).set === 'function';
     }
-
-    private notify(name: string): void {
-        const set = this._listeners.get(name);
-        if (set === undefined) {
-            return;
-        }
-        // Snapshot to guard against mutation during iteration
-        for (const cb of [...set]) {
-            cb();
-        }
-    }
-
-    private registerListener(name: string, onChanged: () => void): () => void {
-        let set = this._listeners.get(name);
-        if (set === undefined) {
-            set = new Set();
-            this._listeners.set(name, set);
-        }
-        set.add(onChanged);
-        return () => {
-            this._listeners.get(name)?.delete(onChanged);
-        };
-    }
 }
 
 /**
@@ -112,19 +119,33 @@ export class MapPropertyBag implements IPropertyBag {
  * - `GetValue`/`SetValue` delegate to `get_property_value`/`set_property_value`
  *   so DP coercion, validation, and the notification system all apply.
  * - `IsReadOnly` reflects `PropertyDescriptor.IsReadOnly`.
- * - `Observe` subscribes via `AddPropertyChangedListener` and returns a thunk
- *   that calls `RemovePropertyChangedListener`.
+ * - `Observe` returns a per-name `Signal`, bridged from the target's DP change
+ *   notification via a single `AddPropertyChangedListener`. The bridge listener
+ *   lives until `dispose()` — subscribers detach via the `Disposable` from
+ *   `subscribe()`, but the DP listener is released only on `dispose()`.
+ * - Iterating yields `[name, accessor]` for every DP; the synthesized accessor's
+ *   `displayName` falls back to the name (a DP carries no human label).
  * - Any operation on an unregistered name throws a descriptive `Error`.
  */
 export class DpPropertyBag implements IPropertyBag {
     private readonly _target: MuralBase;
     private readonly _keys: Map<string, PropertyKey<unknown>>;
+    // Lazily-created per-name change channels and the DP listener bridging each
+    // one, so Dispose() can release the target-side subscriptions.
+    private readonly _signals: Map<string, Signal<PropertyChangeCallback>> = new Map();
+    private readonly _bridges: Map<string, PropertyChangeCallback> = new Map();
 
     constructor(target: MuralBase) {
         this._target = target;
         this._keys = new Map();
         for (const descriptor of MuralBase.EnumerateProperties(target.constructor as Function)) {
             this._keys.set(descriptor.Name, new PropertyKey(descriptor));
+        }
+    }
+
+    public *[Symbol.iterator](): Iterator<[string, IReadOnlyPropertyAccessor]> {
+        for (const name of this._keys.keys()) {
+            yield [name, this.accessorFor(name)];
         }
     }
 
@@ -140,11 +161,38 @@ export class DpPropertyBag implements IPropertyBag {
         return this.key(name).descriptor.IsReadOnly;
     }
 
-    public Observe(name: string, onChanged: () => void): () => void {
+    public Observe(name: string): Signal<PropertyChangeCallback> {
         const key = this.key(name);
-        const callback = () => { onChanged(); };
-        this._target.AddPropertyChangedListener(key, callback);
-        return () => { this._target.RemovePropertyChangedListener(key, callback); };
+        let signal = this._signals.get(name);
+        if (signal === undefined) {
+            signal = new Signal<PropertyChangeCallback>();
+            this._signals.set(name, signal);
+            // Bridge the DP change notification into the Signal. One listener per
+            // observed name; released in Dispose().
+            const bridge: PropertyChangeCallback = () => { signal!.emit(() => {}); };
+            this._bridges.set(name, bridge);
+            this._target.AddPropertyChangedListener(key, bridge);
+        }
+        return signal;
+    }
+
+    /** Detach every DP bridge listener wired by `Observe`. */
+    public dispose(): void {
+        for (const [name, bridge] of this._bridges) {
+            this._target.RemovePropertyChangedListener(this.key(name), bridge);
+        }
+        this._bridges.clear();
+        this._signals.clear();
+    }
+
+    // A read-only accessor view over one DP. A DP has no human label, so
+    // displayName falls back to the property name.
+    private accessorFor(name: string): IReadOnlyPropertyAccessor {
+        return {
+            id: () => name,
+            displayName: () => name,
+            get: () => this.GetValue(name),
+        };
     }
 
     private key(name: string): PropertyKey<unknown> {

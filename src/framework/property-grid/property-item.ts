@@ -1,4 +1,5 @@
 import { Observable } from '../../runtime/index.js';
+import { type Disposable } from '@pragmatic-tech-ai/todl-runtime';
 import { GridProperty } from './grid-property.js';
 import { type IPropertyBag } from './property-bag.js';
 import { type DataTemplate } from '../../basic/templates/data-template.js';
@@ -23,13 +24,13 @@ export type EditorTemplateResolver = (item: PropertyItem) => DataTemplate | unde
 export class PropertyItem extends Observable {
     readonly Descriptor: GridProperty;
     private readonly _bag: IPropertyBag;
-    private _disposer: (() => void) | null;
+    private _subscription: Disposable | null;
 
     constructor(descriptor: GridProperty, bag: IPropertyBag) {
         super();
         this.Descriptor = descriptor;
         this._bag = bag;
-        this._disposer = bag.Observe(descriptor.Name, () => {
+        this._subscription = bag.Observe(descriptor.Name).subscribe(() => {
             const newValue = bag.GetValue(descriptor.Name);
             this.RaisePropertyChanged('Value', undefined, newValue);
         });
@@ -54,9 +55,9 @@ export class PropertyItem extends Observable {
      * Unsubscribes the bag observer.  Safe to call more than once.
      */
     public Dispose(): void {
-        if (this._disposer !== null) {
-            this._disposer();
-            this._disposer = null;
+        if (this._subscription !== null) {
+            this._subscription.dispose();
+            this._subscription = null;
         }
     }
 }

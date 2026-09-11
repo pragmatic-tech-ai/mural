@@ -11,7 +11,7 @@ import { PropertyItem, PropertyCategory } from '../property-item.js';
 function makeRwBag(name: string, initial: unknown): MapPropertyBag {
     let stored = initial;
     const accessors = new Map<string, PropertyAccessor>([
-        [name, { get: () => stored, set: (v) => { stored = v; } }],
+        [name, { id: () => name, displayName: () => name, get: () => stored, set: (v) => { stored = v; } }],
     ]);
     return new MapPropertyBag(accessors);
 }
@@ -19,7 +19,7 @@ function makeRwBag(name: string, initial: unknown): MapPropertyBag {
 function makeRoBag(name: string, initial: unknown): MapPropertyBag {
     const stored = initial;
     const accessors = new Map<string, PropertyAccessor>([
-        [name, { get: () => stored }],
+        [name, { id: () => name, displayName: () => name, get: () => stored }],
     ]);
     return new MapPropertyBag(accessors);
 }
@@ -151,7 +151,7 @@ describe('PropertyItem — read-only guard on set Value', () => {
     test('setting Value when descriptor is read-only does not write to the bag', () => {
         let stored = 'original';
         const accessors = new Map<string, PropertyAccessor>([
-            ['label', { get: () => stored, set: (v) => { stored = v as string; } }],
+            ['label', { id: () => 'label', displayName: () => 'label', get: () => stored, set: (v) => { stored = v as string; } }],
         ]);
         const bag = new MapPropertyBag(accessors);
         const desc = GridProperty.text('label', { readOnly: true });

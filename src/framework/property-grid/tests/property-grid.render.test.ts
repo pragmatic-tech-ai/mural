@@ -64,6 +64,8 @@ function makeBag(entries: Record<string, unknown>): { bag: MapPropertyBag; store
     const accessors = new Map<string, PropertyAccessor>();
     for (const name of Object.keys(stored)) {
         accessors.set(name, {
+            id: () => name,
+            displayName: () => name,
             get: () => stored[name],
             set: (v) => { stored[name] = v; },
         });
@@ -77,7 +79,7 @@ function makeBag(entries: Record<string, unknown>): { bag: MapPropertyBag; store
 function makeReadOnlyBag(entries: Record<string, unknown>): MapPropertyBag {
     const accessors = new Map<string, PropertyAccessor>();
     for (const name of Object.keys(entries)) {
-        accessors.set(name, { get: () => entries[name] });
+        accessors.set(name, { id: () => name, displayName: () => name, get: () => entries[name] });
     }
     return new MapPropertyBag(accessors);
 }
