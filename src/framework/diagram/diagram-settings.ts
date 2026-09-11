@@ -60,6 +60,9 @@ export enum DiagramSettingKey
     ChromeLayoutPreviewNodeFill    = 'diagram.chrome.layoutPreviewNodeFill',
     ChromeLayoutPreviewStroke      = 'diagram.chrome.layoutPreviewStroke',
 
+    DefaultIconWidth            = 'diagram.DefaultIconWidth',
+    DefaultIconHeight           = 'diagram.DefaultIconHeight',
+
     ToolboxTileSize             = 'diagram.toolbox.tileSize',
     ToolboxPreviewFill          = 'diagram.toolbox.previewFill',
 
@@ -85,6 +88,7 @@ interface DiagramSettingSpec
     readonly max:         number;
 }
 
+const CAT_ICONS      = 'Diagram · Icons';
 const CAT_SHAPES     = 'Diagram · Shapes';
 const CAT_CONNECTORS = 'Diagram · Connectors';
 const CAT_CHROME     = 'Diagram · Editing chrome';
@@ -96,6 +100,13 @@ const CAT_RULERS     = 'Diagram · Rulers';
 // helper so a user override in ApplicationSettings takes over live.
 const SPECS: readonly DiagramSettingSpec[] =
 [
+    { key: DiagramSettingKey.DefaultIconWidth, label: 'Default icon width',
+      description: 'Default width of an icon node, in pixels.',
+      category: CAT_ICONS, default: 80, min: 8, max: 400 },
+    { key: DiagramSettingKey.DefaultIconHeight, label: 'Default icon height',
+      description: 'Default height of an icon node, in pixels.',
+      category: CAT_ICONS, default: 80, min: 8, max: 400 },
+
     { key: DiagramSettingKey.ShapeDefaultSize, label: 'Default shape size',
       description: 'Width & height of a newly-placed shape, in pixels.',
       category: CAT_SHAPES, default: 80, min: 8, max: 400 },
@@ -463,6 +474,10 @@ export class DiagramSettings
         // identity is paid once at scheme registration); else wrap the Color.
         return resolved instanceof SolidColorBrush ? resolved : new SolidColorBrush(color);
     }
+
+    // ── Icons ────────────────────────────────────────────────────────────
+    public static DefaultIconWidth():  number { return DiagramSettings.num(DiagramSettingKey.DefaultIconWidth); }
+    public static DefaultIconHeight(): number { return DiagramSettings.num(DiagramSettingKey.DefaultIconHeight); }
 
     // ── Shapes ───────────────────────────────────────────────────────────
     public static ShapeDefaultSize():    number { return DiagramSettings.num(DiagramSettingKey.ShapeDefaultSize); }

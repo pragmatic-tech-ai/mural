@@ -174,6 +174,41 @@ export class Diagram extends Selector implements RigidConnectorDragHost
         MuralBase.OverrideMetadata(Diagram, Element.DefaultStyleKeyKey, { default_value: Diagram });
     }
 
+    // Icon-size attached properties — inheritable so every node in the
+    // diagram's visual subtree reads the per-Diagram icon size without a
+    // direct binding. The setting-bound annotation (8th arg) ties the
+    // default to ApplicationSettings so a user override takes effect live.
+    // A local set_property_value write on a Diagram instance (or any
+    // ancestor) shadows the setting for that diagram's subtree.
+    public static readonly DefaultIconWidthKey = MuralBase.RegisterAttachedProperty<number>(
+        Diagram, 'DefaultIconWidth', 80, MetaData.Inherits,
+        undefined, undefined, undefined,
+        { key: 'diagram.DefaultIconWidth' });
+    public static readonly DefaultIconHeightKey = MuralBase.RegisterAttachedProperty<number>(
+        Diagram, 'DefaultIconHeight', 80, MetaData.Inherits,
+        undefined, undefined, undefined,
+        { key: 'diagram.DefaultIconHeight' });
+
+    public static GetDefaultIconWidth(target: MuralBase): number
+    {
+        return target.get_property_value(Diagram.DefaultIconWidthKey);
+    }
+
+    public static SetDefaultIconWidth(target: MuralBase, value: number): void
+    {
+        target.set_property_value(Diagram.DefaultIconWidthKey, value);
+    }
+
+    public static GetDefaultIconHeight(target: MuralBase): number
+    {
+        return target.get_property_value(Diagram.DefaultIconHeightKey);
+    }
+
+    public static SetDefaultIconHeight(target: MuralBase, value: number): void
+    {
+        target.set_property_value(Diagram.DefaultIconHeightKey, value);
+    }
+
     // §19.3 — `PositionSnap` callback. Default `undefined` = no snap,
     // identity behavior. When set, Figure.OnPointerMove calls it
     // with the cursor-derived candidate rect and uses the returned
