@@ -5,6 +5,9 @@ import type { PropertyDescriptor } from '../property-descriptor.js';
 import { Validation } from './validation.js';
 import { Signal } from '@pragmatic-tech-ai/todl-runtime';
 import type { PropertyChangedEventArgs } from '@pragmatic-tech-ai/todl-runtime';
+import { readServiceScope } from './service-scope.js';
+import { Application } from '../application.js';
+import { SettingSourceKey, type ISettingSource } from '../services/setting-source.js';
 
 // The property-change payload now lives with `Observable` in
 // @pragmatic-tech-ai/todl-runtime — its `owner` is typed `Observable`, the common
@@ -28,7 +31,7 @@ export type InternalPropertyChangeCallback = (
 // Where the effective value came from. Read via MuralBase.GetValueSource(key).
 //
 // Priority order (highest to lowest):
-//   Coerced > Animated > Trigger > Binding > Local > Style > Inherited > Default
+//   Coerced > Animated > Trigger > Binding > Local > Style > Inherited > Setting > Default
 //
 // Deviation from WPF: mural promotes Trigger ABOVE Binding and Local.
 // In WPF the order is Local > Trigger, but mural's `.mu` templates emit
@@ -55,6 +58,7 @@ export enum PropertyValueSource
     TriggerValue,
     StyleValue,
     InheritedValue,
+    SettingValue,
     Default
 }
 
@@ -124,6 +128,33 @@ export class EffectiveValueDescriptor
     {
         this.property_descriptor = propertyDescriptor;
         this.owner = owner;
+        this.source = this.lowestSource();
+    }
+
+    // Returns the lowest-priority base source for this descriptor.
+    // When the descriptor has a SettingValue binding, the floor is
+    // SettingValue; unbound descriptors keep the existing Default floor.
+    private lowestSource(): PropertyValueSource
+    {
+        return this.property_descriptor.SettingValue !== undefined
+            ? PropertyValueSource.SettingValue
+            : PropertyValueSource.Default;
+    }
+
+    // Resolves the current setting value from the ambient ISettingSource.
+    // Falls back through readServiceScope (per-element scope) then
+    // Application.current.Services (app-wide root). Returns { has: false }
+    // when no source is registered or the key has no stored value.
+    private resolveSettingValue(): { has: boolean; value: unknown }
+    {
+        const binding = this.property_descriptor.SettingValue;
+        if (binding === undefined) return { has: false, value: undefined };
+        const provider = readServiceScope(this.owner) ?? Application.current?.Services;
+        const src = provider?.get(SettingSourceKey) as ISettingSource | undefined;
+        if (src === undefined) return { has: false, value: undefined };
+        const raw = src.Get(binding.key);
+        if (raw === undefined) return { has: false, value: undefined };
+        return { has: true, value: binding.convert !== undefined ? binding.convert(raw) : raw };
     }
 
     OnPropertyChange(old_value: any, new_value: any): void
@@ -199,7 +230,7 @@ export class EffectiveValueDescriptor
                 ? PropertyValueSource.StyleValue
                 : this.has_inherited_value
                     ? PropertyValueSource.InheritedValue
-                    : PropertyValueSource.Default;
+                    : this.lowestSource();
 
         const new_effective_value = this.value;
         if (old_effective_value !== new_effective_value)
@@ -224,9 +255,12 @@ export class EffectiveValueDescriptor
 
         // Higher-priority source active: cache is updated but stays
         // invisible until that source clears. No source flip, no
-        // notification.
+        // notification. SettingValue is outranked by Inherited so it is
+        // included in the "must flip" set — an arriving inherited value
+        // takes over when the current source is SettingValue.
         if (this.source !== PropertyValueSource.InheritedValue
-            && this.source !== PropertyValueSource.Default)
+            && this.source !== PropertyValueSource.Default
+            && this.source !== PropertyValueSource.SettingValue)
         {
             // …with ONE exception: a Binding whose own source IS this
             // inherited value (the self-referential `DataContext = $Path`)
@@ -289,7 +323,7 @@ export class EffectiveValueDescriptor
         {
             this.source = this.has_inherited_value
                 ? PropertyValueSource.InheritedValue
-                : PropertyValueSource.Default;
+                : this.lowestSource();
         }
         const new_effective_value = this.value;
         if (old_effective_value !== new_effective_value)
@@ -374,7 +408,7 @@ export class EffectiveValueDescriptor
                         ? PropertyValueSource.StyleValue
                         : this.has_inherited_value
                             ? PropertyValueSource.InheritedValue
-                            : PropertyValueSource.Default;
+                            : this.lowestSource();
         }
         const new_effective_value = this.value;
         if (old_effective_value !== new_effective_value)
@@ -397,7 +431,7 @@ export class EffectiveValueDescriptor
         this.inherited_value = undefined;
         this.has_inherited_value = false;
         if (this.source !== PropertyValueSource.InheritedValue) return;
-        this.source = PropertyValueSource.Default;
+        this.source = this.lowestSource();
         const new_effective_value = this.value;
         if (old_effective_value !== new_effective_value)
         {
@@ -634,7 +668,7 @@ export class EffectiveValueDescriptor
                             ? PropertyValueSource.StyleValue
                             : this.has_inherited_value
                                 ? PropertyValueSource.InheritedValue
-                                : PropertyValueSource.Default;
+                                : this.lowestSource();
         }
         const new_effective_value = this.value;
         if (old_effective_value !== new_effective_value)
@@ -673,6 +707,11 @@ export class EffectiveValueDescriptor
                 return this.style_value;
             case PropertyValueSource.InheritedValue:
                 return this.inherited_value;
+            case PropertyValueSource.SettingValue:
+            {
+                const r = this.resolveSettingValue();
+                return r.has ? r.value : this.property_descriptor.DefaultValue;
+            }
             default:
                 return this.property_descriptor.DefaultValue;
         }
