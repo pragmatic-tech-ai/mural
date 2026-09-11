@@ -117,11 +117,12 @@ export class ScrollViewer extends ContentControl
     public static readonly VerticalScrollEnabledKey   = MuralBase.RegisterProperty<boolean>(
         ScrollViewer, 'VerticalScrollEnabled',   true, MetaData.Measure | MetaData.Arrange);
     // Forwarded to the inner ScrollBars' IsAutoHide DPs in the
-    // constructor + via the listener below. Lets a consumer set
-    // ScrollViewer.IsAutoHideScrollBars=true and get the macOS /
-    // Slack-style overlay behaviour without reaching for the bars.
-    // Default false to match the discoverable always-visible bar shape
-    // that TreeView / ListBox lean on.
+    // constructor + via the listener below. When true the bars fade in on
+    // scroll / hover activity and fade out when idle. This affects ONLY the
+    // fade (opacity) — the bar always reserves its gutter lane either way,
+    // so the content never shifts as the bar shows or hides (the space is
+    // preserved). Default false to match the discoverable always-visible
+    // bar shape that TreeView / ListBox lean on.
     public static readonly IsAutoHideScrollBarsKey = MuralBase.RegisterProperty<boolean>(
         ScrollViewer, 'IsAutoHideScrollBars', false, MetaData.None);
 
@@ -408,17 +409,14 @@ export class ScrollViewer extends ContentControl
         // regardless of extent (consumer doesn't want that axis).
         const wantsV = this.VerticalScrollEnabled   && this.ExtentHeight > finalSize.Height;
         const wantsH = this.HorizontalScrollEnabled && this.ExtentWidth  > finalSize.Width;
-        // Auto-hide bars overlay the content (macOS / Slack pattern):
-        // no reserved gutter, the bar floats on top of the content's
-        // trailing edge. Without this branch a single-line TextBox sized
-        // to font height + padding would have its content clipped by the
-        // 10-DIP gutter even though the (invisible) bar reserved that
-        // space. Always-visible bars (TreeView, ListBox defaults)
-        // continue to reserve gutter so content + bar don't fight for
-        // pixels.
-        const overlay  = this.IsAutoHideScrollBars;
-        const vGutter = (wantsV && !overlay) ? SCROLLBAR_GUTTER : 0;
-        const hGutter = (wantsH && !overlay) ? SCROLLBAR_GUTTER : 0;
+        // Every active bar reserves a gutter so content never shifts when a
+        // bar shows or hides. IsAutoHideScrollBars no longer affects LAYOUT —
+        // it drives only the fade (opacity via SetRegionActive): an auto-hide
+        // bar occupies the same reserved lane whether faded in or out, so the
+        // space is preserved and the bar sits beside the content rather than
+        // on top of it. Always-visible bars behave identically.
+        const vGutter = wantsV ? SCROLLBAR_GUTTER : 0;
+        const hGutter = wantsH ? SCROLLBAR_GUTTER : 0;
 
         // Adjust the SCP slot once we know what each bar is reserving.
         const contentW = Math.max(0, finalSize.Width  - vGutter);
@@ -476,20 +474,17 @@ export class ScrollViewer extends ContentControl
         this._suppressOffsetSync = false;
 
         // Position the bars: vertical on the right edge of the viewport,
-        // horizontal on the bottom. In non-overlay mode the gutter has
-        // already been subtracted from contentW/contentH so the bar
-        // sits just past the content's trailing edge. In overlay mode
-        // (auto-hide), the bar OVERLAYS the trailing edge of the
-        // content — same screen position, just no gutter was reserved.
-        // A hidden bar arranges to a zero-size rect so the renderer
-        // paints nothing and pointer events miss.
+        // horizontal on the bottom. The gutter has already been subtracted
+        // from contentW/contentH, so each bar sits just past the content's
+        // trailing edge in its reserved lane (never overlapping content).
+        // A hidden bar arranges to a zero-size rect so the renderer paints
+        // nothing and pointer events miss.
         const barWidth = SCROLLBAR_GUTTER;
         if (this._vScrollBar !== undefined)
         {
             if (wantsV)
             {
-                const vX = overlay ? contentW - barWidth : contentW;
-                this._vScrollBar.Arrange(new Rect(vX, 0, barWidth, contentH));
+                this._vScrollBar.Arrange(new Rect(contentW, 0, barWidth, contentH));
             }
             else
             {
@@ -500,8 +495,7 @@ export class ScrollViewer extends ContentControl
         {
             if (wantsH)
             {
-                const hY = overlay ? contentH - barWidth : contentH;
-                this._hScrollBar.Arrange(new Rect(0, hY, contentW, barWidth));
+                this._hScrollBar.Arrange(new Rect(0, contentH, contentW, barWidth));
             }
             else
             {

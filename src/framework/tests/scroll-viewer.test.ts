@@ -287,9 +287,11 @@ describe('ScrollViewer — auto-scroll near edges during drag (8.4)', () => {
     function setupForAutoScroll(): { sv: ScrollViewer; session: DragSession }
     {
         const sv = new ScrollViewer();
-        // Auto-hide bars so the always-visible-bar gutter (10px) doesn't
-        // shrink the effective viewport — keeps the test coordinates clean.
-        sv.IsAutoHideScrollBars = true;
+        // Keep the vertical viewport a clean 100px tall: disable the
+        // horizontal axis so no bottom gutter is reserved. (Every bar now
+        // reserves its lane regardless of IsAutoHideScrollBars — the vertical
+        // bar takes 10px of WIDTH, which these y-axis edge tests ignore.)
+        sv.HorizontalScrollEnabled = false;
         // Inflate content so the viewport has scrollable extent.
         sv.Content = new (class extends Element {
             protected override MeasureOverride(_a: Size): Size { return new Size(500, 500); }
