@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { Color, MetaData, MuralBase, Rect, Size, Element, Visual, type DrawingContext } from '../../runtime/index.js';
 import { resolveKey } from '../../runtime/model-internals.js';
 import { Pen, SolidColorBrush, FontWeight } from '../../visual-engine/index.js';
-import { Border, ContentPresenter, ControlTemplate, TemplateBinding, DataTemplate, TextBlock } from '../../basic/index.js';
+import { Border, ContentPresenter, ControlTemplate, TemplateBinding, DataTemplate, DataTemplateSelector, TextBlock } from '../../basic/index.js';
 import { findDataTemplateForType } from '../../basic/templates/data-template.js';
 import { ContentControl } from '@pragmatic-tech-ai/mural/framework';
 
@@ -538,5 +538,70 @@ describe('unresolved DataTemplate surfaces a red diagnostic', () => {
         const fg = err.Foreground as SolidColorBrush;
         assert.ok(fg instanceof SolidColorBrush);
         assert.deepEqual(fg.Color, Color.Red);
+    });
+});
+
+describe('ContentControl — ContentTemplateSelector', () => {
+    class NodeVM extends MuralBase {}
+
+    const slottedText = (cc: ContentControl): string =>
+    {
+        const border    = cc.visualChildren[0] as Border;
+        const presenter = border.visualChildren[0] as ContentPresenter;
+        const tb        = presenter.visualChildren[0] as TextBlock;
+        return tb.Text;
+    };
+
+    test('ContentTemplateSelector wins over implicit DataType resolution', () => {
+        const chosen   = new DataTemplate(() => new TextBlock('chosen'));
+        const implicit = new DataTemplate(() => new TextBlock('implicit'), NodeVM);
+
+        const cc = new ContentControl();
+        cc.Template = borderTemplate();
+        cc.Resources.Set(NodeVM, implicit);                     // implicit-by-type available
+        cc.ContentTemplateSelector = DataTemplateSelector.fromFn(() => chosen);
+        cc.Content = new NodeVM();
+
+        assert.equal(slottedText(cc), 'chosen');
+    });
+
+    test('selector returning undefined falls back to implicit DataType resolution', () => {
+        const implicit = new DataTemplate(() => new TextBlock('implicit'), NodeVM);
+
+        const cc = new ContentControl();
+        cc.Template = borderTemplate();
+        cc.Resources.Set(NodeVM, implicit);
+        cc.ContentTemplateSelector = DataTemplateSelector.fromFn(() => undefined);
+        cc.Content = new NodeVM();
+
+        assert.equal(slottedText(cc), 'implicit');
+    });
+
+    test('no selector → implicit DataType resolution unchanged (backward compat)', () => {
+        const implicit = new DataTemplate(() => new TextBlock('implicit'), NodeVM);
+
+        const cc = new ContentControl();
+        cc.Template = borderTemplate();
+        cc.Resources.Set(NodeVM, implicit);
+        cc.Content = new NodeVM();
+
+        assert.equal(slottedText(cc), 'implicit');
+    });
+
+    test('accepts a DataTemplateSelector object subclass (markup-authorable form)', () => {
+        const groupT = new DataTemplate(() => new TextBlock('group'));
+        const leafT  = new DataTemplate(() => new TextBlock('leaf'));
+        class GroupVM extends NodeVM {}
+        class KindSelector extends DataTemplateSelector {
+            public SelectTemplate(item: unknown): DataTemplate | undefined {
+                return item instanceof GroupVM ? groupT : leafT;
+            }
+        }
+
+        const cc = new ContentControl();
+        cc.Template = borderTemplate();
+        cc.ContentTemplateSelector = new KindSelector();
+        cc.Content = new GroupVM();
+        assert.equal(slottedText(cc), 'group');
     });
 });

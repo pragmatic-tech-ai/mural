@@ -7,7 +7,8 @@
 } from '../../runtime/index.js';
 import { Color, FontWeight, SolidColorBrush } from '../../visual-engine/index.js';
 import { Control } from './control.js';
-import { findDataTemplateForType } from '../../basic/templates/data-template.js';
+import { DataTemplate } from '../../basic/templates/data-template.js';
+import { DataTemplateSelector, type TemplateSelection } from '../../basic/templates/data-template-selector.js';
 import { TextBlock, TextWrapping } from '../../basic/text-block.js';
 
 // Base class for controls that present a single piece of consumer-
@@ -33,6 +34,13 @@ export class ContentControl extends Control
     public static readonly ContentKey = MuralBase.RegisterProperty<Visual | Observable | undefined>(
         ContentControl, 'Content', undefined, MetaData.Measure);
 
+    // Per-content template picker (WPF's ContentControl.ContentTemplateSelector).
+    // Consulted FIRST when resolving a non-Visual Content's template — takes
+    // precedence over the implicit DataType lookup. Accepts a
+    // DataTemplateSelector object (markup-authorable) OR a function.
+    public static readonly ContentTemplateSelectorKey = MuralBase.RegisterProperty<TemplateSelection | undefined>(
+        ContentControl, 'ContentTemplateSelector', undefined, MetaData.Measure);
+
     // Border chrome (WPF Control parity): the default template wraps its
     // ContentPresenter in a Border whose Fill / Stroke TemplateBind to the
     // control. `Fill` and `Stroke` ride on Visual (the library-wide Fill/Stroke
@@ -56,6 +64,9 @@ export class ContentControl extends Control
 
     public get ReuseContentViews(): boolean { return this.get_property_value(ContentControl.ReuseContentViewsKey); }
     public set ReuseContentViews(v: boolean) { this.set_property_value(ContentControl.ReuseContentViewsKey, v); }
+
+    public get ContentTemplateSelector(): TemplateSelection | undefined { return this.get_property_value(ContentControl.ContentTemplateSelectorKey); }
+    public set ContentTemplateSelector(v: TemplateSelection | undefined) { this.set_property_value(ContentControl.ContentTemplateSelectorKey, v); }
 
     // The Visual currently slotted into the presenter. Distinct from
     // Content because Content may be a non-Visual MuralBase — in that case a
@@ -144,9 +155,12 @@ export class ContentControl extends Control
     {
         if (value === undefined || value === null) return undefined;
         if (value instanceof Visual) return value;
-        // Non-Visual MuralBase — auto-resolve a DataTemplate by class identity
-        // (DataType === value.constructor).
-        const template = findDataTemplateForType(value.constructor, this);
+        // Non-Visual MuralBase — pick a DataTemplate. Precedence:
+        //   1. ContentTemplateSelector (per-content picker) — WPF parity, wins.
+        //   2. Implicit DataType match (base-walking, scope-aware) by
+        //      value.constructor via DataTemplate.resolveForType.
+        const template = DataTemplateSelector.resolve(this.ContentTemplateSelector, value, this)
+            ?? DataTemplate.resolveForType(value.constructor, this);
         if (template !== undefined)
         {
             // Reuse this object's existing view when opted in (the default) —
