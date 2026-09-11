@@ -116,7 +116,7 @@ export class AlignmentGuidesAdorner extends Adorner
         return finalSize;
     }
 
-    public Dispose(): void
+    public dispose(): void
     {
         this._sub?.dispose();
         this._sub = undefined;

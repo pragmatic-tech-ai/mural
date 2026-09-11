@@ -16,8 +16,8 @@ import type { IServiceProvider } from './service-provider.js';
 // uniform and greppable (the no-string-type-proxies rule — tokens are
 // real objects).
 //
-// Lifecycle: Dispose() releases subscriptions / timers the service
-// holds. A ServiceProvider scope calls Dispose() on every ServiceBase
+// Lifecycle: dispose() releases subscriptions / timers the service
+// holds. A ServiceProvider scope calls dispose() on every ServiceBase
 // it owns when the scope is disposed (see ServiceProvider.dispose), so
 // a per-shell scope tears its services down with the shell.
 export abstract class ServiceBase extends MuralBase
@@ -54,5 +54,5 @@ export abstract class ServiceBase extends MuralBase
     // Override to release resources (event subscriptions, timers, …).
     // Default no-op. Idempotent by contract — the container calls it
     // once on scope teardown, but a defensive double-call must be safe.
-    public Dispose(): void { }
+    public dispose(): void { }
 }

@@ -164,10 +164,10 @@ export class ToolbarService extends ServiceBase
     }
 
     // Detach the global-pulse subscription when this scoped service is torn down.
-    public override Dispose(): void
+    public override dispose(): void
     {
         CommandManager.UnsubscribeRequerySuggested(this._requery);
-        super.Dispose();
+        super.dispose();
     }
 
     private OnActiveDocumentChanged(): void

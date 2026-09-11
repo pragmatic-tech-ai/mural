@@ -118,9 +118,9 @@ export class DialogService extends ServiceBase
         this._close?.(result);
     }
 
-    public override Dispose(): void
+    public override dispose(): void
     {
         this._close?.(undefined);
-        super.Dispose();
+        super.dispose();
     }
 }

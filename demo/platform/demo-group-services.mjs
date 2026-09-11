@@ -119,9 +119,9 @@ export class DemoGroupService extends DocumentSelectorService {
         this.set_property_value(DemoGroupService.ContentKey, content);
         this.Provider.get(ContentHostService.Key)?.View(content);
     }
-    Dispose() {
+    dispose() {
         this._unsubscribeRegistry();
-        super.Dispose();
+        super.dispose();
     }
 }
 // The five concrete group services. Each fixes its group name (matching its

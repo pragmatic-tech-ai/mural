@@ -97,7 +97,7 @@ export interface ItemsChangedArgs
 //
 // The session intentionally doesn't expose Dispose-via-`Symbol.dispose`
 // (no `using` syntax yet across mural's TS target). Callers wrap in
-// `try { … } finally { session.Dispose(); }`; Dispose is idempotent
+// `try { … } finally { session.dispose(); }`; Dispose is idempotent
 // and a no-op today. Reserved for future StatusChanged events.
 export class GenerationSession
 {
@@ -175,7 +175,7 @@ export class GenerationSession
         return { container, isNewlyRealized: true };
     }
 
-    public Dispose(): void
+    public dispose(): void
     {
         if (this.disposed) return;
         this.disposed = true;

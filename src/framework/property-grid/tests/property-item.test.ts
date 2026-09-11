@@ -34,7 +34,7 @@ describe('PropertyItem — Value get/set round-trip', () => {
         const desc = GridProperty.text('title');
         const item = new PropertyItem(desc, bag);
         assert.equal(item.Value, 'hello');
-        item.Dispose();
+        item.dispose();
     });
 
     test('setting Value updates the bag', () => {
@@ -43,7 +43,7 @@ describe('PropertyItem — Value get/set round-trip', () => {
         const item = new PropertyItem(desc, bag);
         item.Value = 'world';
         assert.equal(item.Value, 'world');
-        item.Dispose();
+        item.dispose();
     });
 
     test('Value reflects subsequent bag changes after construction', () => {
@@ -52,7 +52,7 @@ describe('PropertyItem — Value get/set round-trip', () => {
         const item = new PropertyItem(desc, bag);
         bag.SetValue('count', 42);
         assert.equal(item.Value, 42);
-        item.Dispose();
+        item.dispose();
     });
 });
 
@@ -71,7 +71,7 @@ describe('PropertyItem — external bag change raises PropertyChanged("Value")',
 
         bag.SetValue('x', 99);
         assert.deepEqual(events, ['Value']);
-        item.Dispose();
+        item.dispose();
     });
 
     test('multiple external changes raise multiple notifications', () => {
@@ -86,7 +86,7 @@ describe('PropertyItem — external bag change raises PropertyChanged("Value")',
         bag.SetValue('x', 2);
         bag.SetValue('x', 3);
         assert.equal(count, 3);
-        item.Dispose();
+        item.dispose();
     });
 
     test('notification carries updated new value', () => {
@@ -101,7 +101,7 @@ describe('PropertyItem — external bag change raises PropertyChanged("Value")',
 
         bag.SetValue('x', 77);
         assert.equal(capturedNew, 77);
-        item.Dispose();
+        item.dispose();
     });
 });
 
@@ -115,7 +115,7 @@ describe('PropertyItem — IsReadOnly', () => {
         const desc = GridProperty.number('v');
         const item = new PropertyItem(desc, bag);
         assert.equal(item.IsReadOnly, false);
-        item.Dispose();
+        item.dispose();
     });
 
     test('IsReadOnly is true when the descriptor is read-only', () => {
@@ -123,7 +123,7 @@ describe('PropertyItem — IsReadOnly', () => {
         const desc = GridProperty.number('v', { readOnly: true });
         const item = new PropertyItem(desc, bag);
         assert.equal(item.IsReadOnly, true);
-        item.Dispose();
+        item.dispose();
     });
 
     test('IsReadOnly is true when the bag reports read-only for the property', () => {
@@ -131,7 +131,7 @@ describe('PropertyItem — IsReadOnly', () => {
         const desc = GridProperty.number('v');
         const item = new PropertyItem(desc, bag);
         assert.equal(item.IsReadOnly, true);
-        item.Dispose();
+        item.dispose();
     });
 
     test('IsReadOnly is true when both descriptor and bag are read-only', () => {
@@ -139,7 +139,7 @@ describe('PropertyItem — IsReadOnly', () => {
         const desc = GridProperty.number('v', { readOnly: true });
         const item = new PropertyItem(desc, bag);
         assert.equal(item.IsReadOnly, true);
-        item.Dispose();
+        item.dispose();
     });
 });
 
@@ -161,7 +161,7 @@ describe('PropertyItem — read-only guard on set Value', () => {
 
         // The bag itself is writable; only the descriptor gate prevents the write
         assert.equal(stored, 'original');
-        item.Dispose();
+        item.dispose();
     });
 
     test('setting Value when bag is read-only does not write to the bag', () => {
@@ -172,7 +172,7 @@ describe('PropertyItem — read-only guard on set Value', () => {
         // Should not throw; should silently discard
         assert.doesNotThrow(() => { item.Value = 'changed'; });
         assert.equal(item.Value, 'original');
-        item.Dispose();
+        item.dispose();
     });
 });
 
@@ -192,7 +192,7 @@ describe('PropertyItem — Dispose unsubscribes', () => {
         bag.SetValue('z', 1);
         assert.equal(count, 1);
 
-        item.Dispose();
+        item.dispose();
 
         bag.SetValue('z', 2);
         assert.equal(count, 1, 'no more notifications after Dispose');
@@ -202,8 +202,8 @@ describe('PropertyItem — Dispose unsubscribes', () => {
         const bag = makeRwBag('z', 0);
         const desc = GridProperty.number('z');
         const item = new PropertyItem(desc, bag);
-        item.Dispose();
-        assert.doesNotThrow(() => { item.Dispose(); });
+        item.dispose();
+        assert.doesNotThrow(() => { item.dispose(); });
     });
 });
 
@@ -217,7 +217,7 @@ describe('PropertyItem — Descriptor', () => {
         const desc = GridProperty.text('name');
         const item = new PropertyItem(desc, bag);
         assert.strictEqual(item.Descriptor, desc);
-        item.Dispose();
+        item.dispose();
     });
 });
 
@@ -236,7 +236,7 @@ describe('PropertyCategory — Header and Items', () => {
         const item = new PropertyItem(GridProperty.number('x'), bag);
         const cat = new PropertyCategory('G', [item]);
         assert.deepEqual(cat.Items, [item]);
-        item.Dispose();
+        item.dispose();
     });
 });
 

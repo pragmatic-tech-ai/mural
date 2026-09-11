@@ -317,7 +317,7 @@ export class TextBlockAdorner extends Adorner
         }) as (a: unknown) => void);
     }
 
-    public Dispose(): void
+    public dispose(): void
     {
         this._diagram.RemoveSelectionChangedListener(this._onChange);
         for (const s of this._diagramSubs) s.dispose();

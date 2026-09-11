@@ -67,7 +67,7 @@ export class ValidationErrorAdorner extends Adorner
     // Removes the property listener so the adorner can be GC'd cleanly.
     // Named Dispose (not Detach) to avoid a name-shadow on Visual's
     // own Detach(child) — same idea, different signature.
-    public Dispose(): void
+    public dispose(): void
     {
         this._sub?.dispose();
         this._sub = undefined;
@@ -86,7 +86,7 @@ export class ValidationErrorAdorner extends Adorner
         layer.Add(adorner);
         return (): void => {
             layer.Remove(adorner);
-            adorner.Dispose();
+            adorner.dispose();
         };
     }
 

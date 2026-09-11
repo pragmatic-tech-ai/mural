@@ -349,7 +349,7 @@ export class PropertyGrid extends ItemsControl
     {
         for (const item of this._liveItems)
         {
-            item.Dispose();
+            item.dispose();
         }
         this._liveItems = [];
     }

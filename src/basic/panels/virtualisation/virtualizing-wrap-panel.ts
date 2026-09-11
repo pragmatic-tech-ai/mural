@@ -358,7 +358,7 @@ export class VirtualizingWrapPanel extends VirtualizingPanel implements IScrollI
         }
         finally
         {
-            session.Dispose();
+            session.dispose();
         }
     }
 }

@@ -54,7 +54,7 @@ export class PropertyItem extends Observable {
     /**
      * Unsubscribes the bag observer.  Safe to call more than once.
      */
-    public Dispose(): void {
+    public dispose(): void {
         if (this._subscription !== null) {
             this._subscription.dispose();
             this._subscription = null;

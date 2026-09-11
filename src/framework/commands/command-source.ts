@@ -122,7 +122,7 @@ export class CommandSourceHelper
     /** Detach the listener — call from the control's teardown path if it
      *  has one. (Visual's existing lifetime model relies on dropping
      *  references; this is for symmetry / future-proofing.) */
-    public Dispose(): void
+    public dispose(): void
     {
         if (this._attachedCommand !== undefined)
         {

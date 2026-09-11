@@ -413,12 +413,12 @@ export class DocumentsContentHostService extends ContentHostService
         }
     }
 
-    public override Dispose(): void
+    public override dispose(): void
     {
         this.extendedCommandsUnsub?.();
         this.extendedCommandsUnsub = undefined;
         for (const sub of this.dirtySubs.values()) sub.dispose();
         this.dirtySubs.clear();
-        super.Dispose();
+        super.dispose();
     }
 }

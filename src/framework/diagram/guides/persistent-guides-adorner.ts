@@ -117,7 +117,7 @@ export class PersistentGuidesAdorner extends Adorner
         return finalSize;
     }
 
-    public Dispose(): void
+    public dispose(): void
     {
         this._guidesSub.dispose();
         this._selectedGuideSub.dispose();

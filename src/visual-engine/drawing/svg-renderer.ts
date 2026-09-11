@@ -875,7 +875,7 @@ export class SvgRenderer
     // Detach everything the renderer added; leaves the surface itself
     // intact for HtmlTarget.Dispose to remove. Called when the host
     // discards the target or when Content swaps to a different root.
-    public Dispose(): void
+    public dispose(): void
     {
         for (const info of this.nodes.values())
         {

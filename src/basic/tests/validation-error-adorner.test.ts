@@ -117,7 +117,7 @@ describe('ValidationErrorAdorner', () => {
         adorner.InvalidateVisual = () => { invalidations++; orig(); };
         Validation.SetErrors(target, dummyRule, [ERROR]);
         assert.equal(invalidations, 1);
-        adorner.Dispose();
+        adorner.dispose();
         Validation.SetErrors(target, dummyRule, []);
         assert.equal(invalidations, 1, 'no further repaints after Dispose');
     });

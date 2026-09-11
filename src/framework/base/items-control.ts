@@ -1481,7 +1481,7 @@ export class ItemsControl extends Control
         }
         finally
         {
-            session.Dispose();
+            session.dispose();
         }
         this.updateHasItems();
         this.InvalidateMeasure();

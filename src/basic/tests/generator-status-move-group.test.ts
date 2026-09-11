@@ -41,7 +41,7 @@ describe('ItemContainerGenerator — Status / StatusChanged', () => {
 
         const s = ic.Generator.StartAt();
         assert.equal(ic.Generator.Status, GeneratorStatus.GeneratingContainers);
-        s.Dispose();
+        s.dispose();
         assert.equal(ic.Generator.Status, GeneratorStatus.ContainersGenerated);
     });
 
@@ -51,10 +51,10 @@ describe('ItemContainerGenerator — Status / StatusChanged', () => {
         assert.equal(ic.Generator.Status, GeneratorStatus.GeneratingContainers);
         const inner = ic.Generator.StartAt();
         assert.equal(ic.Generator.Status, GeneratorStatus.GeneratingContainers);
-        inner.Dispose();
+        inner.dispose();
         // Still inside outer.
         assert.equal(ic.Generator.Status, GeneratorStatus.GeneratingContainers);
-        outer.Dispose();
+        outer.dispose();
         assert.equal(ic.Generator.Status, GeneratorStatus.ContainersGenerated);
     });
 
@@ -63,7 +63,7 @@ describe('ItemContainerGenerator — Status / StatusChanged', () => {
         const transitions: GeneratorStatus[] = [];
         ic.Generator.SubscribeStatusChanged(() => transitions.push(ic.Generator.Status));
         const s = ic.Generator.StartAt();
-        s.Dispose();
+        s.dispose();
         assert.deepEqual(transitions, [
             GeneratorStatus.GeneratingContainers,
             GeneratorStatus.ContainersGenerated,

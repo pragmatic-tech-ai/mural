@@ -86,7 +86,7 @@ describe('ItemContainerGenerator — StartAt / GenerateNext session', () => {
         const r1 = s.GenerateNext();
         const r2 = s.GenerateNext();
         const r3 = s.GenerateNext();
-        s.Dispose();
+        s.dispose();
 
         assert.ok(inner(r0.container) instanceof Leaf);
         assert.ok(inner(r1.container) instanceof Leaf);
@@ -101,7 +101,7 @@ describe('ItemContainerGenerator — StartAt / GenerateNext session', () => {
     test('Dispose stops the session — further GenerateNext returns undefined', () => {
         const ic = makeIC(['a', 'b']);
         const s  = ic.Generator.StartAt();
-        s.Dispose();
+        s.dispose();
         const after = s.GenerateNext();
         assert.equal(after.container, undefined);
     });
@@ -112,7 +112,7 @@ describe('ItemContainerGenerator — StartAt / GenerateNext session', () => {
         const s  = ic.Generator.StartAt(new GeneratorPosition(0, 2));
         const r0 = s.GenerateNext();
         const r1 = s.GenerateNext();
-        s.Dispose();
+        s.dispose();
         assert.equal((inner(r0.container) as Leaf).label, 'c');
         assert.equal((inner(r1.container) as Leaf).label, 'd');
     });
@@ -124,7 +124,7 @@ describe('ItemContainerGenerator — StartAt / GenerateNext session', () => {
         const r1 = s.GenerateNext();
         const r2 = s.GenerateNext();
         const r3 = s.GenerateNext();
-        s.Dispose();
+        s.dispose();
         assert.equal((inner(r0.container) as Leaf).label, 'c');
         assert.equal((inner(r1.container) as Leaf).label, 'b');
         assert.equal((inner(r2.container) as Leaf).label, 'a');

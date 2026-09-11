@@ -494,7 +494,7 @@ export class VirtualizingStackPanel extends VirtualizingPanel implements IScroll
         }
         finally
         {
-            session.Dispose();
+            session.dispose();
         }
     }
 

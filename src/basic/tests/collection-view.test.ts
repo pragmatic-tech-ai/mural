@@ -199,7 +199,7 @@ describe('CollectionView — observable source', () => {
     test('Dispose stops listening to source mutations', () => {
         const obs = new ObservableCollection<Row>([ROWS[0]!]);
         const v = new CollectionView(obs);
-        v.Dispose();
+        v.dispose();
         obs.Add(ROWS[1]!);
         assert.equal(v.Count, 1);     // didn't re-refresh
     });

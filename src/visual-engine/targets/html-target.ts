@@ -599,7 +599,7 @@ export class HtmlTarget extends PresentationTarget
 
     // Tear down DOM listeners and unmount the surface. Call before
     // discarding an HtmlTarget so the host element is left clean.
-    public Dispose(): void
+    public dispose(): void
     {
         this.resize_observer.disconnect();
         this.host.removeEventListener('pointermove',   this.onPointerMove   as EventListener);
@@ -612,7 +612,7 @@ export class HtmlTarget extends PresentationTarget
         this.host.removeEventListener('keydown',       this.onDragKeyDown   as EventListener);
         this.host.removeEventListener('keyup',         this.onKeyUp         as EventListener);
         this.host.removeEventListener('blur',          this.onDragBlur      as EventListener);
-        this.renderer.Dispose();
+        this.renderer.dispose();
         this.surface.remove();
         this.DisposeFonts();
     }

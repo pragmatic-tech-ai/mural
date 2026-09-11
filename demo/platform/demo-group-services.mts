@@ -139,9 +139,9 @@ export abstract class DemoGroupService extends DocumentSelectorService
         this.Provider.get(ContentHostService.Key)?.View(content);
     }
 
-    public override Dispose(): void {
+    public override dispose(): void {
         this._unsubscribeRegistry();
-        super.Dispose();
+        super.dispose();
     }
 }
 

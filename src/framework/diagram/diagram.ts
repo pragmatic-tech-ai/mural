@@ -1771,7 +1771,7 @@ export class Diagram extends Selector implements RigidConnectorDragHost
         {
             const layer = AdornerLayer.GetAdornerLayer(this._alignmentGuidesAdorner.AdornedElement);
             layer?.Remove(this._alignmentGuidesAdorner);
-            this._alignmentGuidesAdorner.Dispose();
+            this._alignmentGuidesAdorner.dispose();
             this._alignmentGuidesAdorner = undefined;
         }
     }
@@ -1829,7 +1829,7 @@ export class Diagram extends Selector implements RigidConnectorDragHost
         {
             const layer = AdornerLayer.GetAdornerLayer(this._persistentGuidesAdorner.AdornedElement);
             layer?.Remove(this._persistentGuidesAdorner);
-            this._persistentGuidesAdorner.Dispose();
+            this._persistentGuidesAdorner.dispose();
             this._persistentGuidesAdorner = undefined;
         }
         this._rulerCameraDetach?.();
@@ -1959,7 +1959,7 @@ export class Diagram extends Selector implements RigidConnectorDragHost
         {
             const layer = AdornerLayer.GetAdornerLayer(this._textBlockAdorner.AdornedElement);
             layer?.Remove(this._textBlockAdorner);
-            this._textBlockAdorner.Dispose();
+            this._textBlockAdorner.dispose();
             this._textBlockAdorner = undefined;
         }
     }

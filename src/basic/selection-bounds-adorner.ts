@@ -304,7 +304,7 @@ export class SelectionBoundsAdorner extends Adorner
         }) as (a: unknown) => void);
     }
 
-    public Dispose(): void
+    public dispose(): void
     {
         this._unsubscribe?.();
         this._unsubscribe = undefined;
@@ -325,7 +325,7 @@ export class SelectionBoundsAdorner extends Adorner
             adorner: a,
             detach: () => {
                 layer.Remove(a);
-                a.Dispose();
+                a.dispose();
             },
         };
     }

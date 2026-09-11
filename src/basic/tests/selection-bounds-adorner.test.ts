@@ -238,7 +238,7 @@ describe('SelectionBoundsAdorner', () => {
         const layer = decorator.AdornerLayer;
         const adorner = new SelectionBoundsAdorner(target, source);
         layer.Add(adorner);
-        adorner.Dispose();
+        adorner.dispose();
         // Subsequent fire should not throw; listener count == 0
         // verified through internal state via the source's `subscribe`
         // result.

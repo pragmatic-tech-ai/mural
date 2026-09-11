@@ -608,7 +608,7 @@ export class CollectionView implements IReadOnlyObservableCollection<unknown>
     // re-project from the source (the subscription is for incremental
     // push, not for materialization), but the view will no longer
     // automatically refresh on source mutations.
-    public Dispose(): void
+    public dispose(): void
     {
         this._sourceUnsub?.();
         this._sourceUnsub = undefined;

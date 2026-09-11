@@ -17,6 +17,8 @@
 // applies the lifetime caching rule. Child providers may shadow a
 // parent's registration (Angular-style hierarchical injectors).
 
+import type { Disposable } from '@pragmatic-tech-ai/todl-runtime';
+
 // A typed token for interface-shaped contracts that have no runtime
 // class to key by (e.g. the DiagramStorage duck-type). The generic is
 // phantom — it threads the resolved type through register/get so call
@@ -74,7 +76,7 @@ export interface IServiceContainer
     // provider (resolve). The concrete return is a ServiceProvider, so a
     // caller holding the class keeps both halves.
     createScope(): IServiceContainer;
-    // Tear down THIS scope: Dispose() every instance it owns, then clear.
+    // Tear down THIS scope: dispose() every instance it owns, then clear.
     dispose(): void;
 }
 
@@ -229,7 +231,7 @@ export class ServiceProvider implements IServiceProvider, IServiceContainer
         return new ServiceProvider(this);
     }
 
-    // Dispose this scope: call Dispose() on every instance THIS provider
+    // Dispose this scope: call dispose() on every instance THIS provider
     // owns (its own cache — scoped services plus singletons registered
     // here), then clear the cache. Does NOT touch the parent chain or any
     // child scopes — dispose the scope you created. Idempotent: a second
@@ -239,7 +241,7 @@ export class ServiceProvider implements IServiceProvider, IServiceContainer
     {
         for (const inst of this._cache.values())
         {
-            if (isDisposable(inst)) inst.Dispose();
+            if (isDisposable(inst)) inst.dispose();
         }
         this._cache.clear();
     }
@@ -257,12 +259,12 @@ export class ServiceProvider implements IServiceProvider, IServiceContainer
     }
 }
 
-// Anything carrying a Dispose() method — ServiceBase implements it, but
-// the check is structural so the container needn't import it.
-interface Disposable { Dispose(): void; }
+// Anything carrying a dispose() method — ServiceBase implements it. The
+// Disposable shape is todl-runtime's shared handle; the check stays
+// structural so the container needn't know ServiceBase concretely.
 function isDisposable(v: unknown): v is Disposable
 {
-    return typeof (v as Partial<Disposable> | null)?.Dispose === 'function';
+    return typeof (v as Partial<Disposable> | null)?.dispose === 'function';
 }
 
 function describeToken(token: ServiceToken<unknown>): string

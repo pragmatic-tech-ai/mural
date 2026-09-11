@@ -20,7 +20,7 @@ export abstract class ShellBase extends TemplatedControl
 {
     // This shell's own DI scope (lazy). A child of
     // Application.current.Services: per-shell `scoped` services resolve to
-    // instances unique to THIS shell here, and Dispose() tears them down with
+    // instances unique to THIS shell here, and dispose() tears them down with
     // the shell.
     private _scope: ServiceProvider | undefined;
 
@@ -45,7 +45,7 @@ export abstract class ShellBase extends TemplatedControl
 
     // Tear down the shell's scope — disposes the scoped services it owns.
     // Call when the shell is removed for good.
-    public Dispose(): void
+    public dispose(): void
     {
         this._scope?.dispose();
         this._scope = undefined;

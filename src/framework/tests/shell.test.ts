@@ -112,7 +112,7 @@ describe('Shell — region services', () => {
     test('Dispose tears down the scope, disposing its services', async () => {
         let disposed = false;
         class SpyNav extends NavigationService {
-            public override Dispose(): void { disposed = true; super.Dispose(); }
+            public override dispose(): void { disposed = true; super.dispose(); }
         }
         // Register the spy at the root before constructing, so the shell's
         // scope resolves (and caches) it when the markup binding resolves.
@@ -122,7 +122,7 @@ describe('Shell — region services', () => {
         await Promise.resolve(); await Promise.resolve();
         const rail = findByType(navHost, NavigationRail);
         assert.ok(rail?.DataContext instanceof SpyNav, 'rail resolved the shell-scoped SpyNav');
-        shell.Dispose();
+        shell.dispose();
         assert.equal(disposed, true);
     });
 });
