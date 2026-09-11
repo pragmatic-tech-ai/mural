@@ -137,6 +137,11 @@ export {
     type HierarchicalChildSelector,
     type TemplateDataTriggerCondition,
 } from './templates/data-template.js';
+export {
+    DataTemplateSelector,
+    type TemplateSelectorFn,
+    type TemplateSelection,
+} from './templates/data-template-selector.js';
 export { ListReorderBehavior } from './behaviors/list-reorder-behavior.js';
 export { LogBehavior } from './behaviors/log-behavior.js';
 export { FocusOnVisibleBehavior } from './behaviors/focus-on-visible-behavior.js';
