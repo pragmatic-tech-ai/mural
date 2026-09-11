@@ -34,15 +34,17 @@ describe('Diagram icon-size settings', () =>
 {
     // ── 1. Resolves from setting ────────────────────────────────────────────────
 
-    test('DefaultIconWidth defaults to 80 when no settings host is reachable', () =>
+    test('DefaultIconWidth defaults to 0 when no settings host is reachable', () =>
     {
         Application.current = null;
         const diagram = new Diagram();
-        // No settings host — should read the DP default (80).
+        // No settings host — should read the DP default (0). The real 80
+        // comes from the DiagramSettings spec, which only applies when an
+        // ISettingSource is reachable.
         const sub = diagram.PropertyChanged(Diagram.DefaultIconWidthKey).subscribe(() => { /* arm */ });
         try
         {
-            assert.equal(Diagram.GetDefaultIconWidth(diagram), 80);
+            assert.equal(Diagram.GetDefaultIconWidth(diagram), 0);
         }
         finally
         {
@@ -50,14 +52,14 @@ describe('Diagram icon-size settings', () =>
         }
     });
 
-    test('DefaultIconHeight defaults to 80 when no settings host is reachable', () =>
+    test('DefaultIconHeight defaults to 0 when no settings host is reachable', () =>
     {
         Application.current = null;
         const diagram = new Diagram();
         const sub = diagram.PropertyChanged(Diagram.DefaultIconHeightKey).subscribe(() => { /* arm */ });
         try
         {
-            assert.equal(Diagram.GetDefaultIconHeight(diagram), 80);
+            assert.equal(Diagram.GetDefaultIconHeight(diagram), 0);
         }
         finally
         {
@@ -133,7 +135,8 @@ describe('Diagram icon-size settings', () =>
         const sub = child.PropertyChanged(Diagram.DefaultIconWidthKey).subscribe(() => { /* arm */ });
         try
         {
-            // Before any local override the child reads the descriptor default (80).
+            // Before any local override the child reads the setting value (80)
+            // resolved via the settings host (the DP descriptor default is 0).
             assert.equal(child.get_property_value(Diagram.DefaultIconWidthKey), 80);
 
             // Set a local override on the parent — child must inherit 88.

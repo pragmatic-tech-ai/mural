@@ -124,7 +124,7 @@ import {
 import { Connector } from './connector.js';
 import { type RouteWaypoint, waypoint, hasPinned } from './route-waypoint.js';
 import type { RigidConnectorDragHost, RigidConnectorDragSession } from './rigid-connector-drag.js';
-import { DiagramSettings } from './diagram-settings.js';
+import { DiagramSettingKey, DiagramSettings } from './diagram-settings.js';
 
 // §19.3 follow-up — position snap callback. Consumers (e.g., the
 // diagram demo's align-edges behavior) set this DP to a pure function
@@ -181,13 +181,13 @@ export class Diagram extends Selector implements RigidConnectorDragHost
     // A local set_property_value write on a Diagram instance (or any
     // ancestor) shadows the setting for that diagram's subtree.
     public static readonly DefaultIconWidthKey = MuralBase.RegisterAttachedProperty<number>(
-        Diagram, 'DefaultIconWidth', 80, MetaData.Inherits,
+        Diagram, 'DefaultIconWidth', 0, MetaData.Inherits,
         undefined, undefined, undefined,
-        { key: 'diagram.DefaultIconWidth' });
+        { key: DiagramSettingKey.DefaultIconWidth });
     public static readonly DefaultIconHeightKey = MuralBase.RegisterAttachedProperty<number>(
-        Diagram, 'DefaultIconHeight', 80, MetaData.Inherits,
+        Diagram, 'DefaultIconHeight', 0, MetaData.Inherits,
         undefined, undefined, undefined,
-        { key: 'diagram.DefaultIconHeight' });
+        { key: DiagramSettingKey.DefaultIconHeight });
 
     public static GetDefaultIconWidth(target: MuralBase): number
     {
