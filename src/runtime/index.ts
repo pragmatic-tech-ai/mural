@@ -1,5 +1,10 @@
 ﻿// Barrel re-exports for the runtime property/binding system.
 // Consumers should import from here rather than the individual files.
+//
+// For the canonical map of every core concept — what it is, which file
+// defines it, and where to import it from — see ./CORE-CONCEPTS.md. Check it
+// before adding a new base type: primitives are single-sourced in
+// todl-runtime and re-exported here; never redefine a lower-layer concept.
 export {
     MetaData,
     affectsMeasure,
@@ -17,6 +22,7 @@ export {
     type CoerceValue,
     type ValidateValue,
     type ValidateTarget,
+    type SettingValue,
 } from './property-descriptor.js';
 export {
     AncestorBinding,

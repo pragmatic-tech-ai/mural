@@ -4,7 +4,7 @@ import type { InternalPropertyChangeCallback, PropertyChangedEventArgs } from '.
 import { Observable } from './observable.js';
 import { Signal } from '@pragmatic-tech-ai/todl-runtime';
 import { PropertyDescriptor } from './property-descriptor.js';
-import type { CoerceValue, PropertyMetadata, ValidateTarget, ValidateValue } from './property-descriptor.js';
+import type { CoerceValue, PropertyMetadata, SettingValue, ValidateTarget, ValidateValue } from './property-descriptor.js';
 import { inherits, type MetaData } from './metadata.js';
 
 // Branded handle returned by MuralBase.RegisterProperty (and the read-only /
@@ -270,6 +270,7 @@ export class MuralBase extends Observable
         coerce_value?: CoerceValue,
         validate_value?: ValidateValue,
         validate_target?: ValidateTarget,
+        setting_value?: SettingValue,
     ): PropertyKey<T>
     {
         if (property.includes('.'))
@@ -299,6 +300,10 @@ export class MuralBase extends Observable
             if (validate_target !== undefined)
             {
                 opts.validate_target = validate_target;
+            }
+            if (setting_value !== undefined)
+            {
+                opts.setting_value = setting_value;
             }
             descriptor = new PropertyDescriptor(owner, property, opts);
             bag.set(property, descriptor);
@@ -335,11 +340,12 @@ export class MuralBase extends Observable
         coerce_value?: CoerceValue,
         validate_value?: ValidateValue,
         validate_target?: ValidateTarget,
+        setting_value?: SettingValue,
     ): PropertyKey<T>
     {
         return MuralBase.RegisterProperty<T>(
             owner, property, default_value, meta_data,
-            coerce_value, validate_value, validate_target,
+            coerce_value, validate_value, validate_target, setting_value,
         );
     }
 

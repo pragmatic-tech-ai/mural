@@ -22,6 +22,18 @@ export type ValidateValue = (value: any) => boolean;
 // any MuralBase (the existing behavior pre-§ 15.1).
 export type ValidateTarget = (target: MuralBase) => boolean;
 
+// Declares that a dependency property's value is backed by an application
+// setting. `key` identifies the setting (e.g. 'editor.fontSize'); the
+// optional `convert` callback coerces the raw stored value into the
+// property's expected type. Consumed by the PropertyValueSource.SettingValue
+// tier (added in a later task); recording the annotation here is a
+// purely additive data-model change.
+export interface SettingValue
+{
+    key: string;
+    convert?: (raw: unknown) => unknown;
+}
+
 // Per-class metadata options. Root registrations must supply default_value
 // and meta_data; overrides may omit any field, in which case reads fall
 // through to the parent descriptor's value (WPF-style metadata merge).
@@ -32,6 +44,7 @@ export interface PropertyMetadata
     coerce_value?: CoerceValue;
     validate_value?: ValidateValue;
     validate_target?: ValidateTarget;
+    setting_value?: SettingValue;
 }
 
 // Class-level schema entry for a registered property. One descriptor per
@@ -136,6 +149,12 @@ export class PropertyDescriptor
     {
         if ('validate_target' in this.own) return this.own.validate_target;
         return this.parent_descriptor?.ValidateTarget;
+    }
+
+    public get SettingValue(): SettingValue | undefined
+    {
+        if ('setting_value' in this.own) return this.own.setting_value;
+        return this.parent_descriptor?.SettingValue;
     }
 }
 
