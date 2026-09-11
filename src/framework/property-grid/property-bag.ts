@@ -14,24 +14,29 @@ export interface IPropertyBag extends Iterable<[string, IReadOnlyPropertyAccesso
     Observe(name: string): Signal<PropertyChangedEventArgs>;
 }
 
-/** The read side of a property accessor: its identity and current value. */
+/**
+ * The read side of a property accessor: its identity, current value, and an
+ * optional change channel. `changed`, when present, is the accessor's own
+ * notification source — the bag subscribes to it instead of owning notification.
+ * A read-only accessor over a derived value may expose it too, so a value that
+ * changes without a setter still notifies.
+ */
 export interface IReadOnlyPropertyAccessor {
     /** The property's stable name (the key it is registered under). */
     id(): string;
     /** A human-readable label for the property, shown to the user. */
     displayName(): string;
     get(): unknown;
+    changed?: Signal<PropertyChangedEventArgs>;
 }
 
 /**
- * A writable, self-observable accessor. `set` writes the value; `changed`, when
- * present, is the accessor's own change channel — the bag subscribes to it
- * instead of owning notification, and skips its own emit on `SetValue` so a
- * value change fires exactly once.
+ * A writable accessor. `set` writes the value; when the accessor owns a
+ * `changed` channel, the bag skips its own emit on `SetValue` so a value change
+ * fires exactly once.
  */
 export interface IPropertyAccessor extends IReadOnlyPropertyAccessor {
     set(value: unknown): void;
-    changed?: Signal<PropertyChangedEventArgs>;
 }
 
 /** An accessor is either read-only (`get`) or writable (`get` + `set` [+ `changed`]). */
@@ -82,7 +87,8 @@ export class MapPropertyBag implements IPropertyBag {
 
     public Observe(name: string): Signal<PropertyChangedEventArgs> {
         const accessor = this.entry(name);
-        if (MapPropertyBag.isWritable(accessor) && accessor.changed !== undefined) {
+        // Any accessor — read-only or writable — may own its change channel.
+        if (accessor.changed !== undefined) {
             return accessor.changed;
         }
         return this.signalFor(name);
@@ -133,7 +139,7 @@ export class DpPropertyBag implements IPropertyBag {
     private readonly _target: MuralBase;
     private readonly _keys: Map<string, PropertyKey<unknown>>;
     // Lazily-created per-name change channels and the DP listener bridging each
-    // one, so Dispose() can release the target-side subscriptions.
+    // one, so dispose() can release the target-side subscriptions.
     private readonly _signals: Map<string, Signal<PropertyChangedEventArgs>> = new Map();
     private readonly _bridges: Map<string, Disposable> = new Map();
 
