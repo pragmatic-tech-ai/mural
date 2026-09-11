@@ -147,6 +147,7 @@ export {
     type StyleSelectorFn,
     type StyleSelection,
 } from './templates/style-selector.js';
+export { TypeTemplateSelector } from './templates/type-template-selector.js';
 export { ListReorderBehavior } from './behaviors/list-reorder-behavior.js';
 export { LogBehavior } from './behaviors/log-behavior.js';
 export { FocusOnVisibleBehavior } from './behaviors/focus-on-visible-behavior.js';

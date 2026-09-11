@@ -109,6 +109,34 @@ export class DataTemplate
         }
         return root;
     }
+
+    // Walk `klass`'s prototype chain most-specific-first (stopping at Object),
+    // returning the first non-undefined `lookup(cursor)`. The single home of the
+    // type-match policy — shared by implicit DataType resolution
+    // (matchDataTemplateInDict) and TypeTemplateSelector, so both behave
+    // identically (`[DataType=Derived]` wins over `[DataType=Base]`).
+    public static walkTypeChain<T>(klass: Function, lookup: (t: Function) => T | undefined): T | undefined
+    {
+        let cursor: Function = klass;
+        while (typeof cursor === 'function' && cursor !== Object)
+        {
+            const hit = lookup(cursor);
+            if (hit !== undefined) return hit;
+            cursor = Object.getPrototypeOf(cursor);
+        }
+        return undefined;
+    }
+
+    // Public, base-walking, scope-aware type resolution: the DataTemplate for
+    // `klass` reachable from `start`, walking the resource chain (nearest-wins)
+    // and, within each scope, `klass`'s prototype chain (most-derived-first).
+    // The programmatic counterpart to what ContentPresenter / ItemsControl do
+    // for non-Visual content — exact-key `TryFindResource(klass)` does NOT walk
+    // base types; this does.
+    public static resolveForType(klass: Function, start: Element): DataTemplate | undefined
+    {
+        return findDataTemplateForType(klass, start);
+    }
 }
 
 // Setter variant for use inside DataTemplate triggers. `targetName`
@@ -427,16 +455,10 @@ export function findDataTemplateForType(klass: Function, start: Element): DataTe
 
 // One scope's contribution: walk `klass`'s prototype chain most-specific-first,
 // returning the first DataTemplate registered in `rd` for a class in the chain.
+// Uses the shared DataTemplate.walkTypeChain so the match policy lives once.
 function matchDataTemplateInDict(rd: ResourceDictionary, klass: Function): DataTemplate | undefined
 {
-    let cursor: Function = klass;
-    while (typeof cursor === 'function' && cursor !== Object)
-    {
-        const hit = walkResourcesForDataTemplate(rd, cursor);
-        if (hit !== undefined) return hit;
-        cursor = Object.getPrototypeOf(cursor);
-    }
-    return undefined;
+    return DataTemplate.walkTypeChain(klass, (cursor) => walkResourcesForDataTemplate(rd, cursor));
 }
 
 // Look up the IMPLICIT DataTemplate for `klass` in one dictionary (own entry
