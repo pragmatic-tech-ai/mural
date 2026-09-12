@@ -508,10 +508,10 @@ export interface KeyValueResource
 export interface ResourceForm
 {
     kind:      'resource-form';
-    keyword:   'Style' | 'Template' | 'DataTemplate' | 'HierarchicalDataTemplate' | 'ItemsPanelTemplate';
+    keyword:   'Style' | 'Template' | 'DataTemplate' | 'HierarchicalDataTemplate' | 'ItemsPanelTemplate' | 'TemplateSelector';
     metaAttrs: NamedAttr[];        // TargetType, DataType, itemsselector, basedon, …
     xAttrs:    XAttr[];            // x:key, future x:* meta
-    body:      SetterList | ElementNode | DataTemplateBody;
+    body:      SetterList | ElementNode | DataTemplateBody | TemplateSelectorBody;
     span:      SourceSpan;
 }
 
@@ -526,6 +526,17 @@ export interface DataTemplateBody
     triggers:      TriggerGroup[];
     eventTriggers: EventTriggerGroup[];
     span:          SourceSpan;
+}
+
+// Body of a `TemplateSelector` (spec Shape C): an ordered list of typed
+// `DataTemplate [DataType=X] { … }` cases plus at most one bare `@key`
+// default. Compiles to a runtime `TypeTemplateSelector` (Map<Function,
+// DataTemplate> + optional fallback). No `when(...)` triggers inside.
+export interface TemplateSelectorBody
+{
+    kind:    'template-selector-body';
+    entries: (ResourceForm | StaticResourceValue)[];
+    span:    SourceSpan;
 }
 
 export interface SetterList

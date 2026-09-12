@@ -61,6 +61,7 @@ export type {
     StringValue,
     StructuredBody,
     TemplateBindingValue,
+    TemplateSelectorBody,
     TextChunk,
     ThemeBlock,
     TopForm,

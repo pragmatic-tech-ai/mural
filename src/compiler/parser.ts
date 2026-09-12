@@ -62,6 +62,7 @@ import type {
     StringValue,
     StructuredBody,
     TemplateBindingValue,
+    TemplateSelectorBody,
     ThemeBlock,
     TokenCatalogEntry,
     TopForm,
@@ -128,7 +129,7 @@ function expandTokenRange(first: string, last: string, span: SourceSpan): string
 
 const RESOURCE_KEYWORDS = new Set([
     'Style', 'Template', 'DataTemplate',
-    'HierarchicalDataTemplate', 'ItemsPanelTemplate',
+    'HierarchicalDataTemplate', 'ItemsPanelTemplate', 'TemplateSelector',
 ]);
 
 // Subset of RESOURCE_KEYWORDS that produce a *template* value (something
@@ -751,7 +752,7 @@ export class Parser
     private parseResourceForm(): ResourceForm
     {
         const head    = this.expect(TokenKind.Ident);
-        const keyword = head.value as 'Style' | 'Template' | 'DataTemplate' | 'HierarchicalDataTemplate' | 'ItemsPanelTemplate';
+        const keyword = head.value as 'Style' | 'Template' | 'DataTemplate' | 'HierarchicalDataTemplate' | 'ItemsPanelTemplate' | 'TemplateSelector';
         if (!RESOURCE_KEYWORDS.has(keyword))
         {
             throw new ParseError(`expected resource keyword, got '${keyword}'`, head.span);
@@ -784,7 +785,7 @@ export class Parser
         }
 
         this.expect(TokenKind.LBrace);
-        let body: SetterList | ElementNode | DataTemplateBody;
+        let body: SetterList | ElementNode | DataTemplateBody | TemplateSelectorBody;
         if (keyword === 'Style')
         {
             body = this.parseSetterList();
@@ -845,6 +846,10 @@ export class Parser
                 };
             }
         }
+        else if (keyword === 'TemplateSelector')
+        {
+            body = this.parseTemplateSelectorBody();
+        }
         else
         {
             body = this.parseElement();
@@ -858,6 +863,36 @@ export class Parser
             body,
             span:    this.span(head.span.start, rbrace.span.end),
         };
+    }
+
+    // Body of a `TemplateSelector` resource form — a child list of
+    // `DataTemplate [DataType=X] { … }` typed cases and at most one bare
+    // `@key` default. Runs after parseResourceForm has consumed the opening
+    // `{`, so it reads entries up to (not including) the closing `}`.
+    private parseTemplateSelectorBody(): TemplateSelectorBody
+    {
+        const start = this.peek().span.start;
+        const entries: (ResourceForm | StaticResourceValue)[] = [];
+        while (this.peek().kind !== TokenKind.RBrace)
+        {
+            const tk = this.peek();
+            if (tk.kind === TokenKind.Ident && tk.value === 'DataTemplate')
+            {
+                entries.push(this.parseResourceForm());
+            }
+            else if (tk.kind === TokenKind.At)
+            {
+                entries.push(this.parseStaticResource());
+            }
+            else
+            {
+                throw new ParseError(
+                    'TemplateSelector body accepts only `DataTemplate [DataType=…] { … }` cases and a single `@key` default',
+                    tk.span);
+            }
+            while (this.peek().kind === TokenKind.Semicolon) this.consume();
+        }
+        return { kind: 'template-selector-body', entries, span: this.span(start, this.lastEnd()) };
     }
 
     // ── Setter list (inside a style body) ──────────────────────────
@@ -1586,7 +1621,8 @@ export class Parser
                 case 'Template':
                 case 'DataTemplate':
                 case 'HierarchicalDataTemplate':
-                case 'ItemsPanelTemplate': return this.parseResourceForm();
+                case 'ItemsPanelTemplate':
+                case 'TemplateSelector': return this.parseResourceForm();
                 case 'def':          return this.parseDefForm();
                 case 'include':      return this.parseIncludeForm();
                 case 'merge':        return this.parseMergeForm();

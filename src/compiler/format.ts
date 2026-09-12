@@ -27,8 +27,8 @@ import type {
     KeyValueResource, MacroParam, MemberBlock, ModuleForm, ModulesBlock,
     NamedAttr, PropertySetter,
     ResourceForm, ResourcesBlock, ResourcesImport, SchemeBlock, ServiceEntry,
-    ServicesBlock, SetterItem, SetterList, SlotAssign, StringBody,
-    StructuredBody, ThemeBlock, TokenCatalogEntry, TopForm, TriggerActionNode,
+    ServicesBlock, SetterItem, SetterList, SlotAssign, StaticResourceValue, StringBody,
+    StructuredBody, TemplateSelectorBody, ThemeBlock, TokenCatalogEntry, TopForm, TriggerActionNode,
     TriggerExpr, TriggerGroup, ValueNode, XAttr, BehaviorsBlock,
 } from './ast.js';
 
@@ -633,11 +633,30 @@ class Printer
             this.push(level, '}');
             return;
         }
+        if (body.kind === 'template-selector-body')
+        {
+            this.push(level, `${head} {`);
+            this.printTemplateSelectorBody(body, level + 1);
+            this.flushCommentsBefore(form.span.end.offset, level + 1);
+            this.push(level, '}');
+            return;
+        }
         // data-template-body: root element + triggers.
         this.push(level, `${head} {`);
         this.printDataTemplateBody(body, level + 1);
         this.flushCommentsBefore(form.span.end.offset, level + 1);
         this.push(level, '}');
+    }
+
+    private printTemplateSelectorBody(body: TemplateSelectorBody, level: number): void
+    {
+        const items: SeqItem[] = body.entries.map(e => ({
+            span:  e.span,
+            print: () => e.kind === 'resource-form'
+                ? this.printResourceForm(e, level)
+                : this.push(level, `@${(e as StaticResourceValue).key}`),
+        }));
+        this.printSequence(items, level, it => it.span, it => it.print());
     }
 
     private printDataTemplateBody(body: DataTemplateBody, level: number): void

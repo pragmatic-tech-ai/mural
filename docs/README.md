@@ -93,6 +93,10 @@ Start with whichever doc matches what you're trying to do.
   `ObservableCollection`, `DataTemplate`, `ItemsControl` +
   `ItemsPresenter` + `ItemContainerGenerator`, `VirtualizingPanel` +
   `VirtualizingStackPanel`, `IScrollInfo`, `ScrollViewer`.
+- **[dynamic-markup-ingestion.md](dynamic-markup-ingestion.md)** —
+  compiling mural markup *strings* at runtime with `instantiate()`:
+  the compile-time-`symbols` vs runtime-`ctx` split, converter
+  instances, wrapping into a `DataTemplate`; when to prefer a static `.mu`.
 - **[basic.md](basic.md)** — concrete-control reference:
   `Border`, `TextBlock`, `Canvas`, `ContentControl`, `ItemsControl`,
   `ScrollViewer`, etc.
