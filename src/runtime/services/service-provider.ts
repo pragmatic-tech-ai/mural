@@ -65,7 +65,7 @@ export interface IServiceProvider
 // the same object both composes and resolves, but a collaborator can ask
 // for just the half it needs. Registration methods return IServiceContainer
 // so calls chain (`c.register(a, …).registerInstance(b, …)`).
-export interface IServiceContainer
+export interface IServiceContainer extends Disposable
 {
     register<T>(token: ServiceToken<T>, factory: ServiceFactory<T>, lifetime?: ServiceLifetime): IServiceContainer;
     registerInstance<T>(token: ServiceToken<T>, instance: T): IServiceContainer;
@@ -76,8 +76,8 @@ export interface IServiceContainer
     // provider (resolve). The concrete return is a ServiceProvider, so a
     // caller holding the class keeps both halves.
     createScope(): IServiceContainer;
-    // Tear down THIS scope: dispose() every instance it owns, then clear.
-    dispose(): void;
+    // dispose() (inherited from Disposable) tears down THIS scope: dispose()
+    // every instance it owns, then clear. See ServiceProvider.dispose.
 }
 
 export enum ServiceLifetime
