@@ -205,6 +205,7 @@ export {
 } from './grid-splitter.js';
 export { Splitter } from './splitter.js';
 export { ClickableBorder } from './clickable-border.js';
+export { RepeatButton } from './repeat-button.js';
 export { ClickAwayScrim } from './click-away-scrim.js';
 
 // Drawer / Menu / ContextMenu / Surface-control helpers (ScrimSurface,

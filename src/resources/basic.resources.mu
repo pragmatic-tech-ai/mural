@@ -344,7 +344,7 @@ resources MuralBasic {
                     [ DockPanel.Dock  = Right,
                       Width           = 18 ] {
                     StackPanel [ Orientation = Vertical ] {
-                        ClickableBorder x:name="PART_Up"
+                        RepeatButton x:name="PART_Up"
                             [ Padding         = (0,2,0,2),
                               Height          = 14 ] {
                             Shape x:name="PART_UpGlyph"
@@ -355,7 +355,7 @@ resources MuralBasic {
                                   HorizontalAlignment = Center,
                                   VerticalAlignment   = Center ]
                         }
-                        ClickableBorder x:name="PART_Down"
+                        RepeatButton x:name="PART_Down"
                             [ Padding         = (0,2,0,2),
                               Height          = 14 ] {
                             Shape x:name="PART_DownGlyph"

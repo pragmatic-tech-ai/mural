@@ -7,7 +7,7 @@
     type KeyEventArgs,
     Key,
 } from '../runtime/index.js';
-import { ClickableBorder } from './clickable-border.js';
+import { RepeatButton } from './repeat-button.js';
 import { TemplatedControl } from './templated-control.js';
 import { TextBox } from './text-box.js';
 import { TextBlock } from './text-block.js';
@@ -109,8 +109,8 @@ export class SpinEdit extends TemplatedControl
     // Template parts — all resolved from DefaultSpinEdit in the
     // controls theme.
     private readonly _textBox:    TextBox;
-    private readonly _upButton:   ClickableBorder;
-    private readonly _downButton: ClickableBorder;
+    private readonly _upButton:   RepeatButton;
+    private readonly _downButton: RepeatButton;
 
     // Cross-listener guard. When syncTextFromValue writes the inner
     // TextBox's Text DP, any Text → commit listener would otherwise
@@ -127,8 +127,8 @@ export class SpinEdit extends TemplatedControl
         // rebuildTemplate materialises @DefaultSpinEdit and attaches root.
         this.applyDefaultStyle();
         this._textBox    = this.GetTemplateChild('PART_TextBox') as TextBox;
-        this._upButton   = this.GetTemplateChild('PART_Up')      as ClickableBorder;
-        this._downButton = this.GetTemplateChild('PART_Down')    as ClickableBorder;
+        this._upButton   = this.GetTemplateChild('PART_Up')      as RepeatButton;
+        this._downButton = this.GetTemplateChild('PART_Down')    as RepeatButton;
 
         // Hide the inner TextBox's own outline — the outer PART_Border is THE
         // visible field outline. Clearing Stroke suppresses the inner border's
@@ -169,11 +169,14 @@ export class SpinEdit extends TemplatedControl
         // applies on top of the user's intended value, not the prior
         // committed one. (Typing "3.14" then clicking ▴ with DP=0
         // becomes 3 → 4, not stale-value + 1.)
-        this._upButton.onClick   = (): void => {
+        // RepeatButton fires onRepeat on press and repeatedly while held (never
+        // onClick), so a single click steps once and a held press auto-repeats
+        // — accelerating — until release. step() no-ops when IsReadOnly.
+        this._upButton.onRepeat   = (): void => {
             this.commitText();
             this.step(+1, SpinStep.Small);
         };
-        this._downButton.onClick = (): void => {
+        this._downButton.onRepeat = (): void => {
             this.commitText();
             this.step(-1, SpinStep.Small);
         };
