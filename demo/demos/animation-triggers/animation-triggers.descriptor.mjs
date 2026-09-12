@@ -3,17 +3,15 @@
 // implicit Button style (scoped to the template root) that drives
 // Loaded / hover / TargetName trigger actions.
 import { AnimationTriggersVM } from './animation-triggers-vm.mjs';
-import { register } from '../../platform/registry.mjs';
 
 let vmInstance;
 
-register({
+export default {
     id:       'animation-triggers',
-    group:    'Animation',
     title:    'Trigger actions',
     subtitle: '`when(){ on enter/exit }`, `on Loaded`, `TargetName=banner` — all-markup, zero host JS.',
     factory: () => {
         if (vmInstance === undefined) vmInstance = new AnimationTriggersVM();
         return vmInstance;
     },
-});
+};

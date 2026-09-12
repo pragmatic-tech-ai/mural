@@ -3,17 +3,15 @@
 // Button style (scoped to the template root) that drives Begin /
 // Pause / Resume / Stop via named storyboards.
 import { AnimationNamedVM } from './animation-named-vm.mjs';
-import { register } from '../../platform/registry.mjs';
 
 let vmInstance;
 
-register({
+export default {
     id:       'animation-named',
-    group:    'Animation',
     title:    'Named storyboards',
     subtitle: '`BeginStoryboard[Name=loop]` + Pause / Resume / Stop on hover and click — markup-only.',
     factory: () => {
         if (vmInstance === undefined) vmInstance = new AnimationNamedVM();
         return vmInstance;
     },
-});
+};
