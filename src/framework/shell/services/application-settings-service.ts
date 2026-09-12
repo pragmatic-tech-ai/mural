@@ -61,6 +61,7 @@ export class ApplicationSettings extends ServiceBase implements ISettingSource
     private readonly _store: ISettingsStore | undefined;
     private readonly _persisted: Record<string, unknown>;
     private readonly _emptyChanged = new Map<string, Signal<PropertyChangedEventArgs>>();
+    private _availabilityNotifyScheduled = false;
 
     constructor(provider: IServiceProvider)
     {
@@ -71,14 +72,11 @@ export class ApplicationSettings extends ServiceBase implements ISettingSource
         this._persisted = this._store ? this._store.Load() : {};
         this.set_property_value(ApplicationSettings.SettingsKey, new ObservableCollection<Setting>());
         this.PopulateFromModules();
-        // This instance IS the ISettingSource. Announce availability so any
-        // setting-backed DP that armed before a source existed (read during early
-        // render, before this service was constructed) re-arms and picks up its
-        // value. DEFERRED to a microtask: notifyAvailable re-enters get(SettingSourceKey)
-        // via the waiters' re-resolve, and this factory hasn't returned yet — the
-        // container would re-construct us. By the microtask, construction is
-        // complete and the instance is cached.
-        queueMicrotask(() => SettingSourceAvailability.notifyAvailable());
+        // This instance IS the ISettingSource; announce availability so a
+        // setting-backed DP that armed before it existed re-arms (addSetting already
+        // scheduled this for each key added above, but schedule again so a source
+        // with no NEW keys — all already present — still announces itself).
+        this.scheduleAvailabilityNotify();
     }
 
     public get Settings(): ObservableCollection<Setting>
@@ -166,10 +164,6 @@ export class ApplicationSettings extends ServiceBase implements ISettingSource
     public Contribute(definitions: Iterable<SettingDefinition>): void
     {
         for (const definition of definitions) this.addSetting(definition);
-        // A late-published setting may be the one a waiting DP needs; re-arm.
-        // Safe to fire synchronously here — Contribute runs post-construction, so
-        // a waiter's get(SettingSourceKey) resolves this already-cached instance.
-        SettingSourceAvailability.notifyAvailable();
     }
 
     // Build a live Setting from a definition, overlaying any persisted value onto
@@ -184,6 +178,25 @@ export class ApplicationSettings extends ServiceBase implements ISettingSource
         setting.PropertyChanged(Setting.ValueKey).subscribe(() => this.persist());
         this._byKey.set(definition.Key, setting);
         this.Settings.Add(setting);
+        // A newly-available key may be the one a setting-backed DP is waiting on
+        // (armed while the key was absent). Re-arm those — deferred + coalesced so a
+        // burst of adds (PopulateFromModules / Contribute) fires one notify, and so
+        // it is safe when addSetting runs inside this service's own constructor
+        // (a synchronous notify would re-enter get(SettingSourceKey) before the DI
+        // container has cached this instance).
+        this.scheduleAvailabilityNotify();
+    }
+
+    // Coalesced, microtask-deferred SettingSourceAvailability.notifyAvailable().
+    private scheduleAvailabilityNotify(): void
+    {
+        if (this._availabilityNotifyScheduled) return;
+        this._availabilityNotifyScheduled = true;
+        queueMicrotask(() =>
+        {
+            this._availabilityNotifyScheduled = false;
+            SettingSourceAvailability.notifyAvailable();
+        });
     }
 
     // Write the full current value set through the store (no-op without one).

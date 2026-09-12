@@ -183,7 +183,12 @@ export class EffectiveValueDescriptor implements ISettingReArmable
         const binding = this.property_descriptor.SettingValue;
         if (binding === undefined) return { has: false, value: undefined };
         const r = EffectiveValueDescriptor.resolveSetting(this.owner, binding);
-        if (r.src !== undefined && this.changed.subscriberCount > 0)
+        // Only subscribe when a value was actually found. A source that is present
+        // but has no value for this key yet (definition not contributed) hands back
+        // its EMPTY change signal — subscribing to that latches the default forever
+        // (it never fires, and a later Contribute does not fire it). Leave those to
+        // the availability re-arm path instead.
+        if (r.src !== undefined && r.has && this.changed.subscriberCount > 0)
         {
             this.ensureSettingSubscription(r.src, binding.key);
         }
@@ -197,38 +202,45 @@ export class EffectiveValueDescriptor implements ISettingReArmable
     private ensureSettingSubscriptionFromDemand(): void
     {
         if (this.setting_subscription !== undefined) return;
-        const binding = this.property_descriptor.SettingValue;
-        if (binding === undefined) return;
-        const { src } = EffectiveValueDescriptor.resolveSetting(this.owner, binding);
-        if (src !== undefined) { this.ensureSettingSubscription(src, binding.key); return; }
-        // No source resolvable yet (this property was observed before any
-        // ISettingSource came online). Register for a re-arm so a late source
-        // still reaches us — WEAKLY, so a torn-down owner never pins us. Without
-        // this the binding latches the DP default forever: a source appearing
-        // later fires no change (it wasn't subscribed) and nothing re-reads.
-        SettingSourceAvailability.waitFor(this);
+        this.armSettingValue();
     }
 
-    // Re-arm entry point — fired by SettingSourceAvailability when an
-    // ISettingSource comes online after this descriptor armed source-less.
-    // Re-resolves the source; if one now exists, opens the live subscription
-    // (when still observed) and pushes a change if the effective value moved off
-    // the DP default (e.g. 0 → the setting's 80). If STILL unresolvable (this
-    // owner's scope has no source), re-registers to wait again.
+    // Arm the setting tier for a first (or repeat) attempt. Subscribes to the live
+    // change signal WHEN a value is resolvable now; otherwise registers to re-arm
+    // once one appears. "No value yet" deliberately covers BOTH cases that latch
+    // the DP default: (1) no ISettingSource registered, and (2) a source is present
+    // but this key's definition hasn't been contributed — the source hands back an
+    // empty signal that never fires, so opening a subscription to it would strand
+    // us. The re-arm is registered WEAKLY (WeakRef), so a torn-down owner never
+    // pins us. Returns whether a value was found.
+    private armSettingValue(): boolean
+    {
+        const binding = this.property_descriptor.SettingValue;
+        if (binding === undefined) return false;
+        const { src, has } = EffectiveValueDescriptor.resolveSetting(this.owner, binding);
+        if (has && src !== undefined)
+        {
+            if (this.changed.subscriberCount > 0) this.ensureSettingSubscription(src, binding.key);
+            return true;
+        }
+        SettingSourceAvailability.waitFor(this);
+        return false;
+    }
+
+    // Re-arm entry point — fired by SettingSourceAvailability when a source comes
+    // online (constructed) or a setting is contributed after this descriptor armed
+    // with no value. Re-attempts the arm; if a value now resolves, opens the live
+    // subscription and pushes a change if the effective value moved off the DP
+    // default (e.g. 0 → the setting's 80). If STILL nothing, armSettingValue has
+    // re-registered the wait.
     public onSettingSourceAvailable(): void
     {
         // Masked by a higher-priority tier (Local/Style/Trigger/Inherited/…):
         // the setting no longer drives the value, so nothing to push. A later
         // pull re-resolves if it ever falls back to the setting tier.
         if (this.source !== PropertyValueSource.SettingValue) return;
-        const binding = this.property_descriptor.SettingValue;
-        if (binding === undefined) return;
-        const { src } = EffectiveValueDescriptor.resolveSetting(this.owner, binding);
-        if (src === undefined) { SettingSourceAvailability.waitFor(this); return; }
-        if (this.changed.subscriberCount > 0) this.ensureSettingSubscription(src, binding.key);
-        // Value shown while source-less was the DP default; recompute against the
-        // now-resolvable setting and notify only if it actually changed.
         const before = this.apply_coerce(this.property_descriptor.DefaultValue);
+        if (!this.armSettingValue()) return;
         const after = this.value;
         if (before !== after) this.OnPropertyChange(before, after);
     }

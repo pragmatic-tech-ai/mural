@@ -37,9 +37,13 @@ function numDef(key: string, def: number): SettingDefinition
 let prior: Application | undefined;
 afterEach(() => { if (prior !== undefined) Application.current = prior; });
 
+// ApplicationSettings schedules its availability notify on a microtask (coalesced,
+// re-entrancy-safe), so flush the task queue before asserting the re-armed value.
+const tick = (): Promise<void> => new Promise((r) => setTimeout(r, 0));
+
 describe('setting-backed DP re-arms when a source comes online late', () =>
 {
-    test('armed source-less, then ApplicationSettings + setting appear → DP updates and notifies', () =>
+    test('armed source-less, then ApplicationSettings + setting appear → DP updates and notifies', async () =>
     {
         prior = Application.current;
         const app = new Application();
@@ -57,7 +61,8 @@ describe('setting-backed DP re-arms when a source comes online late', () =>
             app.Services.register(ApplicationSettings.Key, (p) => new ApplicationSettings(p));
             app.Services.register(SettingSourceKey, (p) => p.getRequired(ApplicationSettings.Key));
             const settings = app.Services.getRequired(ApplicationSettings.Key);
-            settings.Contribute([numDef('late.probe', 80)]);   // fires notifyAvailable → re-arm
+            settings.Contribute([numDef('late.probe', 80)]);   // schedules notifyAvailable → re-arm
+            await tick();
 
             assert.equal(probe.Bound, 80, 'DP re-armed off the late source and re-read its value');
             assert.ok(fired >= 1, 'PropertyChanged fired when the value moved off the default');
@@ -65,6 +70,41 @@ describe('setting-backed DP re-arms when a source comes online late', () =>
             // And the live path works now that the subscription is armed.
             settings.Set('late.probe', 120);
             assert.equal(probe.Bound, 120, 'a later Set is reflected');
+        }
+        finally
+        {
+            sub.dispose();
+        }
+    });
+
+    test('source present but key CONTRIBUTED after arm → DP re-arms on Contribute (the app case)', async () =>
+    {
+        prior = Application.current;
+        const app = new Application();
+        Application.current = app;
+        // Source online FIRST (as in the app: constructed early by other services),
+        // but this key's definition is not contributed yet.
+        app.Services.register(ApplicationSettings.Key, (p) => new ApplicationSettings(p));
+        app.Services.register(SettingSourceKey, (p) => p.getRequired(ApplicationSettings.Key));
+        const settings = app.Services.getRequired(ApplicationSettings.Key);
+
+        const probe = new LateProbe();
+        let fired = 0;
+        // Arms while the source exists but the key is absent — the state that used
+        // to subscribe to the never-firing empty signal and latch the default.
+        const sub = probe.PropertyChanged('Bound').subscribe(() => { fired++; });
+        try
+        {
+            assert.equal(probe.Bound, -1, 'key absent → DP default');
+
+            settings.Contribute([numDef('late.probe', 80)]);   // late definition → schedules notifyAvailable
+            await tick();
+
+            assert.equal(probe.Bound, 80, 'DP re-armed after the key was contributed');
+            assert.ok(fired >= 1, 'PropertyChanged fired on re-arm');
+
+            settings.Set('late.probe', 120);
+            assert.equal(probe.Bound, 120, 'live edits work — subscribed to the REAL signal, not the empty one');
         }
         finally
         {
