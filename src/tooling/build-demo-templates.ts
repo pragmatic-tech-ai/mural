@@ -21,6 +21,10 @@ function discoverMuSources(root: string): string[]
     {
         for (const entry of readdirSync(dir))
         {
+            // Skip the Electron app's package tree: node_modules is huge and out/
+            // holds build output — neither has authorable `.mu` sources. (The demo
+            // app now lives at the demo/ root alongside its own node_modules/out.)
+            if (entry === 'node_modules' || entry === 'out') continue;
             const full = join(dir, entry);
             const st = statSync(full);
             if (st.isDirectory()) walk(full);

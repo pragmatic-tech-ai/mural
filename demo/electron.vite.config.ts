@@ -2,8 +2,8 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'electron-vite'
 
-// The repo root (Mural/) relative to this config file (demo/electron/).
-const repo = (p: string): string => fileURLToPath(new URL(`../../${p}`, import.meta.url))
+// The repo root (Mural/) relative to this config file (demo/).
+const repo = (p: string): string => fileURLToPath(new URL(`../${p}`, import.meta.url))
 
 // The renderer bundles mural from its BUILT dist (never src — NodeNext `.js`
 // specifiers break Vite's resolver). These aliases mirror the old importmap in
@@ -26,7 +26,7 @@ export default defineConfig({
         { find: '@pragmatic-tech-ai/mural/resources/material', replacement: repo('dist/resources/material/index.js') },
         { find: '@pragmatic-tech-ai/mural/visual-engine', replacement: repo('dist/visual-engine/index.js') },
         { find: /^@pragmatic-tech-ai\/todl-runtime$/, replacement: repo('node_modules/@pragmatic-tech-ai/todl-runtime/dist/index.js') },
-        { find: /^opentype\.js$/, replacement: repo('demo/opentype-shim.mjs') },
+        { find: /^opentype\.js$/, replacement: fileURLToPath(new URL('./opentype-shim.mjs', import.meta.url)) },
       ],
     },
     build: {
