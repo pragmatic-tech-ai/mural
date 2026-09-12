@@ -236,6 +236,7 @@ const ENTRIES: ReadonlyArray<readonly [string, string]> = [
     ['ToolboxPage',             '@pragmatic-tech-ai/mural/framework/diagram/toolbox/toolbox-page.js'],
     ['ToolboxItem',             '@pragmatic-tech-ai/mural/framework/diagram/toolbox/toolbox-item.js'],
     ['VisualContext',           '@pragmatic-tech-ai/mural/framework/diagram/toolbox/toolbox-visual-resolver.js'],
+    ['VisualContextScope',      '@pragmatic-tech-ai/mural/framework/diagram/toolbox/visual-context-scope.js'],
     ['DiagramDocument',         '@pragmatic-tech-ai/mural/framework/diagram/diagram-document.js'],
     ['DiagramStorageKey',       '@pragmatic-tech-ai/mural/framework/diagram/diagram-document.js'],
     ['DiagramEditingContext',   '@pragmatic-tech-ai/mural/framework/diagram/diagram-command-contexts.js'],

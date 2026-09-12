@@ -249,6 +249,7 @@ export { RulerBar } from './diagram/guides/ruler-bar.js';
 export { PersistentGuidesAdorner } from './diagram/guides/persistent-guides-adorner.js';
 export { attachPersistentGuides, type PersistentGuidesHandlers } from './diagram/behaviors/persistent-guides-behavior.js';
 export { VisualContext, type IToolboxVisualResolver } from './diagram/toolbox/toolbox-visual-resolver.js';
+export { VisualContextScope } from './diagram/toolbox/visual-context-scope.js';
 export { type IToolboxDropFactory, type ToolboxDropContext } from './diagram/toolbox/toolbox-drop-factory.js';
 export { ShapeToolboxItem } from './diagram/toolbox/shape-toolbox-item.js';
 export { ShapeVisualResolver, ShapeVisualResolverKey } from './diagram/toolbox/shape-visual-resolver.js';
