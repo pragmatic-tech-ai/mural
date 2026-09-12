@@ -1190,7 +1190,17 @@ export class Compiler
         // Local handle — keeps emit short.
         const rdVar = this.fresh('rd');
         this.line(`const ${rdVar} = ${rdExpr};`);
+        // Track same-dict resource vars so a `@key` reference to an entry
+        // declared earlier in THIS block resolves to the local JS var
+        // directly — matching the `resources Name { … }` block form
+        // (compileResourcesBlock). Without this, `@key` in the
+        // `Application { resources: { … } }` slot form always fell through
+        // to DynamicResource; a TypeTemplateSelector default needs the
+        // concrete DataTemplate instance at construction, not a binding.
+        const savedLocalRes = this.localResourceVars;
+        this.localResourceVars = new Map<string, string>();
         this.compileResourcesBody(rdVar, slot.value);
+        this.localResourceVars = savedLocalRes;
     }
 
     private compileResourcesBody(rdVar: string, body: StructuredBody): void
@@ -1540,6 +1550,14 @@ export class Compiler
             this.registerResourceFormVar(rdVar, rf, tmplVar, /*allowImplicit*/ false);
             return;
         }
+        if (rf.keyword === 'TemplateSelector')
+        {
+            const selVar = this.compileTemplateSelectorForm(rf);
+            // A selector has no single implicit type key — it MUST be keyed
+            // (allowImplicit=false makes registerResourceFormVar require x:key).
+            this.registerResourceFormVar(rdVar, rf, selVar, /*allowImplicit*/ false);
+            return;
+        }
         throw new EmitError(
             `unknown resource form '${rf.keyword}'`, rf.span);
     }
@@ -1836,6 +1854,55 @@ export class Compiler
             triggerVars.push(v);
         }
         return triggerVars;
+    }
+
+    // Compile a `TemplateSelector` resource form (spec Shape C) into a runtime
+    // `TypeTemplateSelector`: typed `DataTemplate [DataType=X] { … }` children
+    // become Map<Function, DataTemplate> cases; a single bare `@key` (which must
+    // reference a DataTemplate declared earlier in the same resources block)
+    // becomes the fallback. Cases and default share the runtime selector's
+    // most-derived-first prototype walk, matching implicit-`DataType` semantics.
+    private compileTemplateSelectorForm(rf: ResourceForm): string
+    {
+        if (rf.body.kind !== 'template-selector-body')
+        {
+            throw new EmitError(
+                'TemplateSelector body must be a list of `DataTemplate [DataType=…]` cases and an optional `@key` default',
+                rf.span);
+        }
+        this.ensureImport('TypeTemplateSelector');
+        const caseEntries: string[] = [];
+        let fallbackVar: string | undefined;
+        for (const entry of rf.body.entries)
+        {
+            if (entry.kind === 'static-resource')
+            {
+                if (fallbackVar !== undefined)
+                {
+                    throw new EmitError('TemplateSelector accepts at most one `@key` default', entry.span);
+                }
+                const localVar = this.localResourceVars?.get(entry.key);
+                if (localVar === undefined)
+                {
+                    throw new EmitError(
+                        `TemplateSelector default @${entry.key} must reference a DataTemplate declared earlier in the same resources block`,
+                        entry.span);
+                }
+                fallbackVar = localVar;
+                continue;
+            }
+            // A typed case: a DataTemplate that MUST carry a DataType.
+            // requireTargetType throws the standard "missing required 'DataType'"
+            // EmitError otherwise.
+            const dataType = this.requireTargetType(entry);
+            this.ensureImport(dataType);
+            const tmplVar = this.compileDataTemplateForm(entry);
+            caseEntries.push(`[${dataType}, ${tmplVar}]`);
+        }
+        const selVar = this.fresh('sel');
+        this.line(
+            `const ${selVar} = new TypeTemplateSelector(new Map([${caseEntries.join(', ')}]), ${fallbackVar ?? 'undefined'});`);
+        return selVar;
     }
 
     private compileDataTemplateForm(rf: ResourceForm): string
