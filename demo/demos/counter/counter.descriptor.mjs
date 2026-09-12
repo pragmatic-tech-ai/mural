@@ -4,13 +4,11 @@
 // auto-resolves the template by matching the VM's constructor name
 // against the template's DataType.
 import { CounterVM } from './counter-vm.mjs';
-import { register } from '../../platform/registry.mjs';
 
 let vmInstance;
 
-register({
+export default {
     id:       'counter',
-    group:    'Patterns',
     title:    'Counter',
     subtitle: 'Button + ICommand + ComboBox. Increment.CanExecute gates the button at 10.',
     factory: () => {
@@ -23,4 +21,4 @@ register({
         if (vmInstance === undefined) vmInstance = new CounterVM();
         return vmInstance;
     },
-});
+};
