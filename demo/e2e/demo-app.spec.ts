@@ -1,7 +1,7 @@
 import { test, expect, _electron as electron } from '@playwright/test'
-import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const mainEntry = join(__dirname, '../out/main/index.js')
+const mainEntry = fileURLToPath(new URL('../out/main/index.js', import.meta.url))
 
 test('demo app boots, composes 6 group modules, and mounts the shell', async () => {
   // Strip ELECTRON_RUN_AS_NODE — when set (as it is in this dev shell), electron.exe

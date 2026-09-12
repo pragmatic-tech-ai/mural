@@ -14,7 +14,7 @@ function createWindow(): void {
     backgroundColor: '#1c1b1f', // MaterialDark surface — no white flash before mount
     autoHideMenuBar: true,
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      preload: join(__dirname, '../preload/index.mjs'),
       sandbox: false,
     },
   })
