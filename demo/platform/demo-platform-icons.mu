@@ -16,4 +16,5 @@ resources DemoPlatformIcons {
     include "icons/demos.svg"     as DemosIcon
     include "icons/patterns.svg"  as PatternsIcon
     include "icons/styles.svg"    as StylesIcon
+    include "icons/shapes.svg"    as ShapeLibraryIcon
 }

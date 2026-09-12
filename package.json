@@ -118,7 +118,8 @@
     "demo:border": "tsx src/Controls/tests/border-render.ts",
     "demo:text": "tsx src/Controls/tests/text-render.ts",
     "demo:gfont": "tsx src/Controls/tests/google-font-render.ts",
-    "demo:html": "npm run build && echo Demo built. From repo root: 'npx http-server -p 8080' then open http://localhost:8080/demo/",
+    "demo": "npm run build && npm --prefix demo/electron run dev",
+    "demo:build": "npm run build && npm --prefix demo/electron run build",
     "clean": "rimraf dist build",
     "prepublishOnly": "npm run clean && npm run build"
   },
