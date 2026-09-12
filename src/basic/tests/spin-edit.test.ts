@@ -1,5 +1,5 @@
 import { ModifierKeys, toModifierKeys } from '../../runtime/index.js';
-import { test, describe, beforeEach } from 'node:test';
+import { test, describe, beforeEach, afterEach, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { initTestApp } from './test-app.js';
 
@@ -403,5 +403,56 @@ describe('SpinEdit — IsReadOnly propagation', () => {
 
         sp.IsReadOnly = false;
         assert.equal(inner.IsReadOnly, false);
+    });
+});
+
+describe('SpinEdit — hold-to-repeat spin buttons', () => {
+    beforeEach(() => { initTestApp(); });
+    // Mock timers are enabled per-test AFTER fixture()/Flush so the mock does
+    // not intercept any setTimeout used during construction/layout — the repeat
+    // timer only starts on the pointer-down below.
+    afterEach(() => { mock.timers.reset(); });
+
+    test('holding ▴ steps once immediately, then repeats and accelerates until release', () => {
+        const { sp, target, up } = fixture();
+        sp.SmallChange = 1;
+        sp.Value = 0;
+        mock.timers.enable({ apis: ['setTimeout'] });
+
+        target.InputManager.InjectPointerDown(up, pointer());
+        assert.equal(sp.Value, 1, 'press steps once immediately');
+        mock.timers.tick(399); assert.equal(sp.Value, 1, 'no repeat before the initial delay');
+        mock.timers.tick(1);   assert.equal(sp.Value, 2, 'first repeat at the initial delay');
+        mock.timers.tick(120); assert.equal(sp.Value, 3);
+        mock.timers.tick(100); assert.equal(sp.Value, 4, 'gap shrank — accelerating');
+
+        target.InputManager.InjectPointerUp(up, pointer());
+        mock.timers.tick(5000);
+        assert.equal(sp.Value, 4, 'release stops the repeat');
+    });
+
+    test('holding ▾ decrements repeatedly', () => {
+        const { sp, target, down } = fixture();
+        sp.Value = 10;
+        mock.timers.enable({ apis: ['setTimeout'] });
+
+        target.InputManager.InjectPointerDown(down, pointer());   // -1 (now 9)
+        mock.timers.tick(400);   // -1 (8)
+        mock.timers.tick(120);   // -1 (7)
+        mock.timers.tick(100);   // -1 (6)
+        target.InputManager.InjectPointerUp(down, pointer());
+        assert.equal(sp.Value, 6, '1 immediate + 3 repeats = -4');
+    });
+
+    test('IsReadOnly — holding a spin button never changes Value', () => {
+        const { sp, target, up } = fixture();
+        sp.IsReadOnly = true;
+        sp.Value = 5;
+        mock.timers.enable({ apis: ['setTimeout'] });
+
+        target.InputManager.InjectPointerDown(up, pointer());
+        mock.timers.tick(5000);
+        target.InputManager.InjectPointerUp(up, pointer());
+        assert.equal(sp.Value, 5, 'read-only held press is a no-op');
     });
 });

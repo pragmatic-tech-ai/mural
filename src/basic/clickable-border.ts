@@ -29,7 +29,16 @@ export class ClickableBorder extends Border
         const fire = this._pressOriginatedHere && this.IsMouseOver;
         this._pressOriginatedHere = false;
         this._setIsPressed(false);
-        if (fire) this.onClick?.();
+        if (fire) this.onActivate();
+    }
+
+    // The release-fire, as an overridable seam. Default is click-on-release
+    // (onClick). Subclasses with different firing semantics override this —
+    // RepeatButton fires on PRESS and repeats while held, so it makes this a
+    // no-op (a held repeat is not a click).
+    protected onActivate(): void
+    {
+        this.onClick?.();
     }
 
     protected override OnPointerLeave(_args: PointerEventArgs): void

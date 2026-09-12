@@ -334,6 +334,7 @@ const ENTRIES: ReadonlyArray<readonly [string, string]> = [
     // build-control-templates script overrides these entries with
     // direct relative file paths at compile time.
     ['ClickableBorder',         '@pragmatic-tech-ai/mural/basic/clickable-border.js'],
+    ['RepeatButton',            '@pragmatic-tech-ai/mural/basic/repeat-button.js'],
     ['ClickAwayScrim',          '@pragmatic-tech-ai/mural/basic/click-away-scrim.js'],
     ['SplitRow',                '@pragmatic-tech-ai/mural/framework/list/combo-box.js'],
     ['ComboBoxPopupHost',       '@pragmatic-tech-ai/mural/framework/list/combo-box.js'],
@@ -829,6 +830,7 @@ export const DEFAULT_SLOT_INFO: ReadonlyMap<string, SlotInfo> = new Map<string, 
 
     // Internal helper classes (see DEFAULT_SYMBOLS comment above).
     ['ClickableBorder',         { name: 'Child',    kind: 'single' }],
+    ['RepeatButton',            { name: 'Child',    kind: 'single' }],
     ['ClickAwayScrim',          { name: 'Child',    kind: 'single' }],
     ['SplitRow',                { name: 'Children', kind: 'list'   }],
     ['ComboBoxPopupHost',       { name: 'Children', kind: 'list'   }],
