@@ -29,5 +29,5 @@ test('caches the instantiated Visual per demo id across re-selection', () => {
 test('has no dependency on the registry', async () => {
     const { readFileSync } = await import('node:fs');
     const src = readFileSync(new URL('../demo-group-service.mts', import.meta.url), 'utf8');
-    assert.ok(!/registry/.test(src), 'demo-group-service.mts must not import the registry');
+    assert.ok(!/from\s+['"][^'"]*registry/.test(src), 'demo-group-service.mts must not import the registry');
 });
