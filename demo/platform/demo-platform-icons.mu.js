@@ -22,6 +22,8 @@ export class DemoPlatformIcons extends ResourceDictionary {
         t.Set("PatternsIcon", _inc3);
         const _inc4 = new PathGeometry([new PathFigure(new Point(12, 4), [new LineSegment(new Point(20, 20)), new LineSegment(new Point(4, 20))], true)]);
         t.Set("StylesIcon", _inc4);
+        const _inc5 = new PathGeometry([new PathFigure(new Point(6, 2), [new LineSegment(new Point(10, 9)), new LineSegment(new Point(2, 9))], true), new PathFigure(new Point(14, 3), [new LineSegment(new Point(22, 3)), new LineSegment(new Point(22, 11)), new LineSegment(new Point(14, 11))], true), new PathFigure(new Point(12, 13), [new LineSegment(new Point(16, 18)), new LineSegment(new Point(12, 23)), new LineSegment(new Point(8, 18))], true)]);
+        t.Set("ShapeLibraryIcon", _inc5);
         return t;
     }
 }
