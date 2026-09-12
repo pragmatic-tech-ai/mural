@@ -1,0 +1,42 @@
+{
+  // TypeScript for the demo application's LOGIC files (view-models,
+  // services, behaviors, the registry). Authored as `.mts`, compiled to
+  // `.mjs` in place so the browser loads them exactly as before — the
+  // importmap + `.mu`/`.html` references keep pointing at `.mjs`. Thin
+  // bootstrap `.mjs` entry files and generated `.mu.js` stay plain JS and
+  // are NOT part of this program (only `**/*.mts` is included).
+  //
+  // The library (`@pragmatic-tech-ai/mural/*`) resolves to its published
+  // `dist/**/*.d.ts` via the `paths` map below — i.e. demos type-check against
+  // the SAME surface an external consumer sees. (The self-reference that used to
+  // resolve this is shadowed now that demo/ has its own `mural-demo`
+  // package.json, so the mapping is explicit.) Run `npm run build` (which builds
+  // dist) before/with the demo TS build.
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["esnext", "dom", "dom.iterable"],
+
+    "baseUrl": ".",
+    "paths": {
+      "@pragmatic-tech-ai/mural": ["../dist/index.d.ts"],
+      "@pragmatic-tech-ai/mural/*": ["../dist/*/index.d.ts", "../dist/*.d.ts", "../dist/*"]
+    },
+
+    "strict": true,
+    "noImplicitOverride": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // Emit `.mjs` next to each `.mts` source. No `outDir` on purpose: TS
+    // auto-excludes the outDir, and pointing it at `.` would exclude the
+    // whole demo tree. With no outDir, emit lands beside each source.
+    "declaration": false,
+    "sourceMap": false,
+    "noEmitOnError": true
+  },
+  "include": ["platform/**/*.mts", "demos/**/*.mts"],
+  "exclude": ["node_modules", "out", "src", "e2e"]
+}

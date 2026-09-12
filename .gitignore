@@ -19,8 +19,8 @@ third_party/externals/emsdk
 
 test-results/
 
-# Electron demo app (nested electron-vite project)
-demo/electron/out/
-demo/electron/node_modules/
-demo/electron/test-results/
-demo/electron/playwright-report/
+# Electron demo app (the demo/ root IS the electron-vite project)
+demo/out/
+demo/node_modules/
+demo/test-results/
+demo/playwright-report/

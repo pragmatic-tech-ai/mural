@@ -1,4 +1,4 @@
-import { app } from '../../../platform/platform.mu.js'
+import { app } from '../../platform/platform.mu.js'
 import { HtmlTarget } from '@pragmatic-tech-ai/mural/visual-engine'
 import { ThemeManager, Density } from '@pragmatic-tech-ai/mural/runtime'
 import { Material, MaterialLight, MaterialDark } from '@pragmatic-tech-ai/mural/resources/material'
