@@ -7,7 +7,7 @@ import { Signal } from '@pragmatic-tech-ai/todl-runtime';
 import type { Disposable, PropertyChangedEventArgs } from '@pragmatic-tech-ai/todl-runtime';
 import { readServiceScope } from './service-scope.js';
 import { Application } from '../application.js';
-import { SettingSourceKey, type ISettingSource } from '../services/setting-source.js';
+import { SettingSourceKey, SettingSourceAvailability, type ISettingSource, type ISettingReArmable } from '../services/setting-source.js';
 
 // The property-change payload now lives with `Observable` in
 // @pragmatic-tech-ai/todl-runtime — its `owner` is typed `Observable`, the common
@@ -73,7 +73,7 @@ export enum PropertyValueSource
 // resulting value is what listeners and `value` consumers see. When
 // coerce is registered AND its result differs from the base, `Source`
 // reports `CoercedValue`; otherwise it reports the base source.
-export class EffectiveValueDescriptor
+export class EffectiveValueDescriptor implements ISettingReArmable
 {
     private local_value: any;
     private has_local_value: boolean = false;
@@ -200,7 +200,37 @@ export class EffectiveValueDescriptor
         const binding = this.property_descriptor.SettingValue;
         if (binding === undefined) return;
         const { src } = EffectiveValueDescriptor.resolveSetting(this.owner, binding);
-        if (src !== undefined) this.ensureSettingSubscription(src, binding.key);
+        if (src !== undefined) { this.ensureSettingSubscription(src, binding.key); return; }
+        // No source resolvable yet (this property was observed before any
+        // ISettingSource came online). Register for a re-arm so a late source
+        // still reaches us — WEAKLY, so a torn-down owner never pins us. Without
+        // this the binding latches the DP default forever: a source appearing
+        // later fires no change (it wasn't subscribed) and nothing re-reads.
+        SettingSourceAvailability.waitFor(this);
+    }
+
+    // Re-arm entry point — fired by SettingSourceAvailability when an
+    // ISettingSource comes online after this descriptor armed source-less.
+    // Re-resolves the source; if one now exists, opens the live subscription
+    // (when still observed) and pushes a change if the effective value moved off
+    // the DP default (e.g. 0 → the setting's 80). If STILL unresolvable (this
+    // owner's scope has no source), re-registers to wait again.
+    public onSettingSourceAvailable(): void
+    {
+        // Masked by a higher-priority tier (Local/Style/Trigger/Inherited/…):
+        // the setting no longer drives the value, so nothing to push. A later
+        // pull re-resolves if it ever falls back to the setting tier.
+        if (this.source !== PropertyValueSource.SettingValue) return;
+        const binding = this.property_descriptor.SettingValue;
+        if (binding === undefined) return;
+        const { src } = EffectiveValueDescriptor.resolveSetting(this.owner, binding);
+        if (src === undefined) { SettingSourceAvailability.waitFor(this); return; }
+        if (this.changed.subscriberCount > 0) this.ensureSettingSubscription(src, binding.key);
+        // Value shown while source-less was the DP default; recompute against the
+        // now-resolvable setting and notify only if it actually changed.
+        const before = this.apply_coerce(this.property_descriptor.DefaultValue);
+        const after = this.value;
+        if (before !== after) this.OnPropertyChange(before, after);
     }
 
     private ensureSettingSubscription(src: ISettingSource, key: string): void

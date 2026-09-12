@@ -107,7 +107,7 @@ export {
 } from './services/service-provider.js';
 export { ServiceBase } from './services/service-base.js';
 export { ApplicationService, type IApplicationService } from './services/application-service.js';
-export { type ISettingSource, SettingSourceKey } from './services/setting-source.js';
+export { type ISettingSource, type ISettingReArmable, SettingSourceKey, SettingSourceAvailability } from './services/setting-source.js';
 // InputManager moved to `mural/framework`.
 // RoutedCommand / CommandBinding / CommandManager / InputBinding /
 // KeyBinding / MouseBinding / ICommandSource + CommandSourceHelper /
