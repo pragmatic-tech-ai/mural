@@ -16,13 +16,11 @@
 import { Application } from '@pragmatic-tech-ai/mural/runtime';
 import { DiagramStorageKey } from '@pragmatic-tech-ai/mural/framework';
 import { RibbonDemoDoc } from './ribbon-vm.mjs';
-import { register } from '../../platform/registry.mjs';
 
 let docInstance;
 
-register({
+export default {
     id:       'ribbon',
-    group:    'Demos',
     title:    'Ribbon',
     subtitle: 'A tabbed Ribbon over the diagram command palette — Large / Medium / Small buttons plus split & dropdown buttons. Select shapes on the canvas to enable the commands.',
     factory: () => {
@@ -42,4 +40,4 @@ register({
         }
         return docInstance;
     },
-});
+};

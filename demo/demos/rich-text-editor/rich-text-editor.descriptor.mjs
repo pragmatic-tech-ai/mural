@@ -12,7 +12,6 @@ import { RelayCommand } from '@pragmatic-tech-ai/mural/runtime';
 import { RichTextBox } from '@pragmatic-tech-ai/mural/basic';
 
 import { RichTextEditorVM } from './rich-text-editor-vm.mjs';
-import { register } from '../../platform/registry.mjs';
 
 function attachToolbar(view) {
     const editor = view.FindName('Editor');
@@ -36,9 +35,8 @@ function attachToolbar(view) {
 
 let vmInstance;
 
-register({
+export default {
     id:       'rich-text-editor',
-    group:    'Demos',
     title:    'Rich text editor',
     subtitle: 'A FlowDocument editor — caret, selection, Ctrl+B / I / U formatting, and bulleted / numbered lists with Tab indent.',
     factory: () => {
@@ -46,4 +44,4 @@ register({
         vmInstance.OnViewMounted = (view) => attachToolbar(view);
         return vmInstance;
     },
-});
+};

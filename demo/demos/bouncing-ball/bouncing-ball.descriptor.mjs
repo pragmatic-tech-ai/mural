@@ -13,7 +13,6 @@
 
 import { AnimationManager } from '@pragmatic-tech-ai/mural/runtime';
 import { BouncingBallVM } from './bouncing-ball-vm.mjs';
-import { register } from '../../platform/registry.mjs';
 
 let vmInstance;
 let clockSubscribed = false;
@@ -33,9 +32,8 @@ function ensureClockSubscription(vm) {
     });
 }
 
-register({
+export default {
     id:       'bouncing-ball',
-    group:    'Demos',
     title:    'Bouncing Ball',
     subtitle: 'A circle in a box, bouncing forever.',
     factory: () => {
@@ -43,4 +41,4 @@ register({
         ensureClockSubscription(vmInstance);
         return vmInstance;
     },
-});
+};

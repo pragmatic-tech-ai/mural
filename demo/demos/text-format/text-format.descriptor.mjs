@@ -18,7 +18,6 @@ import {
 } from '@pragmatic-tech-ai/mural/visual-engine';
 
 import { TextFormatVM } from './text-format-vm.mjs';
-import { register } from '../../platform/registry.mjs';
 
 function attachFormatBridge(view, vm) {
     const sample = view.FindName('SamplePara');
@@ -49,9 +48,8 @@ function attachFormatBridge(view, vm) {
 
 let vmInstance;
 
-register({
+export default {
     id:       'text-format',
-    group:    'Demos',
     title:    'Text format editors',
     subtitle: 'Font family / size (editable combos), font colour, and bold / italic / underline — bound to a live sample paragraph.',
     factory: () => {
@@ -59,4 +57,4 @@ register({
         vmInstance.OnViewMounted = (view) => attachFormatBridge(view, vmInstance);
         return vmInstance;
     },
-});
+};

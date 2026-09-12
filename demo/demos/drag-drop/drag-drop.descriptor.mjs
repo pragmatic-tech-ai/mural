@@ -6,7 +6,6 @@
 import { ListBox } from '@pragmatic-tech-ai/mural/framework';
 import { DragDropVM } from './drag-drop-vm.mjs';
 import { attachListBoxDrop } from './behaviors/listbox-drop-behavior.mjs';
-import { register } from '../../platform/registry.mjs';
 
 let vmInstance;
 
@@ -25,9 +24,8 @@ function attachBehaviors(view, vm) {
     };
 }
 
-register({
+export default {
     id:       'drag-drop',
-    group:    'Demos',
     title:    'Drag & drop between lists',
     subtitle: 'Drag any item from one list to the other to move it.',
     factory: () => {
@@ -35,4 +33,4 @@ register({
         vmInstance.OnViewMounted = (view) => attachBehaviors(view, vmInstance);
         return vmInstance;
     },
-});
+};

@@ -17,7 +17,6 @@
 import { DragDropEffects } from '@pragmatic-tech-ai/mural/runtime';
 import { DataTemplate } from '@pragmatic-tech-ai/mural/basic';
 import { WordToolboxVM, FMT_WORD_COPY } from './word-toolbox-vm.mjs';
-import { register } from '../../platform/registry.mjs';
 
 import * as controlsRef from '@pragmatic-tech-ai/mural/basic';
 import * as runtimeRef from '@pragmatic-tech-ai/mural/runtime';
@@ -97,9 +96,8 @@ function attachExtras(view, vm) {
     };
 }
 
-register({
+export default {
     id:       'word-toolbox',
-    group:    'Demos',
     title:    'Word toolbox',
     subtitle: 'Drag tiles between a 100-word toolbox and a 2000-tile virtualized wrap-panel listbox.',
     factory: () => {
@@ -107,4 +105,4 @@ register({
         vmInstance.OnViewMounted = (view) => attachExtras(view, vmInstance);
         return vmInstance;
     },
-});
+};

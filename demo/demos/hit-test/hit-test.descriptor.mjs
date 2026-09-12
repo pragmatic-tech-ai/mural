@@ -4,7 +4,6 @@
 // the .mu declares a single Heart shape; this file is the glue.
 import { HitTestVM } from './hit-test-vm.mjs';
 import { attachHeartHit } from './behaviors/heart-hit-behavior.mjs';
-import { register } from '../../platform/registry.mjs';
 
 let vmInstance;
 
@@ -14,9 +13,8 @@ function attachBehaviors(view, vm) {
     return attachHeartHit(heart, vm);
 }
 
-register({
+export default {
     id:       'hit-test',
-    group:    'Demos',
     title:    'Hit test',
     subtitle: 'A single Heart shape — it publishes its own outline as HitTestGeometry; only clicks inside the heart toggle the fill.',
     factory: () => {
@@ -24,4 +22,4 @@ register({
         vmInstance.OnViewMounted = (view) => attachBehaviors(view, vmInstance);
         return vmInstance;
     },
-});
+};

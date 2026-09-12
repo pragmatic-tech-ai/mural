@@ -10,7 +10,6 @@
 import { Application } from '@pragmatic-tech-ai/mural/runtime';
 import { Diagram, DiagramStorageKey } from '@pragmatic-tech-ai/mural/framework';
 import { CommandsVM } from './commands-vm.mjs';
-import { register } from '../../platform/registry.mjs';
 
 let vmInstance;
 
@@ -70,9 +69,8 @@ function attachBehaviors(view, vm) {
     };
 }
 
-register({
+export default {
     id:       'commands',
-    group:    'Demos',
     title:    'Commands',
     subtitle: 'ToolBar + Menu + ContextMenu over a Diagram. One ICommand instance drives every surface.',
     factory: () => {
@@ -80,4 +78,4 @@ register({
         vmInstance.OnViewMounted = (view) => attachBehaviors(view, vmInstance);
         return vmInstance;
     },
-});
+};

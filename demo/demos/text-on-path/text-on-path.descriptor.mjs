@@ -31,7 +31,6 @@ import {
 import { TextOnPathVM } from './text-on-path-vm.mjs';
 import { GeometryView } from './geometry-view.mjs';
 import { getPath } from './paths.mjs';
-import { register } from '../../platform/registry.mjs';
 
 // Font family the demo renders against. The font itself is DECLARED in
 // text-on-path.mu's `fonts { Roboto from "…" }` block (resource
@@ -152,9 +151,8 @@ function attachBehaviors(view, vm) {
 
 let vmInstance;
 
-register({
+export default {
     id:       'text-on-path',
-    group:    'Demos',
     title:    'Text on a path',
     subtitle: 'Glyphs lifted to PathGeometry, arclength-sampled along a curve.',
     factory: () => {
@@ -165,4 +163,4 @@ register({
         vmInstance.OnViewMounted = (view) => attachBehaviors(view, vmInstance);
         return vmInstance;
     },
-});
+};

@@ -20,7 +20,6 @@
 import { DataTemplate } from '@pragmatic-tech-ai/mural/basic';
 import { DragDropExtendedVM } from './drag-drop-extended-vm.mjs';
 import { attachOsFileDrop } from './behaviors/os-file-drop-behavior.mjs';
-import { register } from '../../platform/registry.mjs';
 
 let vmInstance;
 
@@ -96,9 +95,8 @@ function attachExtras(view, vm) {
     };
 }
 
-register({
+export default {
     id:       'drag-drop-extended',
-    group:    'Demos',
     title:    'Drag & drop extended',
     subtitle: 'Reorder + OS file drops + auto-scroll + insertion adorner + source-side hooks.',
     factory: () => {
@@ -106,4 +104,4 @@ register({
         vmInstance.OnViewMounted = (view) => attachExtras(view, vmInstance);
         return vmInstance;
     },
-});
+};

@@ -11,13 +11,11 @@
 
 import { Application } from '@pragmatic-tech-ai/mural/runtime';
 import { ConnectorEndpoint, DiagramDocument, DiagramStorageKey, TextPlacement, TextAutoFit, TextNode, Callout, deserializeFlowDocument, documentWithFields, ensureToolboxDefaults } from '@pragmatic-tech-ai/mural/framework';
-import { register } from '../../platform/registry.mjs';
 
 let docInstance;
 
-register({
+export default {
     id:       'diagram',
-    group:    'Demos',
     title:    'Diagrammer',
     subtitle: 'Drag shapes from the toolbox; drag a node to move; click / marquee to select; Delete to remove.',
     factory: () => {
@@ -101,4 +99,4 @@ register({
         }
         return docInstance;
     },
-});
+};

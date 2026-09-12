@@ -10,7 +10,6 @@ import { Border } from '@pragmatic-tech-ai/mural/basic';
 import { Color, SolidColorBrush } from '@pragmatic-tech-ai/mural/visual-engine';
 
 import { ColorPickerVM } from './color-picker-vm.mjs';
-import { register } from '../../platform/registry.mjs';
 
 function attachBehaviors(view, vm) {
     const wires = [
@@ -42,9 +41,8 @@ function attachBehaviors(view, vm) {
 
 let vmInstance;
 
-register({
+export default {
     id:       'color-picker',
-    group:    'Demos',
     title:    'Color picker',
     subtitle: 'Office-style picker — theme colors + tints, standard colors, recents, More Colors dialog.',
     factory: () => {
@@ -52,4 +50,4 @@ register({
         vmInstance.OnViewMounted = (view) => attachBehaviors(view, vmInstance);
         return vmInstance;
     },
-});
+};

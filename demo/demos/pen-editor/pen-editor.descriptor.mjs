@@ -4,17 +4,15 @@
 
 
 import { PenEditorDemoVM } from './pen-editor-vm.mjs';
-import { register } from '../../platform/registry.mjs';
 
 let vmInstance;
 
-register({
+export default {
     id:       'pen-editor',
-    group:    'Demos',
     title:    'Pen editor',
     subtitle: 'Inline PowerPoint-style Pen editor — brush, thickness, dash, cap, join.',
     factory: () => {
         if (vmInstance === undefined) vmInstance = new PenEditorDemoVM();
         return vmInstance;
     },
-});
+};
