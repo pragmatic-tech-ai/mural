@@ -2,6 +2,9 @@ import { ResourceDictionary, type ResourceKey } from './resource-dictionary.js';
 import { ServiceProvider } from '@pragmatic-tech-ai/todl-runtime';
 import { ApplicationService } from './services/application-service.js';
 import { ObservableCollection } from './observable-collection.js';
+import { CompositionRoot } from './composition/composition-root.js';
+import type { HostKind } from './composition/host-kind.js';
+import type { IModule } from './composition/module.js';
 import type { IShellModule } from './shell-modules.js';
 import type { Visual } from '../visual-engine/visual.js';
 
@@ -95,7 +98,7 @@ export interface MountableTarget
     Content: Visual | undefined;
 }
 
-export class Application
+export class Application extends CompositionRoot
 {
     // Ambient singleton — last constructed instance wins. Cleared
     // explicitly by tests that need isolation.
@@ -139,25 +142,27 @@ export class Application
     // factories resolve from it to inject deps into VMs, keeping the VMs
     // themselves pure. Framework code and Behaviors may pull directly.
     // Per-view overrides layer on via `Services.createScope()`.
-    private _services: ServiceProvider | undefined;
+    // App-wide composition root provider. The CompositionRoot base builds it
+    // lazily via CreateProvider (so apps that never compose a service-bearing
+    // module pay nothing); we override CreateProvider to seed the application's
+    // self-service. `Services` is the historical accessor — it delegates to the
+    // base `Provider`.
+    public get Services(): ServiceProvider { return this.Provider; }
 
-    public get Services(): ServiceProvider
+    protected override CreateProvider(): ServiceProvider
     {
-        if (this._services === undefined)
-        {
-            this._services = new ServiceProvider();
-            // The application's self-service — a singleton every scope beneath
-            // the root can resolve to reach this Application and its modules.
-            // Registered eagerly with the container (not gated on initialize):
-            // `Modules` is live, so services that resolve it later see the fully
-            // populated set even though it's empty at this point.
-            this._services.registerInstance(ApplicationService.Key, new ApplicationService(this));
-        }
-        return this._services;
+        const provider = new ServiceProvider();
+        // The application's self-service — a singleton every scope beneath the
+        // root can resolve to reach this Application and its modules. `Modules`
+        // is live, so services that resolve it later see the fully populated set
+        // even though it's empty at this point.
+        provider.registerInstance(ApplicationService.Key, new ApplicationService(this));
+        return provider;
     }
 
-    constructor()
+    constructor(hostKind?: HostKind)
     {
+        super(hostKind);
         Application.current = this;
         // Wake any resource bindings that were created before an Application
         // existed (module-const DynamicResources) so they re-wire to this
@@ -182,6 +187,16 @@ export class Application
     // removed module's registrations linger harmlessly (nothing resolves their
     // tokens once its capabilities leave the navigation layer).
     private readonly _servicedModules = new Set<IShellModule>();
+
+    // Compose one admitted module (CompositionRoot calls this only for modules
+    // this host's kind admits). Route it through `Modules`, whose subscription
+    // reconciles resources and registers services. Deliberately does NOT call
+    // super — the subscription already registers into the same provider, so
+    // calling super too would double-register.
+    protected override ComposeModule(module: IModule): void
+    {
+        this.Modules.Add(module as IShellModule);
+    }
 
     // Replay each newly-added module's declared service registrations into the
     // root `Services` provider (the module's "register services" seam). Guarded
