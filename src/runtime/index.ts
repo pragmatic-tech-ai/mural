@@ -113,6 +113,7 @@ export { ApplicationService, type IApplicationService } from './services/applica
 // Composition: host-kind-selected module composition (CompositionRoot + IModule
 // + HostKind). Application extends CompositionRoot.
 export { HostKind } from './composition/host-kind.js';
+export type { IModule } from './composition/module.js';
 export { type ISettingSource, type ISettingReArmable, SettingSourceKey, SettingSourceAvailability } from './services/setting-source.js';
 // InputManager moved to `mural/framework`.
 // RoutedCommand / CommandBinding / CommandManager / InputBinding /
