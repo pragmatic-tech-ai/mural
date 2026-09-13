@@ -15,14 +15,17 @@
 // ICapability to the concrete ShellModule / Capability to read those.
 
 import type { ResourceDictionary } from './resource-dictionary.js';
-import type { IServiceContainer } from '@pragmatic-tech-ai/todl-runtime';
+import type { IModule } from './composition/module.js';
 
 export interface ICapability
 {
     readonly Name: string;
 }
 
-export interface IShellModule
+// A UI-flavored composition unit: an IModule (Targets + RegisterServices — the
+// composition half the CompositionRoot base drives) plus the shell contributions
+// the Application aggregates once the module is composed.
+export interface IShellModule extends IModule
 {
     readonly Name: string;
     readonly Capabilities: Iterable<ICapability>;
@@ -39,12 +42,7 @@ export interface IShellModule
     // "apps that never touch services pay nothing" guarantee.
     readonly HasServiceRegistrations: boolean;
 
-    // Compose the module's declared service registrations into `container` (the
-    // Application's root provider). Called once when the module is added to
-    // `Application.Modules`. Each registration keeps the lifetime it was
-    // declared with (bare entry ⇒ singleton — one instance per app root that
-    // the per-shell scopes below share). A no-op when the module declares no
-    // services. `IServiceContainer` is a runtime type, so this stays inside
-    // runtime's layer.
-    RegisterServices(container: IServiceContainer): void;
+    // `Targets` (ReadonlySet<HostKind>) and RegisterServices(container) are
+    // inherited from IModule: the module names the host kinds it composes for
+    // (empty ⇒ universal) and registers its services into the root provider.
 }

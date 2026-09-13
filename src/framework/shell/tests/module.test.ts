@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { ShellModule, Capability } from '../module.js';
 import {
     Application,
+    HostKind,
     ServiceKey,
     ServiceProvider,
     ServiceLifetime,
@@ -42,6 +43,24 @@ describe('ShellModule / Capability', () => {
         mod.AddChild(cap);
         const names = [...mod.Capabilities].map(c => c.Name);
         assert.deepEqual(names, ['C']);
+    });
+});
+
+describe('ShellModule targets', () => {
+    test('defaults to universal (empty targets)', () => {
+        const mod = new ShellModule();
+        assert.equal(mod.Targets.size, 0);
+    });
+
+    test('AddTarget records host kinds the module composes for', () => {
+        const Desktop = new HostKind('desktop');
+        const Web = new HostKind('web');
+        const mod = new ShellModule();
+        mod.AddTarget(Desktop);
+        mod.AddTarget(Web);
+        assert.equal(mod.Targets.size, 2);
+        assert.equal(mod.Targets.has(Desktop), true);
+        assert.equal(mod.Targets.has(Web), true);
     });
 });
 

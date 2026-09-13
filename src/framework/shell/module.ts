@@ -66,6 +66,7 @@
 // ──────────────────────────────────────────────────────────────────────────
 
 import {
+    HostKind,
     MetaData,
     MuralBase,
     ObservableCollection,
@@ -224,8 +225,17 @@ export class ShellModule extends MuralBase implements IShellModule
     // field (not a DP): a build-time list read once at composition, never bound.
     private readonly _registrations: ServiceRegistration[] = [];
 
+    // Host kinds this module composes for. Empty ⇒ universal (every kind).
+    // Authored via a `.targets:` block or set from code with AddTarget; the
+    // CompositionRoot admit gate reads this to decide whether to compose.
+    private readonly _targets = new Set<HostKind>();
+
     public get Name(): string  { return this.get_property_value(ShellModule.NameKey); }
     public set Name(v: string) { this.set_property_value(ShellModule.NameKey, v); }
+
+    public get Targets(): ReadonlySet<HostKind> { return this._targets; }
+
+    public AddTarget(kind: HostKind): void { this._targets.add(kind); }
 
     public get HasServiceRegistrations(): boolean { return this._registrations.length > 0; }
 
