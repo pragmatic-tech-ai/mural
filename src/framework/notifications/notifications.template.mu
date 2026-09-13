@@ -21,6 +21,7 @@ resources Notifications {
         Border x:name="PART_Track"
             [ Fill      = @SurfaceContainerHighest,
               CornerRadius    = 2,
+              ClipToBounds    = true,
               Height          = 4 ] {
             Border x:name="PART_Fill"
                 [ Fill          = @Primary,
