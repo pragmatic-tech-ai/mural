@@ -2,6 +2,7 @@
     Color,
     CornerRadius,
     Matrix,
+    Panel,
     Point,
     Rect,
     Size,
@@ -848,20 +849,26 @@ function localPosition(args: PointerEventArgs, diagram: Diagram): Point
     return diagram.HostToContent(args.HostX, args.HostY);
 }
 
-function findFigureAtCanvasPoint(diagram: Diagram, p: Point): Figure | undefined
+// Resolve the figure the cursor is over (its port adorners follow). For
+// OVERLAPPING figures the pick must respect true paint z-order: a figure sent
+// to a lower Panel.ZIndex must NOT steal the topmost figure's port adorners.
+// Earlier this ranked by collection iteration order, which only coincides with
+// paint order until a z-order command (Bring-to-Front / Send-to-Back) reorders
+// the stack — the same "trust the true z, not position" fix connectorFromSource
+// applies to connector-vs-figure overlap. Falls back to the nearest figure
+// within the proximity tolerance when the cursor is outside every bbox — the
+// "near" pick used during a drag so target port handles appear without the user
+// having to land precisely on the figure body.
+// Exported for the overlap-z regression test only — NOT part of the package's
+// public surface (no barrel re-exports this module).
+export function findFigureAtCanvasPoint(diagram: Diagram, p: Point): Figure | undefined
 {
     const items = diagram.ItemsSource;
     if (items === undefined) return undefined;
-    // Prefer figures whose true bbox contains the cursor (z-order
-    // wins). Fall back to the nearest figure within the proximity tolerance
-    // when the cursor is outside every bbox — that's the "near"
-    // pick used during a drag so target port handles appear without
-    // the user having to land precisely on the figure body.
     let bestInside: Figure | undefined = undefined;
-    let bestInsideZ = -1;
+    let bestInsideZ = Number.NEGATIVE_INFINITY;
     let bestNear: Figure | undefined = undefined;
     let bestNearDist = figureProximity();
-    let z = 0;
     for (const item of items as Iterable<unknown>)
     {
         const container = diagram.Generator.ContainerFromItem(item);
@@ -876,7 +883,11 @@ function findFigureAtCanvasPoint(diagram: Diagram, p: Point): Figure | undefined
                 const bottom = top  + r.Height;
                 if (p.X >= left && p.X <= right && p.Y >= top && p.Y <= bottom)
                 {
-                    if (z >= bestInsideZ) { bestInside = container; bestInsideZ = z; }
+                    // Rank by real paint z (Panel.ZIndex). `>=` lets a later
+                    // sibling win an EQUAL-z tie, matching the canvas's
+                    // within-z paint order (later child paints on top).
+                    const zi = Panel.GetZIndex(container);
+                    if (zi >= bestInsideZ) { bestInside = container; bestInsideZ = zi; }
                 }
                 else
                 {
@@ -887,7 +898,6 @@ function findFigureAtCanvasPoint(diagram: Diagram, p: Point): Figure | undefined
                 }
             }
         }
-        z++;
     }
     return bestInside ?? bestNear;
 }
