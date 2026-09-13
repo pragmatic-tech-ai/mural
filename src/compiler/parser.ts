@@ -53,6 +53,7 @@ import type {
     MemberBlock,
     ModuleForm,
     ModulesBlock,
+    TargetsBlock,
     ServicesBlock,
     ServiceEntry,
     ServiceConfigEntry,
@@ -1647,14 +1648,14 @@ export class Parser
     // surrounding element's `Member` collection by the emitter). The
     // `services` member is the one named exception: its body is a list of
     // DI registrations parsed by the service-entry grammar, not elements.
-    private parseMemberBlock(): MemberBlock | ServicesBlock | ModulesBlock
+    private parseMemberBlock(): MemberBlock | ServicesBlock | ModulesBlock | TargetsBlock
     {
         const dot  = this.expect(TokenKind.Dot);
         const name = this.expect(TokenKind.Ident).value;
         this.expect(TokenKind.Colon);
         this.expect(TokenKind.LBrace);
-        // `.services:` and `.modules:` are the named members with bespoke
-        // entry grammar; everything else is a generic element list.
+        // `.services:`, `.modules:`, and `.targets:` are the named members with
+        // bespoke entry grammar; everything else is a generic element list.
         if (name === 'services')
         {
             return this.parseServicesBlock(dot.span.start);
@@ -1662,6 +1663,10 @@ export class Parser
         if (name === 'modules')
         {
             return this.parseModulesBlock(dot.span.start);
+        }
+        if (name === 'targets')
+        {
+            return this.parseTargetsBlock(dot.span.start);
         }
         const body = this.parseStructuredBody();
         this.expect(TokenKind.RBrace);
@@ -1706,6 +1711,25 @@ export class Parser
         this.expect(TokenKind.RBrace);
         return {
             kind: 'modules-block',
+            entries,
+            span: this.span(start, this.lastEnd()),
+        };
+    }
+
+    // `.targets: { Ident* }` body — called with the opening brace already
+    // consumed. Each entry is the identifier of an imported HostKind const;
+    // lowered to `<module>.AddTarget(Ident)`.
+    private parseTargetsBlock(start: SourceLocation): TargetsBlock
+    {
+        const entries: string[] = [];
+        while (this.peek().kind !== TokenKind.RBrace
+            && this.peek().kind !== TokenKind.EOF)
+        {
+            entries.push(this.expect(TokenKind.Ident).value);
+        }
+        this.expect(TokenKind.RBrace);
+        return {
+            kind: 'targets-block',
             entries,
             span: this.span(start, this.lastEnd()),
         };

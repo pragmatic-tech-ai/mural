@@ -70,6 +70,7 @@ describe('formatter — invariants across constructs', () =>
         'module form no body': `module Empty\n`,
         'merge form in a dictionary': `resources D {\nmerge Icons\n@A = #111\n}\n`,
         'modules block': `Application {\n.modules: {\nDiagram\nLayers\n}\n}\n`,
+        'targets block': `module Diagram {\n.targets: {\nDesktop\nWeb\n}\n}\n`,
         'template selector (Shape C)': `resources D {\nDataTemplate x:key="Fallback" [DataType=Observable] { TextBlock [ Text = "f" ] }\nTemplateSelector x:key="Sel" {\nDataTemplate [ DataType = TextBlock ] { TextBlock [ Text = "t" ] }\n@Fallback\n}\n}\n`,
     };
     for (const [name, src] of Object.entries(cases))

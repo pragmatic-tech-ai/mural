@@ -26,6 +26,7 @@ import type {
     KeyValueResource,
     ModuleForm,
     ModulesBlock,
+    TargetsBlock,
     PropertySetter,
     ResourceForm,
     ResourcesBlock,
@@ -3553,6 +3554,15 @@ export class Compiler
                 this.compileServicesBlock(`${parentVar}.Services`, item);
                 continue;
             }
+            if (item.kind === 'targets-block')
+            {
+                // `.targets:` inside a `module { … }` body: record the host
+                // kinds this module composes for (ShellModule.AddTarget). The
+                // CompositionRoot admit gate reads these when the app composes
+                // the module.
+                this.compileTargetsBlock(parentVar, item);
+                continue;
+            }
             if (item.kind === 'element')
             {
                 // `Behaviors { … }` block — not a default-slot child;
@@ -3707,6 +3717,19 @@ export class Compiler
         {
             this.ensureImport(name);
             this.line(`${appVar}.AddModule(${name});`);
+        }
+    }
+
+    // Lowers a `.targets: { … }` block inside a `module NAME { … }` body. Each
+    // entry is the identifier of an imported HostKind const; every entry lowers
+    // to `<moduleVar>.AddTarget(<entry>)`. ensureImport resolves the entry
+    // against the file's top-level `import NAME from "…"` clause.
+    private compileTargetsBlock(moduleVar: string, block: TargetsBlock): void
+    {
+        for (const name of block.entries)
+        {
+            this.ensureImport(name);
+            this.line(`${moduleVar}.AddTarget(${name});`);
         }
     }
 

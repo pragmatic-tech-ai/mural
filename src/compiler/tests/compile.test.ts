@@ -1111,6 +1111,18 @@ describe('compile — .modules: block on Application', () => {
     });
 });
 
+describe('compile — .targets: block in a module body', () => {
+    test('lowers each entry to module.AddTarget(...)', () => {
+        const js = emitted(`
+            import Desktop from "./host-kinds.js"
+            import Web from "./host-kinds.js"
+            module DiagramModule { .targets: { Desktop Web } }
+        `);
+        assert.match(js, /_shellModule\d+\.AddTarget\(Desktop\);/);
+        assert.match(js, /_shellModule\d+\.AddTarget\(Web\);/);
+    });
+});
+
 describe('compile — result metadata', () => {
     beforeEach(() => { /* nothing — kept for symmetry with other suites */ });
 

@@ -24,7 +24,7 @@ import type {
     AnimationDecl, Attribute, AttrPath, BodyItem, ConverterRef,
     DataTemplateBody, DefForm, Document, ElementNode, EventTriggerGroup,
     FontEntry, FontsForm, GlyphEntry, GlyphsForm, ImportForm, IncludeForm,
-    KeyValueResource, MacroParam, MemberBlock, ModuleForm, ModulesBlock,
+    KeyValueResource, MacroParam, MemberBlock, ModuleForm, ModulesBlock, TargetsBlock,
     NamedAttr, PropertySetter,
     ResourceForm, ResourcesBlock, ResourcesImport, SchemeBlock, ServiceEntry,
     ServicesBlock, SetterItem, SetterList, SlotAssign, StaticResourceValue, StringBody,
@@ -475,6 +475,7 @@ class Printer
             case 'member-block':       return this.printMemberBlock(item, level);
             case 'services-block':     return this.printServicesBlock(item, level);
             case 'modules-block':      return this.printModulesBlock(item, level);
+            case 'targets-block':      return this.printTargetsBlock(item, level);
             case 'key-value-resource': return this.printKeyValueResource(item, level);
             case 'resource-form':      return this.printResourceForm(item, level);
             case 'def':                return this.printDef(item, level);
@@ -551,6 +552,14 @@ class Printer
     {
         if (item.entries.length === 0) { this.push(level, '.modules: { }'); return; }
         this.push(level, '.modules: {');
+        for (const name of item.entries) this.push(level + 1, name);
+        this.push(level, '}');
+    }
+
+    private printTargetsBlock(item: TargetsBlock, level: number): void
+    {
+        if (item.entries.length === 0) { this.push(level, '.targets: { }'); return; }
+        this.push(level, '.targets: {');
         for (const name of item.entries) this.push(level + 1, name);
         this.push(level, '}');
     }

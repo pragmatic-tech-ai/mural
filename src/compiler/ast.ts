@@ -267,6 +267,7 @@ export type BodyItem =
     | MemberBlock
     | ServicesBlock
     | ModulesBlock
+    | TargetsBlock
     | KeyValueResource
     | ResourceForm
     | DefForm
@@ -359,6 +360,17 @@ export interface ModulesBlock
 {
     kind:    'modules-block';
     entries: readonly string[];   // imported `module NAME` const identifiers
+    span:    SourceSpan;
+}
+
+// `.targets: { Desktop Web }` — a bare-identifier list inside a `module NAME { … }`
+// body. Each entry is an imported HostKind const; every entry lowers to
+// `<moduleVar>.AddTarget(<entry>)`. Mirrors ModulesBlock but binds to the
+// enclosing module (which host kinds it composes for; empty ⇒ universal).
+export interface TargetsBlock
+{
+    kind:    'targets-block';
+    entries: readonly string[];   // imported HostKind const identifiers
     span:    SourceSpan;
 }
 
