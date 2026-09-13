@@ -1,7 +1,5 @@
 ﻿import {
     type IServiceProvider,
-    MetaData,
-    MuralBase,
     ObservableCollection,
     ServiceBase,
     ServiceKey,
@@ -15,32 +13,22 @@
 export class StatusService extends ServiceBase {
     public static readonly Key = new ServiceKey<StatusService>('StatusService');
 
-    public static readonly TextKey = MuralBase.RegisterProperty<string>(
-        StatusService, 'Text', '', MetaData.None);
-
-    public static readonly IsBusyKey = MuralBase.RegisterProperty<boolean>(
-        StatusService, 'IsBusy', false, MetaData.None);
+    private _text = '';
+    private _isBusy = false;
 
     // Status cells the shell's StatusBar binds to (ItemsSource = $Items).
     // Arbitrary app models — the StatusBar wraps each in a StatusBarItem.
-    public static readonly ItemsKey = MuralBase.RegisterProperty<ObservableCollection<unknown>>(
-        StatusService, 'Items',
-        undefined as unknown as ObservableCollection<unknown>, MetaData.None);
+    private readonly _items = new ObservableCollection<unknown>();
 
     constructor(provider: IServiceProvider) {
         super(provider);
-        // Per-instance collection so the status bar always has a target
-        // to bind, even before the app posts any cells.
-        this.set_property_value(StatusService.ItemsKey, new ObservableCollection<unknown>());
     }
 
-    public get Items(): ObservableCollection<unknown> {
-        return this.get_property_value(StatusService.ItemsKey);
-    }
+    public get Items(): ObservableCollection<unknown> { return this._items; }
 
-    public get Text(): string { return this.get_property_value(StatusService.TextKey); }
-    public set Text(v: string) { this.set_property_value(StatusService.TextKey, v); }
+    public get Text(): string { return this._text; }
+    public set Text(v: string) { const old = this._text; this._text = v; this.RaisePropertyChanged('Text', old, v); }
 
-    public get IsBusy(): boolean { return this.get_property_value(StatusService.IsBusyKey); }
-    public set IsBusy(v: boolean) { this.set_property_value(StatusService.IsBusyKey, v); }
+    public get IsBusy(): boolean { return this._isBusy; }
+    public set IsBusy(v: boolean) { const old = this._isBusy; this._isBusy = v; this.RaisePropertyChanged('IsBusy', old, v); }
 }

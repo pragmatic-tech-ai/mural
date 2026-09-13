@@ -38,12 +38,13 @@ export class DemoVM extends MuralBase
 // fixes its demos and declares its own ServiceKey.
 export abstract class DemoGroupService extends DocumentSelectorService
 {
-    static readonly TitleKey    = MuralBase.RegisterProperty<string>(DemoGroupService, 'Title', '', MetaData.None);
-    static readonly SubtitleKey = MuralBase.RegisterProperty<string>(DemoGroupService, 'Subtitle', '', MetaData.None);
-    static readonly ContentKey  = MuralBase.RegisterProperty<Visual | undefined>(
-        DemoGroupService, 'Content', undefined, MetaData.None);
-
     private readonly _cache = new Map<string, Visual>();
+
+    // Plain observable state (the service is Observable-based, not a MuralBase):
+    // the demo page's title/subtitle/content bind to these by name.
+    private _title = '';
+    private _subtitle = '';
+    private _content: Visual | undefined = undefined;
 
     constructor(provider: IServiceProvider, descriptors: readonly DemoDescriptor[]) {
         super(provider);
@@ -56,9 +57,9 @@ export abstract class DemoGroupService extends DocumentSelectorService
 
     get Demos():        ObservableCollection<DemoVM> { return this.Items as unknown as ObservableCollection<DemoVM>; }
     get SelectedDemo(): DemoVM | undefined           { return this.SelectedItem as DemoVM | undefined; }
-    get Title():        string                       { return this.get_property_value(DemoGroupService.TitleKey); }
-    get Subtitle():     string                       { return this.get_property_value(DemoGroupService.SubtitleKey); }
-    get Content():      Visual | undefined           { return this.get_property_value(DemoGroupService.ContentKey); }
+    get Title():        string                       { return this._title; }
+    get Subtitle():     string                       { return this._subtitle; }
+    get Content():      Visual | undefined           { return this._content; }
 
     private instantiate(vm: DemoVM): Visual {
         const hit = this._cache.get(vm.Id);
@@ -71,9 +72,13 @@ export abstract class DemoGroupService extends DocumentSelectorService
     protected override OnSelectedItemChanged(item: object | undefined): void {
         const sel = item instanceof DemoVM ? item : undefined;
         const content = sel ? this.instantiate(sel) : undefined;
-        this.set_property_value(DemoGroupService.TitleKey,    sel?.Title ?? '');
-        this.set_property_value(DemoGroupService.SubtitleKey, sel?.Subtitle ?? '');
-        this.set_property_value(DemoGroupService.ContentKey,  content);
+        const oldTitle = this._title, oldSubtitle = this._subtitle, oldContent = this._content;
+        this._title = sel?.Title ?? '';
+        this._subtitle = sel?.Subtitle ?? '';
+        this._content = content;
+        this.RaisePropertyChanged('Title', oldTitle, this._title);
+        this.RaisePropertyChanged('Subtitle', oldSubtitle, this._subtitle);
+        this.RaisePropertyChanged('Content', oldContent, this._content);
         this.Provider.get(ContentHostService.Key)?.View(content);
     }
 }

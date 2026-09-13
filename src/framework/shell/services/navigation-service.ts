@@ -72,12 +72,12 @@ export class NavigationService extends ServiceBase
 {
     public static readonly Key = new ServiceKey<NavigationService>('NavigationService');
 
-    public static readonly ItemsKey = MuralBase.RegisterProperty<ObservableCollection<unknown>>(
-        NavigationService, 'Items',
-        undefined as unknown as ObservableCollection<unknown>, MetaData.None);
-        
-    public static readonly SelectedItemKey = MuralBase.RegisterProperty<unknown>(
-        NavigationService, 'SelectedItem', undefined, MetaData.None);
+    // Per-instance collection so the strip always has a target to bind, even
+    // before the app populates destinations. Plain Observable properties —
+    // bound by name (Items / SelectedItem from the rail, etc.).
+    private readonly _items = new ObservableCollection<unknown>();
+
+    private _selectedItem: unknown = undefined;
 
     // The active capability's content service — what a content host presents
     // while its destination is selected (`Content =
@@ -86,8 +86,7 @@ export class NavigationService extends ServiceBase
     // [DataType=Service]`. `unknown` because the concrete service type varies
     // per capability. Derived (recomputed from SelectedItem via
     // syncActiveService), so a view binds it read-only.
-    public static readonly ActiveServiceKey = MuralBase.RegisterProperty<unknown>(
-        NavigationService, 'ActiveService', undefined, MetaData.None);
+    private _activeService: unknown = undefined;
 
     // Command actions pinned to the rail's Header (top) and Footer (bottom)
     // slots — the non-destination part of the activity bar (a settings gear, a
@@ -95,73 +94,57 @@ export class NavigationService extends ServiceBase
     // the framework rail template renders each as an IconButton. Apps add to
     // these to populate the rail's chrome slots WITHOUT overriding the rail
     // template. Empty by default — a shell shows only what's contributed.
-    public static readonly HeaderActionsKey = MuralBase.RegisterProperty<ObservableCollection<RailAction>>(
-        NavigationService, 'HeaderActions',
-        undefined as unknown as ObservableCollection<RailAction>, MetaData.None);
-    public static readonly FooterActionsKey = MuralBase.RegisterProperty<ObservableCollection<RailAction>>(
-        NavigationService, 'FooterActions',
-        undefined as unknown as ObservableCollection<RailAction>, MetaData.None);
+    private readonly _headerActions = new ObservableCollection<RailAction>();
+    private readonly _footerActions = new ObservableCollection<RailAction>();
 
     // Whether the shell's left side pane (the active capability's panel) is
     // shown — the VSCode "toggle the sidebar" state. The EditorShell template
     // binds `PART_SidePane.Visibility` (and its resize Splitter's) to this, so
     // hiding it collapses the pane out of layout and the content area reclaims
-    // the width. Default true (the pane opens with the shell). Reactive
-    // (MetaData.Render is irrelevant on a service — a plain notifying DP): the
-    // visibility binding re-evaluates on change.
-    public static readonly SidePaneVisibleKey = MuralBase.RegisterProperty<boolean>(
-        NavigationService, 'SidePaneVisible', true, MetaData.None);
+    // the width. Default true (the pane opens with the shell). The visibility
+    // binding re-evaluates on change.
+    private _sidePaneVisible = true;
 
     // Flips SidePaneVisible. The side pane's header close (✕) invokes this to
     // hide; re-invoking (e.g. re-clicking the active activity-bar icon) shows
     // it again — the two-way "toggle the sidebar" affordance.
-    public static readonly ToggleSidePaneCommandKey = MuralBase.RegisterProperty<ICommand>(
-        NavigationService, 'ToggleSidePaneCommand', undefined as unknown as ICommand, MetaData.None);
+    private readonly _toggleSidePaneCommand: ICommand;
 
     constructor(provider: IServiceProvider)
     {
         super(provider);
-        // Per-instance collection so the strip always has a target to
-        // bind, even before the app populates destinations.
-        this.set_property_value(NavigationService.ItemsKey, new ObservableCollection<unknown>());
-        this.set_property_value(NavigationService.HeaderActionsKey, new ObservableCollection<RailAction>());
-        this.set_property_value(NavigationService.FooterActionsKey, new ObservableCollection<RailAction>());
-        this.set_property_value(
-            NavigationService.ToggleSidePaneCommandKey,
-            new RelayCommand(() => { this.SidePaneVisible = !this.SidePaneVisible; }, undefined,
-                { Text: 'Toggle Panel', Description: 'Show or hide the side panel.' }));
+        this._toggleSidePaneCommand = new RelayCommand(
+            () => { this.SidePaneVisible = !this.SidePaneVisible; }, undefined,
+            { Text: 'Toggle Panel', Description: 'Show or hide the side panel.' });
         // Keep ActiveService in lock-step with the selection.
-        this.PropertyChanged(NavigationService.SelectedItemKey).subscribe(
-            () => this.syncActiveService());
+        this.PropertyChanged('SelectedItem').subscribe(() => this.syncActiveService());
     }
 
-    public get Items(): ObservableCollection<unknown>
+    public get Items(): ObservableCollection<unknown> { return this._items; }
+
+    public get SelectedItem(): unknown { return this._selectedItem; }
+    public set SelectedItem(v: unknown)
     {
-        return this.get_property_value(NavigationService.ItemsKey);
+        const old = this._selectedItem;
+        this._selectedItem = v;
+        this.RaisePropertyChanged('SelectedItem', old, v);
     }
 
-    public get SelectedItem(): unknown { return this.get_property_value(NavigationService.SelectedItemKey); }
-    public set SelectedItem(v: unknown) { this.set_property_value(NavigationService.SelectedItemKey, v); }
+    public get ActiveService(): unknown { return this._activeService; }
 
-    public get ActiveService(): unknown
+    public get HeaderActions(): ObservableCollection<RailAction> { return this._headerActions; }
+
+    public get FooterActions(): ObservableCollection<RailAction> { return this._footerActions; }
+
+    public get SidePaneVisible(): boolean { return this._sidePaneVisible; }
+    public set SidePaneVisible(v: boolean)
     {
-        return this.get_property_value(NavigationService.ActiveServiceKey);
+        const old = this._sidePaneVisible;
+        this._sidePaneVisible = v;
+        this.RaisePropertyChanged('SidePaneVisible', old, v);
     }
 
-    public get HeaderActions(): ObservableCollection<RailAction>
-    {
-        return this.get_property_value(NavigationService.HeaderActionsKey);
-    }
-
-    public get FooterActions(): ObservableCollection<RailAction>
-    {
-        return this.get_property_value(NavigationService.FooterActionsKey);
-    }
-
-    public get SidePaneVisible(): boolean { return this.get_property_value(NavigationService.SidePaneVisibleKey); }
-    public set SidePaneVisible(v: boolean) { this.set_property_value(NavigationService.SidePaneVisibleKey, v); }
-
-    public get ToggleSidePaneCommand(): ICommand { return this.get_property_value(NavigationService.ToggleSidePaneCommandKey); }
+    public get ToggleSidePaneCommand(): ICommand { return this._toggleSidePaneCommand; }
 
     // SelectedItem → ActiveService: find the Capability behind the selected item
     // and resolve the service it names (`Capability.ServiceKey`) from the
@@ -177,7 +160,9 @@ export class NavigationService extends ServiceBase
         const service = key !== undefined
             ? this.Provider.get(ServiceProvider.tokenFor(key as unknown as Function))
             : undefined;
-        this.set_property_value(NavigationService.ActiveServiceKey, service);
+        const oldService = this._activeService;
+        this._activeService = service;
+        this.RaisePropertyChanged('ActiveService', oldService, service);
         // Selecting a capability reveals its side pane (the VSCode "click an
         // activity-bar icon → show the sidebar" reveal). Clicking a DIFFERENT
         // icon changes SelectedItem and lands here; re-clicking the active icon

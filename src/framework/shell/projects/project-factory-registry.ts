@@ -1,7 +1,5 @@
 ﻿import {
     ApplicationService,
-    MetaData,
-    MuralBase,
     ObservableCollection,
     ServiceBase,
     ServiceKey,
@@ -28,22 +26,19 @@ export class ProjectFactoryRegistry extends ServiceBase
 {
     public static readonly Key = new ServiceKey<ProjectFactoryRegistry>('ProjectFactoryRegistry');
 
-    public static readonly DefinitionsKey = MuralBase.RegisterProperty<ObservableCollection<ProjectFactoryDefinition>>(
-        ProjectFactoryRegistry, 'Definitions',
-        undefined as unknown as ObservableCollection<ProjectFactoryDefinition>, MetaData.None);
+    private readonly _definitions = new ObservableCollection<ProjectFactoryDefinition>();
 
     private readonly _byType = new Map<string, ProjectFactoryDefinition>();
 
     constructor(provider: IServiceProvider)
     {
         super(provider);
-        this.set_property_value(ProjectFactoryRegistry.DefinitionsKey, new ObservableCollection<ProjectFactoryDefinition>());
         this.PopulateFromModules();
     }
 
     public get Definitions(): ObservableCollection<ProjectFactoryDefinition>
     {
-        return this.get_property_value(ProjectFactoryRegistry.DefinitionsKey);
+        return this._definitions;
     }
 
     // Aggregate every module's declared project types. One-shot: modules are

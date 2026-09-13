@@ -1,6 +1,5 @@
-import { Signal } from '@pragmatic-tech-ai/todl-runtime';
+import { Signal, ServiceKey } from '@pragmatic-tech-ai/todl-runtime';
 import type { PropertyChangedEventArgs } from '@pragmatic-tech-ai/todl-runtime';
-import { ServiceKey } from './service-provider.js';
 
 // DI seam through which the EVD setting-value tier (Task 3) reads a
 // setting's current value and subscribes to its change signal.

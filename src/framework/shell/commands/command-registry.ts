@@ -1,7 +1,5 @@
 ﻿import {
     ApplicationService,
-    MetaData,
-    MuralBase,
     ObservableCollection,
     ServiceBase,
     ServiceKey,
@@ -26,22 +24,19 @@ export class CommandRegistry extends ServiceBase
 {
     public static readonly Key = new ServiceKey<CommandRegistry>('CommandRegistry');
 
-    public static readonly CommandsKey = MuralBase.RegisterProperty<ObservableCollection<CommandDefinition>>(
-        CommandRegistry, 'Commands',
-        undefined as unknown as ObservableCollection<CommandDefinition>, MetaData.None);
+    private readonly _commands = new ObservableCollection<CommandDefinition>();
 
     private readonly _byId = new Map<string, CommandDefinition>();
 
     constructor(provider: IServiceProvider)
     {
         super(provider);
-        this.set_property_value(CommandRegistry.CommandsKey, new ObservableCollection<CommandDefinition>());
         this.PopulateFromModules();
     }
 
     public get Commands(): ObservableCollection<CommandDefinition>
     {
-        return this.get_property_value(CommandRegistry.CommandsKey);
+        return this._commands;
     }
 
     // Aggregate every module's declared commands. One-shot: modules are fully

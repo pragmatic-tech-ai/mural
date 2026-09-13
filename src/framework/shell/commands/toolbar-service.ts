@@ -1,6 +1,5 @@
 ﻿import {
     ApplicationService,
-    MetaData,
     MuralBase,
     ObservableCollection,
     RelayCommand,
@@ -62,18 +61,14 @@ export class ToolbarService extends ServiceBase
     // The commands to show for the active document, already filtered by context
     // and ordered by Group/Order. A toolbar binds `ItemsSource = $VisibleCommands`
     // and renders each CommandViewModel through a DataTemplate.
-    public static readonly VisibleCommandsKey = MuralBase.RegisterProperty<ObservableCollection<CommandViewModel>>(
-        ToolbarService, 'VisibleCommands',
-        undefined as unknown as ObservableCollection<CommandViewModel>, MetaData.None);
+    private readonly _visibleCommands = new ObservableCollection<CommandViewModel>();
 
     // The render list the shell command bar binds: command GROUPS (Flat /
     // SplitMenu / SplitGrid / Toggles) and editor CONTROLS interleaved by Order.
     // Each entry is a ToolbarEntryViewModel subclass the shell dispatches on by
     // type. VisibleCommands stays the flat projection for callers that want the
     // ungrouped command set.
-    public static readonly VisibleEntriesKey = MuralBase.RegisterProperty<ObservableCollection<ToolbarEntryViewModel>>(
-        ToolbarService, 'VisibleEntries',
-        undefined as unknown as ObservableCollection<ToolbarEntryViewModel>, MetaData.None);
+    private readonly _visibleEntries = new ObservableCollection<ToolbarEntryViewModel>();
 
     // The FLAT render list the shell command bar's single ToolBar binds. Same
     // entries as VisibleEntries, but Flat / Toggles groups are EXPANDED into their
@@ -84,9 +79,7 @@ export class ToolbarService extends ServiceBase
     // ToolBar-with-groups look. Split groups and editor controls ride as single
     // items (their own DataTemplate). VisibleEntries stays the GROUPED projection
     // for callers that want one VM per group.
-    public static readonly ToolbarItemsKey = MuralBase.RegisterProperty<ObservableCollection<MuralBase>>(
-        ToolbarService, 'ToolbarItems',
-        undefined as unknown as ObservableCollection<MuralBase>, MetaData.None);
+    private readonly _toolbarItems = new ObservableCollection<MuralBase>();
 
     // The Toolbar-region editor CONTROLS (font pickers, …), Order-sorted. Rendered
     // in a FIXED region beside the command ToolBar — NOT inside it. A ToolBar
@@ -94,9 +87,7 @@ export class ToolbarService extends ServiceBase
     // passes; a wide interactive editor doesn't survive that (it would vanish into
     // the overflow chevron and its hit-testing breaks). So controls live here and
     // the command groups live in ToolbarItems.
-    public static readonly ToolbarControlsKey = MuralBase.RegisterProperty<ObservableCollection<ShellControlViewModel>>(
-        ToolbarService, 'ToolbarControls',
-        undefined as unknown as ObservableCollection<ShellControlViewModel>, MetaData.None);
+    private readonly _toolbarControls = new ObservableCollection<ShellControlViewModel>();
 
     // Cache one VM per definition — rebuilt filtering swaps which are in
     // VisibleCommands, but the VM (and its RelayCommand the button binds) is
@@ -121,10 +112,6 @@ export class ToolbarService extends ServiceBase
     constructor(provider: IServiceProvider)
     {
         super(provider);
-        this.set_property_value(ToolbarService.VisibleCommandsKey, new ObservableCollection<CommandViewModel>());
-        this.set_property_value(ToolbarService.VisibleEntriesKey, new ObservableCollection<ToolbarEntryViewModel>());
-        this.set_property_value(ToolbarService.ToolbarItemsKey, new ObservableCollection<MuralBase>());
-        this.set_property_value(ToolbarService.ToolbarControlsKey, new ObservableCollection<ShellControlViewModel>());
 
         // Track the active document. The host is registered under
         // ContentHostService.Key; only a DocumentsContentHostService carries an
@@ -133,7 +120,7 @@ export class ToolbarService extends ServiceBase
         if (host instanceof DocumentsContentHostService)
         {
             this._host = host;
-            host.PropertyChanged(DocumentsContentHostService.ActiveDocumentKey).subscribe(
+            host.PropertyChanged('ActiveDocument').subscribe(
                 () => this.OnActiveDocumentChanged());
         }
 
@@ -143,25 +130,13 @@ export class ToolbarService extends ServiceBase
         this.Rebuild();
     }
 
-    public get VisibleCommands(): ObservableCollection<CommandViewModel>
-    {
-        return this.get_property_value(ToolbarService.VisibleCommandsKey);
-    }
+    public get VisibleCommands(): ObservableCollection<CommandViewModel> { return this._visibleCommands; }
 
-    public get VisibleEntries(): ObservableCollection<ToolbarEntryViewModel>
-    {
-        return this.get_property_value(ToolbarService.VisibleEntriesKey);
-    }
+    public get VisibleEntries(): ObservableCollection<ToolbarEntryViewModel> { return this._visibleEntries; }
 
-    public get ToolbarItems(): ObservableCollection<MuralBase>
-    {
-        return this.get_property_value(ToolbarService.ToolbarItemsKey);
-    }
+    public get ToolbarItems(): ObservableCollection<MuralBase> { return this._toolbarItems; }
 
-    public get ToolbarControls(): ObservableCollection<ShellControlViewModel>
-    {
-        return this.get_property_value(ToolbarService.ToolbarControlsKey);
-    }
+    public get ToolbarControls(): ObservableCollection<ShellControlViewModel> { return this._toolbarControls; }
 
     // Detach the global-pulse subscription when this scoped service is torn down.
     public override dispose(): void

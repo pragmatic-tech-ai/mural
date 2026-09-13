@@ -1,10 +1,7 @@
 ﻿import {
-    MetaData,
-    MuralBase,
     ObservableCollection,
     ServiceBase,
     type IServiceProvider,
-    type PropertyDescriptor,
 } from '../../../runtime/index.js';
 import { ContentHostService } from './content-host-service.js';
 import type { IActivatable } from './activatable.js';
@@ -26,36 +23,30 @@ import type { IActivatable } from './activatable.js';
 export class DocumentSelectorService extends ServiceBase implements IActivatable
 {
     // The selectable items. A stable per-instance collection a list binds
-    // (`ItemsSource = $Items`); the reference never changes, so this DP only
+    // (`ItemsSource = $Items`); the reference never changes, so this getter only
     // hands it back — mirrors NavigationService.Items.
-    public static readonly ItemsKey = MuralBase.RegisterProperty<ObservableCollection<object>>(
-        DocumentSelectorService, 'Items',
-        undefined as unknown as ObservableCollection<object>, MetaData.None);
+    private readonly _items = new ObservableCollection<object>();
 
     // The current selection (`SelectedItem = $SelectedItem`, usually TwoWay
     // from the list). Every change — programmatic, binding-driven, or a list
     // click — routes onSelectedItemChanged below.
-    public static readonly SelectedItemKey = MuralBase.RegisterProperty<object | undefined>(
-        DocumentSelectorService, 'SelectedItem', undefined, MetaData.None);
+    private _selectedItem: object | undefined = undefined;
 
     constructor(provider: IServiceProvider)
     {
         super(provider);
-        this.set_property_value(DocumentSelectorService.ItemsKey, new ObservableCollection<object>());
     }
 
-    public get Items(): ObservableCollection<object>
-    {
-        return this.get_property_value(DocumentSelectorService.ItemsKey);
-    }
+    public get Items(): ObservableCollection<object> { return this._items; }
 
-    public get SelectedItem(): object | undefined
-    {
-        return this.get_property_value(DocumentSelectorService.SelectedItemKey);
-    }
+    public get SelectedItem(): object | undefined { return this._selectedItem; }
     public set SelectedItem(v: object | undefined)
     {
-        this.set_property_value(DocumentSelectorService.SelectedItemKey, v);
+        const old = this._selectedItem;
+        if (old === v) return;
+        this._selectedItem = v;
+        this.RaisePropertyChanged('SelectedItem', old, v);
+        this.OnSelectedItemChanged(v);
     }
 
     // Selection callback — invoked on every SelectedItem change with the new
@@ -81,15 +72,5 @@ export class DocumentSelectorService extends ServiceBase implements IActivatable
     public OnActivated(): void
     {
         this.OnSelectedItemChanged(this.SelectedItem);
-    }
-
-    protected override OnPropertyChanged(
-        descriptor: PropertyDescriptor, oldValue: unknown, newValue: unknown): void
-    {
-        super.OnPropertyChanged(descriptor, oldValue, newValue);
-        if (descriptor.Name === 'SelectedItem')
-        {
-            this.OnSelectedItemChanged(newValue as object | undefined);
-        }
     }
 }

@@ -18,7 +18,7 @@
 // the concrete ShellModule / Capability to read view-facing fields (Icon,
 // Panel) — the same seam Application.Modules uses.
 
-import { ServiceKey } from './service-provider.js';
+import { ServiceKey } from '@pragmatic-tech-ai/todl-runtime';
 import type { Application } from '../application.js';
 import type { IShellModule } from '../shell-modules.js';
 import type { IReadOnlyObservableCollection } from '../observable-collection.js';

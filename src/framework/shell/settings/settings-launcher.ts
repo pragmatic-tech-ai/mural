@@ -1,7 +1,6 @@
 ﻿import {
     type ICommand,
     type IServiceProvider,
-    MetaData,
     MuralBase,
     RelayCommand,
     ServiceBase,
@@ -45,8 +44,7 @@ export class SettingsLauncherService extends ServiceBase
 {
     public static readonly Key = new ServiceKey<SettingsLauncherService>('SettingsLauncherService');
 
-    public static readonly OpenCommandKey = MuralBase.RegisterProperty<ICommand>(
-        SettingsLauncherService, 'OpenCommand', undefined as unknown as ICommand, MetaData.None);
+    private readonly _openCommand: ICommand;
 
     // Built once — the view's editors bind live to the same Setting DPs, so the
     // one VM stays current across reopens (each open re-renders it from its
@@ -56,10 +54,10 @@ export class SettingsLauncherService extends ServiceBase
     constructor(provider: IServiceProvider)
     {
         super(provider);
-        this.set_property_value(SettingsLauncherService.OpenCommandKey, new RelayCommand(() => this.Open()));
+        this._openCommand = new RelayCommand(() => this.Open());
     }
 
-    public get OpenCommand(): ICommand { return this.get_property_value(SettingsLauncherService.OpenCommandKey); }
+    public get OpenCommand(): ICommand { return this._openCommand; }
 
     // Show the settings view in a modal dialog. The DialogService renders the view
     // VM through its DataTemplate as the dialog body; Escape / scrim-click closes

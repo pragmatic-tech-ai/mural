@@ -27,10 +27,12 @@ export class DemoVM extends MuralBase {
 // nav-back returns to the same tree. Abstract + Key-less; each concrete subclass
 // fixes its demos and declares its own ServiceKey.
 export class DemoGroupService extends DocumentSelectorService {
-    static TitleKey = MuralBase.RegisterProperty(DemoGroupService, 'Title', '', MetaData.None);
-    static SubtitleKey = MuralBase.RegisterProperty(DemoGroupService, 'Subtitle', '', MetaData.None);
-    static ContentKey = MuralBase.RegisterProperty(DemoGroupService, 'Content', undefined, MetaData.None);
     _cache = new Map();
+    // Plain observable state (the service is Observable-based, not a MuralBase):
+    // the demo page's title/subtitle/content bind to these by name.
+    _title = '';
+    _subtitle = '';
+    _content = undefined;
     constructor(provider, descriptors) {
         super(provider);
         const sorted = [...descriptors].sort((a, b) => a.title.localeCompare(b.title));
@@ -42,9 +44,9 @@ export class DemoGroupService extends DocumentSelectorService {
     }
     get Demos() { return this.Items; }
     get SelectedDemo() { return this.SelectedItem; }
-    get Title() { return this.get_property_value(DemoGroupService.TitleKey); }
-    get Subtitle() { return this.get_property_value(DemoGroupService.SubtitleKey); }
-    get Content() { return this.get_property_value(DemoGroupService.ContentKey); }
+    get Title() { return this._title; }
+    get Subtitle() { return this._subtitle; }
+    get Content() { return this._content; }
     instantiate(vm) {
         const hit = this._cache.get(vm.Id);
         if (hit !== undefined)
@@ -56,9 +58,13 @@ export class DemoGroupService extends DocumentSelectorService {
     OnSelectedItemChanged(item) {
         const sel = item instanceof DemoVM ? item : undefined;
         const content = sel ? this.instantiate(sel) : undefined;
-        this.set_property_value(DemoGroupService.TitleKey, sel?.Title ?? '');
-        this.set_property_value(DemoGroupService.SubtitleKey, sel?.Subtitle ?? '');
-        this.set_property_value(DemoGroupService.ContentKey, content);
+        const oldTitle = this._title, oldSubtitle = this._subtitle, oldContent = this._content;
+        this._title = sel?.Title ?? '';
+        this._subtitle = sel?.Subtitle ?? '';
+        this._content = content;
+        this.RaisePropertyChanged('Title', oldTitle, this._title);
+        this.RaisePropertyChanged('Subtitle', oldSubtitle, this._subtitle);
+        this.RaisePropertyChanged('Content', oldContent, this._content);
         this.Provider.get(ContentHostService.Key)?.View(content);
     }
 }

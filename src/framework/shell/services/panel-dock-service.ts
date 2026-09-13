@@ -1,8 +1,6 @@
 ﻿import {
     type ICommand,
     type IServiceProvider,
-    MetaData,
-    MuralBase,
     ObservableCollection,
     RelayCommand,
     ServiceBase,
@@ -28,56 +26,52 @@ export class PanelDockService extends ServiceBase
 
     // The hosted panel set — a stable per-instance collection the region's
     // TabControl binds (`ItemsSource = $Panels`); the reference never changes.
-    public static readonly PanelsKey = MuralBase.RegisterProperty<ObservableCollection<IDockPanel>>(
-        PanelDockService, 'Panels',
-        undefined as unknown as ObservableCollection<IDockPanel>, MetaData.None);
+    private readonly _panels = new ObservableCollection<IDockPanel>();
 
     // The active tab — TwoWay-bound to TabControl.SelectedItem so clicking a tab
-    // updates it and Add()/Close() re-select programmatically.
-    public static readonly SelectedPanelKey = MuralBase.RegisterProperty<IDockPanel | undefined>(
-        PanelDockService, 'SelectedPanel', undefined, MetaData.None | MetaData.BindsTwoWayByDefault);
+    // updates it and Add()/Close() re-select programmatically. (Two-way is
+    // driven by the TabControl.SelectedItem target DP; the plain setter here
+    // receives the write-back.)
+    private _selectedPanel: IDockPanel | undefined = undefined;
 
     // True while at least one panel is hosted — the region binds its Visibility
     // (and its resize Splitter's) to this so an empty dock collapses out of layout.
-    private static readonly _HasPanelsPriv = MuralBase.RegisterReadOnlyProperty<boolean>(
-        PanelDockService, 'HasPanels', false, MetaData.None);
-    public static readonly HasPanelsKey = PanelDockService._HasPanelsPriv;
+    private _hasPanels = false;
 
     // Command a menu binds to open a panel (`Command = $service(PanelDockService)
     // .AddPanelCommand, CommandParameter = $Panel`). Non-IDockPanel params no-op.
-    public static readonly AddPanelCommandKey = MuralBase.RegisterProperty<ICommand>(
-        PanelDockService, 'AddPanelCommand', undefined as unknown as ICommand, MetaData.None);
+    private readonly _addPanelCommand: ICommand;
 
     // Command a tab's close affordance binds (`CommandParameter = $Id`).
-    public static readonly ClosePanelCommandKey = MuralBase.RegisterProperty<ICommand>(
-        PanelDockService, 'ClosePanelCommand', undefined as unknown as ICommand, MetaData.None);
+    private readonly _closePanelCommand: ICommand;
 
     constructor(provider: IServiceProvider)
     {
         super(provider);
-        const panels = new ObservableCollection<IDockPanel>();
-        this.set_property_value(PanelDockService.PanelsKey, panels);
-        panels.Subscribe(() => this.refreshHasPanels());
-        this.set_property_value(
-            PanelDockService.AddPanelCommandKey,
-            new RelayCommand((p) => { if (isDockPanel(p)) this.Add(p); }, undefined,
-                { Text: 'Add Panel', Description: 'Show a panel in the dock.' }));
-        this.set_property_value(
-            PanelDockService.ClosePanelCommandKey,
-            new RelayCommand((id) => this.CloseById(id as string), undefined,
-                { Text: 'Close', Description: 'Close this dock panel.' }));
+        this._panels.Subscribe(() => this.refreshHasPanels());
+        this._addPanelCommand = new RelayCommand((p) => { if (isDockPanel(p)) this.Add(p); }, undefined,
+            { Text: 'Add Panel', Description: 'Show a panel in the dock.' });
+        this._closePanelCommand = new RelayCommand((id) => this.CloseById(id as string), undefined,
+            { Text: 'Close', Description: 'Close this dock panel.' });
     }
 
-    public get Panels(): ObservableCollection<IDockPanel> { return this.get_property_value(PanelDockService.PanelsKey); }
-    public get SelectedPanel(): IDockPanel | undefined { return this.get_property_value(PanelDockService.SelectedPanelKey); }
-    public set SelectedPanel(v: IDockPanel | undefined) { this.set_property_value(PanelDockService.SelectedPanelKey, v); }
-    public get HasPanels(): boolean { return this.get_property_value(PanelDockService.HasPanelsKey); }
-    public get AddPanelCommand(): ICommand { return this.get_property_value(PanelDockService.AddPanelCommandKey); }
-    public get ClosePanelCommand(): ICommand { return this.get_property_value(PanelDockService.ClosePanelCommandKey); }
+    public get Panels(): ObservableCollection<IDockPanel> { return this._panels; }
+    public get SelectedPanel(): IDockPanel | undefined { return this._selectedPanel; }
+    public set SelectedPanel(v: IDockPanel | undefined)
+    {
+        const old = this._selectedPanel;
+        this._selectedPanel = v;
+        this.RaisePropertyChanged('SelectedPanel', old, v);
+    }
+    public get HasPanels(): boolean { return this._hasPanels; }
+    public get AddPanelCommand(): ICommand { return this._addPanelCommand; }
+    public get ClosePanelCommand(): ICommand { return this._closePanelCommand; }
 
     private refreshHasPanels(): void
     {
-        this.set_property_value_with_key(PanelDockService._HasPanelsPriv, this.Panels.Count > 0);
+        const old = this._hasPanels;
+        this._hasPanels = this.Panels.Count > 0;
+        if (old !== this._hasPanels) this.RaisePropertyChanged('HasPanels', old, this._hasPanels);
     }
 
     // Add a panel, deduping by Id. Existing Id → re-select the existing instance

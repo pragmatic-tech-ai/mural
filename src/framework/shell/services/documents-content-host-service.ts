@@ -1,12 +1,10 @@
 ﻿import {
     type ICommand,
-    MetaData,
     MuralBase,
     ObservableCollection,
     RelayCommand,
     type Disposable,
     type IServiceProvider,
-    type PropertyDescriptor,
 } from '../../../runtime/index.js';
 import { findDescriptor, resolveKey } from '../../../runtime/model-internals.js';
 import { ContentHostService } from './content-host-service.js';
@@ -47,43 +45,34 @@ export class DocumentsContentHostService extends ContentHostService
 {
     // The open document set. A stable per-instance collection a tab strip
     // binds (`ItemsSource = $OpenDocuments`); the reference never changes, so
-    // this DP only hands it back — mirrors NavigationService.Items.
-    public static readonly OpenDocumentsKey = MuralBase.RegisterProperty<ObservableCollection<IDocument>>(
-        DocumentsContentHostService, 'OpenDocuments',
-        undefined as unknown as ObservableCollection<IDocument>, MetaData.None);
+    // this getter only hands it back — mirrors NavigationService.Items.
+    private readonly _openDocuments = new ObservableCollection<IDocument>();
 
     // The active document — what the host presents. Written through Open() /
     // Close(); a tab strip may also bind SelectedItem TwoWay to it. Every
-    // write routes View() (see OnPropertyChanged), so activation and the
-    // presented content stay in lock-step.
-    public static readonly ActiveDocumentKey = MuralBase.RegisterProperty<IDocument | undefined>(
-        DocumentsContentHostService, 'ActiveDocument', undefined, MetaData.None);
+    // write routes View() (see the setter), so activation and the presented
+    // content stay in lock-step.
+    private _activeDocument: IDocument | undefined = undefined;
 
     // Close a document by its Id — the command a tab strip's close button binds
     // (`Command = $service(ContentHostService).CloseDocumentCommand`,
     // `CommandParameter = $Id`). Takes the Id string (not the document) because
     // a per-item template can bind a plain path segment but has no binding for
     // "the whole DataContext object". Non-string / unknown-id parameters no-op.
-    public static readonly CloseDocumentCommandKey = MuralBase.RegisterProperty<ICommand>(
-        DocumentsContentHostService, 'CloseDocumentCommand',
-        undefined as unknown as ICommand, MetaData.None);
+    private readonly _closeDocumentCommand: ICommand;
 
     // Close EVERY open document (the "Close All" tab-strip action). Parameterless
     // — a menu item binds `Command = $service(ContentHostService).CloseAllCommand`
     // with no CommandParameter. Ends with an empty open-set and no active
     // document, so the content region clears.
-    public static readonly CloseAllCommandKey = MuralBase.RegisterProperty<ICommand>(
-        DocumentsContentHostService, 'CloseAllCommand',
-        undefined as unknown as ICommand, MetaData.None);
+    private readonly _closeAllCommand: ICommand;
 
     // Activate (make current) a document by its Id — the command an open-tabs
     // menu binds (`Command = $service(ContentHostService).ActivateDocumentCommand`,
     // `CommandParameter = $Id`) so clicking a tab entry switches to it. Takes the
     // Id string for the same reason as CloseDocumentCommand (a per-item template
     // binds a path segment, not the whole object). Unknown / non-string ids no-op.
-    public static readonly ActivateDocumentCommandKey = MuralBase.RegisterProperty<ICommand>(
-        DocumentsContentHostService, 'ActivateDocumentCommand',
-        undefined as unknown as ICommand, MetaData.None);
+    private readonly _activateDocumentCommand: ICommand;
 
     // Module-contributed action buttons for the editor tab-strip (the ExtendedTabControl
     // renders these beside the tabs). Collected from the CommandRegistry: every
@@ -91,33 +80,25 @@ export class DocumentsContentHostService extends ContentHostService
     // button-bindable CommandViewModel whose command dispatches to the ACTIVE
     // document (an ICommandTarget), exactly like the toolbar. Empty when no
     // CommandRegistry is registered (a bare host). A stable per-instance collection.
-    public static readonly ExtendedCommandsKey = MuralBase.RegisterProperty<ObservableCollection<CommandViewModel>>(
-        DocumentsContentHostService, 'ExtendedCommands',
-        undefined as unknown as ObservableCollection<CommandViewModel>, MetaData.None);
+    private readonly _extendedCommands = new ObservableCollection<CommandViewModel>();
 
     // The editor tab-strip overflow-menu rows (the ⋯ dropdown's ItemsSource): a
     // "Close All" action, a separator, then one TabMenuDocument per open document.
     // Re-synthesised whenever the open set changes. A stable per-instance
     // collection (the tab control binds it once).
-    public static readonly TabMenuKey = MuralBase.RegisterProperty<ObservableCollection<MuralBase>>(
-        DocumentsContentHostService, 'TabMenu',
-        undefined as unknown as ObservableCollection<MuralBase>, MetaData.None);
+    private readonly _tabMenu = new ObservableCollection<MuralBase>();
 
-    // True while at least one open document has unsaved changes. Read-only —
-    // recomputed from the open set + each document's IsDirty. Drives SaveAll
-    // enablement and any dirty affordance.
-    private static readonly _AnyDirtyPriv = MuralBase.RegisterReadOnlyProperty<boolean>(
-        DocumentsContentHostService, 'AnyDirty', false, MetaData.None);
-    public static readonly AnyDirtyKey = DocumentsContentHostService._AnyDirtyPriv;
+    // True while at least one open document has unsaved changes. Read-only to the
+    // view — recomputed from the open set + each document's IsDirty. Drives
+    // SaveAll enablement and any dirty affordance.
+    private _anyDirty = false;
 
     // Save the ACTIVE document. Enabled iff the active doc is dirty. A toolbar
     // button binds `$service(ContentHostService).SaveActiveCommand`.
-    public static readonly SaveActiveCommandKey = MuralBase.RegisterProperty<ICommand>(
-        DocumentsContentHostService, 'SaveActiveCommand', undefined as unknown as ICommand, MetaData.None);
+    private readonly _saveActiveCommand: ICommand;
 
     // Save EVERY dirty open document. Enabled iff AnyDirty.
-    public static readonly SaveAllCommandKey = MuralBase.RegisterProperty<ICommand>(
-        DocumentsContentHostService, 'SaveAllCommand', undefined as unknown as ICommand, MetaData.None);
+    private readonly _saveAllCommand: ICommand;
 
     // Per-open-document IsDirty subscriptions, keyed by document, so the
     // aggregation reconciles as the open set changes.
@@ -126,36 +107,20 @@ export class DocumentsContentHostService extends ContentHostService
     constructor(provider: IServiceProvider)
     {
         super(provider);
-        this.set_property_value(
-            DocumentsContentHostService.OpenDocumentsKey, new ObservableCollection<IDocument>());
-        this.set_property_value(
-            DocumentsContentHostService.CloseDocumentCommandKey,
-            new RelayCommand((id) => this.CloseById(id as string), undefined,
-                { Text: 'Close', Description: 'Close this document.' }));
-        this.set_property_value(
-            DocumentsContentHostService.CloseAllCommandKey,
-            new RelayCommand(() => this.CloseAll(), undefined,
-                { Text: 'Close All', Description: 'Close all open documents.' }));
-        this.set_property_value(
-            DocumentsContentHostService.ActivateDocumentCommandKey,
-            new RelayCommand((id) => this.ActivateById(id as string), undefined,
-                { Text: 'Activate', Description: 'Switch to this document.' }));
-        this.set_property_value(
-            DocumentsContentHostService.ExtendedCommandsKey, new ObservableCollection<CommandViewModel>());
-        this.set_property_value(
-            DocumentsContentHostService.TabMenuKey, new ObservableCollection<MuralBase>());
-        this.set_property_value(
-            DocumentsContentHostService.SaveActiveCommandKey,
-            new RelayCommand(
-                () => { void this.Save(); },
-                () => this.ActiveDocument?.IsDirty === true,
-                { Text: 'Save', Description: 'Save the active document.' }));
-        this.set_property_value(
-            DocumentsContentHostService.SaveAllCommandKey,
-            new RelayCommand(
-                () => { void this.SaveAll(); },
-                () => this.AnyDirty,
-                { Text: 'Save All', Description: 'Save all documents with unsaved changes.' }));
+        this._closeDocumentCommand = new RelayCommand((id) => this.CloseById(id as string), undefined,
+            { Text: 'Close', Description: 'Close this document.' });
+        this._closeAllCommand = new RelayCommand(() => this.CloseAll(), undefined,
+            { Text: 'Close All', Description: 'Close all open documents.' });
+        this._activateDocumentCommand = new RelayCommand((id) => this.ActivateById(id as string), undefined,
+            { Text: 'Activate', Description: 'Switch to this document.' });
+        this._saveActiveCommand = new RelayCommand(
+            () => { void this.Save(); },
+            () => this.ActiveDocument?.IsDirty === true,
+            { Text: 'Save', Description: 'Save the active document.' });
+        this._saveAllCommand = new RelayCommand(
+            () => { void this.SaveAll(); },
+            () => this.AnyDirty,
+            { Text: 'Save All', Description: 'Save all documents with unsaved changes.' });
         this.wireExtendedCommands();
         this.rebuildTabMenu();
         this.OpenDocuments.Subscribe(() => this.rebuildTabMenu());
@@ -216,60 +181,46 @@ export class DocumentsContentHostService extends ContentHostService
         return doc !== undefined && isCommandTarget(doc) ? doc : undefined;
     }
 
-    public get CloseDocumentCommand(): ICommand
-    {
-        return this.get_property_value(DocumentsContentHostService.CloseDocumentCommandKey);
-    }
+    public get CloseDocumentCommand(): ICommand { return this._closeDocumentCommand; }
 
-    public get CloseAllCommand(): ICommand
-    {
-        return this.get_property_value(DocumentsContentHostService.CloseAllCommandKey);
-    }
+    public get CloseAllCommand(): ICommand { return this._closeAllCommand; }
 
-    public get ActivateDocumentCommand(): ICommand
-    {
-        return this.get_property_value(DocumentsContentHostService.ActivateDocumentCommandKey);
-    }
+    public get ActivateDocumentCommand(): ICommand { return this._activateDocumentCommand; }
 
-    public get ExtendedCommands(): ObservableCollection<CommandViewModel>
-    {
-        return this.get_property_value(DocumentsContentHostService.ExtendedCommandsKey);
-    }
+    public get ExtendedCommands(): ObservableCollection<CommandViewModel> { return this._extendedCommands; }
 
-    public get TabMenu(): ObservableCollection<MuralBase>
-    {
-        return this.get_property_value(DocumentsContentHostService.TabMenuKey);
-    }
+    public get TabMenu(): ObservableCollection<MuralBase> { return this._tabMenu; }
 
-    public get AnyDirty(): boolean
-    {
-        return this.get_property_value(DocumentsContentHostService.AnyDirtyKey);
-    }
+    public get AnyDirty(): boolean { return this._anyDirty; }
 
-    public get SaveActiveCommand(): ICommand
-    {
-        return this.get_property_value(DocumentsContentHostService.SaveActiveCommandKey);
-    }
+    public get SaveActiveCommand(): ICommand { return this._saveActiveCommand; }
 
-    public get SaveAllCommand(): ICommand
-    {
-        return this.get_property_value(DocumentsContentHostService.SaveAllCommandKey);
-    }
+    public get SaveAllCommand(): ICommand { return this._saveAllCommand; }
 
-    public get OpenDocuments(): ObservableCollection<IDocument>
-    {
-        return this.get_property_value(DocumentsContentHostService.OpenDocumentsKey);
-    }
+    public get OpenDocuments(): ObservableCollection<IDocument> { return this._openDocuments; }
 
-    public get ActiveDocument(): IDocument | undefined
-    {
-        return this.get_property_value(DocumentsContentHostService.ActiveDocumentKey);
-    }
-    // Settable so a TwoWay tab-strip SelectedItem binding can re-activate;
-    // activation drives View() via OnPropertyChanged.
+    public get ActiveDocument(): IDocument | undefined { return this._activeDocument; }
+    // Settable so a TwoWay tab-strip SelectedItem binding can re-activate.
+    // Activation IS what the host presents, so every (changing) write routes
+    // through the base View() and requeries the document-dependent commands.
     public set ActiveDocument(doc: IDocument | undefined)
     {
-        this.set_property_value(DocumentsContentHostService.ActiveDocumentKey, doc);
+        const old = this._activeDocument;
+        if (old === doc) return;
+        this._activeDocument = doc;
+        this.RaisePropertyChanged('ActiveDocument', old, doc);
+        // ActiveDocument IS what the host presents — route it through the base
+        // View() so the content region always tracks the active document.
+        this.View(doc);
+        // The extended-command VMs dispatch to the LIVE active document, so they
+        // don't rebuild on a switch — but their CanExecute must requery so the
+        // buttons enable/disable for the new document.
+        for (const vm of this.ExtendedCommands)
+        {
+            (vm.Command as RelayCommand).RaiseCanExecuteChanged();
+        }
+        // The active doc changed, so its dirtiness may differ — requery Save.
+        (this._saveActiveCommand as RelayCommand | undefined)?.RaiseCanExecuteChanged();
     }
 
     // Open a document: add it to the open set if new (dedupe by Id) and make
@@ -340,7 +291,9 @@ export class DocumentsContentHostService extends ContentHostService
     {
         let any = false;
         for (const doc of this.OpenDocuments) { if (doc.IsDirty) { any = true; break; } }
-        this.set_property_value_with_key(DocumentsContentHostService._AnyDirtyPriv, any);
+        const old = this._anyDirty;
+        this._anyDirty = any;
+        if (old !== any) this.RaisePropertyChanged('AnyDirty', old, any);
         (this.SaveActiveCommand as RelayCommand | undefined)?.RaiseCanExecuteChanged();
         (this.SaveAllCommand as RelayCommand | undefined)?.RaiseCanExecuteChanged();
     }
@@ -390,27 +343,6 @@ export class DocumentsContentHostService extends ContentHostService
             if (doc?.Id === id) return doc;
         }
         return undefined;
-    }
-
-    protected override OnPropertyChanged(
-        descriptor: PropertyDescriptor, oldValue: unknown, newValue: unknown): void
-    {
-        super.OnPropertyChanged(descriptor, oldValue, newValue);
-        // ActiveDocument IS what the host presents — route it through the base
-        // View() so the content region always tracks the active document.
-        if (descriptor.Name === 'ActiveDocument')
-        {
-            this.View(newValue as IDocument | undefined);
-            // The extended-command VMs dispatch to the LIVE active document, so
-            // they don't rebuild on a switch — but their CanExecute must requery
-            // so the buttons enable/disable for the new document.
-            for (const vm of this.ExtendedCommands)
-            {
-                (vm.Command as RelayCommand).RaiseCanExecuteChanged();
-            }
-            // The active doc changed, so its dirtiness may differ — requery Save.
-            (this.SaveActiveCommand as RelayCommand | undefined)?.RaiseCanExecuteChanged();
-        }
     }
 
     public override dispose(): void

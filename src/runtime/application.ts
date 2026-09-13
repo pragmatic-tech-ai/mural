@@ -1,5 +1,5 @@
 import { ResourceDictionary, type ResourceKey } from './resource-dictionary.js';
-import { ServiceProvider } from './services/service-provider.js';
+import { ServiceProvider } from '@pragmatic-tech-ai/todl-runtime';
 import { ApplicationService } from './services/application-service.js';
 import { ObservableCollection } from './observable-collection.js';
 import type { IShellModule } from './shell-modules.js';

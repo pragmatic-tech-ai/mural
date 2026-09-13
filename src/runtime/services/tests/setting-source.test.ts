@@ -1,9 +1,8 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { Signal } from '@pragmatic-tech-ai/todl-runtime';
+import { Signal, ServiceProvider } from '@pragmatic-tech-ai/todl-runtime';
 import type { PropertyChangedEventArgs } from '@pragmatic-tech-ai/todl-runtime';
-import { ServiceProvider } from '../service-provider.js';
 import { type ISettingSource, SettingSourceKey } from '../setting-source.js';
 import { readServiceScope } from '../../binding/service-scope.js';
 import { Element } from '../../../visual-engine/element.js';

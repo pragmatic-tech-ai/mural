@@ -4,7 +4,7 @@ import { MetaData } from '../metadata.js';
 import { MuralBase } from '../model.js';
 import { resolveKey } from '../model-internals.js';
 import { Application } from '../application.js';
-import type { ServiceToken } from '../services/service-provider.js';
+import type { ServiceToken } from '@pragmatic-tech-ai/todl-runtime';
 import type { Visual } from '../../visual-engine/visual.js';
 import { readServiceScope } from './service-scope.js';
 
@@ -213,7 +213,9 @@ class FixedSourceBinding extends Binding
             const seg = segments[i]!;
             if (cur instanceof MuralBase)
             {
-                cur = cur.get_property_value(resolveKey(cur, undefined, seg));
+                cur = MuralBase.HasProperty(cur.constructor, seg)
+                    ? cur.get_property_value(resolveKey(cur, undefined, seg))
+                    : (cur as unknown as Record<string, unknown>)[seg];
             }
             else if (cur !== null && typeof cur === 'object')
             {
@@ -231,7 +233,16 @@ class FixedSourceBinding extends Binding
         const lastSeg = segments[segments.length - 1]!;
         if (cur instanceof MuralBase)
         {
-            cur.set_property_value(resolveKey(cur, undefined, lastSeg), back);
+            // DP → write through the DP channel; plain property → assign the
+            // setter (which raises RaisePropertyChanged) — mirrors DataContextBinding.
+            if (MuralBase.HasProperty(cur.constructor, lastSeg))
+            {
+                cur.set_property_value(resolveKey(cur, undefined, lastSeg), back);
+            }
+            else
+            {
+                (cur as unknown as Record<string, unknown>)[lastSeg] = back;
+            }
         }
         else if (cur !== null && typeof cur === 'object')
         {
@@ -257,9 +268,20 @@ class FixedSourceBinding extends Binding
         // its properties.
         if (this.pathStr === '') return;
         const first = this.firstSegment();
-        if (!MuralBase.HasProperty(src.constructor, first)) return;
-        const key = resolveKey(src, undefined, first);
-        this.sourceSubscription = src.PropertyChanged(key).subscribe(() => { this.watcher.Value = this.walkPath(src); });
+        // Subscribe to the first path segment's change channel — by DP key when
+        // it is a registered DP, else by NAME (a plain Observable property).
+        // Mirrors DataContextBinding so `$service(X).plainProp` / `$elem.plainProp`
+        // stay as reactive as DP paths (services expose plain Observable
+        // properties, not DPs).
+        if (MuralBase.HasProperty(src.constructor, first))
+        {
+            const key = resolveKey(src, undefined, first);
+            this.sourceSubscription = src.PropertyChanged(key).subscribe(() => { this.watcher.Value = this.walkPath(src); });
+        }
+        else
+        {
+            this.sourceSubscription = src.PropertyChanged(first).subscribe(() => { this.watcher.Value = this.walkPath(src); });
+        }
     }
 
     private unsubscribeSource(): void
@@ -280,8 +302,11 @@ class FixedSourceBinding extends Binding
             if (cur === undefined || cur === null) return undefined;
             if (cur instanceof MuralBase)
             {
-                if (!MuralBase.HasProperty(cur.constructor, seg)) return undefined;
-                cur = cur.get_property_value(resolveKey(cur, undefined, seg));
+                // DP → read through the DP channel; plain property → read the
+                // getter directly (mirrors DataContextBinding).
+                cur = MuralBase.HasProperty(cur.constructor, seg)
+                    ? cur.get_property_value(resolveKey(cur, undefined, seg))
+                    : (cur as unknown as Record<string, unknown>)[seg];
             }
             else if (typeof cur === 'object')
             {

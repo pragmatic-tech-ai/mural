@@ -1,6 +1,4 @@
 ﻿import {
-    MetaData,
-    MuralBase,
     ServiceBase,
     ServiceKey,
 } from '../../../runtime/index.js';
@@ -25,15 +23,16 @@ export class ContentHostService extends ServiceBase
     // `$Content`); mutated only through View(). `unknown` because the content
     // is arbitrary — a Visual slotted directly, or a MuralBase rendered via its
     // DataTemplate.
-    public static readonly ContentKey = MuralBase.RegisterProperty<unknown>(
-        ContentHostService, 'Content', undefined, MetaData.None);
+    private _content: unknown = undefined;
 
-    public get Content(): unknown { return this.get_property_value(ContentHostService.ContentKey); }
+    public get Content(): unknown { return this._content; }
 
     // Present `content` in the host region, replacing whatever was shown.
     // Pass undefined to clear the region to its empty state.
     public View(content: unknown): void
     {
-        this.set_property_value(ContentHostService.ContentKey, content);
+        const old = this._content;
+        this._content = content;
+        this.RaisePropertyChanged('Content', old, content);
     }
 }

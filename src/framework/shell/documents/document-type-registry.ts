@@ -1,7 +1,5 @@
 ﻿import {
     ApplicationService,
-    MetaData,
-    MuralBase,
     ObservableCollection,
     ServiceBase,
     ServiceKey,
@@ -33,9 +31,7 @@ export class DocumentTypeRegistry extends ServiceBase
 {
     public static readonly Key = new ServiceKey<DocumentTypeRegistry>('DocumentTypeRegistry');
 
-    public static readonly DefinitionsKey = MuralBase.RegisterProperty<ObservableCollection<DocumentDefinition>>(
-        DocumentTypeRegistry, 'Definitions',
-        undefined as unknown as ObservableCollection<DocumentDefinition>, MetaData.None);
+    private readonly _definitions = new ObservableCollection<DocumentDefinition>();
 
     private readonly _byType = new Map<string, DocumentDefinition>();
     private readonly _byExtension = new Map<string, DocumentDefinition>();
@@ -43,13 +39,12 @@ export class DocumentTypeRegistry extends ServiceBase
     constructor(provider: IServiceProvider)
     {
         super(provider);
-        this.set_property_value(DocumentTypeRegistry.DefinitionsKey, new ObservableCollection<DocumentDefinition>());
         this.PopulateFromModules();
     }
 
     public get Definitions(): ObservableCollection<DocumentDefinition>
     {
-        return this.get_property_value(DocumentTypeRegistry.DefinitionsKey);
+        return this._definitions;
     }
 
     // Aggregate every module's declared document types. One-shot: modules are

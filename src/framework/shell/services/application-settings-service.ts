@@ -1,8 +1,6 @@
 ﻿import {
     ApplicationService,
     Color,
-    MetaData,
-    MuralBase,
     ObservableCollection,
     ServiceBase,
     ServiceKey,
@@ -53,9 +51,7 @@ export class ApplicationSettings extends ServiceBase implements ISettingSource
 {
     public static readonly Key = new ServiceKey<ApplicationSettings>('ApplicationSettings');
 
-    public static readonly SettingsKey = MuralBase.RegisterProperty<ObservableCollection<Setting>>(
-        ApplicationSettings, 'Settings',
-        undefined as unknown as ObservableCollection<Setting>, MetaData.None);
+    private readonly _settings = new ObservableCollection<Setting>();
 
     private readonly _byKey = new Map<string, Setting>();
     private readonly _store: ISettingsStore | undefined;
@@ -70,7 +66,6 @@ export class ApplicationSettings extends ServiceBase implements ISettingSource
         // resolves its own collaborator (DI convention). No store ⇒ in-memory.
         this._store = provider.get(SettingsStoreKey);
         this._persisted = this._store ? this._store.Load() : {};
-        this.set_property_value(ApplicationSettings.SettingsKey, new ObservableCollection<Setting>());
         this.PopulateFromModules();
         // This instance IS the ISettingSource; announce availability so a
         // setting-backed DP that armed before it existed re-arms (addSetting already
@@ -81,7 +76,7 @@ export class ApplicationSettings extends ServiceBase implements ISettingSource
 
     public get Settings(): ObservableCollection<Setting>
     {
-        return this.get_property_value(ApplicationSettings.SettingsKey);
+        return this._settings;
     }
 
     // Aggregate every module's declared settings into live Settings. One-shot:

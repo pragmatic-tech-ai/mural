@@ -5,7 +5,7 @@
 
 import { MuralBase } from '../model.js';
 import { resolveKey } from '../model-internals.js';
-import type { ServiceToken } from '../services/service-provider.js';
+import type { ServiceToken } from '@pragmatic-tech-ai/todl-runtime';
 
 interface Provider { get(token: ServiceToken<unknown>): unknown; }
 

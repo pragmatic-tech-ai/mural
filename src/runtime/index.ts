@@ -95,6 +95,9 @@ export {
     type AutoSchemeInitOptions,
     type MountableTarget,
 } from './application.js';
+// The DI container + service base now live in todl-runtime (so a service can be
+// authored without a mural dependency). Re-exported here so existing
+// `@pragmatic-tech-ai/mural/runtime` consumers are unchanged.
 export {
     ServiceProvider,
     ServiceKey,
@@ -104,8 +107,8 @@ export {
     type ServiceToken,
     type ServiceFactory,
     ServiceLifetime,
-} from './services/service-provider.js';
-export { ServiceBase } from './services/service-base.js';
+    ServiceBase,
+} from '@pragmatic-tech-ai/todl-runtime';
 export { ApplicationService, type IApplicationService } from './services/application-service.js';
 export { type ISettingSource, type ISettingReArmable, SettingSourceKey, SettingSourceAvailability } from './services/setting-source.js';
 // InputManager moved to `mural/framework`.
