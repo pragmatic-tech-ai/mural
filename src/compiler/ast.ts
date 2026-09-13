@@ -352,8 +352,9 @@ export interface ServicesBlock
 // `.modules: { DiagramModule … }` — the named member-block that composes
 // modules onto the Application. Each entry is the identifier of an imported
 // `module NAME { … }` const; every entry lowers to
-// `app.Modules.Add(<entry>)`. Distinct from `.services:` (which registers
-// factories) — modules are added instances.
+// `app.AddModule(<entry>)`, which admits the module by host kind before
+// composing. Distinct from `.services:` (which registers factories) — modules
+// are added instances.
 export interface ModulesBlock
 {
     kind:    'modules-block';

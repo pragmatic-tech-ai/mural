@@ -1105,8 +1105,9 @@ describe('compile — .modules: block on Application', () => {
             Application { .modules: { DiagramModule LayersModule } resources: {} }
         `);
         assert.match(js, /import \{ DiagramModule \} from "\.\/diagram\.module\.mu\.js";/);
-        assert.match(js, /_app\d+\.Modules\.Add\(DiagramModule\);/);
-        assert.match(js, /_app\d+\.Modules\.Add\(LayersModule\);/);
+        assert.match(js, /_app\d+\.AddModule\(DiagramModule\);/);
+        assert.match(js, /_app\d+\.AddModule\(LayersModule\);/);
+        assert.doesNotMatch(js, /_app\d+\.Modules\.Add\(/);
     });
 });
 

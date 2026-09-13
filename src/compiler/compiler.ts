@@ -3696,15 +3696,17 @@ export class Compiler
     // time, so app-defined service classes the compiler can't load still
     // register under the same token `addInstance` / code registration use.
     // Lowers a `.modules: { … }` block on the Application. Each entry is the
-    // identifier of an imported `module NAME { … }` const — added, in order,
-    // to `Application.Modules`. ensureImport resolves the entry against the
-    // file's top-level `import NAME from "…"` clause.
+    // identifier of an imported `module NAME { … }` const — composed, in order,
+    // via `Application.AddModule`, which admits the module only when its declared
+    // Targets match the running host kind (universal when it declares none).
+    // ensureImport resolves the entry against the file's top-level
+    // `import NAME from "…"` clause.
     private compileModulesBlock(appVar: string, block: ModulesBlock): void
     {
         for (const name of block.entries)
         {
             this.ensureImport(name);
-            this.line(`${appVar}.Modules.Add(${name});`);
+            this.line(`${appVar}.AddModule(${name});`);
         }
     }
 
