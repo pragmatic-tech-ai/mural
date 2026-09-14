@@ -198,6 +198,14 @@ resources MuralBasic {
         when ( IsFocused ) { PART_Border.Stroke = Pen [ Brush = @Primary ]; }
         when ( IsEnabled = false ) { PART_Border.Opacity = @DisabledContentOpacity; }
 
+        // Single-line fields have no vertical overflow, so the scroll surface
+        // sits at its one-line desired height CENTERED in the border — a field
+        // stretched taller than one line (e.g. sharing a row with a taller
+        // ComboBox) keeps its text vertically centred instead of top-aligned
+        // with blank space below. Multi-line (AcceptsReturn) leaves it Stretch
+        // so the editor fills the box and scrolls.
+        when ( AcceptsReturn = false ) { PART_Scroll.VerticalAlignment = Center; }
+
         // M3 density variants — tighter Padding on Compact, looser on
         // Comfortable. Width / Height are consumer-set (TextBox is
         // sized by its layout context); Padding is the only knob we
@@ -253,6 +261,10 @@ resources MuralBasic {
             PART_Underline.Stroke = (@Primary, 2);
         }
         when ( IsEnabled = false ) { PART_Root.Opacity = @DisabledContentOpacity; }
+
+        // Center the one-line scroll surface for single-line fields (see the
+        // matching note on DefaultOutlinedTextBox); Stretch stays for multi-line.
+        when ( AcceptsReturn = false ) { PART_Scroll.VerticalAlignment = Center; }
 
         when ( ThemeManager.Density = Compact ) {
             PART_Border.Padding = (@Spacing2,@Spacing1,@Spacing2,@Spacing1);

@@ -3,7 +3,7 @@ import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { initTestApp } from './test-app.js';
 
-import { Application, Key, NoModifiers, Panel, Point, Size, PointerButton, Visual, type FocusEventArgs, type KeyEventArgs, type KeyEventInit, type ModifierKeys, type PointerEventInit, type DrawingContext } from '../../runtime/index.js';
+import { Application, Key, NoModifiers, Panel, Point, Size, PointerButton, Visual, VerticalAlignment, type FocusEventArgs, type KeyEventArgs, type KeyEventInit, type ModifierKeys, type PointerEventInit, type DrawingContext } from '../../runtime/index.js';
 import { resolveKey } from '../../runtime/model-internals.js';
 import { InputManager } from '../../framework/index.js';;
 import { HeadlessTarget, SolidColorBrush, type Brush } from '../../visual-engine/index.js';
@@ -594,6 +594,50 @@ describe('TextBox — caret + selection re-render plumbing', () => {
         im.InjectKeyDown(key(Key.Right));
         assert.ok(renderDirty.has(editor),
             'expected the editor to be marked render-dirty after caret movement');
+    });
+});
+
+describe('TextBox — single-line content is vertically centered', () => {
+    beforeEach(() => { initTestApp(); });
+
+    function scrollOf(tb: TextBox): Visual {
+        return (tb.visualChildren[0] as Visual).FindName('PART_Scroll')! as Visual;
+    }
+
+    function mount(tb: TextBox): void {
+        const target = new HeadlessTarget(300, 400);
+        target.Content = tb;
+        target.Flush();
+    }
+
+    // A single-line field stretched taller than one line (the canonical case:
+    // sharing a row with a taller ComboBox) must center its editor, not top-align
+    // it — otherwise the surplus height falls as blank space below the text.
+    test('single-line (default) centers the scroll surface', () => {
+        const tb = new TextBox();
+        tb.Text = 'hi';
+        mount(tb);
+        assert.equal(scrollOf(tb).VerticalAlignment, VerticalAlignment.Center);
+    });
+
+    // Multi-line must keep the scroll surface stretched so it fills the box and
+    // scrolls; centering it would break vertical overflow.
+    test('multi-line keeps the scroll surface stretched', () => {
+        const tb = new TextBox();
+        tb.AcceptsReturn = true;
+        tb.Text = 'a\nb';
+        mount(tb);
+        assert.equal(scrollOf(tb).VerticalAlignment, VerticalAlignment.Stretch);
+    });
+
+    // The Filled variant swaps to a different template with its own PART_Scroll —
+    // it must center single-line content too.
+    test('filled single-line variant centers the scroll surface', () => {
+        const tb = new TextBox();
+        tb.Variant = TextBoxVariant.Filled;
+        tb.Text = 'hi';
+        mount(tb);
+        assert.equal(scrollOf(tb).VerticalAlignment, VerticalAlignment.Center);
     });
 });
 
