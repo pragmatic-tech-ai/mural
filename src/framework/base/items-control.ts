@@ -1701,6 +1701,17 @@ export class ItemsControl extends Control
                 };
                 break;
             }
+            case 'reset':
+            {
+                // Wholesale change (an ObservableCollection.Batch, or a
+                // CollectionView re-projection). Rebuild from current contents
+                // in one pass — rebuildContainers does its own teardown,
+                // updateHasItems, and single InvalidateMeasure, so return here
+                // rather than falling through to the incremental tail (which
+                // assumes an incremental changeArgs / restamp).
+                this.rebuildContainers();
+                return;
+            }
         }
         if (changeArgs !== undefined)
         {
