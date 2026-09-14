@@ -641,7 +641,7 @@ describe('TextBox — single-line content is vertically centered', () => {
     });
 });
 
-describe('TextBox — single-line field is a compact row by default', () => {
+describe('TextBox — single-line field matches the ComboBox row height', () => {
     beforeEach(() => { initTestApp(); });
 
     function desiredH(v: Visual, density?: Density): number {
@@ -652,23 +652,25 @@ describe('TextBox — single-line field is a compact row by default', () => {
         return v.DesiredSize.Height;
     }
 
-    // Text fields default to the COMPACT row height (28) app-wide, regardless of
-    // the ambient density — a dense, standard-row baseline.
-    test('single-line field defaults to the compact row height (28)', () => {
-        const tb = new TextBox(); tb.Text = 'hi';
-        assert.equal(desiredH(tb), 28);
-    });
-
-    // Where the ambient density explicitly raises the row height, the field still
-    // tracks the ComboBox (both respond to Compact / Comfortable) so a field and a
-    // dropdown in the same density-scoped row stay the same height.
-    for (const d of [Density.Compact, Density.Comfortable]) {
+    // The whole point: a single-line field is the SAME height as a ComboBox beside
+    // it, at every density (both resolve to @ListRowHeight{Regular,Compact,Comfortable}).
+    for (const d of [Density.Regular, Density.Compact, Density.Comfortable]) {
         test(`single-line field matches ComboBox height at ${d} density`, () => {
             const tb = new TextBox(); tb.Text = 'hi';
             const cb = new ComboBox();
             assert.equal(desiredH(tb, d), desiredH(cb, d), `height mismatch at ${d}`);
         });
     }
+
+    // A field sits at its own row height inside a taller slot instead of stretching
+    // to fill it (VerticalAlignment = Center in the default Style).
+    test('single-line field does not stretch to fill a taller slot', () => {
+        const tb = new TextBox(); tb.Text = 'hi';
+        const target = new HeadlessTarget(300, 400);
+        target.Content = tb;
+        target.Flush();
+        assert.equal(tb.RenderSize.Height, tb.DesiredSize.Height);
+    });
 
     // Multi-line must NOT be pinned to the row height — it grows with content
     // (the floor is a MinHeight, not a fixed Height).
