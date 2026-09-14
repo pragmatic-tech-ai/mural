@@ -1432,14 +1432,40 @@ export function attachConnectorInteractions(diagram: Diagram): () => void
             if (conn !== undefined && diagram.IsConnectorSelected(conn)) conn = undefined;
         }
 
-        // Figure hover (side bars / port handles) — near-detection by bbox.
-        // Suppress it while idle when a connector is the topmost hit: the
-        // connector sits above the figure there, so the user is targeting the
-        // connector, not the figure beneath it. During an active gesture the
-        // figure hover stays live so drag-create target handles still appear.
-        const fig = (state.activeGesture === undefined && conn !== undefined)
-            ? undefined
-            : findFigureAtCanvasPoint(diagram, cursor);
+        // Figure hover (side bars / port handles). While IDLE, resolve the
+        // figure from the TRUE topmost hit (args.Source) rather than a bbox
+        // scan of ItemsSource: the render hit-test respects nesting (a figure
+        // inside a container is NOT in ItemsSource, so the bbox scan can never
+        // see it — that's why nested nodes showed no port adorners), silhouette
+        // geometry, AND z-order. The figure's own side-bar handle resolves back
+        // to its figure so reaching a port doesn't drop the hover (mirrors the
+        // segment-pad resolution above). Suppress when a connector is the
+        // topmost hit — the user is targeting the connector, not the figure
+        // beneath it. The bbox scan stays as the "near" fallback (cursor just
+        // off a figure body) and drives the ACTIVE-gesture case, where
+        // args.Source is the dragged connector, not the target figure.
+        let fig: Figure | undefined;
+        if (state.activeGesture === undefined)
+        {
+            if (conn !== undefined)
+            {
+                fig = undefined;
+            }
+            else
+            {
+                fig = findFigureAncestor(args.Source);
+                if (fig === undefined)
+                {
+                    const tag = args.Source instanceof Visual ? HANDLE_TAGS.get(args.Source) : undefined;
+                    if (tag !== undefined && tag.kind === 'side') fig = tag.figure;
+                }
+                if (fig === undefined) fig = findFigureAtCanvasPoint(diagram, cursor);
+            }
+        }
+        else
+        {
+            fig = findFigureAtCanvasPoint(diagram, cursor);
+        }
         // Only the side nearest the cursor is shown — recompute it on
         // every move so the highlighted edge tracks the pointer around
         // the figure. Re-arrange when EITHER the figure or the chosen
