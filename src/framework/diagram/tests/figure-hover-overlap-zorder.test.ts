@@ -14,6 +14,7 @@ import assert from 'node:assert/strict';
 
 import { ObservableCollection, Panel, Point, Rect, Size } from '../../../runtime/index.js';
 import { Figure } from '../figure.js';
+import { ContainerFigure } from '../container-figure.js';
 import { Diagram } from '../diagram.js';
 import { initTestApp } from '../../../basic/tests/test-app.js';
 import { findFigureAtCanvasPoint } from '../behaviors/connector-interactions-behavior.js';
@@ -59,5 +60,44 @@ describe('figure hover pick respects paint z-order under overlap', () => {
 
         const hit = findFigureAtCanvasPoint(stubDiagram([first, second]), new Point(30, 30));
         assert.equal(hit, second, 'equal-z tie goes to the later sibling');
+    });
+});
+
+// Container-nested nodes live flat in ItemsSource but carry PARENT-RELATIVE
+// Left/Top; the pick must resolve them through diagramSpaceRect (canvas coords),
+// not by comparing the cursor against parent-relative coords — the reason nested
+// nodes were invisible to this scan and its drag drop-target callers.
+describe('figure hover pick sees container-nested figures', () => {
+    beforeEach(() => { initTestApp(); });
+
+    // A container at (100,100) 220x160 with one child at container-local (22,18)
+    // 30x20. ContentOrigin is (8,32), so the child's canvas rect is
+    // (100+8+22, 100+32+18) = (130,150) .. (160,170).
+    function containerWithChild(): { container: ContainerFigure; child: Figure } {
+        const container = new ContainerFigure();
+        container.Left = 100; container.Top = 100; container.Width = 220; container.Height = 160;
+        container.Measure(new Size(220, 160));
+        container.Arrange(new Rect(100, 100, 220, 160));
+
+        const child = Figure.fromKind('rectangle', 22, 18, { width: 30, height: 20 });
+        child.ContainerParent = container;      // nested → Left/Top are container-local
+        child.Measure(new Size(30, 20));
+        child.Arrange(new Rect(0, 0, 30, 20));  // realized; geometry read via diagramSpaceRect
+        return { container, child };
+    }
+
+    test('a point inside the child resolves to the nested child, not the container', () => {
+        const { container, child } = containerWithChild();
+        // (140,160) is inside the child's canvas rect — which sits inside the
+        // container box, so both contain it; the DEEPER figure must win.
+        const hit = findFigureAtCanvasPoint(stubDiagram([container, child]), new Point(140, 160));
+        assert.equal(hit, child, 'the nested child wins over its container');
+    });
+
+    test('a point inside the container but off the child resolves to the container', () => {
+        const { container, child } = containerWithChild();
+        // (110,140) is inside the container box but above-left of the child rect.
+        const hit = findFigureAtCanvasPoint(stubDiagram([container, child]), new Point(110, 140));
+        assert.equal(hit, container, 'the container wins where no child covers the point');
     });
 });

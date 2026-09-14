@@ -33,6 +33,7 @@ import { routePoints } from '../route-waypoint.js';
 import { ConnectorCreateBehavior } from './connector-create-behavior.js';
 import { ConnectorEditAdorner, segmentIsHorizontal } from './connector-edit-adorner.js';
 import { Figure } from '../figure.js';
+import { diagramSpaceRect, type SpatialNode } from '../coordinate-space.js';
 import { PortSide, type ResolvedPortSide } from '../port.js';
 import { ConnectorEnd } from '../routing/router.js';
 import type { Diagram } from '../diagram.js';
@@ -866,40 +867,62 @@ export function findFigureAtCanvasPoint(diagram: Diagram, p: Point): Figure | un
     const items = diagram.ItemsSource;
     if (items === undefined) return undefined;
     let bestInside: Figure | undefined = undefined;
+    let bestInsideDepth = Number.NEGATIVE_INFINITY;
     let bestInsideZ = Number.NEGATIVE_INFINITY;
     let bestNear: Figure | undefined = undefined;
     let bestNearDist = figureProximity();
     for (const item of items as Iterable<unknown>)
     {
         const container = diagram.Generator.ContainerFromItem(item);
-        if (container instanceof Figure)
+        if (!(container instanceof Figure)) continue;
+        // Only realized (laid-out) figures are pickable.
+        if (container.ArrangedRect === undefined) continue;
+        // Canvas-space rect: diagramSpaceRect sums the ContainerParent chain, so a
+        // NESTED node's parent-relative Left/Top resolve to true canvas coords. The
+        // old test read container.Left/Top directly — comparing a canvas-space
+        // cursor against parent-relative coords — so nested nodes never matched and
+        // were invisible to this scan and its callers (the drag drop-target among
+        // them). A root node has no ContainerParent, so diagramSpaceRect returns
+        // (Left, Top, Width, Height) unchanged and the root-sibling case is intact.
+        const rect   = diagramSpaceRect(container as unknown as SpatialNode);
+        const left   = rect.X;
+        const top    = rect.Y;
+        const right  = left + rect.Width;
+        const bottom = top  + rect.Height;
+        if (p.X >= left && p.X <= right && p.Y >= top && p.Y <= bottom)
         {
-            const r = container.ArrangedRect;
-            if (r !== undefined)
+            // A nested child always paints ABOVE its container, so the DEEPER
+            // figure wins (mirrors ContainerPlacement.containerAt's innermost-
+            // wins). Within a single depth, rank by real paint z (Panel.ZIndex) —
+            // the root-sibling overlap fix; `>=` lets a later equal-z sibling win.
+            const depth = containerDepth(container);
+            const zi    = Panel.GetZIndex(container);
+            if (depth > bestInsideDepth || (depth === bestInsideDepth && zi >= bestInsideZ))
             {
-                const left   = container.Left;
-                const top    = container.Top;
-                const right  = left + r.Width;
-                const bottom = top  + r.Height;
-                if (p.X >= left && p.X <= right && p.Y >= top && p.Y <= bottom)
-                {
-                    // Rank by real paint z (Panel.ZIndex). `>=` lets a later
-                    // sibling win an EQUAL-z tie, matching the canvas's
-                    // within-z paint order (later child paints on top).
-                    const zi = Panel.GetZIndex(container);
-                    if (zi >= bestInsideZ) { bestInside = container; bestInsideZ = zi; }
-                }
-                else
-                {
-                    const dx = Math.max(left - p.X, 0, p.X - right);
-                    const dy = Math.max(top  - p.Y, 0, p.Y - bottom);
-                    const d  = Math.hypot(dx, dy);
-                    if (d <= bestNearDist) { bestNear = container; bestNearDist = d; }
-                }
+                bestInside      = container;
+                bestInsideDepth = depth;
+                bestInsideZ     = zi;
             }
+        }
+        else
+        {
+            const dx = Math.max(left - p.X, 0, p.X - right);
+            const dy = Math.max(top  - p.Y, 0, p.Y - bottom);
+            const d  = Math.hypot(dx, dy);
+            if (d <= bestNearDist) { bestNear = container; bestNearDist = d; }
         }
     }
     return bestInside ?? bestNear;
+}
+
+// Container-nesting depth of `fig`: 0 for a root node, +1 per ContainerParent
+// hop. A deeper figure paints later (its visual is a descendant of the shallower
+// one's child host), so findFigureAtCanvasPoint prefers it under overlap.
+function containerDepth(fig: Figure): number
+{
+    let d = 0;
+    for (let c = fig.ContainerParent; c !== undefined; c = c.ContainerParent) d++;
+    return d;
 }
 
 // Closest cardinal side of `figure` to point `p` in canvas-host coords.
