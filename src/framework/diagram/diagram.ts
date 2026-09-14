@@ -1679,6 +1679,12 @@ export class Diagram extends Selector implements RigidConnectorDragHost
         }
         else if (descriptor === Diagram.ConnectorsKey.descriptor)
         {
+            // Same-instance re-push (a bound collection pulses the DP on every
+            // content mutation — binding.ts fires onValueChanged(coll, coll)).
+            // The materializer's own collection subscription already handles the
+            // mutation incrementally; a full re-materialize here is the O(M^2)
+            // trap. Mirrors the ItemsSource identity guard in ItemsControl.
+            if (oldValue === newValue) return;
             this._connectorsMaterializer._onConnectorsCollectionChanged();
             this._resubscribeConnectorsForSelectionPrune();
         }
