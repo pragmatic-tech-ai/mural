@@ -15,7 +15,7 @@
 // ICapability to the concrete ShellModule / Capability to read those.
 
 import type { ResourceDictionary } from './resource-dictionary.js';
-import type { IModule } from './composition/module.js';
+import type { IModule } from '@pragmatic-tech-ai/todl-runtime';
 
 export interface ICapability
 {

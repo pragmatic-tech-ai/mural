@@ -2,9 +2,7 @@ import { ResourceDictionary, type ResourceKey } from './resource-dictionary.js';
 import { ServiceProvider } from '@pragmatic-tech-ai/todl-runtime';
 import { ApplicationService } from './services/application-service.js';
 import { ObservableCollection } from './observable-collection.js';
-import { CompositionRoot } from './composition/composition-root.js';
-import type { HostKind } from './composition/host-kind.js';
-import type { IModule } from './composition/module.js';
+import { CompositionRoot, type HostKind, type IModule } from '@pragmatic-tech-ai/todl-runtime';
 import type { IShellModule } from './shell-modules.js';
 import type { Visual } from '../visual-engine/visual.js';
 

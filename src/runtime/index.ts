@@ -112,9 +112,9 @@ export {
 export { ApplicationService, type IApplicationService } from './services/application-service.js';
 // Composition: host-kind-selected module composition (CompositionRoot + IModule
 // + HostKind). Application extends CompositionRoot.
-export { HostKind } from './composition/host-kind.js';
-export type { IModule } from './composition/module.js';
-export { CompositionRoot } from './composition/composition-root.js';
+// Composition (HostKind + IModule + CompositionRoot) lives in todl-runtime;
+// re-exported here so `@pragmatic-tech-ai/mural/runtime` consumers are unchanged.
+export { HostKind, CompositionRoot, type IModule } from '@pragmatic-tech-ai/todl-runtime';
 export { type ISettingSource, type ISettingReArmable, SettingSourceKey, SettingSourceAvailability } from './services/setting-source.js';
 // InputManager moved to `mural/framework`.
 // RoutedCommand / CommandBinding / CommandManager / InputBinding /
