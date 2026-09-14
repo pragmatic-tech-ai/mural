@@ -198,19 +198,9 @@ resources MuralBasic {
         when ( IsFocused ) { PART_Border.Stroke = Pen [ Brush = @Primary ]; }
         when ( IsEnabled = false ) { PART_Border.Opacity = @DisabledContentOpacity; }
 
-        // Single-line fields have no vertical overflow, so the scroll surface
-        // sits at its one-line desired height CENTERED in the border — a field
-        // stretched taller than one line (e.g. sharing a row with a taller
-        // ComboBox) keeps its text vertically centred instead of top-aligned
-        // with blank space below. Multi-line (AcceptsReturn) leaves it Stretch
-        // so the editor fills the box and scrolls.
-        when ( AcceptsReturn = false ) { PART_Scroll.VerticalAlignment = Center; }
-
         // M3 density variants — tighter Padding on Compact, looser on
-        // Comfortable. Width / Height are consumer-set (TextBox is
-        // sized by its layout context); Padding is the only knob we
-        // tune here, matching the same shape ComboBox / ListBoxItem
-        // use under Density triggers.
+        // Comfortable. Multi-line height is content-driven; the single-line
+        // row height is pinned below.
         when ( ThemeManager.Density = Compact ) {
             PART_Border.Padding = (@Spacing2,@Spacing1,@Spacing2,@Spacing1);
         }
@@ -219,6 +209,20 @@ resources MuralBasic {
         }
         when ( ThemeManager.Pointer = Coarse ) {
             PART_Border.Padding = (@Spacing4,@Spacing3,@Spacing4,@Spacing3);
+        }
+
+        // Single-line fields read as a standard row: pinned to
+        // @ListRowHeightRegular with tight vertical padding — the SAME height
+        // as a ComboBox they sit beside (a bare padding+line-box field measures
+        // ~3dp taller) — and the one-line scroll surface is centred within it,
+        // so a stretched field never top-aligns its text. Declared LAST so its
+        // padding wins over the density triggers above for single-line;
+        // multi-line keeps their responsive padding and grows freely. Mirrors
+        // DefaultComboBoxSelection's fixed-row reasoning.
+        when ( AcceptsReturn = false ) {
+            PART_Border.Height  = @ListRowHeightRegular;
+            PART_Border.Padding = (@Spacing3,@Spacing1,@Spacing3,@Spacing1);
+            PART_Scroll.VerticalAlignment = Center;
         }
     }
 
@@ -262,10 +266,6 @@ resources MuralBasic {
         }
         when ( IsEnabled = false ) { PART_Root.Opacity = @DisabledContentOpacity; }
 
-        // Center the one-line scroll surface for single-line fields (see the
-        // matching note on DefaultOutlinedTextBox); Stretch stays for multi-line.
-        when ( AcceptsReturn = false ) { PART_Scroll.VerticalAlignment = Center; }
-
         when ( ThemeManager.Density = Compact ) {
             PART_Border.Padding = (@Spacing2,@Spacing1,@Spacing2,@Spacing1);
         }
@@ -274,6 +274,15 @@ resources MuralBasic {
         }
         when ( ThemeManager.Pointer = Coarse ) {
             PART_Border.Padding = (@Spacing4,@Spacing3,@Spacing4,@Spacing3);
+        }
+
+        // Single-line = standard row height + centred one-line surface (see the
+        // matching note on DefaultOutlinedTextBox). Declared last so the padding
+        // wins over the density triggers; multi-line grows freely.
+        when ( AcceptsReturn = false ) {
+            PART_Border.Height  = @ListRowHeightRegular;
+            PART_Border.Padding = (@Spacing3,@Spacing1,@Spacing3,@Spacing1);
+            PART_Scroll.VerticalAlignment = Center;
         }
     }
 

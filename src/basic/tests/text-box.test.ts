@@ -5,7 +5,7 @@ import { initTestApp } from './test-app.js';
 
 import { Application, Key, NoModifiers, Panel, Point, Size, PointerButton, Visual, VerticalAlignment, type FocusEventArgs, type KeyEventArgs, type KeyEventInit, type ModifierKeys, type PointerEventInit, type DrawingContext } from '../../runtime/index.js';
 import { resolveKey } from '../../runtime/model-internals.js';
-import { InputManager } from '../../framework/index.js';;
+import { InputManager, ComboBox } from '../../framework/index.js';;
 import { HeadlessTarget, SolidColorBrush, type Brush } from '../../visual-engine/index.js';
 import { TextBox, TextBoxVariant, type ClipboardSink } from '../text-box.js';
 
@@ -638,6 +638,33 @@ describe('TextBox — single-line content is vertically centered', () => {
         tb.Text = 'hi';
         mount(tb);
         assert.equal(scrollOf(tb).VerticalAlignment, VerticalAlignment.Center);
+    });
+});
+
+describe('TextBox — single-line height matches the standard row', () => {
+    beforeEach(() => { initTestApp(); });
+
+    function desiredH(v: Visual): number {
+        const target = new HeadlessTarget(300, 400);
+        target.Content = v;
+        target.Flush();
+        return v.DesiredSize.Height;
+    }
+
+    // A single-line field must read as a standard row — the same height as a
+    // ComboBox it sits beside — not ~3dp taller from its own padding + line box.
+    test('single-line field is the standard row height (parity with ComboBox)', () => {
+        const tb = new TextBox(); tb.Text = 'hi';
+        const cb = new ComboBox();
+        assert.equal(desiredH(tb), desiredH(cb));
+    });
+
+    // Multi-line must NOT be pinned to the row height — it grows with content.
+    test('multi-line field grows with content, not pinned to the row height', () => {
+        const one  = new TextBox(); one.AcceptsReturn  = true; one.Text  = 'a';
+        const many = new TextBox(); many.AcceptsReturn = true; many.Text = 'a\nb\nc\nd';
+        assert.ok(desiredH(many) > desiredH(one),
+            'multi-line desired height should grow with line count');
     });
 });
 
