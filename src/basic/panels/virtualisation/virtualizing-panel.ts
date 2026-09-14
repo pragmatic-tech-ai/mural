@@ -173,6 +173,7 @@ export abstract class VirtualizingPanel extends Panel
             }
             case 'moved':
             case 'cleared':
+            case 'reset':   // wholesale change (ObservableCollection.Batch)
             default:
                 this.RecycleAll();
                 this.InvalidateMeasure();
