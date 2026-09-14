@@ -185,7 +185,15 @@ resources MuralBasic {
             [ Fill      = @Surface,
               Stroke     = Pen [ Brush = @Outline ],
               CornerRadius    = @ShapeExtraSmall,
-              Padding         = (@Spacing3,@Spacing2,@Spacing3,@Spacing2) ] {
+              Padding         = (@Spacing3,@Spacing2,@Spacing3,@Spacing2),
+              // Floor the field at the standard row height so a single-line box
+              // reads as the SAME height as a ComboBox beside it (both 32 at the
+              // Regular density; the density triggers below track the ComboBox's
+              // 28/40/48). A floor (not a fixed Height) leaves multi-line free to
+              // grow past it — an auto-growing composer/property-grid field is
+              // never capped. Single-line tightens its padding below so its
+              // one-line content sits under this floor and the floor sets the height.
+              MinHeight       = @ListRowHeightRegular ] {
             ScrollViewer x:name="PART_Scroll" {
                 TextEditorSurface x:name="PART_Editor"
             }
@@ -198,29 +206,32 @@ resources MuralBasic {
         when ( IsFocused ) { PART_Border.Stroke = Pen [ Brush = @Primary ]; }
         when ( IsEnabled = false ) { PART_Border.Opacity = @DisabledContentOpacity; }
 
-        // M3 density variants — tighter Padding on Compact, looser on
-        // Comfortable. Multi-line height is content-driven; the single-line
-        // row height is pinned below.
+        // M3 density variants — tighter Padding + the matching row-height floor,
+        // mirroring DefaultComboBoxSelection's per-density heights so a TextBox
+        // and a ComboBox in the same row stay the same height at every density.
         when ( ThemeManager.Density = Compact ) {
-            PART_Border.Padding = (@Spacing2,@Spacing1,@Spacing2,@Spacing1);
+            PART_Border.Padding   = (@Spacing2,@Spacing1,@Spacing2,@Spacing1);
+            PART_Border.MinHeight = @ListRowHeightCompact;
         }
         when ( ThemeManager.Density = Comfortable ) {
-            PART_Border.Padding = (@Spacing4,@Spacing3,@Spacing4,@Spacing3);
+            // @Spacing2 (8) vertical, not @Spacing3 (12): keeps a one-line field
+            // below the 40-DIP floor so the floor sets its height (matching the
+            // ComboBox, which tightens here for the same reason).
+            PART_Border.Padding   = (@Spacing4,@Spacing2,@Spacing4,@Spacing2);
+            PART_Border.MinHeight = @ListRowHeightComfortable;
         }
         when ( ThemeManager.Pointer = Coarse ) {
-            PART_Border.Padding = (@Spacing4,@Spacing3,@Spacing4,@Spacing3);
+            PART_Border.Padding   = (@Spacing4,@Spacing3,@Spacing4,@Spacing3);
+            PART_Border.MinHeight = @ListRowHeightTouch;
         }
 
-        // Single-line fields read as a standard row: pinned to
-        // @ListRowHeightRegular with tight vertical padding — the SAME height
-        // as a ComboBox they sit beside (a bare padding+line-box field measures
-        // ~3dp taller) — and the one-line scroll surface is centred within it,
-        // so a stretched field never top-aligns its text. Declared LAST so its
-        // padding wins over the density triggers above for single-line;
-        // multi-line keeps their responsive padding and grows freely. Mirrors
-        // DefaultComboBoxSelection's fixed-row reasoning.
+        // Single-line: tighten vertical padding so the one-line content measures
+        // BELOW the row-height floor (the floor then sets the height → exact
+        // parity with the ComboBox), and centre the one-line scroll surface so
+        // the text never top-aligns. Every density's padding above is likewise
+        // kept under its floor, so the field lands on the floor regardless of
+        // which padding trigger wins; multi-line grows past the floor.
         when ( AcceptsReturn = false ) {
-            PART_Border.Height  = @ListRowHeightRegular;
             PART_Border.Padding = (@Spacing3,@Spacing1,@Spacing3,@Spacing1);
             PART_Scroll.VerticalAlignment = Center;
         }
@@ -247,7 +258,10 @@ resources MuralBasic {
             Border x:name="PART_Border"
                 [ Fill      = @SurfaceContainerHigh,
                   CornerRadius    = (@ShapeExtraSmall,@ShapeExtraSmall,0,0),
-                  Padding         = (@Spacing3,@Spacing2,@Spacing3,@Spacing2) ] {
+                  Padding         = (@Spacing3,@Spacing2,@Spacing3,@Spacing2),
+                  // Row-height floor (see DefaultOutlinedTextBox) — single-line
+                  // matches the ComboBox; multi-line grows past it.
+                  MinHeight       = @ListRowHeightRegular ] {
                 ScrollViewer x:name="PART_Scroll" {
                     TextEditorSurface x:name="PART_Editor"
                 }
@@ -267,20 +281,24 @@ resources MuralBasic {
         when ( IsEnabled = false ) { PART_Root.Opacity = @DisabledContentOpacity; }
 
         when ( ThemeManager.Density = Compact ) {
-            PART_Border.Padding = (@Spacing2,@Spacing1,@Spacing2,@Spacing1);
+            PART_Border.Padding   = (@Spacing2,@Spacing1,@Spacing2,@Spacing1);
+            PART_Border.MinHeight = @ListRowHeightCompact;
         }
         when ( ThemeManager.Density = Comfortable ) {
-            PART_Border.Padding = (@Spacing4,@Spacing3,@Spacing4,@Spacing3);
+            // @Spacing2 vertical keeps a one-line field under the 40-DIP floor
+            // (see DefaultOutlinedTextBox / the ComboBox's matching note).
+            PART_Border.Padding   = (@Spacing4,@Spacing2,@Spacing4,@Spacing2);
+            PART_Border.MinHeight = @ListRowHeightComfortable;
         }
         when ( ThemeManager.Pointer = Coarse ) {
-            PART_Border.Padding = (@Spacing4,@Spacing3,@Spacing4,@Spacing3);
+            PART_Border.Padding   = (@Spacing4,@Spacing3,@Spacing4,@Spacing3);
+            PART_Border.MinHeight = @ListRowHeightTouch;
         }
 
-        // Single-line = standard row height + centred one-line surface (see the
-        // matching note on DefaultOutlinedTextBox). Declared last so the padding
-        // wins over the density triggers; multi-line grows freely.
+        // Single-line: tight padding (one-line content dips below the row-height
+        // floor → the floor sets the height, matching the ComboBox at every
+        // density) + centred one-line surface. See DefaultOutlinedTextBox.
         when ( AcceptsReturn = false ) {
-            PART_Border.Height  = @ListRowHeightRegular;
             PART_Border.Padding = (@Spacing3,@Spacing1,@Spacing3,@Spacing1);
             PART_Scroll.VerticalAlignment = Center;
         }

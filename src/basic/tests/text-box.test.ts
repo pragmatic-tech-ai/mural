@@ -3,7 +3,7 @@ import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { initTestApp } from './test-app.js';
 
-import { Application, Key, NoModifiers, Panel, Point, Size, PointerButton, Visual, VerticalAlignment, type FocusEventArgs, type KeyEventArgs, type KeyEventInit, type ModifierKeys, type PointerEventInit, type DrawingContext } from '../../runtime/index.js';
+import { Application, Key, NoModifiers, Panel, Point, Size, PointerButton, Visual, VerticalAlignment, ThemeManager, Density, type FocusEventArgs, type KeyEventArgs, type KeyEventInit, type ModifierKeys, type PointerEventInit, type DrawingContext } from '../../runtime/index.js';
 import { resolveKey } from '../../runtime/model-internals.js';
 import { InputManager, ComboBox } from '../../framework/index.js';;
 import { HeadlessTarget, SolidColorBrush, type Brush } from '../../visual-engine/index.js';
@@ -644,25 +644,31 @@ describe('TextBox — single-line content is vertically centered', () => {
 describe('TextBox — single-line height matches the standard row', () => {
     beforeEach(() => { initTestApp(); });
 
-    function desiredH(v: Visual): number {
+    function desiredH(v: Visual, density?: Density): number {
+        if (density !== undefined) ThemeManager.SetDensity(v, density);
         const target = new HeadlessTarget(300, 400);
         target.Content = v;
         target.Flush();
         return v.DesiredSize.Height;
     }
 
-    // A single-line field must read as a standard row — the same height as a
-    // ComboBox it sits beside — not ~3dp taller from its own padding + line box.
-    test('single-line field is the standard row height (parity with ComboBox)', () => {
-        const tb = new TextBox(); tb.Text = 'hi';
-        const cb = new ComboBox();
-        assert.equal(desiredH(tb), desiredH(cb));
-    });
+    // A single-line field must read as a standard row — the SAME height as a
+    // ComboBox it sits beside — at every density (the ComboBox switches its
+    // fixed row height per density: 28 / 32 / 40). Regression: the field was
+    // pinned to the Regular 32 and stayed taller than a Compact 28 ComboBox.
+    for (const d of [Density.Regular, Density.Compact, Density.Comfortable]) {
+        test(`single-line field matches ComboBox height at ${d} density`, () => {
+            const tb = new TextBox(); tb.Text = 'hi';
+            const cb = new ComboBox();
+            assert.equal(desiredH(tb, d), desiredH(cb, d), `height mismatch at ${d}`);
+        });
+    }
 
-    // Multi-line must NOT be pinned to the row height — it grows with content.
+    // Multi-line must NOT be pinned to the row height — it grows with content
+    // (the floor is a MinHeight, not a fixed Height).
     test('multi-line field grows with content, not pinned to the row height', () => {
         const one  = new TextBox(); one.AcceptsReturn  = true; one.Text  = 'a';
-        const many = new TextBox(); many.AcceptsReturn = true; many.Text = 'a\nb\nc\nd';
+        const many = new TextBox(); many.AcceptsReturn = true; many.Text = 'a\nb\nc\nd\ne\nf';
         assert.ok(desiredH(many) > desiredH(one),
             'multi-line desired height should grow with line count');
     });
