@@ -203,3 +203,6 @@ export {
     type TokenType,
     type ViewportBreakpoints,
 } from './theme/index.js';
+
+// Help — a framework attached property linking a control to a help scenario.
+export { Help } from './help.js';

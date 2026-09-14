@@ -468,6 +468,7 @@ const ENTRIES: ReadonlyArray<readonly [string, string]> = [
     ['Control',                 '@pragmatic-tech-ai/mural/framework'],
 
     // ── visual-engine ───────────────────────────────────────────────
+    ['Help',                '@pragmatic-tech-ai/mural/visual-engine'],
     ['SolidColorBrush',     '@pragmatic-tech-ai/mural/visual-engine'],
     ['LinearGradientBrush', '@pragmatic-tech-ai/mural/visual-engine'],
     ['RadialGradientBrush', '@pragmatic-tech-ai/mural/visual-engine'],
