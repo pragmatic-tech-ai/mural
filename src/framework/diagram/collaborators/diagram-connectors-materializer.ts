@@ -109,6 +109,11 @@ export class DiagramConnectorsMaterializer
             case 'cleared':
                 this._clearAll();
                 break;
+            case 'reset':
+                // Wholesale change (ObservableCollection.Batch). Rebuild the
+                // whole connectors layer from current contents in one pass.
+                this._onConnectorsCollectionChanged();
+                break;
             case 'moved':
                 // Visual identity preserved; nothing to rebuild.
                 break;
