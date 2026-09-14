@@ -236,6 +236,14 @@ export class CollectionView implements IReadOnlyObservableCollection<unknown>
                 this.setCurrent(-1);
                 return;
             }
+            case 'reset':
+            {
+                // Source was mutated wholesale (ObservableCollection.Batch) —
+                // re-project from scratch (Refresh itself emits one downstream
+                // reset via its batched _projected rebuild).
+                this.Refresh();
+                return;
+            }
         }
     }
 
@@ -349,7 +357,7 @@ export class CollectionView implements IReadOnlyObservableCollection<unknown>
     // Re-evaluate Filter → Sort → Group from scratch against the
     // current source. Cheap to call: O(N log N) for sort, O(N) for
     // filter + project, O(N) for group transitions. Subscribers see
-    // a single 'cleared' followed by per-item 'inserted' events.
+    // a single 'reset' event (the _projected rebuild is batched).
     public Refresh(): void
     {
         const sourceArray = this.materializeSource();
@@ -372,11 +380,14 @@ export class CollectionView implements IReadOnlyObservableCollection<unknown>
             ? undefined
             : this.buildGroups(sorted);
 
-        // Replace the projected list. To minimize subscriber churn
-        // we Clear → Add — a per-item diff would be tidier but a
-        // Refresh is already the "view re-projected" semantic.
-        this._projected.Clear();
-        for (const item of projected) this._projected.Add(item);
+        // Replace the projected list in one batch so subscribers see a single
+        // 'reset' rather than 'cleared' + N x 'inserted' (the old churn — a
+        // re-projection would otherwise recycle-then-rematerialize every
+        // realized container in a bound ItemsControl).
+        this._projected.Batch(() => {
+            this._projected.Clear();
+            for (const item of projected) this._projected.Add(item);
+        });
 
         // Reconcile CurrentItem with the new projection. If the
         // previous CurrentItem is still present, keep it (its

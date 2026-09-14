@@ -54,15 +54,15 @@ describe('CollectionView — Filter', () => {
         assert.equal(v.Count, 4);
     });
 
-    test('Subscribe sees a Cleared followed by per-item Inserts on Refresh', () => {
+    test('Subscribe sees a single reset on Refresh (batched re-projection)', () => {
         const v = new CollectionView(ROWS);
         const changes: string[] = [];
         v.Subscribe(c => changes.push(c.kind));
         v.Filter = (r) => (r as Row).id === 1;
-        // Refresh path: Clear, then Insert per item.
-        assert.equal(changes[0], 'cleared');
-        // 1 surviving item → 1 insert.
-        assert.equal(changes.filter(k => k === 'inserted').length, 1);
+        // Refresh batches its _projected rebuild → one 'reset', not
+        // 'cleared' + per-item 'inserted' (the old churn).
+        assert.deepEqual(changes, ['reset']);
+        assert.equal(v.Count, 1);
     });
 });
 
