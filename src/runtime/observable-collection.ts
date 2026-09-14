@@ -5,12 +5,16 @@
 // `moved` carries both old and new indices so listeners can shift
 // container bookkeeping (item identity is preserved across the move,
 // so containers can be re-positioned without re-realization).
+// `reset` means the contents changed wholesale — a listener should re-read the
+// collection and rebuild from scratch (WPF's NotifyCollectionChangedAction.Reset).
+// Emitted by `Batch`, which coalesces a run of mutations into this one event.
 export type CollectionChange<T> =
     | { kind: 'inserted'; index: number; items: readonly T[] }
     | { kind: 'removed';  index: number; items: readonly T[] }
     | { kind: 'replaced'; index: number; oldItem: T; newItem: T }
     | { kind: 'moved';    oldIndex: number; newIndex: number; item: T }
-    | { kind: 'cleared' };
+    | { kind: 'cleared' }
+    | { kind: 'reset' };
 
 export type CollectionChangeListener<T> = (change: CollectionChange<T>) => void;
 
@@ -50,6 +54,8 @@ export class ObservableCollection<T> implements IReadOnlyObservableCollection<T>
 {
     private readonly items: T[];
     private readonly listeners: CollectionChangeListener<T>[] = [];
+    private _suspendDepth = 0;
+    private _dirtyDuringSuspend = false;
 
     constructor(initial: readonly T[] = [])
     {
@@ -141,6 +147,30 @@ export class ObservableCollection<T> implements IReadOnlyObservableCollection<T>
         this.notify({ kind: 'cleared' });
     }
 
+    // Coalesce arbitrary mutations into a single 'reset' notification.
+    // Interior Add/Insert/Remove/Move/Clear events are suppressed; when the
+    // outermost Batch completes AND at least one mutation was suppressed, one
+    // { kind: 'reset' } is emitted. Nesting is supported (only the outermost
+    // emits). The reset fires even if `mutate` throws, so a listener never
+    // observes a permanently-suspended collection.
+    public Batch(mutate: () => void): void
+    {
+        this._suspendDepth++;
+        try
+        {
+            mutate();
+        }
+        finally
+        {
+            this._suspendDepth--;
+            if (this._suspendDepth === 0 && this._dirtyDuringSuspend)
+            {
+                this._dirtyDuringSuspend = false;
+                this.notify({ kind: 'reset' });
+            }
+        }
+    }
+
     // Subscribe to change notifications. Returns an unsubscribe
     // function — call it to stop receiving notifications. Listeners
     // are invoked synchronously in registration order during the
@@ -156,6 +186,13 @@ export class ObservableCollection<T> implements IReadOnlyObservableCollection<T>
 
     private notify(change: CollectionChange<T>): void
     {
+        // Inside a Batch, suppress the granular event and remember that
+        // something changed — the outermost Batch emits one 'reset' at the end.
+        if (this._suspendDepth > 0)
+        {
+            this._dirtyDuringSuspend = true;
+            return;
+        }
         // Snapshot listeners so an unsubscribe-during-notify doesn't
         // disrupt the iteration. Pre-existing test pattern in the
         // codebase (model.test.ts has similar concerns).
