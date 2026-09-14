@@ -186,14 +186,15 @@ resources MuralBasic {
               Stroke     = Pen [ Brush = @Outline ],
               CornerRadius    = @ShapeExtraSmall,
               Padding         = (@Spacing3,@Spacing2,@Spacing3,@Spacing2),
-              // Floor the field at the standard row height so a single-line box
-              // reads as the SAME height as a ComboBox beside it (both 32 at the
-              // Regular density; the density triggers below track the ComboBox's
-              // 28/40/48). A floor (not a fixed Height) leaves multi-line free to
-              // grow past it — an auto-growing composer/property-grid field is
-              // never capped. Single-line tightens its padding below so its
-              // one-line content sits under this floor and the floor sets the height.
-              MinHeight       = @ListRowHeightRegular ] {
+              // Floor the field at the COMPACT row height (28) so a single-line
+              // box reads as a dense, standard row by default app-wide. A floor
+              // (not a fixed Height) leaves multi-line free to grow past it — an
+              // auto-growing composer/property-grid field is never capped.
+              // Single-line tightens its padding below so its one-line content
+              // sits under this floor and the floor sets the height. The density
+              // triggers below still raise the floor for explicit Comfortable /
+              // Touch consumers (40 / 48).
+              MinHeight       = @ListRowHeightCompact ] {
             ScrollViewer x:name="PART_Scroll" {
                 TextEditorSurface x:name="PART_Editor"
             }
@@ -259,9 +260,9 @@ resources MuralBasic {
                 [ Fill      = @SurfaceContainerHigh,
                   CornerRadius    = (@ShapeExtraSmall,@ShapeExtraSmall,0,0),
                   Padding         = (@Spacing3,@Spacing2,@Spacing3,@Spacing2),
-                  // Row-height floor (see DefaultOutlinedTextBox) — single-line
-                  // matches the ComboBox; multi-line grows past it.
-                  MinHeight       = @ListRowHeightRegular ] {
+                  // Compact row-height floor (see DefaultOutlinedTextBox) —
+                  // single-line reads dense by default; multi-line grows past it.
+                  MinHeight       = @ListRowHeightCompact ] {
                 ScrollViewer x:name="PART_Scroll" {
                     TextEditorSurface x:name="PART_Editor"
                 }

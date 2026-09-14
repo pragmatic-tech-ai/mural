@@ -641,7 +641,7 @@ describe('TextBox — single-line content is vertically centered', () => {
     });
 });
 
-describe('TextBox — single-line height matches the standard row', () => {
+describe('TextBox — single-line field is a compact row by default', () => {
     beforeEach(() => { initTestApp(); });
 
     function desiredH(v: Visual, density?: Density): number {
@@ -652,11 +652,17 @@ describe('TextBox — single-line height matches the standard row', () => {
         return v.DesiredSize.Height;
     }
 
-    // A single-line field must read as a standard row — the SAME height as a
-    // ComboBox it sits beside — at every density (the ComboBox switches its
-    // fixed row height per density: 28 / 32 / 40). Regression: the field was
-    // pinned to the Regular 32 and stayed taller than a Compact 28 ComboBox.
-    for (const d of [Density.Regular, Density.Compact, Density.Comfortable]) {
+    // Text fields default to the COMPACT row height (28) app-wide, regardless of
+    // the ambient density — a dense, standard-row baseline.
+    test('single-line field defaults to the compact row height (28)', () => {
+        const tb = new TextBox(); tb.Text = 'hi';
+        assert.equal(desiredH(tb), 28);
+    });
+
+    // Where the ambient density explicitly raises the row height, the field still
+    // tracks the ComboBox (both respond to Compact / Comfortable) so a field and a
+    // dropdown in the same density-scoped row stay the same height.
+    for (const d of [Density.Compact, Density.Comfortable]) {
         test(`single-line field matches ComboBox height at ${d} density`, () => {
             const tb = new TextBox(); tb.Text = 'hi';
             const cb = new ComboBox();
