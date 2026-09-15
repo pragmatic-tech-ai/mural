@@ -24,6 +24,7 @@ import type { IPortProvider } from './port-providers/port-provider.js';
 import { resolveDefaultPortProvider } from './port-providers/default-port-providers.js';
 import type { ConnectorEndpoint } from './connector-endpoint.js';
 import { SideEndpointRegistry, type ISideAnchoredConnector, type ISideEndpointHost } from './side-endpoint-host.js';
+import { ConnectorRoutingScheduler } from './connector-routing-scheduler.js';
 import type { RigidConnectorDragHost, RigidConnectorDragSession } from './rigid-connector-drag.js';
 import { DiagramSettings } from './diagram-settings.js';
 import { PositionAnchor } from './position-anchor.js';
@@ -1105,6 +1106,14 @@ export class Figure extends ContentControl implements ISideEndpointHost
         const preMoveLeft = this.Left;
         const preMoveTop  = this.Top;
 
+        // All the position writes below re-route the attached connectors. On a
+        // hub node (many connectors on one side) the crossing optimizer would
+        // otherwise run once per attached connector PER TICK — O(k²) full
+        // re-routes that freeze the drag. Coalesce the whole tick into one
+        // settle: each write only marks connectors/sides dirty, and the Batch
+        // exit does a single recompute-per-connector + one optimize-per-side.
+        ConnectorRoutingScheduler.Batch(() =>
+        {
         // First pass: write this.Left / this.Top using the current effective
         // scroll offset.
         this.moveSelfToCursor(args.HostX, args.HostY);
@@ -1161,6 +1170,7 @@ export class Figure extends ContentControl implements ISideEndpointHost
         {
             this._rigidConnectors.Translate(netDx, netDy);
         }
+        });
 
         // Live drop affordance: highlight the container this node would nest into
         // at its current centre (it was popped to root on pointer-down, so Left/Top

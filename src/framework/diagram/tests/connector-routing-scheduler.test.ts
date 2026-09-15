@@ -118,6 +118,21 @@ function anchorsOf(cons: readonly Connector[]): string {
     return JSON.stringify(cons.map(c => [c.CurrentSourceAnchor, c.CurrentTargetAnchor]));
 }
 
+// A hub already wired (routes settled) plus its N spokes, ready to be moved —
+// the drag scenario. Returns the hub so the test can rewrite its Left/Top.
+function buildSettledHub(spokeCount: number): { hub: Figure; cons: Connector[] } {
+    const hub = fig('hub', 500, 200);
+    const cons: Connector[] = [];
+    for (let i = 0; i < spokeCount; i++) {
+        const s = fig(`s${i}`, 0, i * 80);
+        const c = new Connector();
+        c.Source = new ConnectorEndpoint({ Node: s });
+        c.Target = new ConnectorEndpoint({ Node: hub });
+        cons.push(c);
+    }
+    return { hub, cons };
+}
+
 describe('ConnectorRoutingScheduler outcome identity', () => {
     test('batched wiring produces identical routes to eager', () => {
         Application.current = null; new Application();
@@ -125,6 +140,63 @@ describe('ConnectorRoutingScheduler outcome identity', () => {
         Application.current = null; new Application();
         const batched = anchorsOf(buildHubGraph(true));
         assert.equal(batched, eager);
+    });
+});
+
+describe('ConnectorRoutingScheduler node-move (drag tick)', () => {
+    // Regression: dragging a hub node freezes because each Left/Top write
+    // re-routes every attached connector AND re-runs the crossing optimizer —
+    // O(k²) per tick. Wrapping the tick's position writes in a Batch (as
+    // Figure.OnPointerMove now does) must collapse that to one optimize per
+    // multi-connector side, independent of k.
+    test('moving a hub inside Batch optimizes per-side, not per-connector', () => {
+        const proto = SideEndpointRegistry.prototype as unknown as {
+            optimizeIntersections: (s: unknown) => void;
+        };
+        const orig = proto.optimizeIntersections;
+        let calls = 0;
+        proto.optimizeIntersections = function (this: unknown, s: unknown): void {
+            calls++;
+            return orig.call(this, s);
+        };
+        try {
+            Application.current = null; new Application();
+            const eager = buildSettledHub(8);
+            calls = 0;
+            eager.hub.Left = eager.hub.Left + 40;
+            eager.hub.Top  = eager.hub.Top + 40;
+            const eagerCalls = calls;
+
+            Application.current = null; new Application();
+            const batched = buildSettledHub(8);
+            calls = 0;
+            ConnectorRoutingScheduler.Batch(() => {
+                batched.hub.Left = batched.hub.Left + 40;
+                batched.hub.Top  = batched.hub.Top + 40;
+            });
+            const batchedCalls = calls;
+
+            assert.ok(batchedCalls < eagerCalls, `batched(${batchedCalls}) must be < eager(${eagerCalls})`);
+            assert.ok(batchedCalls <= 2, `expected per-side optimize, got ${batchedCalls}`);
+        } finally {
+            proto.optimizeIntersections = orig;
+        }
+    });
+
+    test('batched move yields the same routes as an eager move', () => {
+        Application.current = null; new Application();
+        const eager = buildSettledHub(8);
+        eager.hub.Left = eager.hub.Left + 40;
+        eager.hub.Top  = eager.hub.Top + 40;
+        const eagerAnchors = anchorsOf(eager.cons);
+
+        Application.current = null; new Application();
+        const batched = buildSettledHub(8);
+        ConnectorRoutingScheduler.Batch(() => {
+            batched.hub.Left = batched.hub.Left + 40;
+            batched.hub.Top  = batched.hub.Top + 40;
+        });
+        assert.equal(anchorsOf(batched.cons), eagerAnchors);
     });
 });
 
