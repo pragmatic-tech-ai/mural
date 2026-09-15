@@ -106,6 +106,12 @@ internals-access escape hatch apply.
   re-export, not under any [package.json](package.json) `exports`
   entry. Library consumers must not see it.
 
+## View models extend Observable
+
+New view-model classes derive from `Observable` (the lightweight INPC root),
+not `MuralBase`. Reserve `MuralBase` for the few things that genuinely need the
+dependency-property system. Default a VM to `Observable` unless told otherwise.
+
 ## MVVM
 
 Apply to `*-vm.mts` files under `demo/demos/` (any remaining `*-vm.mjs`
