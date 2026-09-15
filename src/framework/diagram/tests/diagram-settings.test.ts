@@ -112,6 +112,19 @@ describe('DiagramSettings', () => {
         assert.equal(DiagramSettings.ShapeDefaultFill().Color.ToHex().toLowerCase(), '#00ff00');
     });
 
+    test('OptimizeConnectorRouting defaults to true and honours an override', () => {
+        Application.current = null;
+        assert.equal(DiagramSettings.OptimizeConnectorRouting(), true);
+
+        const app = appWithSettings();
+        const settings = app.Services.getRequired(ApplicationSettings.Key);
+        DiagramSettings.OptimizeConnectorRouting();       // bind + contribute
+        // The boolean definition self-published as a Boolean-kind setting.
+        assert.ok(settings.GetSetting(DiagramSettingKey.ConnectorOptimizeRouting) !== undefined);
+        settings.Set(DiagramSettingKey.ConnectorOptimizeRouting, false);
+        assert.equal(DiagramSettings.OptimizeConnectorRouting(), false);
+    });
+
     test('exposes ruler + persistent-guide defaults', () => {
         Application.current = null;
         assert.equal(DiagramSettings.RulerThickness(), 20);

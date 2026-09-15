@@ -3,6 +3,7 @@ import { type Rect } from '../../runtime/index.js';
 import { PortSide, type Port, type ResolvedPortSide } from './port.js';
 import type { ConnectorEndpoint } from './connector-endpoint.js';
 import { ConnectorRoutingScheduler } from './connector-routing-scheduler.js';
+import { DiagramSettings } from './diagram-settings.js';
 
 // Duck-typed shape of a Connector for the side-intersection optimizer.
 // The optimizer only needs the resolved Geometry to extract a polyline and
@@ -210,6 +211,10 @@ export class SideEndpointRegistry
      *  keeps the optimiser off until the side is stable. */
     public optimizeIntersections(side: ResolvedPortSide): void
     {
+        // Master switch (Diagram · Connectors → "Optimize connector routing").
+        // OFF routes connectors directly in their current slot order — the old
+        // way, with no crossing reduction and none of the optimizer's cost.
+        if (!DiagramSettings.OptimizeConnectorRouting()) return;
         if (this._optimizing) return;
         if (this._userOrdered.has(side)) return;
         const list = this._sideEndpoints.get(side);

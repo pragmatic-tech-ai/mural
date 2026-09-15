@@ -32,6 +32,7 @@ export enum DiagramSettingKey
     ConnectorBezierMinOffset    = 'diagram.connector.bezierMinOffset',
     ConnectorSegmentJogStub     = 'diagram.connector.segmentJogStub',
     ConnectorJogMargin          = 'diagram.connector.jogMargin',
+    ConnectorOptimizeRouting    = 'diagram.connector.optimizeRouting',
 
     ChromeEndpointHandleSize    = 'diagram.chrome.endpointHandleSize',
     ChromeWaypointHandleSize    = 'diagram.chrome.waypointHandleSize',
@@ -294,6 +295,27 @@ const COLOR_SPECS: readonly DiagramColorSettingSpec[] =
 const COLOR_DEFAULTS: ReadonlyMap<DiagramSettingKey, SolidColorBrush> =
     new Map(COLOR_SPECS.map(s => [s.key, s.default]));
 
+// The boolean-valued sibling of DiagramSettingSpec — a toggle. Surfaces in a
+// settings pane as a switch (SettingKind.Boolean); no numeric bounds.
+interface DiagramBoolSettingSpec
+{
+    readonly key:         DiagramSettingKey;
+    readonly label:       string;
+    readonly description: string;
+    readonly category:    string;
+    readonly default:     boolean;
+}
+
+const BOOL_SPECS: readonly DiagramBoolSettingSpec[] =
+[
+    { key: DiagramSettingKey.ConnectorOptimizeRouting, label: 'Optimize connector routing',
+      description: 'Reorder connectors that share a node side to minimise crossings. Off routes them directly (the old way) — faster, but connectors no longer re-tidy to reduce crossings.',
+      category: CAT_CONNECTORS, default: true },
+];
+
+const BOOL_DEFAULTS: ReadonlyMap<DiagramSettingKey, boolean> =
+    new Map(BOOL_SPECS.map(s => [s.key, s.default]));
+
 // ── Theme-linked colour defaults ───────────────────────────────────────
 //
 // A colour whose DEFAULT tracks the active theme scheme rather than a fixed
@@ -319,9 +341,10 @@ const THEME_LINK: ReadonlyMap<DiagramSettingKey, ThemeLink> = new Map<DiagramSet
     [DiagramSettingKey.ChromeLayoutPreviewStroke,   { token: 'Primary' }],
 ]);
 
-// Every catalogued key, numeric + colour — the change-listener wiring binds all.
+// Every catalogued key, numeric + colour + boolean — the change-listener wiring
+// binds all.
 const ALL_KEYS: readonly DiagramSettingKey[] =
-    [...SPECS.map(s => s.key), ...COLOR_SPECS.map(s => s.key)];
+    [...SPECS.map(s => s.key), ...COLOR_SPECS.map(s => s.key), ...BOOL_SPECS.map(s => s.key)];
 
 // Static resolver for every tunable Diagram constant. Each accessor returns the
 // live value from the app's ApplicationSettings when one is reachable (and the
@@ -423,13 +446,30 @@ export class DiagramSettings
             d.Default     = THEME_LINK.has(spec.key) ? undefined : spec.default;
             return d;
         });
-        return [...numeric, ...color];
+        const bool = BOOL_SPECS.map(spec =>
+        {
+            const d = new SettingDefinition();
+            d.Key         = spec.key;
+            d.Label       = spec.label;
+            d.Description = spec.description;
+            d.Category    = spec.category;
+            d.Kind        = SettingKind.Boolean;
+            d.Default     = spec.default;
+            return d;
+        });
+        return [...numeric, ...color, ...bool];
     }
 
     private static num(key: DiagramSettingKey): number
     {
         const value = DiagramSettings.resolve()?.Get(key);
         return typeof value === 'number' ? value : DEFAULTS.get(key)!;
+    }
+
+    private static bool(key: DiagramSettingKey): boolean
+    {
+        const value = DiagramSettings.resolve()?.Get(key);
+        return typeof value === 'boolean' ? value : BOOL_DEFAULTS.get(key)!;
     }
 
     private static color(key: DiagramSettingKey): SolidColorBrush
@@ -501,6 +541,9 @@ export class DiagramSettings
     public static ConnectorBezierMinOffset(): number { return DiagramSettings.num(DiagramSettingKey.ConnectorBezierMinOffset); }
     public static ConnectorSegmentJogStub():  number { return DiagramSettings.num(DiagramSettingKey.ConnectorSegmentJogStub); }
     public static ConnectorJogMargin():       number { return DiagramSettings.num(DiagramSettingKey.ConnectorJogMargin); }
+    // Crossing optimizer master switch. ON (default) reorders connectors sharing
+    // a node side to minimise crossings; OFF routes them directly (the old way).
+    public static OptimizeConnectorRouting(): boolean { return DiagramSettings.bool(DiagramSettingKey.ConnectorOptimizeRouting); }
 
     // ── Editing chrome ───────────────────────────────────────────────────
     public static EndpointHandleSize():    number { return DiagramSettings.num(DiagramSettingKey.ChromeEndpointHandleSize); }
