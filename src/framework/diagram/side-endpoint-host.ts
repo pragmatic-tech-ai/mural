@@ -2,6 +2,7 @@ import { type Geometry, type PathGeometry, type Point } from '../../visual-engin
 import { type Rect } from '../../runtime/index.js';
 import { PortSide, type Port, type ResolvedPortSide } from './port.js';
 import type { ConnectorEndpoint } from './connector-endpoint.js';
+import { ConnectorRoutingScheduler } from './connector-routing-scheduler.js';
 
 // Duck-typed shape of a Connector for the side-intersection optimizer.
 // The optimizer only needs the resolved Geometry to extract a polyline and
@@ -142,6 +143,14 @@ export class SideEndpointRegistry
 
     public _fireSideRebalance(side: ResolvedPortSide): void
     {
+        // Routing-suspend scope: during a bulk wire, collapse the O(k) side
+        // re-route into a single dirty mark; the scheduler's flush Pass B fires
+        // one rebalance + one optimize per side. See connector-routing-scheduler.ts.
+        if (ConnectorRoutingScheduler.IsSuspended)
+        {
+            ConnectorRoutingScheduler.markSideDirty(this, side);
+            return;
+        }
         const list = this._sideEndpoints.get(side);
         if (list === undefined) return;
         // Snapshot — listener may unregister mid-fire (a rebalance can

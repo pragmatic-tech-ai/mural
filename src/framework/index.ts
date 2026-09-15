@@ -276,6 +276,7 @@ export {
 export { Connector, AnchorClip } from './diagram/connector.js';
 export { connectorCapOptions } from './diagram/caps/connector-cap-options.js';
 export { ConnectorEndpoint, type ConnectorEndpointInit } from './diagram/connector-endpoint.js';
+export { ConnectorRoutingScheduler } from './diagram/connector-routing-scheduler.js';
 export { Port, PortSide, PortCoordSpace, PortResolver, type PortInit, type IPortHost } from './diagram/port.js';
 export { ConnectorEnd, RoutingMode, type ResolvedAnchor, type RouteSpec, type IRouter, type ResolvedPortSide } from './diagram/routing/router.js';
 export {

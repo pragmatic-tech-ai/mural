@@ -27,6 +27,7 @@ import { FieldKind, resolveFields } from './shape-text-field.js';
 import { nearestTOnPolyline, pointAlongPolyline, polylineLength, splitPolylineAroundRect } from './connector-route.js';
 import { diagramSpaceRect, type SpatialNode } from './coordinate-space.js';
 import { ConnectorEndpoint } from './connector-endpoint.js';
+import { ConnectorRoutingScheduler } from './connector-routing-scheduler.js';
 import { ConnectorCapDataContext } from './caps/connector-cap-data-context.js';
 import { Figure } from './figure.js';
 import { NodeViewModel } from './node-view-model.js';
@@ -1016,6 +1017,14 @@ export class Connector extends Shape
     // first interactive demo flags a measurable cost.
     private _scheduleRecompute(): void
     {
+        // Routing-suspend scope: during a bulk wire, defer the route + the
+        // per-side crossing optimize (both hang off this method) to the
+        // scheduler's flush, which settles once. See connector-routing-scheduler.ts.
+        if (ConnectorRoutingScheduler.IsSuspended)
+        {
+            ConnectorRoutingScheduler.markConnectorDirty(this);
+            return;
+        }
         // Re-entry guard. Bake (below) writes ep.PortSide, which fires
         // OnPropertyChanged → _on*EndpointInputChanged → _scheduleRecompute
         // recursively. If we let that nested call run, it would route
@@ -1041,7 +1050,30 @@ export class Connector extends Shape
         // geometry). Re-entry is bounded: the rebalance re-enters
         // _scheduleRecompute, but the registry's `_optimizing` flag makes the
         // nested _optimizeAnchoredSides a no-op.
-        this._optimizeAnchoredSides();
+        //
+        // Skipped during the routing scheduler's flush Pass B: there the
+        // per-side optimizer drives this re-route and would otherwise re-trigger
+        // the very cascade the scheduler collapses (it optimizes each side once
+        // itself). See connector-routing-scheduler.ts.
+        if (!ConnectorRoutingScheduler.IsSuppressingOptimize) this._optimizeAnchoredSides();
+    }
+
+    // Route body only, no side optimize — the ConnectorRoutingScheduler flush's
+    // Pass A entry (§ Connector routing-suspend scope). Runs the same guarded
+    // body as _scheduleRecompute but omits _optimizeAnchoredSides; the flush's
+    // Pass B runs the optimize once per dirty side instead of once per connector.
+    public _flushRecompute(): void
+    {
+        if (this._recomputing) return;
+        this._recomputing = true;
+        try
+        {
+            this._scheduleRecomputeBody();
+        }
+        finally
+        {
+            this._recomputing = false;
+        }
     }
 
     private _scheduleRecomputeBody(): void
