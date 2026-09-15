@@ -224,7 +224,7 @@ export {
     type NodeBaseRecord,
     type SerializedNodeV2,
 } from './diagram/serialization/node-serialization.js';
-export { DiagramSettings, DiagramSettingKey } from './diagram/diagram-settings.js';
+export { DiagramSettings, DiagramSettingKey, SidePortsOptimizer } from './diagram/diagram-settings.js';
 export { ShapeText, TextPlacement, TextAutoFit, isOutsideTextPlacement, computeTextBlockAnchor, type ITextStyleTarget } from './diagram/shape-text.js';
 export {
     serializeFlowDocument, deserializeFlowDocument, cloneFlowDocument,

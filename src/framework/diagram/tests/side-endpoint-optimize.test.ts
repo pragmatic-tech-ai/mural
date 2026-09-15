@@ -8,7 +8,7 @@ import { ConnectorEndpoint } from '../connector-endpoint.js';
 import { ConnectorRoutingScheduler } from '../connector-routing-scheduler.js';
 import { ConnectorEnd } from '../routing/router.js';
 import { ApplicationSettings } from '../../shell/services/application-settings-service.js';
-import { DiagramSettings, DiagramSettingKey } from '../diagram-settings.js';
+import { DiagramSettings, DiagramSettingKey, SidePortsOptimizer } from '../diagram-settings.js';
 
 function fig(id: string, x: number, y: number): Figure {
     const f = Figure.fromKind('rectangle', x, y, { width: 120, height: 48 });
@@ -44,15 +44,15 @@ describe('SideEndpointRegistry.optimizeIntersections — barycenter ordering', (
         assert.deepEqual(slots, [0, 1, 2, 3, 4, 5], `expected far-endpoint order, got ${JSON.stringify(slots)}`);
     });
 
-    test('with "Optimize connector routing" OFF, slots stay in insertion order', () => {
-        // Same reverse-wired hub as the barycenter test, but the master switch is
-        // off — optimizeIntersections must early-return, leaving each connector on
-        // the slot it was inserted at (the old way, no crossing reduction).
+    test('the BruteForce optimizer also resolves a reverse-wired hub to a crossing-free fan', () => {
+        // Same reverse-wired hub as the barycenter test, but under the exhaustive
+        // BruteForce optimizer: the full hill-climb must drive the maximally-crossed
+        // insertion order down to the crossing-free fan (slots in far-endpoint order).
         const app = new Application();
         app.Services.register(ApplicationSettings.Key, p => new ApplicationSettings(p));
         const settings = app.Services.getRequired(ApplicationSettings.Key);
-        DiagramSettings.OptimizeConnectorRouting();          // bind + contribute
-        settings.Set(DiagramSettingKey.ConnectorOptimizeRouting, false);
+        DiagramSettings.SidePortsOptimizer();                // bind + contribute
+        settings.Set(DiagramSettingKey.ConnectorSidePortsOptimizer, SidePortsOptimizer.BruteForce);
 
         const K = 6;
         const hub = fig('hub', 1000, 0);
@@ -67,12 +67,9 @@ describe('SideEndpointRegistry.optimizeIntersections — barycenter ordering', (
             }
         });
 
-        // Spoke i was inserted at position (K-1-i); with no optimizer that IS its
-        // slot. So slots run reversed vs. the far-endpoint order — proof the
-        // optimizer never reordered.
         const slots = cons.map(c => c.GetPortSlotIndex(ConnectorEnd.Target));
         for (const s of slots) assert.ok(s !== undefined, 'connector must be side-anchored on the hub');
-        assert.deepEqual(slots, [5, 4, 3, 2, 1, 0], `expected insertion order (unoptimized), got ${JSON.stringify(slots)}`);
+        assert.deepEqual(slots, [0, 1, 2, 3, 4, 5], `expected crossing-free fan, got ${JSON.stringify(slots)}`);
     });
 
     test('a dense side (k=120) settles quickly — no O(k^4) hill-climb blowup', () => {

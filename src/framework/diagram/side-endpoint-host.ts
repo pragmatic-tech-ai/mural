@@ -3,7 +3,7 @@ import { type Rect } from '../../runtime/index.js';
 import { PortSide, type Port, type ResolvedPortSide } from './port.js';
 import type { ConnectorEndpoint } from './connector-endpoint.js';
 import { ConnectorRoutingScheduler } from './connector-routing-scheduler.js';
-import { DiagramSettings } from './diagram-settings.js';
+import { DiagramSettings, SidePortsOptimizer } from './diagram-settings.js';
 
 // Duck-typed shape of a Connector for the side-intersection optimizer.
 // The optimizer only needs the resolved Geometry to extract a polyline and
@@ -211,10 +211,6 @@ export class SideEndpointRegistry
      *  keeps the optimiser off until the side is stable. */
     public optimizeIntersections(side: ResolvedPortSide): void
     {
-        // Master switch (Diagram · Connectors → "Optimize connector routing").
-        // OFF routes connectors directly in their current slot order — the old
-        // way, with no crossing reduction and none of the optimizer's cost.
-        if (!DiagramSettings.OptimizeConnectorRouting()) return;
         if (this._optimizing) return;
         if (this._userOrdered.has(side)) return;
         const list = this._sideEndpoints.get(side);
@@ -230,10 +226,22 @@ export class SideEndpointRegistry
         this._optimizing = true;
         try
         {
-            this.barycenterOrder(side, list, owners);
-            if (list.length <= SideEndpointRegistry.HILL_CLIMB_MAX)
+            // Diagram · Connectors → "Side ports optimizer".
+            if (DiagramSettings.SidePortsOptimizer() === SidePortsOptimizer.BruteForce)
             {
+                // Exhaustive pre-optimization path: a full, ungated hill-climb from
+                // the current slot order. O(k⁴) — costly on a big side — but the
+                // hardest crossing reduction.
                 this.hillClimb(side, list, owners);
+            }
+            else
+            {
+                // Fast default: O(k log k) barycenter order + a size-gated hill-climb.
+                this.barycenterOrder(side, list, owners);
+                if (list.length <= SideEndpointRegistry.HILL_CLIMB_MAX)
+                {
+                    this.hillClimb(side, list, owners);
+                }
             }
         }
         finally

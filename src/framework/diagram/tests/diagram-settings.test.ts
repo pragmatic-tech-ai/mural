@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { Application, Color, ResourceDictionary, ThemeManager } from '../../../runtime/index.js';
 import { SolidColorBrush } from '../../../visual-engine/index.js';
 import { ApplicationSettings } from '../../shell/services/application-settings-service.js';
-import { DiagramSettings, DiagramSettingKey } from '../diagram-settings.js';
+import { DiagramSettings, DiagramSettingKey, SidePortsOptimizer } from '../diagram-settings.js';
+import { SettingKind } from '../../shell/settings/setting-definition.js';
 import { Material, MaterialLight, MaterialDark } from '../../../resources/material/material.js';
 
 // Build an Application with ApplicationSettings registered at the ROOT — the
@@ -112,17 +113,35 @@ describe('DiagramSettings', () => {
         assert.equal(DiagramSettings.ShapeDefaultFill().Color.ToHex().toLowerCase(), '#00ff00');
     });
 
-    test('OptimizeConnectorRouting defaults to true and honours an override', () => {
+    test('SidePortsOptimizer defaults to Optimized and honours an override', () => {
         Application.current = null;
-        assert.equal(DiagramSettings.OptimizeConnectorRouting(), true);
+        assert.equal(DiagramSettings.SidePortsOptimizer(), SidePortsOptimizer.Optimized);
 
         const app = appWithSettings();
         const settings = app.Services.getRequired(ApplicationSettings.Key);
-        DiagramSettings.OptimizeConnectorRouting();       // bind + contribute
-        // The boolean definition self-published as a Boolean-kind setting.
-        assert.ok(settings.GetSetting(DiagramSettingKey.ConnectorOptimizeRouting) !== undefined);
-        settings.Set(DiagramSettingKey.ConnectorOptimizeRouting, false);
-        assert.equal(DiagramSettings.OptimizeConnectorRouting(), false);
+        DiagramSettings.SidePortsOptimizer();             // bind + contribute
+        assert.ok(settings.GetSetting(DiagramSettingKey.ConnectorSidePortsOptimizer) !== undefined);
+        settings.Set(DiagramSettingKey.ConnectorSidePortsOptimizer, SidePortsOptimizer.BruteForce);
+        assert.equal(DiagramSettings.SidePortsOptimizer(), SidePortsOptimizer.BruteForce);
+    });
+
+    test('the side-ports optimizer is published as a Choice with both options', () => {
+        const def = DiagramSettings.Definitions()
+            .find(d => d.Key === DiagramSettingKey.ConnectorSidePortsOptimizer);
+        assert.ok(def !== undefined, 'definition present');
+        assert.equal(def!.Kind, SettingKind.Choice);
+        assert.equal(def!.Default, SidePortsOptimizer.Optimized);
+        assert.equal(def!.Choices?.Count, 2);
+        assert.equal(def!.Choices?.Get(0), SidePortsOptimizer.Optimized);
+        assert.equal(def!.Choices?.Get(1), SidePortsOptimizer.BruteForce);
+    });
+
+    test('an unrecognised persisted optimizer value falls back to Optimized', () => {
+        const app = appWithSettings();
+        const settings = app.Services.getRequired(ApplicationSettings.Key);
+        DiagramSettings.SidePortsOptimizer();             // bind + contribute
+        settings.Set(DiagramSettingKey.ConnectorSidePortsOptimizer, 'nonsense');
+        assert.equal(DiagramSettings.SidePortsOptimizer(), SidePortsOptimizer.Optimized);
     });
 
     test('exposes ruler + persistent-guide defaults', () => {

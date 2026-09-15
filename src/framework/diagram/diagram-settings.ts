@@ -1,4 +1,4 @@
-import { Application, Color, ThemeManager } from '../../runtime/index.js';
+import { Application, Color, ObservableCollection, ThemeManager } from '../../runtime/index.js';
 import { SolidColorBrush } from '../../visual-engine/index.js';
 import { ApplicationSettings } from '../shell/services/application-settings-service.js';
 import { SettingDefinition, SettingKind } from '../shell/settings/setting-definition.js';
@@ -32,7 +32,7 @@ export enum DiagramSettingKey
     ConnectorBezierMinOffset    = 'diagram.connector.bezierMinOffset',
     ConnectorSegmentJogStub     = 'diagram.connector.segmentJogStub',
     ConnectorJogMargin          = 'diagram.connector.jogMargin',
-    ConnectorOptimizeRouting    = 'diagram.connector.optimizeRouting',
+    ConnectorSidePortsOptimizer = 'diagram.connector.sidePortsOptimizer',
 
     ChromeEndpointHandleSize    = 'diagram.chrome.endpointHandleSize',
     ChromeWaypointHandleSize    = 'diagram.chrome.waypointHandleSize',
@@ -72,6 +72,21 @@ export enum DiagramSettingKey
     RulerFill                   = 'diagram.ruler.fill',
     RulerTickColor              = 'diagram.ruler.tickColor',
     RulerHoverFill              = 'diagram.ruler.hoverFill',
+}
+
+// Which side-port crossing optimizer the diagram runs (Diagram · Connectors →
+// "Side ports optimizer"). Stored/displayed verbatim — the settings pane renders
+// a Choice as a ComboBox of these strings — so the member values double as the
+// picker labels.
+export enum SidePortsOptimizer
+{
+    // Fast heuristic (default): O(k log k) barycenter order + a hill-climb capped
+    // to small sides. Cheap even on a 150+ connector hub.
+    Optimized  = 'Optimized',
+    // The exhaustive pre-optimization algorithm: a full, ungated O(k⁴) hill-climb
+    // that minimises crossings hardest. Costly — can hang for minutes on a large
+    // hub — and still cannot guarantee zero crossings on a non-planar graph.
+    BruteForce = 'BruteForce',
 }
 
 // One catalogue row: the schema for a tunable constant. The `default` is the
@@ -295,26 +310,29 @@ const COLOR_SPECS: readonly DiagramColorSettingSpec[] =
 const COLOR_DEFAULTS: ReadonlyMap<DiagramSettingKey, SolidColorBrush> =
     new Map(COLOR_SPECS.map(s => [s.key, s.default]));
 
-// The boolean-valued sibling of DiagramSettingSpec — a toggle. Surfaces in a
-// settings pane as a switch (SettingKind.Boolean); no numeric bounds.
-interface DiagramBoolSettingSpec
+// The choice-valued sibling of DiagramSettingSpec — a fixed option list.
+// Surfaces in a settings pane as a picker (SettingKind.Choice). `default` and the
+// `choices` entries are the verbatim option strings (enum values).
+interface DiagramChoiceSettingSpec
 {
     readonly key:         DiagramSettingKey;
     readonly label:       string;
     readonly description: string;
     readonly category:    string;
-    readonly default:     boolean;
+    readonly default:     string;
+    readonly choices:     readonly string[];
 }
 
-const BOOL_SPECS: readonly DiagramBoolSettingSpec[] =
+const CHOICE_SPECS: readonly DiagramChoiceSettingSpec[] =
 [
-    { key: DiagramSettingKey.ConnectorOptimizeRouting, label: 'Optimize connector routing',
-      description: 'Reorder connectors that share a node side to minimise crossings. Off routes them directly (the old way) — faster, but connectors no longer re-tidy to reduce crossings.',
-      category: CAT_CONNECTORS, default: true },
+    { key: DiagramSettingKey.ConnectorSidePortsOptimizer, label: 'Side ports optimizer',
+      description: 'Which optimizer orders connectors that share a node side. Optimized (default) is a fast barycenter heuristic. BruteForce runs an exhaustive crossing-minimising search — the best result, but costly: it can hang for minutes on a large hub, and still cannot guarantee zero crossings on a non-planar graph.',
+      category: CAT_CONNECTORS, default: SidePortsOptimizer.Optimized,
+      choices: [SidePortsOptimizer.Optimized, SidePortsOptimizer.BruteForce] },
 ];
 
-const BOOL_DEFAULTS: ReadonlyMap<DiagramSettingKey, boolean> =
-    new Map(BOOL_SPECS.map(s => [s.key, s.default]));
+const CHOICE_DEFAULTS: ReadonlyMap<DiagramSettingKey, string> =
+    new Map(CHOICE_SPECS.map(s => [s.key, s.default]));
 
 // ── Theme-linked colour defaults ───────────────────────────────────────
 //
@@ -341,10 +359,10 @@ const THEME_LINK: ReadonlyMap<DiagramSettingKey, ThemeLink> = new Map<DiagramSet
     [DiagramSettingKey.ChromeLayoutPreviewStroke,   { token: 'Primary' }],
 ]);
 
-// Every catalogued key, numeric + colour + boolean — the change-listener wiring
+// Every catalogued key, numeric + colour + choice — the change-listener wiring
 // binds all.
 const ALL_KEYS: readonly DiagramSettingKey[] =
-    [...SPECS.map(s => s.key), ...COLOR_SPECS.map(s => s.key), ...BOOL_SPECS.map(s => s.key)];
+    [...SPECS.map(s => s.key), ...COLOR_SPECS.map(s => s.key), ...CHOICE_SPECS.map(s => s.key)];
 
 // Static resolver for every tunable Diagram constant. Each accessor returns the
 // live value from the app's ApplicationSettings when one is reachable (and the
@@ -446,18 +464,19 @@ export class DiagramSettings
             d.Default     = THEME_LINK.has(spec.key) ? undefined : spec.default;
             return d;
         });
-        const bool = BOOL_SPECS.map(spec =>
+        const choice = CHOICE_SPECS.map(spec =>
         {
             const d = new SettingDefinition();
             d.Key         = spec.key;
             d.Label       = spec.label;
             d.Description = spec.description;
             d.Category    = spec.category;
-            d.Kind        = SettingKind.Boolean;
+            d.Kind        = SettingKind.Choice;
             d.Default     = spec.default;
+            d.Choices     = new ObservableCollection<string>([...spec.choices]);
             return d;
         });
-        return [...numeric, ...color, ...bool];
+        return [...numeric, ...color, ...choice];
     }
 
     private static num(key: DiagramSettingKey): number
@@ -466,10 +485,10 @@ export class DiagramSettings
         return typeof value === 'number' ? value : DEFAULTS.get(key)!;
     }
 
-    private static bool(key: DiagramSettingKey): boolean
+    private static choice(key: DiagramSettingKey): string
     {
         const value = DiagramSettings.resolve()?.Get(key);
-        return typeof value === 'boolean' ? value : BOOL_DEFAULTS.get(key)!;
+        return typeof value === 'string' ? value : CHOICE_DEFAULTS.get(key)!;
     }
 
     private static color(key: DiagramSettingKey): SolidColorBrush
@@ -541,9 +560,15 @@ export class DiagramSettings
     public static ConnectorBezierMinOffset(): number { return DiagramSettings.num(DiagramSettingKey.ConnectorBezierMinOffset); }
     public static ConnectorSegmentJogStub():  number { return DiagramSettings.num(DiagramSettingKey.ConnectorSegmentJogStub); }
     public static ConnectorJogMargin():       number { return DiagramSettings.num(DiagramSettingKey.ConnectorJogMargin); }
-    // Crossing optimizer master switch. ON (default) reorders connectors sharing
-    // a node side to minimise crossings; OFF routes them directly (the old way).
-    public static OptimizeConnectorRouting(): boolean { return DiagramSettings.bool(DiagramSettingKey.ConnectorOptimizeRouting); }
+    // Which side-port crossing optimizer runs. Optimized (default) is the fast
+    // barycenter heuristic; BruteForce is the exhaustive O(k⁴) hill-climb. An
+    // unrecognised persisted value falls back to Optimized.
+    public static SidePortsOptimizer(): SidePortsOptimizer
+    {
+        return DiagramSettings.choice(DiagramSettingKey.ConnectorSidePortsOptimizer) === SidePortsOptimizer.BruteForce
+            ? SidePortsOptimizer.BruteForce
+            : SidePortsOptimizer.Optimized;
+    }
 
     // ── Editing chrome ───────────────────────────────────────────────────
     public static EndpointHandleSize():    number { return DiagramSettings.num(DiagramSettingKey.ChromeEndpointHandleSize); }
