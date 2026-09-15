@@ -182,23 +182,32 @@ export class SideEndpointRegistry
         this._userOrdered.add(side);
     }
 
-    /** Re-order `side`'s endpoint slots to minimise the number of crossings
-     *  (and collinear overlaps) between the connectors that share the side.
+    // Sides larger than this skip the O(k⁴) hill-climb polish and rely on the
+    // O(k log k) barycenter order alone. The hill-climb re-routes the whole side
+    // and recounts every crossing after each of its O(k²) trial swaps, so it is
+    // O(k⁴) per side — a real 157-connector hub took tens of minutes. A dense fan
+    // also can't be meaningfully de-crossed by local swaps, so the cutoff loses
+    // nothing visible.
+    private static readonly HILL_CLIMB_MAX = 8;
+
+    /** Re-order `side`'s endpoint slots to minimise crossings (and collinear
+     *  overlaps) between the connectors that share the side.
      *
-     *  Hill-climbs on the TOTAL side crossing count: it tries every pair
-     *  swap, keeps a swap only when it STRICTLY reduces the total, and
-     *  reverts otherwise. Each tentative swap re-routes the side via
-     *  _fireSideRebalance so the crossing test reads live geometry — this is
-     *  the empirical approach, which (unlike a one-shot far-endpoint sort)
-     *  handles wrap-around / same-side routes where the crossing-free order
-     *  is NOT simply the far-endpoint order. Bounded iteration guards against
-     *  a topology (e.g. a pinned waypoint) that no ordering can fully resolve.
+     *  Two stages:
+     *   1. Barycenter order (always) — O(k log k). Sort the slots by each
+     *      connector's FAR-endpoint position along the side's distribution axis,
+     *      so routes fan out monotonically. This is the standard crossing-
+     *      reduction heuristic and the only stage that runs for dense sides.
+     *   2. Hill-climb polish (small sides only, k ≤ HILL_CLIMB_MAX) — the
+     *      empirical pair-swap search, which resolves the wrap-around / same-side
+     *      cases a monotone far-endpoint order can't. Gated by size because it is
+     *      O(k⁴) (see HILL_CLIMB_MAX).
      *
      *  Skips entirely unless EVERY connector on the side has a resolved route
      *  (defined Geometry). During load and while a host is still settling its
-     *  size, some routes are transient; measuring/mutating them then is what
-     *  let a connector be captured at a bad anchor. Requiring all routes
-     *  resolved keeps the optimiser off until the side is stable. */
+     *  size, some routes are transient; measuring/mutating them then is what let
+     *  a connector be captured at a bad anchor. Requiring all routes resolved
+     *  keeps the optimiser off until the side is stable. */
     public optimizeIntersections(side: ResolvedPortSide): void
     {
         if (this._optimizing) return;
@@ -216,42 +225,90 @@ export class SideEndpointRegistry
         this._optimizing = true;
         try
         {
-            const total = (): number =>
+            this.barycenterOrder(side, list, owners);
+            if (list.length <= SideEndpointRegistry.HILL_CLIMB_MAX)
             {
-                let n = 0;
-                for (let i = 0; i < owners.length - 1; i++)
-                    for (let j = i + 1; j < owners.length; j++)
-                        if (connectorsConflict(owners[i]!, owners[j]!)) n++;
-                return n;
-            };
-            let best = total();
-            let improved = true;
-            let iter = 0;
-            while (best > 0 && improved && iter++ < 4)
-            {
-                improved = false;
-                for (let i = 0; i < list.length - 1 && best > 0; i++)
-                {
-                    for (let j = i + 1; j < list.length && best > 0; j++)
-                    {
-                        [list[i], list[j]] = [list[j]!, list[i]!];
-                        [owners[i], owners[j]] = [owners[j]!, owners[i]!];
-                        this._fireSideRebalance(side);
-                        const after = total();
-                        if (after < best) { best = after; improved = true; }
-                        else
-                        {
-                            [list[i], list[j]] = [list[j]!, list[i]!];
-                            [owners[i], owners[j]] = [owners[j]!, owners[i]!];
-                            this._fireSideRebalance(side);
-                        }
-                    }
-                }
+                this.hillClimb(side, list, owners);
             }
         }
         finally
         {
             this._optimizing = false;
+        }
+    }
+
+    // Sort the side's slots by each connector's far-endpoint coordinate along the
+    // distribution axis (Y for E/W, X for N/S). Rewrites `list` and the parallel
+    // `owners` in place and fires one rebalance so routes take the new slots.
+    private barycenterOrder(
+        side: ResolvedPortSide,
+        list: ConnectorEndpoint[],
+        owners: ISideAnchoredConnector[],
+    ): void
+    {
+        const r = this.bounds();
+        const vertical = side === PortSide.E || side === PortSide.W;   // distributes along Y
+        // The side's perpendicular coordinate — the figure edge the near anchors
+        // sit on. Whichever polyline end is closer to it is the near anchor, so
+        // the other is the far endpoint used as the sort key.
+        const line = side === PortSide.W ? r.X
+            : side === PortSide.E ? r.X + r.Width
+            : side === PortSide.N ? r.Y
+            : r.Y + r.Height;
+        const keyed = list.map((ep, i) => ({ ep, owner: owners[i]!, key: farAxisCoord(owners[i]!, vertical, line) }));
+        keyed.sort((a, b) => a.key - b.key);
+        let changed = false;
+        for (let i = 0; i < keyed.length; i++)
+        {
+            if (list[i] !== keyed[i]!.ep) changed = true;
+            list[i] = keyed[i]!.ep;
+            owners[i] = keyed[i]!.owner;
+        }
+        if (changed) this._fireSideRebalance(side);
+    }
+
+    // Empirical pair-swap crossing minimiser — the small-side polish. Tries every
+    // pair swap, keeps one only when it STRICTLY reduces the live crossing count,
+    // reverts otherwise. Each tentative swap re-routes the side via
+    // _fireSideRebalance so the count reads live geometry. Bounded iteration
+    // guards a topology no ordering can fully resolve.
+    private hillClimb(
+        side: ResolvedPortSide,
+        list: ConnectorEndpoint[],
+        owners: ISideAnchoredConnector[],
+    ): void
+    {
+        const total = (): number =>
+        {
+            let n = 0;
+            for (let i = 0; i < owners.length - 1; i++)
+                for (let j = i + 1; j < owners.length; j++)
+                    if (connectorsConflict(owners[i]!, owners[j]!)) n++;
+            return n;
+        };
+        let best = total();
+        let improved = true;
+        let iter = 0;
+        while (best > 0 && improved && iter++ < 4)
+        {
+            improved = false;
+            for (let i = 0; i < list.length - 1 && best > 0; i++)
+            {
+                for (let j = i + 1; j < list.length && best > 0; j++)
+                {
+                    [list[i], list[j]] = [list[j]!, list[i]!];
+                    [owners[i], owners[j]] = [owners[j]!, owners[i]!];
+                    this._fireSideRebalance(side);
+                    const after = total();
+                    if (after < best) { best = after; improved = true; }
+                    else
+                    {
+                        [list[i], list[j]] = [list[j]!, list[i]!];
+                        [owners[i], owners[j]] = [owners[j]!, owners[i]!];
+                        this._fireSideRebalance(side);
+                    }
+                }
+            }
         }
     }
 }
@@ -335,6 +392,23 @@ function segmentsOverlap(
     const lo = Math.max(Math.min(a1, b1), Math.min(c1, d1));
     const hi = Math.min(Math.max(a1, b1), Math.max(c1, d1));
     return hi - lo > EPS;
+}
+
+// The far endpoint's coordinate along the side's distribution axis, used as the
+// barycenter sort key. `vertical` = E/W side (distributes along Y; perpendicular
+// axis is X); `line` = the side's perpendicular coordinate (the figure edge the
+// NEAR anchor sits on). Whichever polyline end is farther from `line` on the
+// perpendicular axis is the far endpoint; return its distribution-axis coord.
+function farAxisCoord(owner: ISideAnchoredConnector, vertical: boolean, line: number): number
+{
+    const poly = polylineOf(owner.Geometry);
+    if (poly.length < 2) return 0;
+    const a = poly[0]!;
+    const b = poly[poly.length - 1]!;
+    const perpA = vertical ? a.x : a.y;
+    const perpB = vertical ? b.x : b.y;
+    const far = Math.abs(perpA - line) >= Math.abs(perpB - line) ? a : b;
+    return vertical ? far.y : far.x;
 }
 
 // Extract a flat sequence of points from a PathGeometry. The orthogonal
