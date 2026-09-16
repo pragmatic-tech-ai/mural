@@ -16,7 +16,7 @@
 
 import { readFileSync } from 'node:fs';
 import { isAbsolute, resolve } from 'node:path';
-import opentype from 'opentype.js';
+import * as opentype from 'opentype.js/dist/opentype.mjs';
 
 import type { GlyphResolver, IncludeResolution } from '../compiler/compiler.js';
 import { glyphOutlineToGeometry } from '../visual-engine/index.js';

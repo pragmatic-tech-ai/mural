@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { writeFileSync, rmSync, mkdtempSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import opentype from 'opentype.js';
+import * as opentype from 'opentype.js/dist/opentype.mjs';
 
 import { makeGlyphResolver } from '../font-glyph-geometry.js';
 

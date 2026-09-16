@@ -23,7 +23,7 @@
 // centering ("startOffset = (totalLen - textWidth) / 2") or trailing
 // the path's end.
 
-import type opentype from 'opentype.js';
+import type * as opentype from 'opentype.js/dist/opentype.mjs';
 
 import { Point } from '../primitives.js';
 import {

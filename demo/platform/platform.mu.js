@@ -21,12 +21,12 @@ export const app = (() => {
     _app0.initialize({ theme: Material, scheme: MaterialLight });
     _app0.Services.register(ServiceProvider.tokenFor(DiagramStorageKey), (p) => new DemoStorageStore(p), 'singleton');
     _app0.Services.register(ServiceProvider.tokenFor(ContentHostService), (p) => new ContentHostService(p), 'singleton');
-    _app0.Modules.Add(AnimationsModule);
-    _app0.Modules.Add(ControlsModule);
-    _app0.Modules.Add(DemosModule);
-    _app0.Modules.Add(PatternsModule);
-    _app0.Modules.Add(StylesModule);
-    _app0.Modules.Add(ShapeLibraryModule);
+    _app0.AddModule(AnimationsModule);
+    _app0.AddModule(ControlsModule);
+    _app0.AddModule(DemosModule);
+    _app0.AddModule(PatternsModule);
+    _app0.AddModule(StylesModule);
+    _app0.AddModule(ShapeLibraryModule);
     const _rd1 = _app0.Resources;
     for (const [_k, _v] of DemoPlatformIcons.Clone().Entries()) _rd1.Set(_k, _v);
     for (const [_k, _v] of Icons.Clone().Entries()) _rd1.Set(_k, _v);

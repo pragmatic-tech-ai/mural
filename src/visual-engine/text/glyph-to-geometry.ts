@@ -15,7 +15,7 @@
 //   { type: 'C', x1, y1, x2, y2, x, y } — cubicTo
 //   { type: 'Z' }                  — close
 
-import type opentype from 'opentype.js';
+import type * as opentype from 'opentype.js/dist/opentype.mjs';
 
 import { Point } from '../primitives.js';
 import {

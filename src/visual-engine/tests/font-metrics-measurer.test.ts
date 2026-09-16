@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import opentype from 'opentype.js';
+import * as opentype from 'opentype.js/dist/opentype.mjs';
 import { FontMetricsMeasurer } from '../index.js';
 
 // Builds a tiny, valid TTF in memory using opentype.js's Font

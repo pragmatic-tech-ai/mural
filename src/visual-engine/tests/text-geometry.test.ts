@@ -14,7 +14,7 @@
 
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
-import opentype from 'opentype.js';
+import * as opentype from 'opentype.js/dist/opentype.mjs';
 
 import { FontMetricsMeasurer } from '../text/font-metrics-measurer.js';
 import { textOnPath } from '../text/text-on-path.js';
