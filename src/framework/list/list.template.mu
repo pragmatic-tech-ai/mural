@@ -139,7 +139,17 @@ resources Lists {
                   CornerRadius    = @ShapeExtraSmall,
                   Effect          = @Elevation2,
                   Padding         = (@Spacing0,@Spacing1,@Spacing0,@Spacing1) ] {
-                ComboBoxItemList x:name="PART_PopupList"
+                // A default height cap so a long item list scrolls inside the
+                // popup instead of growing to fill (and overrunning) the screen.
+                // MaxHeight clamps the ScrollViewer's desired height; the SCP
+                // measures the item list unbounded, so an overflowing list gets a
+                // vertical scrollbar while a short one still sizes to content.
+                // Horizontal scroll is off — the popup already matches the
+                // selection-box width. Authors can override MaxHeight per instance.
+                ScrollViewer x:name="PART_PopupScroll"
+                    [ MaxHeight = 320, HorizontalScrollEnabled = false ] {
+                    ComboBoxItemList x:name="PART_PopupList"
+                }
             }
         }
 

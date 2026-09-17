@@ -3,10 +3,9 @@ import assert from 'node:assert/strict';
 import { initTestApp } from '../../../basic/tests/test-app.js';
 
 import { Application, NoModifiers, PointerButton, Panel, Size, Rect, Visual, type PointerEventInit } from '../../../runtime/index.js';
-import { InputManager } from '../../../framework/index.js';;
+import { InputManager, ScrollViewer } from '../../../framework/index.js';;
 import { HeadlessTarget } from '../../../visual-engine/index.js';
 import { ComboBox } from '../combo-box.js';
-import { Border } from '../../../basic/border.js';
 import { StackPanel } from '../../../basic/panels/stack-panel.js';
 import { Orientation } from '../../../basic/panels/orientation.js';
 import { TextBlock } from '../../../basic/text-block.js';
@@ -119,12 +118,12 @@ function mountInTarget(cb: ComboBox): HeadlessTarget {
 //                         └─ item containers (ClickableBorder…)
 function popupItems(target: HeadlessTarget): readonly Visual[] {
     const overlay = target.OverlayRoot!;
-    const popupHost = overlay.visualChildren[0]!;
-    const popup = popupHost.visualChildren[1] as Border;
-    // popup → ComboBoxItemList → items panel (StackPanel) → rows.
-    // The ItemsControl layer is the post-refactor change; previously
-    // the popup hosted a plain StackPanel directly.
-    const popupList   = popup.visualChildren[0]!;
+    const popupHost = overlay.visualChildren[0] as unknown as { FindName(n: string): Visual | undefined };
+    // popup → ScrollViewer → ComboBoxItemList → items panel (StackPanel) → rows.
+    // The item list is now wrapped in a ScrollViewer (a default MaxHeight cap so
+    // long lists scroll instead of filling the screen), so resolve PART_PopupList
+    // by name rather than index-walking through the scroll chrome.
+    const popupList   = popupHost.FindName('PART_PopupList')!;
     const stack       = popupList.visualChildren[0] as StackPanel;
     return stack.visualChildren;
 }
@@ -246,5 +245,29 @@ describe('ComboBox — popup behaviour', () => {
         im.InjectPointerDown(scrim, pointer());
         im.InjectPointerUp  (scrim, pointer());
         assert.equal(cb.IsDropDownOpen, false);
+    });
+
+    test('popup caps its height so a long item list scrolls instead of filling the screen', () => {
+        const cb = new ComboBox();
+        cb.Items = Array.from({ length: 40 }, (_, i) => `Item ${i}`);
+        // A target taller than the default cap, so the cap (not the screen) is
+        // what bounds the popup — the whole point of the MaxHeight.
+        const root = new Root();
+        root.AddChild(cb);
+        const target = new HeadlessTarget(400, 1000);
+        target.Content = root;
+        target.Flush();
+        cb.IsDropDownOpen = true;
+        target.Flush();
+
+        const popupHost = target.OverlayRoot!.visualChildren[0] as unknown as { FindName(n: string): Visual | undefined };
+        const scroll = popupHost.FindName('PART_PopupScroll') as ScrollViewer;
+        assert.notEqual(scroll, undefined, 'the popup wraps its items in a ScrollViewer');
+        assert.equal(scroll.HorizontalScrollEnabled, false, 'horizontal scroll is off');
+        assert.ok(Number.isFinite(scroll.MaxHeight), 'a finite default MaxHeight caps the popup');
+        // The 40-row list overflows the cap: the viewport stays within MaxHeight
+        // (not the 1000px screen) while the extent runs well past it — so it scrolls.
+        assert.ok(scroll.ViewportHeight <= scroll.MaxHeight + 0.5, 'viewport height is capped at MaxHeight');
+        assert.ok(scroll.ExtentHeight > scroll.ViewportHeight, 'a long list extends beyond the viewport (scrollable)');
     });
 });
