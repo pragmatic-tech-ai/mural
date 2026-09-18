@@ -1,9 +1,8 @@
 import { ResourceDictionary, type ResourceKey } from './resource-dictionary.js';
 import { ServiceProvider } from '@pragmatic-tech-ai/todl-runtime';
 import { ApplicationService } from './services/application-service.js';
-import { ObservableCollection } from './observable-collection.js';
-import { CompositionRoot, type HostKind, type IModule } from '@pragmatic-tech-ai/todl-runtime';
-import type { IShellModule } from './shell-modules.js';
+import { type HostKind } from '@pragmatic-tech-ai/todl-runtime';
+import { ShellCompositionRoot } from './shell-composition-root.js';
 import type { Visual } from '../visual-engine/visual.js';
 
 /** Theme class accepted by Application.initialize. Any subclass of
@@ -96,7 +95,7 @@ export interface MountableTarget
     Content: Visual | undefined;
 }
 
-export class Application extends CompositionRoot
+export class Application extends ShellCompositionRoot
 {
     // Ambient singleton — last constructed instance wins. Cleared
     // explicitly by tests that need isolation.
@@ -121,12 +120,9 @@ export class Application extends CompositionRoot
 
     public readonly Resources: ResourceDictionary = new ResourceDictionary();
 
-    // Modules composed onto the shell via a `.modules:` block on the
-    // Application (a sibling of `resources:`). Held as the runtime
-    // IShellModule contract so runtime doesn't depend on the framework where
-    // the concrete ShellModule lives; the shell's NavigationService flattens
-    // their capabilities into the root navigation layer.
-    public readonly Modules: ObservableCollection<IShellModule> = new ObservableCollection<IShellModule>();
+    // `Modules` (the composed IShellModule collection) is inherited from
+    // ShellCompositionRoot — the shell's NavigationService flattens their
+    // capabilities into the root navigation layer.
 
     // The module dictionaries this Application has merged into `Resources`.
     // Tracked so a reconcile pass can tell module-contributed merged dicts
@@ -166,50 +162,22 @@ export class Application extends CompositionRoot
         // existed (module-const DynamicResources) so they re-wire to this
         // app's Resources. Snapshot the set: listeners unsubscribe themselves.
         for (const listener of [...Application._currentListeners]) listener();
-        // A module contributes its resources app-global: whenever `Modules`
-        // changes (the `.modules:` block emits `Modules.Add(...)`), reconcile
-        // the merged module dictionaries into `Resources`. Subscribing once and
-        // reconciling from scratch handles add / remove / replace / move /
-        // clear uniformly — the `cleared` event carries no items, so a
-        // diff-from-current-contents pass is the only correct shape.
-        this.Modules.Subscribe(() => {
-            this.reconcileModuleResources();
-            this.registerModuleServices();
-        });
+        // Module-service registration on `Modules` change is inherited from
+        // ShellCompositionRoot (subscribed in its ctor). This class extends the
+        // hook via `onModulesChanged` to also merge module resources.
     }
 
-    // Modules already composed into `Services` — so a module's registrations
-    // are replayed exactly once, even though the subscription fires on every
-    // Modules change. Registration is add-only: `ServiceProvider` exposes no
-    // un-register, and the module's services are singletons on the root, so a
-    // removed module's registrations linger harmlessly (nothing resolves their
-    // tokens once its capabilities leave the navigation layer).
-    private readonly _servicedModules = new Set<IShellModule>();
-
-    // Compose one admitted module (CompositionRoot calls this only for modules
-    // this host's kind admits). Route it through `Modules`, whose subscription
-    // reconciles resources and registers services. Deliberately does NOT call
-    // super — the subscription already registers into the same provider, so
-    // calling super too would double-register.
-    protected override ComposeModule(module: IModule): void
+    // A module contributes its resources app-global: whenever `Modules` changes
+    // (the `.modules:` block emits `Modules.Add(...)`), reconcile the merged
+    // module dictionaries into `Resources` FIRST, then let the base register the
+    // module's services — preserving the historical resources-before-services
+    // order. Reconciling from scratch handles add / remove / replace / move /
+    // clear uniformly; the `cleared` event carries no items, so a
+    // diff-from-current-contents pass is the only correct shape.
+    protected override onModulesChanged(): void
     {
-        this.Modules.Add(module as IShellModule);
-    }
-
-    // Replay each newly-added module's declared service registrations into the
-    // root `Services` provider (the module's "register services" seam). Guarded
-    // by `HasServiceRegistrations` so a module that contributes none does NOT
-    // realize the lazy provider — apps that never touch services still pay
-    // nothing.
-    private registerModuleServices(): void
-    {
-        for (const m of this.Modules)
-        {
-            if (this._servicedModules.has(m)) continue;
-            this._servicedModules.add(m);
-            if (!m.HasServiceRegistrations) continue;
-            m.RegisterServices(this.Services);
-        }
+        this.reconcileModuleResources();
+        super.onModulesChanged();
     }
 
     // Sync `Resources`' module-contributed merged dictionaries to the current

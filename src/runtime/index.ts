@@ -115,6 +115,9 @@ export { ApplicationService, type IApplicationService } from './services/applica
 // Composition (HostKind + IModule + CompositionRoot) lives in todl-runtime;
 // re-exported here so `@pragmatic-tech-ai/mural/runtime` consumers are unchanged.
 export { HostKind, CompositionRoot, type IModule } from '@pragmatic-tech-ai/todl-runtime';
+// A CompositionRoot that routes shell modules (IShellModule) into `Modules` and
+// plain IModules straight through the base — the seam Application extends.
+export { ShellCompositionRoot } from './shell-composition-root.js';
 export { type ISettingSource, type ISettingReArmable, SettingSourceKey, SettingSourceAvailability } from './services/setting-source.js';
 // InputManager moved to `mural/framework`.
 // RoutedCommand / CommandBinding / CommandManager / InputBinding /
