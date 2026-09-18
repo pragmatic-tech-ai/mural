@@ -6,7 +6,7 @@ import AnimationDeclarativeDemo from "../../demos/animation-declarative/animatio
 import AnimationNamedDemo from "../../demos/animation-named/animation-named.mu.js"
 import AnimationTriggersDemo from "../../demos/animation-triggers/animation-triggers.mu.js"
 
-module AnimationsModule [ Name = "Animation" ] {
+shell module AnimationsModule [ Name = "Animation" ] {
     .services: {
         AnimationsService
     }

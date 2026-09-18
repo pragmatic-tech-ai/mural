@@ -66,7 +66,7 @@ describe('formatter — invariants across constructs', () =>
         'def macro': `def Card[#1, #bg: Brush = @Surface] {\nBorder [ Fill = #bg ] { }\n}\n`,
         'theme + scheme': `theme T {\nschemes: [Light, Dark]\ndefaultScheme: Light\ntokens {\n@Primary : Brush "brand"\n@Space1..@Space3 : number "scale"\n}\n}\nscheme Light against T {\n@Primary = #fff\n}\n`,
         'services block': `Application {\n.services: {\nFooService -> IFoo\nscoped BarService { Seed: 3 }\n}\n}\n`,
-        'module form': `module Diagram [ Name = "Diagram" ] {\nCapability [ Name = "Shapes" ] { }\n}\n`,
+        'shell module form': `shell module Diagram [ Name = "Diagram" ] {\nCapability [ Name = "Shapes" ] { }\n}\n`,
         'module form no body': `module Empty\n`,
         'merge form in a dictionary': `resources D {\nmerge Icons\n@A = #111\n}\n`,
         'modules block': `Application {\n.modules: {\nDiagram\nLayers\n}\n}\n`,
@@ -83,15 +83,15 @@ describe('formatter — verify guard (no silent data loss)', () =>
 {
     test('module form is not dropped (would print to nothing before the printer case)', () =>
     {
-        const src = `module Diagram [ Name = "Diagram" ] {\nCapability [ Name = "Shapes" ] { }\n}\n`;
+        const src = `shell module Diagram [ Name = "Diagram" ] {\nCapability [ Name = "Shapes" ] { }\n}\n`;
         const out = format(src);
-        assert.match(out, /module Diagram/);
+        assert.match(out, /shell module Diagram/);
         assert.match(out, /Capability \[ Name = "Shapes" \]/);
     });
 
     test('verify accepts output that round-trips', () =>
     {
-        const src = `module Diagram {\nCapability [ Name = "Shapes" ] { }\n}\n`;
+        const src = `shell module Diagram {\nCapability [ Name = "Shapes" ] { }\n}\n`;
         // Must not throw now that the printer handles module-form.
         assert.equal(format(src, { verify: true }), format(src));
     });

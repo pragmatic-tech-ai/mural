@@ -34,7 +34,7 @@ import ToolBarDemo from "../../demos/tool-bar/tool-bar.mu.js"
 import TopAppBarDemo from "../../demos/top-app-bar/top-app-bar.mu.js"
 import TreeViewDemo from "../../demos/tree-view/tree-view.mu.js"
 
-module ControlsModule [ Name = "Controls" ] {
+shell module ControlsModule [ Name = "Controls" ] {
     .services: {
         ControlsService
     }

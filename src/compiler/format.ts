@@ -260,13 +260,15 @@ class Printer
         }
     }
 
-    // `module Name [attrs] { Capability … }` — reprinted by reusing the
-    // element printer on the synthetic ShellModule root, with the type name
-    // swapped for the `module Name` keyword head. The root's attrs/body then
-    // wrap and indent exactly like any element.
+    // `module Name [attrs] { … }` / `shell module Name [attrs] { Capability … }` —
+    // reprinted by reusing the element printer on the synthetic module root, with
+    // the type name swapped for the keyword head. The root's synthesized type
+    // (`ShellModule` vs the headless `Module`) selects the `shell module` / `module`
+    // keyword; the root's attrs/body then wrap and indent exactly like any element.
     private printModuleForm(form: ModuleForm, level: number): void
     {
-        this.printElement({ ...form.root, name: `module ${form.exportName}` }, level);
+        const keyword = form.root.name === 'ShellModule' ? 'shell module' : 'module';
+        this.printElement({ ...form.root, name: `${keyword} ${form.exportName}` }, level);
     }
 
     private printImport(form: ImportForm, level: number): void

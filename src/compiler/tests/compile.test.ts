@@ -1024,8 +1024,8 @@ describe('compile — ShellModule (module declaration)', () => {
     });
 });
 
-describe('compile — module NAME form', () => {
-    const src = `module DiagramModule[Name="Diagram"]{ Capability[Name="Shapes"] }`;
+describe('compile — shell module NAME form', () => {
+    const src = `shell module DiagramModule[Name="Diagram"]{ Capability[Name="Shapes"] }`;
 
     test('exports `const NAME` as an IIFE building the ShellModule', () => {
         const js = emitted(src);
@@ -1037,7 +1037,7 @@ describe('compile — module NAME form', () => {
     });
 
     test('a module file cannot also contain another top-level form', () => {
-        assert.throws(() => emitted(`module M{} Border{}`), /cannot also contain/);
+        assert.throws(() => emitted(`shell module M{} Border{}`), /cannot also contain/);
     });
 
     test('`merge Alias` in the app resources folds an imported dictionary in', () => {
@@ -1055,7 +1055,7 @@ describe('compile — module NAME form', () => {
         // element-resources slot lowers onto `<shellModule>.Resources`, which
         // the Application merges app-global when the module is added.
         const js = emitted(
-            `module DiagramModule { resources: { @ModIcon = #ff0000 } Capability[Name="Shapes"]{} }`);
+            `shell module DiagramModule { resources: { @ModIcon = #ff0000 } Capability[Name="Shapes"]{} }`);
         assert.match(js, /const _rd\d+ = _shellModule\d+\.Resources;/);
         assert.match(js, /_rd\d+\.Set\("ModIcon",/);
     });
@@ -1067,7 +1067,7 @@ describe('compile — module NAME form', () => {
         // the module is composed. A Capability's ServiceKey then references one
         // of these tokens.
         const js = emitted(
-            `module DiagramModule {
+            `shell module DiagramModule {
                 .services: { StatusService  scoped NavigationService }
                 Capability[Name="Shapes", ServiceKey=StatusService]
              }`);
@@ -1082,7 +1082,7 @@ describe('compile — module NAME form', () => {
         // / `.modules:`) remaps to the PascalCase `Settings` property. `Kind =
         // Boolean` resolves to the SettingKind enum member.
         const js = emitted(
-            `module DiagramModule {
+            `shell module DiagramModule {
                 .settings: {
                     SettingDefinition[Key="diagram.grid.snap", Label="Snap to grid", Kind=Boolean, Default=true]
                 }
@@ -1113,13 +1113,39 @@ describe('compile — .modules: block on Application', () => {
 
 describe('compile — .targets: block in a module body', () => {
     test('lowers each entry to module.AddTarget(...)', () => {
+        // A targets-only module has no shell contributions → a plain Module.
         const js = emitted(`
             import Desktop from "./host-kinds.js"
             import Web from "./host-kinds.js"
             module DiagramModule { .targets: { Desktop Web } }
         `);
-        assert.match(js, /_shellModule\d+\.AddTarget\(Desktop\);/);
-        assert.match(js, /_shellModule\d+\.AddTarget\(Web\);/);
+        assert.match(js, /_module\d+\.AddTarget\(Desktop\);/);
+        assert.match(js, /_module\d+\.AddTarget\(Web\);/);
+    });
+});
+
+describe('compile — plain module NAME form', () => {
+    test('a services-only module lowers to a headless Module + AddRegistration', () => {
+        const js = emitted(`module EngineModule { .services: { StatusService  scoped NavigationService } }`);
+        assert.match(js, /export const EngineModule = \(\(\) => \{/);
+        assert.match(js, /const _module\d+ = new Module\(\);/);
+        assert.match(js, /_module\d+\.AddRegistration\(ServiceProvider\.tokenFor\(StatusService\), \(p\) => new StatusService\(p\), 'singleton'\);/);
+        assert.match(js, /_module\d+\.AddRegistration\(ServiceProvider\.tokenFor\(NavigationService\), \(p\) => new NavigationService\(p\), 'scoped'\);/);
+        assert.match(js, /return _module\d+;/);
+    });
+
+    test('the plain Module is imported from mural/runtime (no framework import)', () => {
+        const js = emitted(`module EngineModule { .services: { StatusService } }`);
+        assert.match(js, /import \{[^}]*\bModule\b[^}]*\} from "@pragmatic-tech-ai\/mural\/runtime";/);
+        assert.doesNotMatch(js, /ShellModule/);
+        assert.doesNotMatch(js, /shell\/module\.js/);
+    });
+
+    test('a plain module rejects a Capability child — points at `shell module`', () => {
+        assert.throws(
+            () => emitted(`module EngineModule { .services: { StatusService } Capability[Name="X"] }`),
+            /shell module/,
+        );
     });
 });
 

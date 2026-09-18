@@ -3514,15 +3514,16 @@ export class Compiler
             }
             if (item.kind === 'services-block')
             {
-                if (parentClass === 'ShellModule')
+                if (parentClass === 'ShellModule' || parentClass === 'Module')
                 {
-                    // `.services:` inside a `module { … }` body: the module has
-                    // no live provider — it RECORDS each registration
-                    // (AddRegistration) and replays them into the app root when
-                    // it is composed onto Application.Modules
-                    // (Application.registerModuleServices). This is the module's
-                    // "register services" seam; a Capability's `ServiceKey` then
-                    // references one of these registered tokens.
+                    // `.services:` inside a `module { … }` / `shell module { … }`
+                    // body: the module has no live provider — it RECORDS each
+                    // registration (AddRegistration) and replays them into the app
+                    // root when composed (a ShellModule via
+                    // ShellCompositionRoot.registerModuleServices; a plain Module
+                    // via CompositionRoot's straight-through ComposeModule). This is
+                    // the module's "register services" seam; a Capability's
+                    // `ServiceKey` then references one of these registered tokens.
                     this.compileModuleServicesBlock(parentVar, item);
                     continue;
                 }
@@ -3982,6 +3983,16 @@ export class Compiler
     {
         if (slot === undefined)
         {
+            if (parentClass === 'Module')
+            {
+                // A plain `module NAME { … }` lowers to a headless Module, which
+                // has no capabilities slot. A capability-bearing module must be a
+                // `shell module NAME { … }` (→ ShellModule).
+                throw new EmitError(
+                    'a plain `module` cannot declare capabilities or content — '
+                    + 'use `shell module NAME { … }` for a capability-bearing module',
+                    span);
+            }
             throw new EmitError(
                 `${parentClass} has no default-slot info — cannot receive a child`,
                 span);

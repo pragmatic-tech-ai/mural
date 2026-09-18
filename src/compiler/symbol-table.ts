@@ -116,6 +116,11 @@ const ENTRIES: ReadonlyArray<readonly [string, string]> = [
     ['ShellSideContentPane',    '@pragmatic-tech-ai/mural/framework/shell/shell-side-content-pane.js'],
     ['PanelButton',             '@pragmatic-tech-ai/mural/framework/shell/panel-button.js'],
     ['ShellModule',             '@pragmatic-tech-ai/mural/framework/shell/module.js'],
+    // The headless module base a plain `module NAME { … }` lowers to — from
+    // mural/runtime (re-exported from todl-runtime), so a module with only
+    // `.services:` needs no framework import. `shell module NAME { … }` lowers to
+    // the ShellModule above instead.
+    ['Module',                  '@pragmatic-tech-ai/mural/runtime'],
     ['Capability',              '@pragmatic-tech-ai/mural/framework/shell/module.js'],
     ['RailAction',              '@pragmatic-tech-ai/mural/framework/shell/rail-action.js'],
     ['SettingDefinition',       '@pragmatic-tech-ai/mural/framework/shell/settings/setting-definition.js'],

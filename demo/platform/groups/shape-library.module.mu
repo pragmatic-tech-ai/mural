@@ -3,7 +3,7 @@
 import ShapeLibraryService from "./shape-library-service.mjs"
 import ShapesDemo from "../../demos/shapes/shapes.mu.js"
 
-module ShapeLibraryModule [ Name = "Shape library" ] {
+shell module ShapeLibraryModule [ Name = "Shape library" ] {
     .services: {
         ShapeLibraryService
     }

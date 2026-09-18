@@ -17,7 +17,7 @@ import TextFormatDemo from "../../demos/text-format/text-format.mu.js"
 import TextOnPathDemo from "../../demos/text-on-path/text-on-path.mu.js"
 import WordToolboxDemo from "../../demos/word-toolbox/word-toolbox.mu.js"
 
-module DemosModule [ Name = "Demos" ] {
+shell module DemosModule [ Name = "Demos" ] {
     .services: {
         DemosService
     }

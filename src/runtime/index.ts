@@ -114,7 +114,7 @@ export { ApplicationService, type IApplicationService } from './services/applica
 // + HostKind). Application extends CompositionRoot.
 // Composition (HostKind + IModule + CompositionRoot) lives in todl-runtime;
 // re-exported here so `@pragmatic-tech-ai/mural/runtime` consumers are unchanged.
-export { HostKind, CompositionRoot, type IModule } from '@pragmatic-tech-ai/todl-runtime';
+export { HostKind, CompositionRoot, Module, type IModule } from '@pragmatic-tech-ai/todl-runtime';
 // A CompositionRoot that routes shell modules (IShellModule) into `Modules` and
 // plain IModules straight through the base — the seam Application extends.
 export { ShellCompositionRoot } from './shell-composition-root.js';

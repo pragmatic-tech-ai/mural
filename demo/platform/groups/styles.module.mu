@@ -3,7 +3,7 @@
 import StylesService from "./styles-service.mjs"
 import DashboardDemo from "../../demos/dashboard/dashboard.mu.js"
 
-module StylesModule [ Name = "Styles & Triggers" ] {
+shell module StylesModule [ Name = "Styles & Triggers" ] {
     .services: {
         StylesService
     }

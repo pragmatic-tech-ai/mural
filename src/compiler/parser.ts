@@ -210,7 +210,16 @@ export class Parser
                 case 'resources':    return this.parseResourcesBlock();
                 case 'theme':        return this.parseThemeBlock();
                 case 'scheme':       return this.parseSchemeBlock();
-                case 'module':       return this.parseModuleForm();
+                case 'module':       return this.parseModuleForm(false);
+                case 'shell':
+                    // `shell module NAME { … }` — the UI-flavored ShellModule.
+                    // Only claim the `shell` keyword when `module` follows;
+                    // otherwise fall through so a stray identifier errors normally.
+                    if (this.peek(1).kind === TokenKind.Ident && this.peek(1).value === 'module')
+                    {
+                        return this.parseModuleForm(true);
+                    }
+                    return this.parseElement();
                 case 'Style':
                 case 'Template':
                 case 'DataTemplate':
@@ -261,15 +270,21 @@ export class Parser
         };
     }
 
-    // `module Identifier [attrs] { Capability … }` — a named ShellModule.
-    // After the identifier, the remainder parses exactly like a ShellModule
-    // element (implicit type): an optional `[ … ]` attribute block then an
-    // optional `{ … }` body of Capability children. Emits `export const
-    // Identifier = (() => { … })()`.
-    private parseModuleForm(): ModuleForm
+    // `module Identifier [attrs] { … }` — a named module. Two flavors:
+    //   • `module NAME { .services: … }`        → a headless `Module` (plain
+    //       IModule): only `.services:` / `.targets:`, no UI contributions.
+    //   • `shell module NAME { Capability … }`  → a `ShellModule`: capabilities,
+    //       resources, and the shell contributions the Application aggregates.
+    // After the identifier, the remainder parses identically for both (an
+    // optional `[ … ]` attribute block then an optional `{ … }` body); only the
+    // synthesized root element type differs, so the compiler reuses the ordinary
+    // element pipeline (attrs → property sets, children → AddChild). Emits
+    // `export const Identifier = (() => { … })()`.
+    private parseModuleForm(isShell: boolean): ModuleForm
     {
-        const head       = this.expectIdent('module');
+        const head       = isShell ? this.expectIdent('shell') : this.expectIdent('module');
         const start      = head.span.start;
+        if (isShell) this.expectIdent('module');
         const exportName = this.expect(TokenKind.Ident).value;
 
         const attrs: Attribute[] = [];
@@ -288,12 +303,12 @@ export class Parser
         }
         const end = this.lastEnd();
         const span = this.span(start, end);
-        // Synthesize the implicit ShellModule element the body describes, so
-        // the compiler reuses the ordinary element pipeline (attrs → property
-        // sets, children → AddChild).
+        // Synthesize the implicit module element the body describes. A plain
+        // `module` lowers to a headless `Module` (no content slot, so it accepts
+        // no Capability children); a `shell module` lowers to `ShellModule`.
         const root: ElementNode = {
             kind: 'element',
-            name: 'ShellModule',
+            name: isShell ? 'ShellModule' : 'Module',
             xAttrs: [],
             attrs,
             body,

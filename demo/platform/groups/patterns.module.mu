@@ -3,7 +3,7 @@
 import PatternsService from "./patterns-service.mjs"
 import CounterDemo from "../../demos/counter/counter.mu.js"
 
-module PatternsModule [ Name = "Patterns" ] {
+shell module PatternsModule [ Name = "Patterns" ] {
     .services: {
         PatternsService
     }
