@@ -82,7 +82,6 @@ import type { Geometry } from '../../visual-engine/index.js';
 import { SettingDefinition } from './settings/setting-definition.js';
 import { DocumentDefinition } from './documents/document-definition.js';
 import { CommandDefinition } from './commands/command-definition.js';
-import { ProjectFactoryDefinition } from './projects/project-factory-definition.js';
 import { ShellControlDefinition } from './commands/shell-control-definition.js';
 
 // One service a module contributes to the app container: the token it registers
@@ -199,17 +198,6 @@ export class ShellModule extends MuralBase implements IShellModule
     // region ones into the StatusService.
     public readonly ShellControls: ObservableCollection<ShellControlDefinition> =
         new ObservableCollection<ShellControlDefinition>();
-
-    // Declared project types — the ProjectFactoryDefinitions this module
-    // contributes to the app's ProjectFactoryRegistry. Authored as a
-    // `.projectFactories: { ProjectFactoryDefinition … }` block: a generic
-    // member-block, so each entry lowers to `module.ProjectFactories.Add(def)`
-    // (the compiler remaps the lowercase section to this PascalCase collection,
-    // exactly as `.documents:` → `Documents`). ProjectFactoryRegistry aggregates
-    // these across all composed modules; a project-explorer service resolves a
-    // definition's Factory to open / create / save real projects.
-    public readonly ProjectFactories: ObservableCollection<ProjectFactoryDefinition> =
-        new ObservableCollection<ProjectFactoryDefinition>();
 
     // Resources the module contributes — styles, brushes, templates, and the
     // icon geometries its capabilities paint. Authored as a `resources: { … }`

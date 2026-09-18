@@ -10,7 +10,6 @@ import { ApplicationSettings } from './services/application-settings-service.js'
 import { SettingSourceKey } from '../../runtime/index.js';
 import { ThemeServiceKey, ThemeServiceInstance } from './services/theme-service.js';
 import { DocumentTypeRegistry } from './documents/document-type-registry.js';
-import { ProjectFactoryRegistry } from './projects/project-factory-registry.js';
 import { CommandRegistry } from './commands/command-registry.js';
 import { ToolbarService } from './commands/toolbar-service.js';
 import { RailAction } from './rail-action.js';
@@ -156,15 +155,6 @@ export class EditorShell extends ShellBase
         if (!this.Services.has(DocumentTypeRegistry.Key))
         {
             this.Services.registerScoped(DocumentTypeRegistry.Key, (p) => new DocumentTypeRegistry(p));
-        }
-        // Provide the ProjectFactoryRegistry by default: aggregates every composed
-        // module's declared ProjectFactoryDefinitions (the `.projectFactories:`
-        // blocks) into one queryable set — lookup by project type. Same opt-out
-        // guard. A project-explorer service resolves it and routes Open/New to the
-        // matching factory.
-        if (!this.Services.has(ProjectFactoryRegistry.Key))
-        {
-            this.Services.registerScoped(ProjectFactoryRegistry.Key, (p) => new ProjectFactoryRegistry(p));
         }
         // Provide the command registry + toolbar service by default: the registry
         // aggregates every module's `.commands:` declarations; the toolbar service

@@ -3860,7 +3860,6 @@ export class Compiler
         const memberName = block.name === 'settings'         ? 'Settings'
                          : block.name === 'documents'        ? 'Documents'
                          : block.name === 'commands'         ? 'Commands'
-                         : block.name === 'projectFactories' ? 'ProjectFactories'
                          : block.name;
         const accessor = `${parentVar}.${memberName}`;
         if (this.isDictionaryMemberBody(block.body))

@@ -77,8 +77,6 @@ export { ApplicationSettings, SettingsStoreKey, type ISettingsStore } from './sh
 export { SettingDefinition, SettingKind } from './shell/settings/setting-definition.js';
 export { DocumentDefinition } from './shell/documents/document-definition.js';
 export { DocumentTypeRegistry } from './shell/documents/document-type-registry.js';
-export { ProjectFactoryDefinition } from './shell/projects/project-factory-definition.js';
-export { ProjectFactoryRegistry } from './shell/projects/project-factory-registry.js';
 export { CommandDefinition } from './shell/commands/command-definition.js';
 export { ShellControlDefinition, ShellRegion, ShellControlAlignment } from './shell/commands/shell-control-definition.js';
 export { CommandRegistry } from './shell/commands/command-registry.js';
