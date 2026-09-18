@@ -139,7 +139,7 @@
     "typescript": "^5.7.0"
   },
   "dependencies": {
-    "@pragmatic-tech-ai/todl-runtime": "^0.5.4",
+    "@pragmatic-tech-ai/todl-runtime": "^0.5.5",
     "opentype.js": "^2.0.0",
     "yaml": "^2.9.0"
   }
