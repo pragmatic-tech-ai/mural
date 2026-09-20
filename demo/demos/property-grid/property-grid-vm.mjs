@@ -14,7 +14,8 @@
 // auto-resolution by type name). SampleDpObject is defined inline as a static
 // nested class — no module-level symbols.
 import { MuralBase, MetaData } from '@pragmatic-tech-ai/mural/runtime';
-import { DpPropertyBag, MapPropertyBag, GridProperty, } from '@pragmatic-tech-ai/mural/framework';
+import { DpPropertyBag, GridProperty } from '@pragmatic-tech-ai/mural/framework';
+import { MapPropertyBag, } from '@pragmatic-tech-ai/todl-runtime';
 // ── Sample DP target ────────────────────────────────────────────────────────
 // A minimal MuralBase subclass with three typed dependency properties.
 // DpPropertyBag.constructor enumerates these via MuralBase.EnumerateProperties.
@@ -76,10 +77,10 @@ export class PropertyGridVM extends MuralBase {
             Status: 'Active',
         };
         const accessors = new Map([
-            ['Name', { id: () => 'Name', displayName: () => 'Name', get: () => data['Name'], set: v => { data['Name'] = v; } }],
-            ['Priority', { id: () => 'Priority', displayName: () => 'Priority', get: () => data['Priority'], set: v => { data['Priority'] = v; } }],
-            ['Archived', { id: () => 'Archived', displayName: () => 'Archived', get: () => data['Archived'], set: v => { data['Archived'] = v; } }],
-            ['Status', { id: () => 'Status', displayName: () => 'Status', get: () => data['Status'], set: v => { data['Status'] = v; } }],
+            ['Name', { id: () => 'Name', displayName: () => 'Name', get: () => data['Name'], set: (v) => { data['Name'] = v; } }],
+            ['Priority', { id: () => 'Priority', displayName: () => 'Priority', get: () => data['Priority'], set: (v) => { data['Priority'] = v; } }],
+            ['Archived', { id: () => 'Archived', displayName: () => 'Archived', get: () => data['Archived'], set: (v) => { data['Archived'] = v; } }],
+            ['Status', { id: () => 'Status', displayName: () => 'Status', get: () => data['Status'], set: (v) => { data['Status'] = v; } }],
         ]);
         const bag = new MapPropertyBag(accessors);
         const descs = Object.freeze([

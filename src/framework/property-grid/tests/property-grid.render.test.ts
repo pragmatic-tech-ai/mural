@@ -22,7 +22,7 @@ import { HeadlessTarget } from '../../../visual-engine/index.js';
 import { Visual } from '../../../runtime/index.js';
 import { PropertyGrid } from '../property-grid.js';
 import { GridProperty } from '../grid-property.js';
-import { MapPropertyBag, type PropertyAccessor } from '../property-bag.js';
+import { MapPropertyBag, type PropertyAccessor } from '@pragmatic-tech-ai/todl-runtime';
 import { TextBox } from '../../../basic/text-box.js';
 import { Checkbox } from '../../toggles/checkbox.js';
 import { ComboBox } from '../../list/combo-box.js';
@@ -59,7 +59,10 @@ function findAllType<T extends Visual>(root: Visual, ctor: new (...a: never[]) =
 
 // Read-write bag: every accessor has a setter, so IsReadOnly(name) === false.
 // `stored` is returned so a test can inspect the source value after inflation.
-function makeBag(entries: Record<string, unknown>): { bag: MapPropertyBag; stored: Record<string, unknown> } {
+function makeBag(entries: Record<string, unknown>): {
+    bag: MapPropertyBag;
+    stored: Record<string, unknown>;
+} {
     const stored: Record<string, unknown> = { ...entries };
     const accessors = new Map<string, PropertyAccessor>();
     for (const name of Object.keys(stored)) {
@@ -67,7 +70,9 @@ function makeBag(entries: Record<string, unknown>): { bag: MapPropertyBag; store
             id: () => name,
             displayName: () => name,
             get: () => stored[name],
-            set: (v) => { stored[name] = v; },
+            set: (v) => {
+                stored[name] = v;
+            },
         });
     }
     return { bag: new MapPropertyBag(accessors), stored };
@@ -87,7 +92,9 @@ function makeReadOnlyBag(entries: Record<string, unknown>): MapPropertyBag {
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 describe('PropertyGrid render — per-row editor dispatch', () => {
-    beforeEach(() => { initTestApp(); });
+    beforeEach(() => {
+        initTestApp();
+    });
 
     test('a Text property row materialises exactly one editable TextBox (and no Checkbox)', () => {
         const grid = new PropertyGrid();
@@ -97,7 +104,11 @@ describe('PropertyGrid render — per-row editor dispatch', () => {
         const target = new HeadlessTarget(400, 300, grid);
         target.Flush();
 
-        assert.equal(findAllType(grid, TextBox).length, 1, 'exactly one TextBox for the single Text row');
+        assert.equal(
+            findAllType(grid, TextBox).length,
+            1,
+            'exactly one TextBox for the single Text row',
+        );
         assert.equal(findAllType(grid, Checkbox).length, 0, 'no Checkbox for a Text row');
     });
 
@@ -109,12 +120,20 @@ describe('PropertyGrid render — per-row editor dispatch', () => {
         const target = new HeadlessTarget(400, 300, grid);
         target.Flush();
 
-        assert.equal(findAllType(grid, Checkbox).length, 1, 'exactly one Checkbox for the Boolean row');
+        assert.equal(
+            findAllType(grid, Checkbox).length,
+            1,
+            'exactly one Checkbox for the Boolean row',
+        );
         // The write-back hazard the review flagged: with the old overlay, a
         // hidden TextBox[Text=$Value] existed on this row and could coerce the
         // boolean through the two-way binding. Structural dispatch means NO
         // TextBox is instantiated for a Boolean row at all.
-        assert.equal(findAllType(grid, TextBox).length, 0, 'no editable TextBox bound to a Boolean row');
+        assert.equal(
+            findAllType(grid, TextBox).length,
+            0,
+            'no editable TextBox bound to a Boolean row',
+        );
     });
 
     test('a read-only Text row renders ONLY the read-only editor (no editable TextBox)', () => {
@@ -127,8 +146,11 @@ describe('PropertyGrid render — per-row editor dispatch', () => {
 
         // Read-only wins over kind: selectEditorTemplate returns the ReadOnly
         // editor (a TextBlock), so no editable TextBox is present for the row.
-        assert.equal(findAllType(grid, TextBox).length, 0,
-            'a read-only row must not instantiate an editable TextBox');
+        assert.equal(
+            findAllType(grid, TextBox).length,
+            0,
+            'a read-only row must not instantiate an editable TextBox',
+        );
     });
 
     test('a NON-enum row does not instantiate a ComboBox and leaves $Value UNCHANGED after inflation', () => {
@@ -165,17 +187,18 @@ describe('PropertyGrid render — per-row editor dispatch', () => {
 
     test('mixed Text + Boolean descriptors: one TextBox and one Checkbox, no cross-instantiation', () => {
         const grid = new PropertyGrid();
-        grid.Descriptors = [
-            GridProperty.text('Label'),
-            GridProperty.bool('Visible'),
-        ];
+        grid.Descriptors = [GridProperty.text('Label'), GridProperty.bool('Visible')];
         grid.Target = makeBag({ Label: 'node-1', Visible: true }).bag;
 
         const target = new HeadlessTarget(400, 400, grid);
         target.Flush();
 
         assert.equal(findAllType(grid, TextBox).length, 1, 'exactly one TextBox (the Text row)');
-        assert.equal(findAllType(grid, Checkbox).length, 1, 'exactly one Checkbox (the Boolean row)');
+        assert.equal(
+            findAllType(grid, Checkbox).length,
+            1,
+            'exactly one Checkbox (the Boolean row)',
+        );
     });
 
     test('category header is rendered as a ToggleButton', () => {
@@ -193,8 +216,8 @@ describe('PropertyGrid render — per-row editor dispatch', () => {
     test('two categories each produce their own ToggleButton header', () => {
         const grid = new PropertyGrid();
         grid.Descriptors = [
-            GridProperty.text('Name',   { category: 'Identity' }),
-            GridProperty.text('Color',  { category: 'Appearance' }),
+            GridProperty.text('Name', { category: 'Identity' }),
+            GridProperty.text('Color', { category: 'Appearance' }),
         ];
         grid.Target = makeBag({ Name: 'node', Color: '#ff0000' }).bag;
 

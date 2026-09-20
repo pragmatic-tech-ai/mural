@@ -1,182 +1,61 @@
 import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import { MapPropertyBag, DpPropertyBag, type PropertyAccessor } from '../property-bag.js';
+import { DpPropertyBag } from '../property-bag.js';
 import { initTestApp } from '../../../basic/tests/test-app.js';
-import { MuralBase, MetaData, PropertyKey, type CoerceValue } from '../../../runtime/index.js';
-import { Signal, type PropertyChangedEventArgs } from '@pragmatic-tech-ai/todl-runtime';
+import { MuralBase, MetaData, type CoerceValue } from '../../../runtime/index.js';
+
+// The DP-free MapPropertyBag core lives in @pragmatic-tech-ai/todl-runtime and is
+// exercised by todl-runtime's own property-bag.test.ts. This file covers
+// DpPropertyBag — the reflective bag over MuralBase dependency properties.
 
 // ---------------------------------------------------------------------------
 // Probe class for DpPropertyBag tests
 // ---------------------------------------------------------------------------
 class Probe extends MuralBase {
     static readonly ValueKey = MuralBase.RegisterProperty<number>(Probe, 'Value', 0, MetaData.None);
-    get Value(): number { return this.get_property_value(Probe.ValueKey); }
-    set Value(v: number) { this.set_property_value(Probe.ValueKey, v); }
+    get Value(): number {
+        return this.get_property_value(Probe.ValueKey);
+    }
+    set Value(v: number) {
+        this.set_property_value(Probe.ValueKey, v);
+    }
 
     // Read-only DP — only the holder of the key may write it
-    static readonly ReadOnlyKey = MuralBase.RegisterReadOnlyProperty<string>(Probe, 'ReadOnly', 'initial', MetaData.None);
-    get ReadOnly(): string { return this.get_property_value(Probe.ReadOnlyKey); }
+    static readonly ReadOnlyKey = MuralBase.RegisterReadOnlyProperty<string>(
+        Probe,
+        'ReadOnly',
+        'initial',
+        MetaData.None,
+    );
+    get ReadOnly(): string {
+        return this.get_property_value(Probe.ReadOnlyKey);
+    }
 
     // Coercing DP — clamps number to [0, 100]
-    private static readonly clamp: CoerceValue = (_model, v) => Math.max(0, Math.min(100, v as number));
-    static readonly ClampedKey = MuralBase.RegisterProperty<number>(Probe, 'Clamped', 50, MetaData.None, Probe.clamp);
-    get Clamped(): number { return this.get_property_value(Probe.ClampedKey); }
-    set Clamped(v: number) { this.set_property_value(Probe.ClampedKey, v); }
+    private static readonly clamp: CoerceValue = (_model, v) =>
+        Math.max(0, Math.min(100, v as number));
+    static readonly ClampedKey = MuralBase.RegisterProperty<number>(
+        Probe,
+        'Clamped',
+        50,
+        MetaData.None,
+        Probe.clamp,
+    );
+    get Clamped(): number {
+        return this.get_property_value(Probe.ClampedKey);
+    }
+    set Clamped(v: number) {
+        this.set_property_value(Probe.ClampedKey, v);
+    }
 }
-
-describe('MapPropertyBag — get/set via delegates', () => {
-    test('GetValue delegates to accessor.get()', () => {
-        let stored = 42;
-        const accessors = new Map<string, PropertyAccessor>([
-            ['count', { id: () => 'count', displayName: () => 'count', get: () => stored, set: (v) => { stored = v as number; } }],
-        ]);
-        const bag = new MapPropertyBag(accessors);
-        assert.equal(bag.GetValue('count'), 42);
-    });
-
-    test('SetValue delegates to accessor.set()', () => {
-        let stored = 0;
-        const accessors = new Map<string, PropertyAccessor>([
-            ['count', { id: () => 'count', displayName: () => 'count', get: () => stored, set: (v) => { stored = v as number; } }],
-        ]);
-        const bag = new MapPropertyBag(accessors);
-        bag.SetValue('count', 99);
-        assert.equal(stored, 99);
-    });
-});
-
-describe('MapPropertyBag — IsReadOnly', () => {
-    test('IsReadOnly is false when accessor has set', () => {
-        const accessors = new Map<string, PropertyAccessor>([
-            ['x', { id: () => 'x', displayName: () => 'x', get: () => 1, set: () => {} }],
-        ]);
-        const bag = new MapPropertyBag(accessors);
-        assert.equal(bag.IsReadOnly('x'), false);
-    });
-
-    test('IsReadOnly is true when accessor has no set', () => {
-        const accessors = new Map<string, PropertyAccessor>([
-            ['x', { id: () => 'x', displayName: () => 'x', get: () => 1 }],
-        ]);
-        const bag = new MapPropertyBag(accessors);
-        assert.equal(bag.IsReadOnly('x'), true);
-    });
-});
-
-describe('MapPropertyBag — bag-owned notification', () => {
-    test('SetValue fires bag-owned listeners when accessor has no changed signal', () => {
-        let stored = 0;
-        const accessors = new Map<string, PropertyAccessor>([
-            ['v', { id: () => 'v', displayName: () => 'v', get: () => stored, set: (val) => { stored = val as number; } }],
-        ]);
-        const bag = new MapPropertyBag(accessors);
-        let notified = 0;
-        bag.Observe('v').subscribe(() => { notified++; });
-        bag.SetValue('v', 10);
-        assert.equal(notified, 1);
-        bag.SetValue('v', 20);
-        assert.equal(notified, 2);
-    });
-
-    test('Observe returns unsubscribe that stops notifications', () => {
-        let stored = 0;
-        const accessors = new Map<string, PropertyAccessor>([
-            ['v', { id: () => 'v', displayName: () => 'v', get: () => stored, set: (val) => { stored = val as number; } }],
-        ]);
-        const bag = new MapPropertyBag(accessors);
-        let notified = 0;
-        const sub = bag.Observe('v').subscribe(() => { notified++; });
-        bag.SetValue('v', 1);
-        assert.equal(notified, 1);
-        sub.dispose();
-        bag.SetValue('v', 2);
-        // Listener was removed — count must not increase
-        assert.equal(notified, 1);
-    });
-});
-
-describe('MapPropertyBag — accessor.changed delegation', () => {
-    test('Observe subscribes to accessor.changed when present', () => {
-        const changed = new Signal<PropertyChangedEventArgs>();
-        const accessors = new Map<string, PropertyAccessor>([
-            ['x', { id: () => 'x', displayName: () => 'x', get: () => 0, set: () => {}, changed }],
-        ]);
-        const bag = new MapPropertyBag(accessors);
-        let notified = 0;
-        bag.Observe('x').subscribe(() => { notified++; });
-        // Simulate the external source firing
-        changed.emit({ property: 'x', oldValue: 0, newValue: 0 });
-        assert.equal(notified, 1);
-    });
-
-    test('SetValue does NOT double-fire when accessor supplies changed', () => {
-        // The accessor owns notification; SetValue must not also fire bag listeners
-        const changed = new Signal<PropertyChangedEventArgs>();
-        let stored = 0;
-        const accessors = new Map<string, PropertyAccessor>([
-            ['x', {
-                id: () => 'x',
-                displayName: () => 'x',
-                get: () => stored,
-                set: (v) => { stored = v as number; },
-                changed,
-            }],
-        ]);
-        const bag = new MapPropertyBag(accessors);
-        let notified = 0;
-        bag.Observe('x').subscribe(() => { notified++; });
-        // SetValue calls set() but must NOT fire bag's own emitter (accessor.changed owns it)
-        bag.SetValue('x', 7);
-        assert.equal(notified, 0, 'bag must not double-fire when accessor owns notification');
-        // The accessor's own channel still works independently
-        changed.emit({ property: 'x', oldValue: 0, newValue: 0 });
-        assert.equal(notified, 1);
-    });
-
-    test('Observe unsubscribe from accessor.changed path removes listener', () => {
-        const changed = new Signal<PropertyChangedEventArgs>();
-        const accessors = new Map<string, PropertyAccessor>([
-            ['x', { id: () => 'x', displayName: () => 'x', get: () => 0, set: () => {}, changed }],
-        ]);
-        const bag = new MapPropertyBag(accessors);
-        let notified = 0;
-        const sub = bag.Observe('x').subscribe(() => { notified++; });
-        changed.emit({ property: 'x', oldValue: 0, newValue: 0 });
-        assert.equal(notified, 1);
-        sub.dispose();
-        changed.emit({ property: 'x', oldValue: 0, newValue: 0 });
-        // After unsub the accessor's own source no longer drives our listener
-        assert.equal(notified, 1);
-    });
-});
-
-describe('MapPropertyBag — unknown name throws', () => {
-    test('GetValue throws on unknown name', () => {
-        const bag = new MapPropertyBag(new Map());
-        assert.throws(() => bag.GetValue('missing'), /missing/);
-    });
-
-    test('SetValue throws on unknown name', () => {
-        const bag = new MapPropertyBag(new Map());
-        assert.throws(() => bag.SetValue('missing', 1), /missing/);
-    });
-
-    test('IsReadOnly throws on unknown name', () => {
-        const bag = new MapPropertyBag(new Map());
-        assert.throws(() => bag.IsReadOnly('missing'), /missing/);
-    });
-
-    test('Observe throws on unknown name', () => {
-        const bag = new MapPropertyBag(new Map());
-        assert.throws(() => bag.Observe('missing'), /missing/);
-    });
-});
 
 // ---------------------------------------------------------------------------
 // DpPropertyBag — reflective bag over MuralBase dependency properties
 // ---------------------------------------------------------------------------
 describe('DpPropertyBag — GetValue/SetValue round-trip', () => {
-    beforeEach(() => { initTestApp(); });
+    beforeEach(() => {
+        initTestApp();
+    });
 
     test('GetValue returns the DP default before any write', () => {
         const probe = new Probe();
@@ -219,7 +98,9 @@ describe('DpPropertyBag — GetValue/SetValue round-trip', () => {
 });
 
 describe('DpPropertyBag — IsReadOnly', () => {
-    beforeEach(() => { initTestApp(); });
+    beforeEach(() => {
+        initTestApp();
+    });
 
     test('IsReadOnly is false for a normal read/write DP', () => {
         const probe = new Probe();
@@ -235,7 +116,9 @@ describe('DpPropertyBag — IsReadOnly', () => {
 });
 
 describe('DpPropertyBag — coercion', () => {
-    beforeEach(() => { initTestApp(); });
+    beforeEach(() => {
+        initTestApp();
+    });
 
     test('SetValue runs DP coercion — value above ceiling is clamped', () => {
         const probe = new Probe();
@@ -260,13 +143,17 @@ describe('DpPropertyBag — coercion', () => {
 });
 
 describe('DpPropertyBag — Observe', () => {
-    beforeEach(() => { initTestApp(); });
+    beforeEach(() => {
+        initTestApp();
+    });
 
     test('Observe fires when the DP is changed externally via native accessor', () => {
         const probe = new Probe();
         const bag = new DpPropertyBag(probe);
         let callCount = 0;
-        bag.Observe('Value').subscribe(() => { callCount++; });
+        bag.Observe('Value').subscribe(() => {
+            callCount++;
+        });
         probe.Value = 1;
         assert.equal(callCount, 1);
         probe.Value = 2;
@@ -277,7 +164,9 @@ describe('DpPropertyBag — Observe', () => {
         const probe = new Probe();
         const bag = new DpPropertyBag(probe);
         let callCount = 0;
-        bag.Observe('Value').subscribe(() => { callCount++; });
+        bag.Observe('Value').subscribe(() => {
+            callCount++;
+        });
         bag.SetValue('Value', 5);
         assert.equal(callCount, 1);
     });
@@ -286,7 +175,9 @@ describe('DpPropertyBag — Observe', () => {
         const probe = new Probe();
         const bag = new DpPropertyBag(probe);
         let callCount = 0;
-        const sub = bag.Observe('Value').subscribe(() => { callCount++; });
+        const sub = bag.Observe('Value').subscribe(() => {
+            callCount++;
+        });
         probe.Value = 10;
         assert.equal(callCount, 1);
         sub.dispose();
@@ -299,7 +190,9 @@ describe('DpPropertyBag — Observe', () => {
         const probe = new Probe();
         const bag = new DpPropertyBag(probe);
         let callCount = 0;
-        bag.Observe('Value').subscribe(() => { callCount++; });
+        bag.Observe('Value').subscribe(() => {
+            callCount++;
+        });
         probe.Value = 1;
         assert.equal(callCount, 1);
         bag.dispose();
@@ -309,26 +202,12 @@ describe('DpPropertyBag — Observe', () => {
     });
 });
 
-// ---------------------------------------------------------------------------
-// Iteration — a bag yields [name, accessor] entries for every property
-// ---------------------------------------------------------------------------
-describe('IPropertyBag iteration', () => {
-    beforeEach(() => { initTestApp(); });
-
-    test('MapPropertyBag yields [name, accessor] for each property', () => {
-        const accessors = new Map<string, PropertyAccessor>([
-            ['a', { id: () => 'a', displayName: () => 'Alpha', get: () => 1 }],
-            ['b', { id: () => 'b', displayName: () => 'Beta', get: () => 2, set: () => {} }],
-        ]);
-        const bag = new MapPropertyBag(accessors);
-        const seen = [...bag].map(([name, acc]) => [name, acc.id(), acc.displayName(), acc.get()]);
-        assert.deepEqual(seen, [
-            ['a', 'a', 'Alpha', 1],
-            ['b', 'b', 'Beta', 2],
-        ]);
+describe('DpPropertyBag — iteration', () => {
+    beforeEach(() => {
+        initTestApp();
     });
 
-    test('DpPropertyBag yields an accessor per DP; displayName falls back to the name', () => {
+    test('yields an accessor per DP; displayName falls back to the name', () => {
         const probe = new Probe();
         const bag = new DpPropertyBag(probe);
         const byName = new Map([...bag].map(([name, acc]) => [name, acc]));

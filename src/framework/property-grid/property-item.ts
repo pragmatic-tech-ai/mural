@@ -1,7 +1,6 @@
 import { Observable } from '../../runtime/index.js';
-import { type Disposable } from '@pragmatic-tech-ai/todl-runtime';
+import { type Disposable, type IPropertyBag } from '@pragmatic-tech-ai/todl-runtime';
 import { GridProperty } from './grid-property.js';
-import { type IPropertyBag } from './property-bag.js';
 import { type DataTemplate } from '../../basic/templates/data-template.js';
 
 /**

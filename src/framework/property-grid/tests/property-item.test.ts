@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { MapPropertyBag, type PropertyAccessor } from '../property-bag.js';
+import { MapPropertyBag, type PropertyAccessor } from '@pragmatic-tech-ai/todl-runtime';
 import { GridProperty } from '../grid-property.js';
 import { PropertyItem, PropertyCategory } from '../property-item.js';
 
@@ -11,7 +11,17 @@ import { PropertyItem, PropertyCategory } from '../property-item.js';
 function makeRwBag(name: string, initial: unknown): MapPropertyBag {
     let stored = initial;
     const accessors = new Map<string, PropertyAccessor>([
-        [name, { id: () => name, displayName: () => name, get: () => stored, set: (v) => { stored = v; } }],
+        [
+            name,
+            {
+                id: () => name,
+                displayName: () => name,
+                get: () => stored,
+                set: (v) => {
+                    stored = v;
+                },
+            },
+        ],
     ]);
     return new MapPropertyBag(accessors);
 }
@@ -67,7 +77,9 @@ describe('PropertyItem — external bag change raises PropertyChanged("Value")',
         const item = new PropertyItem(desc, bag);
 
         const events: string[] = [];
-        item.PropertyChanged('Value').subscribe(({ property }) => { events.push(property); });
+        item.PropertyChanged('Value').subscribe(({ property }) => {
+            events.push(property);
+        });
 
         bag.SetValue('x', 99);
         assert.deepEqual(events, ['Value']);
@@ -80,7 +92,9 @@ describe('PropertyItem — external bag change raises PropertyChanged("Value")',
         const item = new PropertyItem(desc, bag);
 
         let count = 0;
-        item.PropertyChanged('Value').subscribe(() => { count++; });
+        item.PropertyChanged('Value').subscribe(() => {
+            count++;
+        });
 
         bag.SetValue('x', 1);
         bag.SetValue('x', 2);
@@ -151,7 +165,17 @@ describe('PropertyItem — read-only guard on set Value', () => {
     test('setting Value when descriptor is read-only does not write to the bag', () => {
         let stored = 'original';
         const accessors = new Map<string, PropertyAccessor>([
-            ['label', { id: () => 'label', displayName: () => 'label', get: () => stored, set: (v) => { stored = v as string; } }],
+            [
+                'label',
+                {
+                    id: () => 'label',
+                    displayName: () => 'label',
+                    get: () => stored,
+                    set: (v) => {
+                        stored = v as string;
+                    },
+                },
+            ],
         ]);
         const bag = new MapPropertyBag(accessors);
         const desc = GridProperty.text('label', { readOnly: true });
@@ -170,7 +194,9 @@ describe('PropertyItem — read-only guard on set Value', () => {
         const item = new PropertyItem(desc, bag);
 
         // Should not throw; should silently discard
-        assert.doesNotThrow(() => { item.Value = 'changed'; });
+        assert.doesNotThrow(() => {
+            item.Value = 'changed';
+        });
         assert.equal(item.Value, 'original');
         item.dispose();
     });
@@ -187,7 +213,9 @@ describe('PropertyItem — Dispose unsubscribes', () => {
         const item = new PropertyItem(desc, bag);
 
         let count = 0;
-        item.PropertyChanged('Value').subscribe(() => { count++; });
+        item.PropertyChanged('Value').subscribe(() => {
+            count++;
+        });
 
         bag.SetValue('z', 1);
         assert.equal(count, 1);
@@ -203,7 +231,9 @@ describe('PropertyItem — Dispose unsubscribes', () => {
         const desc = GridProperty.number('z');
         const item = new PropertyItem(desc, bag);
         item.dispose();
-        assert.doesNotThrow(() => { item.dispose(); });
+        assert.doesNotThrow(() => {
+            item.dispose();
+        });
     });
 });
 
@@ -259,7 +289,9 @@ describe('PropertyCategory — IsExpanded reactive property', () => {
     test('setting IsExpanded raises PropertyChanged("IsExpanded")', () => {
         const cat = new PropertyCategory('G', []);
         const events: string[] = [];
-        cat.PropertyChanged('IsExpanded').subscribe(({ property }) => { events.push(property); });
+        cat.PropertyChanged('IsExpanded').subscribe(({ property }) => {
+            events.push(property);
+        });
         cat.IsExpanded = false;
         assert.deepEqual(events, ['IsExpanded']);
     });
@@ -267,7 +299,9 @@ describe('PropertyCategory — IsExpanded reactive property', () => {
     test('setting IsExpanded to the same value does NOT raise PropertyChanged', () => {
         const cat = new PropertyCategory('G', []);
         let count = 0;
-        cat.PropertyChanged('IsExpanded').subscribe(() => { count++; });
+        cat.PropertyChanged('IsExpanded').subscribe(() => {
+            count++;
+        });
         cat.IsExpanded = true; // same as default
         assert.equal(count, 0);
     });
@@ -275,7 +309,9 @@ describe('PropertyCategory — IsExpanded reactive property', () => {
     test('toggling back fires a second notification', () => {
         const cat = new PropertyCategory('G', []);
         let count = 0;
-        cat.PropertyChanged('IsExpanded').subscribe(() => { count++; });
+        cat.PropertyChanged('IsExpanded').subscribe(() => {
+            count++;
+        });
         cat.IsExpanded = false;
         cat.IsExpanded = true;
         assert.equal(count, 2);

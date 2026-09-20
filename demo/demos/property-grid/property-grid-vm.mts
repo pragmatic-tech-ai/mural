@@ -14,13 +14,12 @@
 // auto-resolution by type name). SampleDpObject is defined inline as a static
 // nested class — no module-level symbols.
 import { MuralBase, MetaData } from '@pragmatic-tech-ai/mural/runtime';
+import { DpPropertyBag, GridProperty } from '@pragmatic-tech-ai/mural/framework';
 import {
-    DpPropertyBag,
     MapPropertyBag,
-    GridProperty,
     type IPropertyBag,
     type PropertyAccessor,
-} from '@pragmatic-tech-ai/mural/framework';
+} from '@pragmatic-tech-ai/todl-runtime';
 
 // ── Sample DP target ────────────────────────────────────────────────────────
 // A minimal MuralBase subclass with three typed dependency properties.
@@ -106,10 +105,10 @@ export class PropertyGridVM extends MuralBase
         };
 
         const accessors = new Map<string, PropertyAccessor>([
-            ['Name',     { id: () => 'Name',     displayName: () => 'Name',     get: () => data['Name'],     set: v => { data['Name']     = v; } }],
-            ['Priority', { id: () => 'Priority', displayName: () => 'Priority', get: () => data['Priority'], set: v => { data['Priority'] = v; } }],
-            ['Archived', { id: () => 'Archived', displayName: () => 'Archived', get: () => data['Archived'], set: v => { data['Archived'] = v; } }],
-            ['Status',   { id: () => 'Status',   displayName: () => 'Status',   get: () => data['Status'],   set: v => { data['Status']   = v; } }],
+            ['Name',     { id: () => 'Name',     displayName: () => 'Name',     get: () => data['Name'],     set: (v: unknown) => { data['Name']     = v; } }],
+            ['Priority', { id: () => 'Priority', displayName: () => 'Priority', get: () => data['Priority'], set: (v: unknown) => { data['Priority'] = v; } }],
+            ['Archived', { id: () => 'Archived', displayName: () => 'Archived', get: () => data['Archived'], set: (v: unknown) => { data['Archived'] = v; } }],
+            ['Status',   { id: () => 'Status',   displayName: () => 'Status',   get: () => data['Status'],   set: (v: unknown) => { data['Status']   = v; } }],
         ]);
 
         const bag = new MapPropertyBag(accessors);

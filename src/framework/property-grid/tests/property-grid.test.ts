@@ -6,8 +6,12 @@ import { Border } from '../../../basic/border.js';
 import { PropertyGrid } from '../property-grid.js';
 import { GridProperty, PropertyKind } from '../grid-property.js';
 import { PropertyItem, PropertyCategory } from '../property-item.js';
-import { MapPropertyBag, type PropertyAccessor } from '../property-bag.js';
-import { Signal, type PropertyChangedEventArgs } from '@pragmatic-tech-ai/todl-runtime';
+import {
+    MapPropertyBag,
+    type PropertyAccessor,
+    Signal,
+    type PropertyChangedEventArgs,
+} from '@pragmatic-tech-ai/todl-runtime';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -22,7 +26,9 @@ function makeBag(names: string[], values: Record<string, unknown> = {}): MapProp
             id: () => name,
             displayName: () => name,
             get: () => stored[name],
-            set: (v) => { stored[name] = v; },
+            set: (v) => {
+                stored[name] = v;
+            },
         });
     }
     return new MapPropertyBag(accessors);
@@ -30,7 +36,10 @@ function makeBag(names: string[], values: Record<string, unknown> = {}): MapProp
 
 // Spy bag records which names have been disposed by tracking
 // whether their observers were unsubscribed.
-function makeSpyBag(name: string, initial: unknown): {
+function makeSpyBag(
+    name: string,
+    initial: unknown,
+): {
     bag: MapPropertyBag;
     disposerCalled: () => boolean;
 } {
@@ -41,13 +50,18 @@ function makeSpyBag(name: string, initial: unknown): {
     // subscription has been established, which every caller does via Target).
     const changed = new Signal<PropertyChangedEventArgs>();
     const accessors = new Map<string, PropertyAccessor>([
-        [name, {
-            id: () => name,
-            displayName: () => name,
-            get: () => stored,
-            set: (v) => { stored = v; },
-            changed,
-        }],
+        [
+            name,
+            {
+                id: () => name,
+                displayName: () => name,
+                get: () => stored,
+                set: (v) => {
+                    stored = v;
+                },
+                changed,
+            },
+        ],
     ]);
     return { bag: new MapPropertyBag(accessors), disposerCalled: () => !changed.hasSubscribers };
 }
@@ -69,7 +83,9 @@ function makeTemplate(_id: string): DataTemplate {
 // ---------------------------------------------------------------------------
 
 describe('PropertyGrid — category grouping', () => {
-    beforeEach(() => { initTestApp(); });
+    beforeEach(() => {
+        initTestApp();
+    });
 
     test('ItemsSource is empty when neither Descriptors nor Target is set', () => {
         const grid = new PropertyGrid();
@@ -189,7 +205,9 @@ describe('PropertyGrid — category grouping', () => {
 // ---------------------------------------------------------------------------
 
 describe('PropertyGrid — editor selector per-kind DP', () => {
-    beforeEach(() => { initTestApp(); });
+    beforeEach(() => {
+        initTestApp();
+    });
 
     test('selector returns TextEditorTemplate for PropertyKind.Text', () => {
         const grid = new PropertyGrid();
@@ -310,7 +328,9 @@ describe('PropertyGrid — editor selector per-kind DP', () => {
 // ---------------------------------------------------------------------------
 
 describe('PropertyGrid — EditorTemplateKey per-item override', () => {
-    beforeEach(() => { initTestApp(); });
+    beforeEach(() => {
+        initTestApp();
+    });
 
     test('descriptor with EditorTemplateKey set: selector resolves from grid resources when template is registered', () => {
         const grid = new PropertyGrid();
@@ -359,7 +379,9 @@ describe('PropertyGrid — EditorTemplateKey per-item override', () => {
 // ---------------------------------------------------------------------------
 
 describe('PropertyGrid — Target change disposes prior items', () => {
-    beforeEach(() => { initTestApp(); });
+    beforeEach(() => {
+        initTestApp();
+    });
 
     test('changing Target disposes all prior PropertyItems', () => {
         const grid = new PropertyGrid();
@@ -378,7 +400,10 @@ describe('PropertyGrid — Target change disposes prior items', () => {
         grid.Target = bag2;
 
         // Prior item should have been disposed
-        assert.ok(disposed1(), 'observer from bag1 should have been unsubscribed (item.Dispose called)');
+        assert.ok(
+            disposed1(),
+            'observer from bag1 should have been unsubscribed (item.Dispose called)',
+        );
     });
 
     test('changing Target rebuilds groups from the new target', () => {
@@ -422,7 +447,7 @@ describe('PropertyGrid — Target change disposes prior items', () => {
         const multiPropBag = makeBag(['name', 'title'], { name: 'hello', title: 'world' });
 
         grid.Descriptors = [GridProperty.text('name')];
-        grid.Target = bag;  // builds with 'name' descriptor
+        grid.Target = bag; // builds with 'name' descriptor
 
         const cats1 = grid.ItemsSource as PropertyCategory[];
         assert.equal(cats1.length, 1);
@@ -446,7 +471,9 @@ describe('PropertyGrid — Target change disposes prior items', () => {
 // ---------------------------------------------------------------------------
 
 describe('PropertyGrid — static DP keys and accessors', () => {
-    beforeEach(() => { initTestApp(); });
+    beforeEach(() => {
+        initTestApp();
+    });
 
     test('DescriptorsKey is defined', () => {
         assert.ok(PropertyGrid.DescriptorsKey !== undefined);
@@ -498,7 +525,9 @@ describe('PropertyGrid — static DP keys and accessors', () => {
 // used by ToolboxVisualPresenter and its tests).
 
 describe('PropertyGrid — unmount disposes live PropertyItems', () => {
-    beforeEach(() => { initTestApp(); });
+    beforeEach(() => {
+        initTestApp();
+    });
 
     test('live PropertyItem observer is disposed when the grid is detached from the visual tree', () => {
         const grid = new PropertyGrid();
