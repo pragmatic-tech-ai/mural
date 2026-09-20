@@ -3542,6 +3542,16 @@ export class Compiler
                 this.compileTargetsBlock(parentVar, item);
                 continue;
             }
+            if (item.kind === 'modules-block')
+            {
+                // `.modules:` on a non-Application element: the element is a
+                // CompositionRoot (e.g. a test/host root) and each entry composes
+                // onto it via AddModule — the same lowering Application uses, just
+                // not limited to it. Runtime-errors if the element is not a
+                // CompositionRoot (exposes no AddModule).
+                this.compileModulesBlock(parentVar, item);
+                continue;
+            }
             if (item.kind === 'element')
             {
                 // `Behaviors { … }` block — not a default-slot child;
