@@ -39,7 +39,8 @@ export class Tooltip extends ContentControl
     public get Shortcut():  string  { return this.get_property_value(Tooltip.ShortcutKey); }
     public set Shortcut(v:  string) { this.set_property_value(Tooltip.ShortcutKey, v); }
 
-    static {
+    static
+    {
         // Theme-style lookup key — Tooltip instances resolve their
         // default Style via TryFindResource(Tooltip) on attach.
         MuralBase.OverrideMetadata(

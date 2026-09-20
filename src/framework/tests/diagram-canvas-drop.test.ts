@@ -24,20 +24,23 @@ import {
 } from '../diagram/behaviors/canvas-drop-behavior.js';
 import { SelectionMode } from '../list/list-box.js';
 
-class ItemVM extends MuralBase {
+class ItemVM extends MuralBase
+{
     public static readonly LeftKey   = MuralBase.RegisterProperty<number>(ItemVM, 'Left',   0,  MetaData.None);
     public static readonly TopKey    = MuralBase.RegisterProperty<number>(ItemVM, 'Top',    0,  MetaData.None);
     public static readonly WidthKey  = MuralBase.RegisterProperty<number>(ItemVM, 'Width',  10, MetaData.None);
     public static readonly HeightKey = MuralBase.RegisterProperty<number>(ItemVM, 'Height', 10, MetaData.None);
 }
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void { /* noop */ }
     public GetFocusedVisual(): Visual | undefined { return undefined; }
 }
 
-function setup(): { diagram: Diagram; surface: Border } {
+function setup(): { diagram: Diagram; surface: Border }
+{
     Application.current = null;
     new Application();
     const diagram = new Diagram();
@@ -53,7 +56,8 @@ function setup(): { diagram: Diagram; surface: Border } {
     return { diagram, surface };
 }
 
-function dragInit(overrides: Partial<DragEventInit> = {}): DragEventInit {
+function dragInit(overrides: Partial<DragEventInit> = {}): DragEventInit
+{
     return {
         HostX:          0,
         HostY:          0,

@@ -435,7 +435,8 @@ export class DiagramDocument extends MuralBase implements DiagramMutator, IDocum
         let lastGood: SerializedDiagram | undefined;
         this._history.RegisterLayer({
             Id: HistoryLayerId.Diagram,
-            Capture: () => { try { lastGood = this._serialize(); } catch { /* transient — keep last good */ } return lastGood; },
+            Capture: () => { try { lastGood = this._serialize(); }
+            catch { /* transient — keep last good */ } return lastGood; },
             Equals: (a, b) => JSON.stringify(a) === JSON.stringify(b),
             Restore: (s) => { if (s !== undefined) this._deserialize(s as SerializedDiagram); },
         });
@@ -461,7 +462,8 @@ export class DiagramDocument extends MuralBase implements DiagramMutator, IDocum
     // Mark the document as having unsaved edits. Called from every structural
     // mutation; cleared by Save / Load. Private — dirtiness is derived, not set
     // from outside.
-    private _markDirty(): void {
+    private _markDirty(): void
+    {
         this.set_property_value(DiagramDocument.IsDirtyKey, true);
         this._history.NotifyEdited();   // safety net: coalesce any un-bracketed edit
     }

@@ -72,7 +72,8 @@ function extractBody(src: string, start: number): { open: number; close: number;
     if (open === -1) return undefined;
     let depth = 1;
     let i = open + 1;
-    while (i < src.length && depth > 0) {
+    while (i < src.length && depth > 0)
+    {
         const c = src[i]!;
         if (c === '{') depth++;
         else if (c === '}') depth--;
@@ -105,7 +106,8 @@ function parseNums(s: string, expected: number): number[] | undefined
     const parts = resolved.split(',').map(t => t.trim()).filter(t => t.length > 0);
     if (parts.length !== expected) return undefined;
     const out: number[] = [];
-    for (const p of parts) {
+    for (const p of parts)
+    {
         // Strip trailing `f` (float suffix) and any `(float)` cast.
         const m = p.replace(/\(\s*float\s*\)\s*/g, '').replace(/f$/, '').trim();
         const n = Number(m);
@@ -132,7 +134,8 @@ function collectBuilders(body: string): Map<string, PathBuilder> | undefined
     const builders = new Map<string, PathBuilder>();
     const ensure = (name: string): PathBuilder => {
         let b = builders.get(name);
-        if (b === undefined) {
+        if (b === undefined)
+        {
             b = { name, fill: 'winding', tokens: [] };
             builders.set(name, b);
         }
@@ -147,9 +150,11 @@ function collectBuilders(body: string): Map<string, PathBuilder> | undefined
     const pushIssue = (re: RegExp, fn: (m: RegExpExecArray) => Issued | undefined): void => {
         re.lastIndex = 0;
         let m: RegExpExecArray | null;
-        while ((m = re.exec(body)) !== null) {
+        while ((m = re.exec(body)) !== null)
+        {
             const it = fn(m);
-            if (it === undefined) {
+            if (it === undefined)
+            {
                 // Malformed match — fail the whole function.
                 throw new Error(`malformed match: ${m[0]}`);
             }
@@ -157,7 +162,8 @@ function collectBuilders(body: string): Map<string, PathBuilder> | undefined
         }
     };
 
-    try {
+    try
+    {
         pushIssue(FILL_RE, (m) => ({ idx: m.index, tag: 'fill:' + m[1] + ':' + m[2], bx: m[1]! }));
         pushIssue(MOVE_RE, (m) => {
             const nums = parseNums(m[2]!, 2);
@@ -180,16 +186,22 @@ function collectBuilders(body: string): Map<string, PathBuilder> | undefined
             return { idx: m.index, tag: 'C ' + nums.map(fmt).join(' '), bx: m[1]! };
         });
         pushIssue(CLOSE_RE, (m) => ({ idx: m.index, tag: 'Z', bx: m[1]! }));
-    } catch {
+    }
+    catch
+    {
         return undefined;
     }
 
     issued.sort((a, b) => a.idx - b.idx);
-    for (const it of issued) {
+    for (const it of issued)
+    {
         const b = ensure(it.bx);
-        if (it.tag.startsWith('fill:')) {
+        if (it.tag.startsWith('fill:'))
+        {
             b.fill = it.tag.endsWith(':EvenOdd') ? 'evenodd' : 'winding';
-        } else {
+        }
+        else
+        {
             b.tokens.push(it.tag);
         }
     }
@@ -217,16 +229,20 @@ function detectBinaryCall(body: string):
     const opTok = args[3]!;
     let opShort: string | undefined;
     const named = /k(Difference|Intersect|Union|XOR|ReverseDifference)_SkPathOp/.exec(opTok);
-    if (named) {
+    if (named)
+    {
         opShort =
             named[1] === 'Difference'        ? 'diff' :
             named[1] === 'Intersect'         ? 'sect' :
             named[1] === 'Union'             ? 'union' :
             named[1] === 'XOR'               ? 'xor' :
             'revdiff';
-    } else {
+    }
+    else
+    {
         const numeric = /\(\s*SkPathOp\s*\)\s*(\d+)/.exec(opTok);
-        if (numeric) {
+        if (numeric)
+        {
             const n = Number(numeric[1]);
             if (n >= 0 && n <= 4) opShort = OP_NUMERIC_TO_SHORT[n]!;
         }
@@ -256,7 +272,8 @@ function detectUnaryCall(body: string):
 interface OpEntry { name: string; op: string; a: string; b: string; fillA?: string; fillB?: string; }
 interface SimplifyEntry { name: string; p: string; fill?: string; }
 
-interface Buckets {
+interface Buckets
+{
     opOk: OpEntry[];
     opFail: OpEntry[];
     simplifyOk: SimplifyEntry[];
@@ -276,7 +293,8 @@ function processFile(srcPath: string, kind: 'op' | 'simplify'): Buckets
     };
     FN_RE.lastIndex = 0;
     let m: RegExpExecArray | null;
-    while ((m = FN_RE.exec(src)) !== null) {
+    while ((m = FN_RE.exec(src)) !== null)
+    {
         out.total++;
         const name = m[1]!;
         const body = extractBody(src, m.index + m[0].length);
@@ -285,12 +303,14 @@ function processFile(srcPath: string, kind: 'op' | 'simplify'): Buckets
         const builders = collectBuilders(body.body);
         if (!builders) { out.skipped++; continue; }
 
-        if (kind === 'op') {
+        if (kind === 'op')
+        {
             const call = detectBinaryCall(body.body);
             if (!call) { out.skipped++; continue; }
             const ba = builders.get(call.paths[0]);
             const bb = builders.get(call.paths[1]);
-            if (!ba || !bb || ba.tokens.length === 0 || bb.tokens.length === 0) {
+            if (!ba || !bb || ba.tokens.length === 0 || bb.tokens.length === 0)
+            {
                 out.skipped++; continue;
             }
             const entry: OpEntry = {
@@ -303,7 +323,9 @@ function processFile(srcPath: string, kind: 'op' | 'simplify'): Buckets
             if (bb.fill === 'evenodd') entry.fillB = 'evenodd';
             if (call.op.kind === 'fail') out.opFail.push(entry);
             else out.opOk.push(entry);
-        } else {
+        }
+        else
+        {
             const call = detectUnaryCall(body.body);
             if (!call) { out.skipped++; continue; }
             const bp = builders.get(call.p);
@@ -384,9 +406,11 @@ function emitSimplifyFile(b: Buckets, srcName: string): string
 function main(): void
 {
     if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
-    for (const cfg of SOURCES) {
+    for (const cfg of SOURCES)
+    {
         const srcPath = path.join(SKIA_DIR, cfg.src);
-        if (!fs.existsSync(srcPath)) {
+        if (!fs.existsSync(srcPath))
+        {
             console.warn(`[port-pathops-corpus] skipping missing source ${cfg.src}`);
             continue;
         }

@@ -3,7 +3,8 @@ import { type IHistoryLayer } from './history-layer.js';
 interface LayerChange { layer: IHistoryLayer; before: unknown; after: unknown; }
 interface HistoryEntry { label: string; changes: LayerChange[]; }
 
-interface HistoryOptions {
+interface HistoryOptions
+{
     cap?: number;
     scheduleMicrotask?: (fn: () => void) => void;
     // Macrotask scheduler for the settle window (default setTimeout 0). A settle
@@ -15,7 +16,8 @@ interface HistoryOptions {
 // Per-document undo/redo. Records ref-counted transactions; each committed
 // transaction that changed a layer becomes one reversible entry. In-memory,
 // session-only. See docs/superpowers/specs/2026-08-26-undo-redo-design.md.
-export class DiagramHistory {
+export class DiagramHistory
+{
     private readonly layers: IHistoryLayer[] = [];
     private readonly undoStack: HistoryEntry[] = [];
     private readonly redoStack: HistoryEntry[] = [];
@@ -38,13 +40,15 @@ export class DiagramHistory {
     private suppressed = false;          // true while restoring (undo/redo)
     private autoScheduled = false;       // a microtask commit is pending
 
-    constructor(opts?: HistoryOptions) {
+    constructor(opts?: HistoryOptions)
+    {
         this.cap = opts?.cap ?? 100;
         this.schedule = opts?.scheduleMicrotask ?? ((fn) => queueMicrotask(fn));
         this.scheduleSettle = opts?.scheduleSettle ?? ((fn) => { setTimeout(fn, 0); });
     }
 
-    public RegisterLayer(layer: IHistoryLayer): () => void {
+    public RegisterLayer(layer: IHistoryLayer): () => void
+    {
         this.layers.push(layer);
         this.baseline.set(layer, layer.Capture());
         return () => {
@@ -55,7 +59,8 @@ export class DiagramHistory {
     }
 
     // Re-read every layer into the baseline (the new last-good pre-edit state).
-    private refreshBaseline(): void {
+    private refreshBaseline(): void
+    {
         for (const l of this.layers) this.baseline.set(l, l.Capture());
     }
 
@@ -68,7 +73,8 @@ export class DiagramHistory {
     // content is the new pre-edit baseline — NOT a phantom "added everything" edit
     // (the deserialize's node adds fire the safety net against the empty
     // constructor baseline, which this clears).
-    public Reset(): void {
+    public Reset(): void
+    {
         this.undoStack.length = 0;
         this.redoStack.length = 0;
         this.depth = 0;
@@ -86,7 +92,8 @@ export class DiagramHistory {
     // history. Explicit brackets are UNAFFECTED: an edit bracketed by the caller
     // (a drop, a gesture) still records; this gates only the un-bracketed safety
     // net. Re-entrant (counted), and exception-safe.
-    public RunSilently<T>(fn: () => T): T {
+    public RunSilently<T>(fn: () => T): T
+    {
         this.silentDepth++;
         try { return fn(); }
         finally { this.silentDepth--; }
@@ -102,13 +109,15 @@ export class DiagramHistory {
     // sync rescan PLUS its async tail) coalesces to nothing. The window closes one
     // macrotask after the last edit, when the settled diagram becomes the baseline.
     // Real user edits are bracketed and record regardless of this window.
-    public BeginSettle(): void {
+    public BeginSettle(): void
+    {
         if (this.suppressed) return;
         this.settleSilent = true;
         this.rearmSettle();
     }
 
-    private rearmSettle(): void {
+    private rearmSettle(): void
+    {
         const token = ++this.settleToken;
         this.scheduleSettle(() => {
             if (token !== this.settleToken) return;    // a later edit re-armed — stay open
@@ -117,9 +126,11 @@ export class DiagramHistory {
         });
     }
 
-    public Begin(label: string): void {
+    public Begin(label: string): void
+    {
         if (this.suppressed) return;
-        if (this.depth === 0) {
+        if (this.depth === 0)
+        {
             this.label = label;
             // Explicit Begin runs PRE-edit, so the layers still hold the true
             // pre-edit state — capture "before" fresh. Trusting the baseline here
@@ -135,13 +146,15 @@ export class DiagramHistory {
         this.depth++;
     }
 
-    public Commit(): void {
+    public Commit(): void
+    {
         if (this.suppressed) return;
         if (this.depth === 0) return;
         this.depth--;
         if (this.depth > 0) return;
         const changes: LayerChange[] = [];
-        for (const l of this.layers) {
+        for (const l of this.layers)
+        {
             // Only diff layers we captured a "before" for at Begin. A layer that
             // registered mid-transaction (e.g. the model layer attaching during an
             // open safety-net transaction) has no before — skip it here; it records
@@ -159,7 +172,8 @@ export class DiagramHistory {
         this.redoStack.length = 0;
     }
 
-    public Abort(): void {
+    public Abort(): void
+    {
         if (this.depth === 0) return;
         this.depth = 0;
         this.before = new Map();
@@ -167,7 +181,8 @@ export class DiagramHistory {
 
     // Safety net: an edit happened outside any explicit transaction. Open one and
     // commit it at microtask end so a burst of synchronous edits coalesces.
-    public NotifyEdited(): void {
+    public NotifyEdited(): void
+    {
         // Inside a settle window, keep muting AND re-arm it: continued churn holds
         // the window open until the diagram is quiet for a full macrotask.
         if (this.settleSilent) { this.rearmSettle(); return; }
@@ -189,12 +204,14 @@ export class DiagramHistory {
     // node instances and drops derived visuals, but carries no model layer to
     // reconcile) — so projected connectors and nesting are rebuilt against the
     // restored nodes. Returns an unsubscribe thunk.
-    public AddAppliedListener(cb: () => void): () => void {
+    public AddAppliedListener(cb: () => void): () => void
+    {
         this.appliedListeners.add(cb);
         return () => { this.appliedListeners.delete(cb); };
     }
 
-    public Undo(): void {
+    public Undo(): void
+    {
         const entry = this.undoStack.pop();
         if (entry === undefined) return;
         this.applyChanges(entry.changes, (c) => c.before);
@@ -202,7 +219,8 @@ export class DiagramHistory {
         this.fireApplied();
     }
 
-    public Redo(): void {
+    public Redo(): void
+    {
         const entry = this.redoStack.pop();
         if (entry === undefined) return;
         this.applyChanges(entry.changes, (c) => c.after);
@@ -210,16 +228,21 @@ export class DiagramHistory {
         this.fireApplied();
     }
 
-    private fireApplied(): void {
+    private fireApplied(): void
+    {
         for (const cb of [...this.appliedListeners]) cb();
     }
 
-    private applyChanges(changes: LayerChange[], pick: (c: LayerChange) => unknown): void {
+    private applyChanges(changes: LayerChange[], pick: (c: LayerChange) => unknown): void
+    {
         this.suppressed = true;
-        try {
+        try
+        {
             for (const c of changes) c.layer.Restore(pick(c));
             for (const c of changes) c.layer.Reconcile?.();
-        } finally {
+        }
+        finally
+        {
             this.suppressed = false;
         }
         this.refreshBaseline();                     // restored state is the new baseline

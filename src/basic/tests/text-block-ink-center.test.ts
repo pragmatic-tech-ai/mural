@@ -19,9 +19,11 @@ import { TextBlock } from '../text-block.js';
 // baseline, 0 below, in a 10/4 font line box. So the font-box centre (7) and the
 // ink centre (6) differ — exactly the mismatch ink-centring corrects.
 const FONT_ASCENT = 10, FONT_DESCENT = 4, INK_ASCENT = 8, INK_DESCENT = 0;
-class InkMeasurer implements TextMeasurer {
+class InkMeasurer implements TextMeasurer
+{
     public LoadFont(): void { /* no-op */ }
-    public Measure(text: string): TextMetrics {
+    public Measure(text: string): TextMetrics
+    {
         if (text === '') return { Width: 0, Height: 0, Ascent: 0, Descent: 0 };
         return {
             Width: text.length * 6,
@@ -35,7 +37,8 @@ class InkMeasurer implements TextMeasurer {
 }
 
 // Records the y-origin of every DrawText; every other primitive is a no-op.
-class RecordingContext implements DrawingContext {
+class RecordingContext implements DrawingContext
+{
     public textYs: number[] = [];
     public DrawText(_t: FormattedText, origin: Point): void { this.textYs.push(origin.Y); }
     public DrawRectangle(_b: Brush | undefined, _p: Pen | undefined, _r: Rect): void {}
@@ -47,7 +50,8 @@ class RecordingContext implements DrawingContext {
     public Pop(): void {}
 }
 
-function renderY(valign: VerticalAlignment): number {
+function renderY(valign: VerticalAlignment): number
+{
     const tb = new TextBlock('X');
     tb.VerticalAlignment = valign;
     const target = new HeadlessTarget(200, 60);

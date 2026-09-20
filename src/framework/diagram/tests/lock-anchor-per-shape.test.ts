@@ -7,7 +7,8 @@ import { Diagram } from '../diagram.js';
 import { Figure } from '../figure.js';
 import { PositionAnchor } from '../position-anchor.js';
 
-function mount(): { diagram: Diagram; a: Figure; b: Figure } {
+function mount(): { diagram: Diagram; a: Figure; b: Figure }
+{
     Application.current = null; new Application();
     const a = Figure.fromKind('rectangle', 10, 20, { width: 100, height: 50 }); a.Id = 'a';
     const b = Figure.fromKind('rectangle', 200, 60, { width: 80, height: 40 }); b.Id = 'b';
@@ -22,7 +23,8 @@ function mount(): { diagram: Diagram; a: Figure; b: Figure } {
     return { diagram, a, b };
 }
 
-function select(diagram: Diagram, item: unknown): void {
+function select(diagram: Diagram, item: unknown): void
+{
     const container = diagram.Generator.ContainerFromItem(item);
     if (container === undefined) throw new Error('no container');
     diagram.HandleContainerClick(container, ModifierKeys.None);

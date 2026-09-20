@@ -24,7 +24,8 @@ import { OpCoincidenceLike, OpContourHeadLike } from './op-fwd.js';
 // SkPathOpsTypes.h:29 — phase enum. Tracks where in the pathops
 // pipeline we are; affects which assertions fire (intersecting allows
 // open spans; walking does not).
-export enum OpPhase {
+export enum OpPhase
+{
     kNoChange,
     kIntersecting,
     kWalking,
@@ -35,13 +36,15 @@ export enum OpPhase {
 // winding / no-op / even-odd path-fill semantics. Used by the Op
 // driver, not the span tree, but lives here for parity with Skia's
 // header organisation.
-export enum OpMask {
+export enum OpMask
+{
     kWinding  = -1,
     kNo       =  0,
     kEvenOdd  =  1,
 }
 
-export class OpGlobalState {
+export class OpGlobalState
+{
     // Public: hot-path state read by spans / segments without
     // accessors. Skia exposes these too; matching shape simplifies the
     // line-by-line port.

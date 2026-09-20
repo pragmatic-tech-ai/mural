@@ -34,7 +34,8 @@ class CounterAction extends TriggerAction
 // because these tests assert state, not paint output.
 class Tile extends Element
 {
-    static {
+    static
+    {
         MuralBase.RegisterProperty(Tile, 'Tint', 'plain',  MetaData.None);
         MuralBase.RegisterProperty(Tile, 'Bias', 0,        MetaData.None);
     }
@@ -253,7 +254,8 @@ describe('DataTemplate.Triggers — TemplateMultiDataTrigger', () => {
         );
         class MultiVM extends MuralBase
         {
-            static {
+            static
+            {
                 MuralBase.RegisterProperty(MultiVM, 'IsSelected', false, MetaData.None);
                 MuralBase.RegisterProperty(MultiVM, 'Score',       0,    MetaData.None);
             }

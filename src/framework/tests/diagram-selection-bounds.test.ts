@@ -49,13 +49,15 @@ class FigureVM extends MuralBase
     public set Height(v: number) { this.set_property_value(FigureVM.HeightKey, v); }
 }
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void { /* noop */ }
     public GetFocusedVisual(): Visual | undefined { return undefined; }
 }
 
-function setup(items: FigureVM[]): { diagram: Diagram; coll: ObservableCollection<FigureVM> } {
+function setup(items: FigureVM[]): { diagram: Diagram; coll: ObservableCollection<FigureVM> }
+{
     Application.current = null;
     new Application();
     const coll = new ObservableCollection<FigureVM>();
@@ -78,16 +80,19 @@ function setup(items: FigureVM[]): { diagram: Diagram; coll: ObservableCollectio
     return { diagram, coll };
 }
 
-function cont(diagram: Diagram, item: unknown): Figure {
+function cont(diagram: Diagram, item: unknown): Figure
+{
     const gen = (diagram as unknown as { _generator: { ContainerFromItem(item: unknown): Visual | undefined } })._generator;
     const c = gen.ContainerFromItem(item);
     assert.ok(c instanceof Figure, 'container should be Figure');
     return c;
 }
 
-function selectMany(diagram: Diagram, items: unknown[]): void {
+function selectMany(diagram: Diagram, items: unknown[]): void
+{
     // First click: replace selection. Subsequent: Ctrl-add.
-    for (let i = 0; i < items.length; i++) {
+    for (let i = 0; i < items.length; i++)
+    {
         const c = cont(diagram, items[i]);
         const mods = i === 0
             ? ModifierKeys.None

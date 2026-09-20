@@ -548,7 +548,8 @@ function lineColOf(tb: TextBox, idx: number): { line: number; col: number }
     let line = 0, col = 0;
     for (let i = 0; i < idx && i < text.length; i++)
     {
-        if (text[i] === '\n') { line++; col = 0; } else col++;
+        if (text[i] === '\n') { line++; col = 0; }
+        else col++;
     }
     return { line, col };
 }
@@ -600,11 +601,13 @@ describe('TextBox — caret + selection re-render plumbing', () => {
 describe('TextBox — single-line content is vertically centered', () => {
     beforeEach(() => { initTestApp(); });
 
-    function scrollOf(tb: TextBox): Visual {
+    function scrollOf(tb: TextBox): Visual
+    {
         return (tb.visualChildren[0] as Visual).FindName('PART_Scroll')! as Visual;
     }
 
-    function mount(tb: TextBox): void {
+    function mount(tb: TextBox): void
+    {
         const target = new HeadlessTarget(300, 400);
         target.Content = tb;
         target.Flush();
@@ -644,7 +647,8 @@ describe('TextBox — single-line content is vertically centered', () => {
 describe('TextBox — single-line field matches the ComboBox row height', () => {
     beforeEach(() => { initTestApp(); });
 
-    function desiredH(v: Visual, density?: Density): number {
+    function desiredH(v: Visual, density?: Density): number
+    {
         if (density !== undefined) ThemeManager.SetDensity(v, density);
         const target = new HeadlessTarget(300, 400);
         target.Content = v;
@@ -654,7 +658,8 @@ describe('TextBox — single-line field matches the ComboBox row height', () => 
 
     // The whole point: a single-line field is the SAME height as a ComboBox beside
     // it, at every density (both resolve to @ListRowHeight{Regular,Compact,Comfortable}).
-    for (const d of [Density.Regular, Density.Compact, Density.Comfortable]) {
+    for (const d of [Density.Regular, Density.Compact, Density.Comfortable])
+    {
         test(`single-line field matches ComboBox height at ${d} density`, () => {
             const tb = new TextBox(); tb.Text = 'hi';
             const cb = new ComboBox();

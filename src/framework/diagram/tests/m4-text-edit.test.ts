@@ -18,7 +18,8 @@ import { Diagram } from '../diagram.js';
 import { Figure } from '../figure.js';
 import { RichTextBox } from '../../../basic/rich-text-box.js';
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void { /* noop */ }
     public GetFocusedVisual(): Visual | undefined { return undefined; }

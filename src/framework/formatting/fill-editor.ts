@@ -154,7 +154,8 @@ export class FillEditor extends TemplatedControl
     public get PictureStretch(): Stretch { return this.get_property_value(FillEditor.PictureStretchKey); }
     public set PictureStretch(v: Stretch){ this.set_property_value(FillEditor.PictureStretchKey, v); }
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(FillEditor, Element.DefaultStyleKeyKey, { default_value: FillEditor });
     }
 
@@ -354,12 +355,14 @@ export class FillEditor extends TemplatedControl
             const s = this._opacityEdit;
             // The editor reads TRANSPARENCY = 100 − opacity (MS-Office).
             this._syncing = true;
-            try { s.Value = 100 - this.FillOpacity; } finally { this._syncing = false; }
+            try { s.Value = 100 - this.FillOpacity; }
+            finally { this._syncing = false; }
             const handler = (): void => {
                 if (this._syncing) return;
                 const opacity = 100 - s.Value;
                 this._syncing = true;
-                try { this.FillOpacity = opacity; } finally { this._syncing = false; }
+                try { this.FillOpacity = opacity; }
+                finally { this._syncing = false; }
                 // Rebuild + reassign Fill (same as every other editor
                 // handler) so the TwoWay binding pushes a fresh brush to
                 // the consumer. An in-place `brush.Opacity =` mutates the

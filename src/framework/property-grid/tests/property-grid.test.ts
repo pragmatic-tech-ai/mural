@@ -17,10 +17,12 @@ import {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeBag(names: string[], values: Record<string, unknown> = {}): MapPropertyBag {
+function makeBag(names: string[], values: Record<string, unknown> = {}): MapPropertyBag
+{
     const stored: Record<string, unknown> = {};
     const accessors = new Map<string, PropertyAccessor>();
-    for (const name of names) {
+    for (const name of names)
+    {
         stored[name] = values[name] ?? '';
         accessors.set(name, {
             id: () => name,
@@ -42,7 +44,8 @@ function makeSpyBag(
 ): {
     bag: MapPropertyBag;
     disposerCalled: () => boolean;
-} {
+}
+{
     let stored = initial;
     // The accessor's own change channel. The bag subscribes to it on Observe and
     // disposes that subscription on unobserve, so "the observer was disposed" is
@@ -74,7 +77,8 @@ function makeSpyBag(
 // template. A throwing factory would explode during that legitimate render;
 // a benign Border keeps these tests focused on selector identity while
 // tolerating the real dispatch path.
-function makeTemplate(_id: string): DataTemplate {
+function makeTemplate(_id: string): DataTemplate
+{
     return new DataTemplate(() => new Border());
 }
 

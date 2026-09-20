@@ -50,14 +50,17 @@ import {
 // implementations are installed via `Intersections.prototype.foo = …`
 // below.
 
-declare module './intersections.js' {
-    interface Intersections {
+declare module './intersections.js'
+{
+    interface Intersections
+    {
         intersectQuadLine(quad: Quad, line: Line): number;
         intersectRayQuadLine(quad: Quad, line: Line): number;
         horizontalQuad(quad: Quad, left: number, right: number, y: number, flipped: boolean): number;
         verticalQuad(quad: Quad, top: number, bottom: number, x: number, flipped: boolean): number;
     }
-    interface IntersectionsStatic {
+    interface IntersectionsStatic
+    {
         HorizontalInterceptQuad(quad: Quad, y: number, roots: number[]): number;
         VerticalInterceptQuad(quad: Quad, x: number, roots: number[]): number;
     }
@@ -122,7 +125,8 @@ function quadNearPoint(quad: Quad, xy: Point, opp: Point): number
 
 // ── LineQuadraticIntersections — the SkDQuadLineIntersection helper ──
 
-class LineQuadraticIntersections {
+class LineQuadraticIntersections
+{
     private readonly fQuad: Quad;
     private readonly fLine: Line | undefined;
     private readonly fIntersections: Intersections | undefined;

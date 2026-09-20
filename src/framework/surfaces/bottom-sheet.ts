@@ -24,7 +24,8 @@ import { ContentControl } from '../base/content-control.js';
 // internal layout entirely up to the consumer.
 export class BottomSheet extends ContentControl
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(
             BottomSheet, Element.DefaultStyleKeyKey,
             { default_value: BottomSheet });

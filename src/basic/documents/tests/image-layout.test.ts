@@ -18,13 +18,15 @@ const measure: MeasureText = (t: string): TextMetrics =>
     ({ Width: [...t].length * 10, Height: 12, Ascent: 10, Descent: 2 } as TextMetrics);
 const measureObject: MeasureObject = () => ({ width: 0, height: 0 });
 
-function imageItem(w: number, h: number, display = ImageDisplay.Inline, uri = 'data:image/png;base64,AAAA'): FlowItem {
+function imageItem(w: number, h: number, display = ImageDisplay.Inline, uri = 'data:image/png;base64,AAAA'): FlowItem
+{
     const src = new BitmapImage(uri);
     const el = new ImageInline(src, { width: w, height: h, display });
     return { kind: 'image', image: src, width: w, height: h, stretch: Stretch.Uniform, display, source: el };
 }
 
-function layout(items: FlowItem[], availableWidth = Number.POSITIVE_INFINITY, wrap = false) {
+function layout(items: FlowItem[], availableWidth = Number.POSITIVE_INFINITY, wrap = false)
+{
     return layoutInlines(items, { availableWidth, wrap, letterSpacing: 0, lineHeight: Number.NaN, measureText: measure, measureObject });
 }
 

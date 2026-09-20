@@ -11,7 +11,8 @@ import { Point } from '../../../../visual-engine/index.js';
 import { RoutingMode } from '../../routing/router.js';
 import '../../routing/straight-router.js';
 
-function makeConnector(): Connector {
+function makeConnector(): Connector
+{
     const c = new Connector();
     c.RoutingMode = RoutingMode.Straight;
     c.Source = new ConnectorEndpoint({ FreePoint: new Point(0, 0) });
@@ -20,7 +21,8 @@ function makeConnector(): Connector {
 }
 
 // Diagram on a plain Canvas with one figure and one connector, laid out.
-function mount(): { diagram: Diagram; figure: Figure; conn: Connector } {
+function mount(): { diagram: Diagram; figure: Figure; conn: Connector }
+{
     const figure = Figure.fromKind('rectangle', 10, 10, { width: 40, height: 30 });
     const items = new ObservableCollection<Figure>(); items.Add(figure);
     const conn = makeConnector();

@@ -4,7 +4,8 @@ import { DiagramHistory } from '../diagram-history.js';
 import { HistoryLayerId, type IHistoryLayer } from '../history-layer.js';
 
 // A fake layer over a single mutable string cell.
-function cellLayer(id: HistoryLayerId, get: () => string, set: (v: string) => void): IHistoryLayer {
+function cellLayer(id: HistoryLayerId, get: () => string, set: (v: string) => void): IHistoryLayer
+{
     return { Id: id, Capture: () => get(), Equals: (a, b) => a === b, Restore: (s) => set(s as string) };
 }
 

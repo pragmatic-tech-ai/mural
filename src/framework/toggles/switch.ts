@@ -19,7 +19,8 @@ import { ToggleButton } from '../buttons/toggle-button.js';
 // both spell it `Switch`.
 export class Switch extends ToggleButton
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(
             Switch, Element.DefaultStyleKeyKey,
             { default_value: Switch });
@@ -32,7 +33,8 @@ export class Switch extends ToggleButton
     // unchanged, and an explicit Width / Height on the Switch overrides these
     // defaults via the LocalValue tier (above Default in the EVD precedence
     // ladder).
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(Switch, Visual.WidthKey,  { default_value: 36.4 });
         MuralBase.OverrideMetadata(Switch, Visual.HeightKey, { default_value: 22.4 });
     }

@@ -27,14 +27,16 @@ import { flattenToLeaves } from '../diagram/commands/group-ops.js';
 // Fill is a Brush DP; Stroke is a Pen DP. Each instance gets its
 // own Pen so FormatMirror can verify per-shape Pen identity is preserved
 // during broadcast.
-class FormattableVM extends MuralBase {
+class FormattableVM extends MuralBase
+{
     public static readonly LeftKey      = MuralBase.RegisterProperty<number>(FormattableVM, 'Left',      0,  MetaData.None);
     public static readonly TopKey       = MuralBase.RegisterProperty<number>(FormattableVM, 'Top',       0,  MetaData.None);
     public static readonly WidthKey     = MuralBase.RegisterProperty<number>(FormattableVM, 'Width',    10, MetaData.None);
     public static readonly HeightKey    = MuralBase.RegisterProperty<number>(FormattableVM, 'Height',   10, MetaData.None);
     public static readonly FillKey = MuralBase.RegisterProperty<SolidColorBrush | undefined>(FormattableVM, 'Fill', undefined, MetaData.None);
     public static readonly StrokeKey    = MuralBase.RegisterProperty<Pen | undefined>(FormattableVM, 'Stroke',    undefined, MetaData.None);
-    constructor(fill: SolidColorBrush, stroke: Pen) {
+    constructor(fill: SolidColorBrush, stroke: Pen)
+    {
         super();
         this.set_property_value(FormattableVM.WidthKey,  10);
         this.set_property_value(FormattableVM.HeightKey, 10);
@@ -49,19 +51,22 @@ class FormattableVM extends MuralBase {
 
 // IGroup-shaped VM containing FormattableVM members. Used to verify
 // flattenToLeaves walks Members.
-class GroupOfFormattablesVM extends MuralBase {
+class GroupOfFormattablesVM extends MuralBase
+{
     public static readonly LeftKey   = MuralBase.RegisterProperty<number>(GroupOfFormattablesVM, 'Left',   0,  MetaData.None);
     public static readonly TopKey    = MuralBase.RegisterProperty<number>(GroupOfFormattablesVM, 'Top',    0,  MetaData.None);
     public static readonly WidthKey  = MuralBase.RegisterProperty<number>(GroupOfFormattablesVM, 'Width',  10, MetaData.None);
     public static readonly HeightKey = MuralBase.RegisterProperty<number>(GroupOfFormattablesVM, 'Height', 10, MetaData.None);
     public Members: FormattableVM[];
-    constructor(members: FormattableVM[]) {
+    constructor(members: FormattableVM[])
+    {
         super();
         this.Members = members;
     }
 }
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void { /* noop */ }
     public GetFocusedVisual(): Visual | undefined { return undefined; }
@@ -71,14 +76,16 @@ const red  = new SolidColorBrush(Color.FromHex('#ff0000'));
 const blue = new SolidColorBrush(Color.FromHex('#0000ff'));
 const green = new SolidColorBrush(Color.FromHex('#00ff00'));
 
-function freshPen(brushColor: SolidColorBrush, thickness: number = 1): Pen {
+function freshPen(brushColor: SolidColorBrush, thickness: number = 1): Pen
+{
     const p = new Pen();
     p.set_property_value(Pen.BrushKey,     brushColor);
     p.set_property_value(Pen.ThicknessKey, thickness);
     return p;
 }
 
-function setup(items: MuralBase[]): { diagram: Diagram } {
+function setup(items: MuralBase[]): { diagram: Diagram }
+{
     Application.current = null;
     new Application();
     const coll = new ObservableCollection<MuralBase>();
@@ -101,15 +108,18 @@ function setup(items: MuralBase[]): { diagram: Diagram } {
     return { diagram };
 }
 
-function cont(diagram: Diagram, item: unknown): Figure {
+function cont(diagram: Diagram, item: unknown): Figure
+{
     const gen = (diagram as unknown as { _generator: { ContainerFromItem(item: unknown): Visual | undefined } })._generator;
     const c = gen.ContainerFromItem(item);
     assert.ok(c instanceof Figure, 'container should be Figure');
     return c;
 }
 
-function selectMany(diagram: Diagram, items: unknown[]): void {
-    for (let i = 0; i < items.length; i++) {
+function selectMany(diagram: Diagram, items: unknown[]): void
+{
+    for (let i = 0; i < items.length; i++)
+    {
         const c = cont(diagram, items[i]);
         const mods = i === 0
             ? ModifierKeys.None

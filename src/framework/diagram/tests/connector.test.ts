@@ -501,7 +501,8 @@ describe('Connector resolution path 3a — dynamic side-slot distribution', () =
         const orient = (a: Point, b: Point, p: Point): number =>
             (b.X - a.X) * (p.Y - a.Y) - (b.Y - a.Y) * (p.X - a.X);
         const cross = (p: Point[], q: Point[]): boolean => {
-            for (let i = 1; i < p.length; i++) for (let j = 1; j < q.length; j++) {
+            for (let i = 1; i < p.length; i++) for (let j = 1; j < q.length; j++)
+            {
                 const a = p[i - 1]!, b = p[i]!, c = q[j - 1]!, d = q[j]!;
                 const o1 = orient(a, b, c), o2 = orient(a, b, d);
                 const o3 = orient(c, d, a), o4 = orient(c, d, b);

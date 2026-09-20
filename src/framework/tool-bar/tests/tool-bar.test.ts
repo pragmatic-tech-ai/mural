@@ -86,7 +86,8 @@ describe('ToolBar — items + overflow', () => {
 describe('ToolBarSplitButton — primary + dropdown', () => {
     beforeEach(() => { initTestApp(); });
 
-    function pointer(overrides: Partial<PointerEventInit> = {}): PointerEventInit {
+    function pointer(overrides: Partial<PointerEventInit> = {}): PointerEventInit
+    {
         return {
             HostX: 0, HostY: 0, Button: PointerButton.Primary, Buttons: 1,
             Modifiers: NoModifiers, PointerId: 0, Pressure: 0, PointerType: 'mouse',
@@ -95,23 +96,28 @@ describe('ToolBarSplitButton — primary + dropdown', () => {
     }
     // Press-here-release-here on a plain Border half (the trigger halves are
     // Borders, not Buttons, so InjectPointerDown/Up drive wireClickable).
-    function pressRelease(v: Visual): void {
+    function pressRelease(v: Visual): void
+    {
         const im = new InputManager();
         im.InjectPointerDown(v, pointer());
         im.InjectPointerUp(v, pointer());
     }
-    function findNamed(root: Visual, name: string): Visual | undefined {
+    function findNamed(root: Visual, name: string): Visual | undefined
+    {
         const stack: Visual[] = [root];
-        while (stack.length > 0) {
+        while (stack.length > 0)
+        {
             const cur = stack.pop()!;
             if ((cur as unknown as { Name?: string }).Name === name) return cur;
             for (const c of (cur as unknown as { visualChildren: Iterable<Visual> }).visualChildren) stack.push(c);
         }
         return undefined;
     }
-    function findType<T extends Visual>(root: Visual, ctor: new (...a: never[]) => T): T | undefined {
+    function findType<T extends Visual>(root: Visual, ctor: new (...a: never[]) => T): T | undefined
+    {
         const stack: Visual[] = [root];
-        while (stack.length > 0) {
+        while (stack.length > 0)
+        {
             const cur = stack.pop()!;
             if (cur instanceof ctor) return cur;
             for (const c of (cur as unknown as { visualChildren: Iterable<Visual> }).visualChildren) stack.push(c);
@@ -326,7 +332,8 @@ describe('ToolBarSplitButton — primary + dropdown', () => {
 describe('ToolBar — split-button group chrome', () => {
     beforeEach(() => { initTestApp(); });
 
-    function collect(root: Visual, name: string): Visual[] {
+    function collect(root: Visual, name: string): Visual[]
+    {
         const out: Visual[] = [];
         const walk = (v: Visual): void => {
             if (v.constructor.name === name) out.push(v);
@@ -335,25 +342,30 @@ describe('ToolBar — split-button group chrome', () => {
         walk(root);
         return out;
     }
-    function findNamed(root: Visual, target: string): Visual | undefined {
+    function findNamed(root: Visual, target: string): Visual | undefined
+    {
         const stack: Visual[] = [root];
-        while (stack.length > 0) {
+        while (stack.length > 0)
+        {
             const cur = stack.pop()!;
             if ((cur as unknown as { Name?: string }).Name === target) return cur;
             for (const c of (cur as unknown as { visualChildren: Iterable<Visual> }).visualChildren) stack.push(c);
         }
         return undefined;
     }
-    function radiusOf(button: Visual): CornerRadius | number {
+    function radiusOf(button: Visual): CornerRadius | number
+    {
         const border = findNamed(button, 'PART_Border')!;
         return (border as unknown as { CornerRadius: CornerRadius | number }).CornerRadius;
     }
-    function dividerVisible(button: Visual): boolean {
+    function dividerVisible(button: Visual): boolean
+    {
         const divider = findNamed(button, 'PART_Divider')!;
         return (divider as unknown as { Visibility: Visibility }).Visibility === Visibility.Visible;
     }
 
-    function threeButtonBar(): ToolBar {
+    function threeButtonBar(): ToolBar
+    {
         const tb = new ToolBar();
         tb.ItemTemplate = new DataTemplate(() => {
             const btn = new ToolBarButton();
@@ -518,7 +530,8 @@ describe('ToolBarPanel — overflow math', () => {
 describe('ToolBar — data-driven (ItemsSource + ItemTemplate)', () => {
     beforeEach(() => { initTestApp(); });
 
-    function collect(root: Visual, name: string): Visual[] {
+    function collect(root: Visual, name: string): Visual[]
+    {
         const out: Visual[] = [];
         const walk = (v: Visual): void => {
             if (v.constructor.name === name) out.push(v);

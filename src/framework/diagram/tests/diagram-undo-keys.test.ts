@@ -4,7 +4,8 @@ import { initTestApp } from '../../../basic/tests/test-app.js';
 import { Diagram } from '../diagram.js';
 import { Key, ModifierKeys } from '../../../runtime/index.js';
 
-function keydown(d: Diagram, key: Key, mods: ModifierKeys): boolean {
+function keydown(d: Diagram, key: Key, mods: ModifierKeys): boolean
+{
     const args = { Key: key, Modifiers: mods, Handled: false };
     (d as unknown as { OnKeyDown(a: unknown): void }).OnKeyDown(args);
     return args.Handled;

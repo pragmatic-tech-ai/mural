@@ -10,7 +10,8 @@ import { InsertImage, InsertText, NormalizeParagraph, RemoveImage } from '../tex
 
 function newApp(): void { Application.current = null; new Application(); }
 
-function docWith(text: string): { doc: FlowDocument; p: Paragraph } {
+function docWith(text: string): { doc: FlowDocument; p: Paragraph }
+{
     const doc = new FlowDocument();
     const p = new Paragraph();
     p.Inlines.Add(new Run(text));

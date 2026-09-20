@@ -8,13 +8,15 @@ import { DataTemplate } from '../../basic/templates/data-template.js';
 import { TextBlock } from '../../basic/text-block.js';
 import { ItemsControl } from '../base/items-control.js';
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void {}
     public GetFocusedVisual(): Visual | undefined { return undefined; }
 }
 
-function mount(ic: ItemsControl): void {
+function mount(ic: ItemsControl): void
+{
     const surface = new Border();
     (surface as unknown as { Child: Visual }).Child = ic;
     const target = new FakeTarget();

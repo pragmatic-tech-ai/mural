@@ -222,7 +222,8 @@ describe('DocumentsContentHostService', () => {
     });
 
     // ── ExtendedCommands (editor-region command strip) ──────────────────────
-    function hostWithCommands(...defs: CommandDefinition[]): { host: DocumentsContentHostService; registry: CommandRegistry } {
+    function hostWithCommands(...defs: CommandDefinition[]): { host: DocumentsContentHostService; registry: CommandRegistry }
+    {
         const app = new Application();
         app.Services.register(CommandRegistry.Key, (p) => new CommandRegistry(p));
         const registry = app.Services.getRequired(CommandRegistry.Key);

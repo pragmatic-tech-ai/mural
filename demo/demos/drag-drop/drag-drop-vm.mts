@@ -32,7 +32,8 @@ export class ItemVM extends MuralBase
     // value to the framework's OnDragStart slot.
     static BeginDragDataKey = MuralBase.RegisterProperty<(() => DragStartSpec) | undefined>(ItemVM, 'BeginDragData', undefined,  MetaData.None);
 
-    constructor(label: string) {
+    constructor(label: string)
+    {
         super();
         const id = 'i' + (_nextId++);
         this.set_property_value(ItemVM.IdKey,    id);
@@ -56,7 +57,8 @@ export class DragDropVM extends MuralBase
     static RightItemsKey = MuralBase.RegisterProperty<ObservableCollection<ItemVM> | undefined>(DragDropVM, 'RightItems', undefined,                       MetaData.None);
     static StatusKey     = MuralBase.RegisterProperty(DragDropVM, 'Status',     'Drag items between the lists.', MetaData.None);
 
-    constructor() {
+    constructor()
+    {
         super();
         const left  = new ObservableCollection<ItemVM>();
         const right = new ObservableCollection<ItemVM>();
@@ -74,15 +76,18 @@ export class DragDropVM extends MuralBase
     // Move an item to the left list. No-op when the item is already
     // there (the drop behavior screens this case in DragOver and
     // suppresses the Effect, but we re-check at Drop time for safety).
-    MoveToLeft(itemId: string): boolean {
+    MoveToLeft(itemId: string): boolean
+    {
         return this._move(itemId, this.RightItems, this.LeftItems, 'left');
     }
 
-    MoveToRight(itemId: string): boolean {
+    MoveToRight(itemId: string): boolean
+    {
         return this._move(itemId, this.LeftItems, this.RightItems, 'right');
     }
 
-    _move(itemId: string, from: ObservableCollection<ItemVM> | undefined, to: ObservableCollection<ItemVM> | undefined, sideName: string): boolean {
+    _move(itemId: string, from: ObservableCollection<ItemVM> | undefined, to: ObservableCollection<ItemVM> | undefined, sideName: string): boolean
+    {
         if (from === undefined || to === undefined) return false;
         let item: ItemVM | null = null;
         for (let i = 0; i < from.Count; i++)
@@ -100,7 +105,8 @@ export class DragDropVM extends MuralBase
     // Helpers the drop behavior queries during DragOver to decide
     // whether to accept (avoids same-list "drop" that would be a
     // no-op).
-    IsInLeft(itemId: string): boolean {
+    IsInLeft(itemId: string): boolean
+    {
         const left = this.LeftItems;
         if (left === undefined) return false;
         for (let i = 0; i < left.Count; i++)
@@ -110,7 +116,8 @@ export class DragDropVM extends MuralBase
         return false;
     }
 
-    IsInRight(itemId: string): boolean {
+    IsInRight(itemId: string): boolean
+    {
         const right = this.RightItems;
         if (right === undefined) return false;
         for (let i = 0; i < right.Count; i++)

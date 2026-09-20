@@ -20,7 +20,8 @@ test('all 54 demos are reachable through exactly one group, ids globally unique'
 
 test('the registry module no longer exists', async () => {
     const { existsSync } = await import('node:fs');
-    for (const gone of ['../registry.mts', '../demo-group-services.mts', '../demo-platform.module.mu']) {
+    for (const gone of ['../registry.mts', '../demo-group-services.mts', '../demo-platform.module.mu'])
+    {
         assert.ok(!existsSync(new URL(gone, import.meta.url)), `${gone} must be deleted`);
     }
 });

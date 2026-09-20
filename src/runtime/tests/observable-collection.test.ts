@@ -2,7 +2,8 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { ObservableCollection, type CollectionChange } from '../observable-collection.js';
 
-function record<T>(c: ObservableCollection<T>): CollectionChange<T>[] {
+function record<T>(c: ObservableCollection<T>): CollectionChange<T>[]
+{
     const log: CollectionChange<T>[] = [];
     c.Subscribe(ch => log.push(ch));
     return log;

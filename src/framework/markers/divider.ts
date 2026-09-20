@@ -34,7 +34,8 @@ export class Divider extends TemplatedControl
         this.applyDefaultStyle();
     }
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(
             Divider, Element.DefaultStyleKeyKey,
             { default_value: Divider });

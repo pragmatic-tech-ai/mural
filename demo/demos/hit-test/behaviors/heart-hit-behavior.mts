@@ -13,7 +13,8 @@ export function attachHeartHit(heart: Visual, vm: HitTestVM): () => void
     const onDown = (): void => { vm.IsToggled = !vm.IsToggled; };
     heart.AddRoutedEventListener('MouseLeftButtonDown', onDown);
 
-    return function detach(): void {
+    return function detach(): void
+    {
         heart.RemoveRoutedEventListener('MouseLeftButtonDown', onDown);
     };
 }

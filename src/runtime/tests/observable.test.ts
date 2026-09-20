@@ -3,10 +3,12 @@ import assert from 'node:assert/strict';
 import { Observable, MuralBase, MetaData, type Disposable } from '../index.js';
 
 // A plain Observable subclass: real typed field + getter/setter + notify.
-class Loc extends Observable {
+class Loc extends Observable
+{
   private _label = '';
   get label(): string { return this._label; }
-  set label(v: string) {
+  set label(v: string)
+  {
     const old = this._label;
     if (old === v) return;
     this._label = v;
@@ -51,12 +53,14 @@ test('RemovePropertyChangedListener stops delivery', () => {
 // ---------------------------------------------------------------------------
 
 // A two-field Observable subclass for edge tests.
-class Point extends Observable {
+class Point extends Observable
+{
   private _x = 0;
   private _y = 0;
 
   get x(): number { return this._x; }
-  set x(v: number) {
+  set x(v: number)
+  {
     const old = this._x;
     if (old === v) return;
     this._x = v;
@@ -64,7 +68,8 @@ class Point extends Observable {
   }
 
   get y(): number { return this._y; }
-  set y(v: number) {
+  set y(v: number)
+  {
     const old = this._y;
     if (old === v) return;
     this._y = v;
@@ -136,7 +141,8 @@ test('subscribing the same callback twice delivers once (Signal Set semantics, d
 // ---------------------------------------------------------------------------
 
 // A two-field MuralBase subclass for the cost comparison.
-class CostMB extends MuralBase {
+class CostMB extends MuralBase
+{
   static readonly LabelKey = MuralBase.RegisterProperty(CostMB, 'label', '', MetaData.None);
   static readonly CountKey = MuralBase.RegisterProperty(CostMB, 'count', 0, MetaData.None);
 }
@@ -146,14 +152,16 @@ test('Observable instances carry no property_values EVD map (structural win over
 
   // Build N Observable instances; write one field on each.
   const obs: Point[] = [];
-  for (let i = 0; i < N; i++) {
+  for (let i = 0; i < N; i++)
+  {
     const p = new Point();
     p.x = i;       // writes backing field; no subscribe → _listeners stays undefined
     obs.push(p);
   }
 
   // Every Observable instance must lack the property_values EVD map.
-  for (const p of obs) {
+  for (const p of obs)
+  {
     assert.equal(
       (p as unknown as { property_values?: unknown }).property_values,
       undefined,
@@ -162,7 +170,8 @@ test('Observable instances carry no property_values EVD map (structural win over
   }
 
   // An Observable written-to but never subscribed must have _listeners === undefined.
-  for (const p of obs) {
+  for (const p of obs)
+  {
     assert.equal(
       (p as unknown as { _listeners?: unknown })._listeners,
       undefined,
@@ -172,7 +181,8 @@ test('Observable instances carry no property_values EVD map (structural win over
 
   // Build N MuralBase instances; set one DP on each to make property_values non-empty.
   const mbs: CostMB[] = [];
-  for (let i = 0; i < N; i++) {
+  for (let i = 0; i < N; i++)
+  {
     const m = new CostMB();
     m.set_property_value(CostMB.LabelKey, `item-${i}`);
     mbs.push(m);
@@ -180,7 +190,8 @@ test('Observable instances carry no property_values EVD map (structural win over
 
   // Every MuralBase instance that had a DP set DOES have property_values (the
   // contrast that proves the Observable win).
-  for (const m of mbs) {
+  for (const m of mbs)
+  {
     assert.notEqual(
       (m as unknown as { property_values?: unknown }).property_values,
       undefined,

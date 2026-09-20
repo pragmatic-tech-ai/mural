@@ -20,12 +20,14 @@ export type EditorTemplateResolver = (item: PropertyItem) => DataTemplate | unde
  *
  * Extends `Observable` (lightweight INPC root) — NOT `MuralBase`.
  */
-export class PropertyItem extends Observable {
+export class PropertyItem extends Observable
+{
     readonly Descriptor: GridProperty;
     private readonly _bag: IPropertyBag;
     private _subscription: Disposable | null;
 
-    constructor(descriptor: GridProperty, bag: IPropertyBag) {
+    constructor(descriptor: GridProperty, bag: IPropertyBag)
+    {
         super();
         this.Descriptor = descriptor;
         this._bag = bag;
@@ -35,26 +37,32 @@ export class PropertyItem extends Observable {
         });
     }
 
-    public get Value(): unknown {
+    public get Value(): unknown
+    {
         return this._bag.GetValue(this.Descriptor.Name);
     }
 
-    public set Value(v: unknown) {
-        if (this.IsReadOnly) {
+    public set Value(v: unknown)
+    {
+        if (this.IsReadOnly)
+        {
             return;
         }
         this._bag.SetValue(this.Descriptor.Name, v);
     }
 
-    public get IsReadOnly(): boolean {
+    public get IsReadOnly(): boolean
+    {
         return this.Descriptor.IsReadOnly || this._bag.IsReadOnly(this.Descriptor.Name);
     }
 
     /**
      * Unsubscribes the bag observer.  Safe to call more than once.
      */
-    public dispose(): void {
-        if (this._subscription !== null) {
+    public dispose(): void
+    {
+        if (this._subscription !== null)
+        {
             this._subscription.dispose();
             this._subscription = null;
         }
@@ -69,7 +77,8 @@ export class PropertyItem extends Observable {
  *
  * Extends `Observable` (lightweight INPC root) — NOT `MuralBase`.
  */
-export class PropertyCategory extends Observable {
+export class PropertyCategory extends Observable
+{
     readonly Header: string;
     readonly Items: readonly PropertyItem[];
     private _isExpanded: boolean = true;
@@ -88,20 +97,24 @@ export class PropertyCategory extends Observable {
         header: string,
         items: readonly PropertyItem[],
         editorSelector?: EditorTemplateResolver,
-    ) {
+    )
+    {
         super();
         this.Header = header;
         this.Items = items;
         this.EditorSelector = editorSelector;
     }
 
-    public get IsExpanded(): boolean {
+    public get IsExpanded(): boolean
+    {
         return this._isExpanded;
     }
 
-    public set IsExpanded(v: boolean) {
+    public set IsExpanded(v: boolean)
+    {
         const old = this._isExpanded;
-        if (old === v) {
+        if (old === v)
+        {
             return;
         }
         this._isExpanded = v;

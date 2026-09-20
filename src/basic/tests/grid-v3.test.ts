@@ -42,7 +42,8 @@ function star(n = 1):   GridLength  { return new GridLength(n, 'star'); }
 
 // Tiny DrawingContext stub that records every DrawGeometry call so the
 // ShowGridLines test can assert on what Grid emitted.
-interface RecordedDraw {
+interface RecordedDraw
+{
     pen:      Pen | undefined;
     geometry: Geometry;
 }
@@ -50,7 +51,8 @@ function makeRecorder(): { dc: DrawingContext; draws: RecordedDraw[] }
 {
     const draws: RecordedDraw[] = [];
     const dc = {
-        DrawGeometry(_brush: unknown, pen: Pen | undefined, geometry: Geometry): void {
+        DrawGeometry(_brush: unknown, pen: Pen | undefined, geometry: Geometry): void
+        {
             draws.push({ pen, geometry });
         },
         // Stubs for the rest of the DrawingContext surface — Grid only

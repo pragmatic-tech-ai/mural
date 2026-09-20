@@ -2,7 +2,8 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { compile } from '../compile.js';
 
-function emitted(src: string): string {
+function emitted(src: string): string
+{
     return compile(src).js;
 }
 

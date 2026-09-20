@@ -10,7 +10,8 @@ import { ConnectorEnd } from '../routing/router.js';
 import { ApplicationSettings } from '../../shell/services/application-settings-service.js';
 import { DiagramSettings, DiagramSettingKey, SidePortsOptimizer } from '../diagram-settings.js';
 
-function fig(id: string, x: number, y: number): Figure {
+function fig(id: string, x: number, y: number): Figure
+{
     const f = Figure.fromKind('rectangle', x, y, { width: 120, height: 48 });
     f.Id = id;
     f.Fill = new SolidColorBrush(Color.FromHex('#eee'));
@@ -79,7 +80,8 @@ describe('SideEndpointRegistry.optimizeIntersections — barycenter ordering', (
         const hub = fig('hub', 4000, 0);
         const t0 = performance.now();
         ConnectorRoutingScheduler.Batch(() => {
-            for (let i = 0; i < K; i++) {
+            for (let i = 0; i < K; i++)
+            {
                 const s = fig(`s${i}`, 0, i * 70);
                 const c = new Connector();
                 c.Source = new ConnectorEndpoint({ Node: s });

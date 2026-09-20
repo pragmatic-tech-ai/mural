@@ -70,21 +70,25 @@ export function buildOpPath(spec: string, fillType: OpFillType = OpFillType.kWin
     p.setFillType(fillType);
     const tokens = spec.replace(/[,]/g, ' ').split(/\s+/).filter(t => t.length > 0);
     let i = 0;
-    while (i < tokens.length) {
+    while (i < tokens.length)
+    {
         const verb = tokens[i++]!;
         const arity = VERB_ARITY[verb];
-        if (arity === undefined) {
+        if (arity === undefined)
+        {
             throw new Error(`buildOpPath: unknown verb "${verb}" at token ${i - 1}`);
         }
         const nums: number[] = [];
-        for (let k = 0; k < arity; ++k) {
+        for (let k = 0; k < arity; ++k)
+        {
             const t = tokens[i++];
             if (t === undefined) throw new Error(`buildOpPath: missing arg for ${verb}`);
             const n = Number(t);
             if (!Number.isFinite(n)) throw new Error(`buildOpPath: non-numeric arg "${t}" for ${verb}`);
             nums.push(n);
         }
-        switch (verb) {
+        switch (verb)
+        {
             case 'M': p.moveTo(new DPoint(nums[0]!, nums[1]!)); break;
             case 'L': p.lineTo(new DPoint(nums[0]!, nums[1]!)); break;
             case 'Q': p.quadTo(new DPoint(nums[0]!, nums[1]!),
@@ -131,7 +135,8 @@ function rayCastQuad(a: DPoint, b: DPoint, c: DPoint,
     const C = a.fY - py;
     const roots: number[] = [];
     const n = Quad.RootsValidT(A, B, C, roots);
-    for (let i = 0; i < n; ++i) {
+    for (let i = 0; i < n; ++i)
+    {
         const t = roots[i]!;
         if (t < 0 || t >= 1) continue;
         const mt = 1 - t;
@@ -153,7 +158,8 @@ function rayCastCubic(a: DPoint, b: DPoint, c: DPoint, d: DPoint,
     const D =  a.fY - py;
     const roots: number[] = [];
     const n = Cubic.RootsValidT(A, B, C, D, roots);
-    for (let i = 0; i < n; ++i) {
+    for (let i = 0; i < n; ++i)
+    {
         const t = roots[i]!;
         if (t < 0 || t >= 1) continue;
         const mt = 1 - t;
@@ -177,27 +183,32 @@ function opPathContains(p: OpPath, px: number, py: number): boolean
     let pen = new DPoint(0, 0);
     let figureStart = new DPoint(0, 0);
     let hasFigure = false;
-    for (const cmd of p.fCommands) {
-        switch (cmd.verb) {
+    for (const cmd of p.fCommands)
+    {
+        switch (cmd.verb)
+        {
             case OpVerb.kMove:
                 // Implicit close-by-line for the prior figure if any.
                 pen = cmd.pts[0]!;
                 figureStart = pen;
                 hasFigure = true;
                 break;
-            case OpVerb.kLine: {
+            case OpVerb.kLine:
+            {
                 const np = cmd.pts[0]!;
                 rayCastLine(pen.fX, pen.fY, np.fX, np.fY, px, py, acc);
                 pen = np;
                 break;
             }
-            case OpVerb.kQuad: {
+            case OpVerb.kQuad:
+            {
                 const c1 = cmd.pts[0]!, np = cmd.pts[1]!;
                 rayCastQuad(pen, c1, np, px, py, acc);
                 pen = np;
                 break;
             }
-            case OpVerb.kCubic: {
+            case OpVerb.kCubic:
+            {
                 const c1 = cmd.pts[0]!, c2 = cmd.pts[1]!, np = cmd.pts[2]!;
                 rayCastCubic(pen, c1, c2, np, px, py, acc);
                 pen = np;
@@ -215,7 +226,8 @@ function opPathContains(p: OpPath, px: number, py: number): boolean
                 break;
         }
     }
-    if (p.fFillType === OpFillType.kEvenOdd || p.fFillType === OpFillType.kInverseEvenOdd) {
+    if (p.fFillType === OpFillType.kEvenOdd || p.fFillType === OpFillType.kInverseEvenOdd)
+    {
         const inside = (acc.crossings & 1) === 1;
         return p.isInverseFillType() ? !inside : inside;
     }
@@ -231,8 +243,10 @@ function opPathBounds(p: OpPath): XYRect
 {
     let x0 = +Infinity, y0 = +Infinity, x1 = -Infinity, y1 = -Infinity;
     let any = false;
-    for (const cmd of p.fCommands) {
-        for (const pt of cmd.pts) {
+    for (const cmd of p.fCommands)
+    {
+        for (const pt of cmd.pts)
+        {
             if (pt.fX < x0) x0 = pt.fX;
             if (pt.fY < y0) y0 = pt.fY;
             if (pt.fX > x1) x1 = pt.fX;
@@ -245,7 +259,8 @@ function opPathBounds(p: OpPath): XYRect
 
 function tooCloseToVertex(px: number, py: number, verts: DPoint[]): boolean
 {
-    for (const v of verts) {
+    for (const v of verts)
+    {
         const dx = px - v.fX, dy = py - v.fY;
         if (dx * dx + dy * dy < BOUNDARY_EPS * BOUNDARY_EPS) return true;
     }
@@ -254,7 +269,8 @@ function tooCloseToVertex(px: number, py: number, verts: DPoint[]): boolean
 
 function collectVertices(p: OpPath, out: DPoint[]): void
 {
-    for (const c of p.fCommands) {
+    for (const c of p.fCommands)
+    {
         for (const pt of c.pts) out.push(pt);
     }
 }
@@ -268,7 +284,8 @@ const MIN_CLEAN_PROBES = 8;   // require at least this many ambiguity-free probe
 
 function applyOp(op: SkPathOp, inA: boolean, inB: boolean): boolean
 {
-    switch (op) {
+    switch (op)
+    {
         case SkPathOp.kDifference:        return inA && !inB;
         case SkPathOp.kIntersect:         return inA &&  inB;
         case SkPathOp.kUnion:             return inA ||  inB;
@@ -299,8 +316,10 @@ function probeVerify(A: OpPath, B: OpPath | undefined, op: SkPathOp | undefined,
     const dy = (Y1 - Y0) / (PROBE_GRID - 1);
     let clean = 0;
     const mismatches: VerifyOutcome['mismatches'] = [];
-    for (let row = 0; row < PROBE_GRID; ++row) {
-        for (let col = 0; col < PROBE_GRID; ++col) {
+    for (let row = 0; row < PROBE_GRID; ++row)
+    {
+        for (let col = 0; col < PROBE_GRID; ++col)
+        {
             const px = X0 + col * dx;
             const py = Y0 + row * dy;
             if (tooCloseToVertex(px, py, vertices)) continue;
@@ -375,7 +394,8 @@ function runOneOp(e: OpCorpusEntry, stats: CorpusStats): void
 {
     stats.total++;
     const t0 = Date.now();
-    try {
+    try
+    {
         const opA = buildOpPath(e.a, fillCode(e.fillA));
         const opB = buildOpPath(e.b, fillCode(e.fillB));
         const op = OP_BY_SHORT[e.op]!;
@@ -397,7 +417,9 @@ function runOneOp(e: OpCorpusEntry, stats: CorpusStats): void
         if (out.cleanProbes < MIN_CLEAN_PROBES) { stats.robustnessFallback++; return; }
         if (out.mismatches.length > 0) { stats.probeMismatch.push(e.name); return; }
         stats.passed++;
-    } catch (err) {
+    }
+    catch (err)
+    {
         stats.threw.push(`${e.name}: ${(err as Error).message}`);
     }
 }
@@ -406,7 +428,8 @@ function runOneSimplify(e: SimplifyCorpusEntry, stats: CorpusStats): void
 {
     stats.total++;
     const t0 = Date.now();
-    try {
+    try
+    {
         const inputPath = buildOpPath(e.p, fillCode(e.fill));
         const result = new OpPath();
         const ok = Simplify(inputPath, result);
@@ -425,7 +448,9 @@ function runOneSimplify(e: SimplifyCorpusEntry, stats: CorpusStats): void
         if (out.cleanProbes < MIN_CLEAN_PROBES) { stats.robustnessFallback++; return; }
         if (out.mismatches.length > 0) { stats.probeMismatch.push(e.name); return; }
         stats.passed++;
-    } catch (err) {
+    }
+    catch (err)
+    {
         stats.threw.push(`${e.name}: ${(err as Error).message}`);
     }
 }
@@ -441,16 +466,20 @@ function reportStats(label: string, stats: CorpusStats): void
         `  non-finite bbox (broken output):      ${stats.nonFinite.length}`,
         `  threw / unexpected (engine crash):    ${stats.threw.length}`,
     ];
-    if (stats.probeMismatch.length > 0) {
+    if (stats.probeMismatch.length > 0)
+    {
         lines.push(`  first 10 probe-mismatch names: ${stats.probeMismatch.slice(0, 10).join(', ')}`);
     }
-    if (stats.nonFinite.length > 0) {
+    if (stats.nonFinite.length > 0)
+    {
         lines.push(`  first 5 non-finite names:      ${stats.nonFinite.slice(0, 5).join(', ')}`);
     }
-    if (stats.threw.length > 0) {
+    if (stats.threw.length > 0)
+    {
         lines.push(`  first 5 thrown:                ${stats.threw.slice(0, 5).join(' | ')}`);
     }
-    if (stats.slow.length > 0) {
+    if (stats.slow.length > 0)
+    {
         lines.push(`  ${stats.slow.length} slow entries (> ${SLOW_THRESHOLD_MS}ms): ${stats.slow.slice(0, 5).join(', ')}`);
     }
     console.log(lines.join('\n'));

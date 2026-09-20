@@ -146,7 +146,8 @@ export class Puffy extends Shape
 // PuffyDiamond — Puffy with `Base = Diamond` baked in.
 export class PuffyDiamond extends Puffy
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(PuffyDiamond, Puffy.BaseKey, { default_value: PuffyBase.Diamond });
     }
 }

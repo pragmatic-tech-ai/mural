@@ -16,7 +16,8 @@ import { PropertyItem, PropertyCategory } from './property-item.js';
 // `Style [TargetType=PropertyGrid]` in the merged resources dict is found by
 // applyDefaultStyle(). Task 7 will author that style; this class works without
 // it (no ctor template wiring needed).
-export class PropertyGrid extends ItemsControl {
+export class PropertyGrid extends ItemsControl
+{
     // ── Descriptors DP ────────────────────────────────────────────────
     public static readonly DescriptorsKey = MuralBase.RegisterProperty<
         readonly GridProperty[] | undefined
@@ -62,7 +63,8 @@ export class PropertyGrid extends ItemsControl {
         DataTemplate | undefined
     >(PropertyGrid, 'ReadOnlyEditorTemplate', undefined, MetaData.None);
 
-    static {
+    static
+    {
         // Registers the theme-lookup key so applyDefaultStyle() picks up
         // `Style [TargetType=PropertyGrid]` from the merged dictionaries.
         // Task 7 will author that Style and set the seven editor-template DPs.
@@ -84,7 +86,8 @@ export class PropertyGrid extends ItemsControl {
         item: unknown,
     ): DataTemplate | undefined => this.selectEditorTemplate(item as PropertyItem);
 
-    constructor() {
+    constructor()
+    {
         super();
         // Apply the default Style (Task 7 provides it). If no Style is
         // present in the current theme (e.g., during unit tests without the
@@ -103,85 +106,104 @@ export class PropertyGrid extends ItemsControl {
     // Headless tests cannot drive a real visual-tree detach edge; this
     // method invokes the same disposeLiveItems() path the unload listener
     // calls, matching the pattern used by ToolboxVisualPresenter.
-    public _forceDetachedForTest(): void {
+    public _forceDetachedForTest(): void
+    {
         this.disposeLiveItems();
     }
 
     // ── Descriptors ───────────────────────────────────────────────────
 
-    public get Descriptors(): readonly GridProperty[] | undefined {
+    public get Descriptors(): readonly GridProperty[] | undefined
+    {
         return this.get_property_value(PropertyGrid.DescriptorsKey);
     }
 
-    public set Descriptors(value: readonly GridProperty[] | undefined) {
+    public set Descriptors(value: readonly GridProperty[] | undefined)
+    {
         this.set_property_value(PropertyGrid.DescriptorsKey, value);
     }
 
     // ── Target ────────────────────────────────────────────────────────
 
-    public get Target(): IPropertyBag | undefined {
+    public get Target(): IPropertyBag | undefined
+    {
         return this.get_property_value(PropertyGrid.TargetKey);
     }
 
-    public set Target(value: IPropertyBag | undefined) {
+    public set Target(value: IPropertyBag | undefined)
+    {
         this.set_property_value(PropertyGrid.TargetKey, value);
     }
 
     // ── Per-kind editor-template accessors ────────────────────────────
 
-    public get TextEditorTemplate(): DataTemplate | undefined {
+    public get TextEditorTemplate(): DataTemplate | undefined
+    {
         return this.get_property_value(PropertyGrid.TextEditorTemplateKey);
     }
 
-    public set TextEditorTemplate(value: DataTemplate | undefined) {
+    public set TextEditorTemplate(value: DataTemplate | undefined)
+    {
         this.set_property_value(PropertyGrid.TextEditorTemplateKey, value);
     }
 
-    public get NumberEditorTemplate(): DataTemplate | undefined {
+    public get NumberEditorTemplate(): DataTemplate | undefined
+    {
         return this.get_property_value(PropertyGrid.NumberEditorTemplateKey);
     }
 
-    public set NumberEditorTemplate(value: DataTemplate | undefined) {
+    public set NumberEditorTemplate(value: DataTemplate | undefined)
+    {
         this.set_property_value(PropertyGrid.NumberEditorTemplateKey, value);
     }
 
-    public get BooleanEditorTemplate(): DataTemplate | undefined {
+    public get BooleanEditorTemplate(): DataTemplate | undefined
+    {
         return this.get_property_value(PropertyGrid.BooleanEditorTemplateKey);
     }
 
-    public set BooleanEditorTemplate(value: DataTemplate | undefined) {
+    public set BooleanEditorTemplate(value: DataTemplate | undefined)
+    {
         this.set_property_value(PropertyGrid.BooleanEditorTemplateKey, value);
     }
 
-    public get EnumEditorTemplate(): DataTemplate | undefined {
+    public get EnumEditorTemplate(): DataTemplate | undefined
+    {
         return this.get_property_value(PropertyGrid.EnumEditorTemplateKey);
     }
 
-    public set EnumEditorTemplate(value: DataTemplate | undefined) {
+    public set EnumEditorTemplate(value: DataTemplate | undefined)
+    {
         this.set_property_value(PropertyGrid.EnumEditorTemplateKey, value);
     }
 
-    public get MultilineEditorTemplate(): DataTemplate | undefined {
+    public get MultilineEditorTemplate(): DataTemplate | undefined
+    {
         return this.get_property_value(PropertyGrid.MultilineEditorTemplateKey);
     }
 
-    public set MultilineEditorTemplate(value: DataTemplate | undefined) {
+    public set MultilineEditorTemplate(value: DataTemplate | undefined)
+    {
         this.set_property_value(PropertyGrid.MultilineEditorTemplateKey, value);
     }
 
-    public get ColorEditorTemplate(): DataTemplate | undefined {
+    public get ColorEditorTemplate(): DataTemplate | undefined
+    {
         return this.get_property_value(PropertyGrid.ColorEditorTemplateKey);
     }
 
-    public set ColorEditorTemplate(value: DataTemplate | undefined) {
+    public set ColorEditorTemplate(value: DataTemplate | undefined)
+    {
         this.set_property_value(PropertyGrid.ColorEditorTemplateKey, value);
     }
 
-    public get ReadOnlyEditorTemplate(): DataTemplate | undefined {
+    public get ReadOnlyEditorTemplate(): DataTemplate | undefined
+    {
         return this.get_property_value(PropertyGrid.ReadOnlyEditorTemplateKey);
     }
 
-    public set ReadOnlyEditorTemplate(value: DataTemplate | undefined) {
+    public set ReadOnlyEditorTemplate(value: DataTemplate | undefined)
+    {
         this.set_property_value(PropertyGrid.ReadOnlyEditorTemplateKey, value);
     }
 
@@ -199,14 +221,17 @@ export class PropertyGrid extends ItemsControl {
     // and instantiate ONLY the selected editor per row (structural dispatch —
     // no overlaid editors, no additive triggers). Tests also call
     // `grid.EditorTemplateSelector(item)` directly.
-    public get EditorTemplateSelector(): ItemTemplateSelector {
+    public get EditorTemplateSelector(): ItemTemplateSelector
+    {
         return this._editorSelector;
     }
 
-    private selectEditorTemplate(item: PropertyItem): DataTemplate | undefined {
+    private selectEditorTemplate(item: PropertyItem): DataTemplate | undefined
+    {
         // Step 1 — per-descriptor override via resource key.
         const editorKey = item.Descriptor.EditorTemplateKey;
-        if (editorKey !== undefined) {
+        if (editorKey !== undefined)
+        {
             const resolved = this.TryFindResource(editorKey);
             if (resolved instanceof DataTemplate) return resolved;
             // Key is set but not found — fall through to per-kind lookup.
@@ -219,8 +244,10 @@ export class PropertyGrid extends ItemsControl {
         return this.templateForKind(item.Descriptor.Kind);
     }
 
-    private templateForKind(kind: PropertyKind): DataTemplate | undefined {
-        switch (kind) {
+    private templateForKind(kind: PropertyKind): DataTemplate | undefined
+    {
+        switch (kind)
+        {
             case PropertyKind.Text:
                 return this.TextEditorTemplate;
             case PropertyKind.MultilineText:
@@ -244,20 +271,24 @@ export class PropertyGrid extends ItemsControl {
         descriptor: PropertyDescriptor,
         oldValue: unknown,
         newValue: unknown,
-    ): void {
+    ): void
+    {
         super.OnPropertyChanged(descriptor, oldValue, newValue);
-        if (descriptor.Name === 'Target') {
+        if (descriptor.Name === 'Target')
+        {
             // The replaced bag's Observe wired listeners on its source; release them.
             (oldValue as IPropertyBag | undefined)?.dispose();
         }
-        if (descriptor.Name === 'Descriptors' || descriptor.Name === 'Target') {
+        if (descriptor.Name === 'Descriptors' || descriptor.Name === 'Target')
+        {
             this.rebuildGroups();
         }
     }
 
     // ── Group builder ─────────────────────────────────────────────────
 
-    private rebuildGroups(): void {
+    private rebuildGroups(): void
+    {
         // Dispose prior rows unconditionally — even if the new build fails
         // there should be no dangling live observers.
         this.disposeLiveItems();
@@ -265,7 +296,8 @@ export class PropertyGrid extends ItemsControl {
         const descriptors = this.Descriptors;
         const target = this.Target;
 
-        if (descriptors === undefined || descriptors.length === 0 || target === undefined) {
+        if (descriptors === undefined || descriptors.length === 0 || target === undefined)
+        {
             // No items to show — set an empty array on ItemsSource.
             this.setItemsSource([]);
             return;
@@ -275,10 +307,12 @@ export class PropertyGrid extends ItemsControl {
         const categoryOrder: string[] = [];
         const categoryMap = new Map<string, PropertyItem[]>();
 
-        for (const desc of descriptors) {
+        for (const desc of descriptors)
+        {
             const cat = desc.Category;
             let bucket = categoryMap.get(cat);
-            if (bucket === undefined) {
+            if (bucket === undefined)
+            {
                 categoryOrder.push(cat);
                 bucket = [];
                 categoryMap.set(cat, bucket);
@@ -305,12 +339,15 @@ export class PropertyGrid extends ItemsControl {
     // ItemsSource is non-undefined" guard: we always set ItemsSource, not
     // Items directly. ItemsControl.ItemsSource setter routes to
     // OnPropertyChanged('ItemsSource') → refreshItemsFromSource().
-    private setItemsSource(categories: PropertyCategory[]): void {
+    private setItemsSource(categories: PropertyCategory[]): void
+    {
         this.ItemsSource = categories;
     }
 
-    private disposeLiveItems(): void {
-        for (const item of this._liveItems) {
+    private disposeLiveItems(): void
+    {
+        for (const item of this._liveItems)
+        {
             item.dispose();
         }
         this._liveItems = [];

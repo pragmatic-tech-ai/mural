@@ -34,7 +34,8 @@ const outerOf = (surface: SVGSVGElement, v: Visual): SVGElement | undefined =>
 describe('diagram container — child renders nested in the DOM and follows a move', () => {
     beforeEach(() => { initTestApp(); });
 
-    function build(): { surface: Border; diagram: Diagram; container: ContainerFigure; child: Figure } {
+    function build(): { surface: Border; diagram: Diagram; container: ContainerFigure; child: Figure }
+    {
         const diagram = new Diagram();
         diagram.ItemsPanel = new ItemsPanelTemplate(() => new PaginatedCanvas());
         const surface = new Border();

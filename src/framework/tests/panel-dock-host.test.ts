@@ -10,14 +10,16 @@ import { EditorShell } from '../shell/editor-shell.js';
 import { TabControl } from '../tabs/tabs.js';
 
 // Minimal dock panel: an Id + Title is all IDockPanel requires.
-class Panel implements IDockPanel {
+class Panel implements IDockPanel
+{
     constructor(public readonly Id: string, public readonly Title: string) {}
 }
 
 describe('PanelDockService — tabbed dock host', () => {
     beforeEach(() => { initTestApp(); });
 
-    function svc(): PanelDockService {
+    function svc(): PanelDockService
+    {
         return new PanelDockService(undefined as never);
     }
 
@@ -77,7 +79,8 @@ describe('PanelDockService — tabbed dock host', () => {
     });
 });
 
-function collect<T>(root: Visual, ctor: new (...a: never[]) => T, out: T[] = []): T[] {
+function collect<T>(root: Visual, ctor: new (...a: never[]) => T, out: T[] = []): T[]
+{
     if (root instanceof ctor) out.push(root);
     for (const c of root.visualChildren) collect(c, ctor, out);
     return out;
@@ -85,11 +88,13 @@ function collect<T>(root: Visual, ctor: new (...a: never[]) => T, out: T[] = [])
 const settle = (): Promise<void> => new Promise((r) => setTimeout(r, 0));
 
 // A concrete dock panel rendered by a marker DataTemplate.
-class ViewPanel extends MuralBase implements IDockPanel {
+class ViewPanel extends MuralBase implements IDockPanel
+{
     public static readonly IdKey = MuralBase.RegisterProperty<string>(ViewPanel, 'Id', '', MetaData.None);
     public static readonly TitleKey = MuralBase.RegisterProperty<string>(ViewPanel, 'Title', '', MetaData.None);
     public readonly marker = new Border();
-    constructor(id: string, title: string) {
+    constructor(id: string, title: string)
+    {
         super();
         this.set_property_value(ViewPanel.IdKey, id);
         this.set_property_value(ViewPanel.TitleKey, title);
@@ -104,7 +109,8 @@ describe('PanelDockService — shell region renders a TabControl', () => {
         Application.current.Resources.Set(ViewPanel, new DataTemplate((s) => (s as ViewPanel).marker, ViewPanel));
     });
 
-    async function mount(): Promise<{ root: Visual; dock: PanelDockService }> {
+    async function mount(): Promise<{ root: Visual; dock: PanelDockService }>
+    {
         const shell = new EditorShell();
         const root = shell.visualChildren[0]!;
         const dock = shell.Services.get(PanelDockService.Key) as PanelDockService;

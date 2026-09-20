@@ -66,14 +66,16 @@ describe('repro — saved-diagram shared-side fan', () => {
 
     test('the three shared sides fan into distinct slots on load', () => {
         const nodes: Record<string, Figure> = {};
-        for (const [id, p] of Object.entries(NODES)) {
+        for (const [id, p] of Object.entries(NODES))
+        {
             const f = Figure.fromKind('rectangle', p.left, p.top, { width: 80, height: 80 });
             f.Id = id;
             nodes[id] = f;
         }
 
         const conns: Connector[] = [];
-        for (const [s, ss, t, ts] of EDGES) {
+        for (const [s, ss, t, ts] of EDGES)
+        {
             const c = new Connector();
             c.RoutingMode = RoutingMode.Orthogonal;
             c.Source = new ConnectorEndpoint({ Node: nodes[s], PortSide: ss });
@@ -82,7 +84,8 @@ describe('repro — saved-diagram shared-side fan', () => {
         }
 
         // The three sides that host two connectors each.
-        for (const [id, side] of [['n9', PortSide.N], ['n11', PortSide.W], ['n11', PortSide.S]] as const) {
+        for (const [id, side] of [['n9', PortSide.N], ['n11', PortSide.W], ['n11', PortSide.S]] as const)
+        {
             const count = nodes[id]!.GetSideEndpointCount(side);
             assert.equal(count, 2, `${id}|${side} should host 2 connectors`);
         }
@@ -94,7 +97,8 @@ describe('repro — saved-diagram shared-side fan', () => {
                 .filter((e): e is ConnectorEndpoint => e !== undefined && e.Node === nodes[id] && e.PortSide === side)
                 .map(e => nodes[id]!.GetSideSlot(e, side)?.index ?? -1);
 
-        for (const [id, side] of [['n9', PortSide.N], ['n11', PortSide.W], ['n11', PortSide.S]] as const) {
+        for (const [id, side] of [['n9', PortSide.N], ['n11', PortSide.W], ['n11', PortSide.S]] as const)
+        {
             const idxs = slotIdx(id, side).sort();
             assert.deepEqual(idxs, [0, 1], `${id}|${side} connectors must occupy distinct slots 0 and 1`);
         }

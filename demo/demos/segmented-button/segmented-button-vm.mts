@@ -32,7 +32,8 @@ export class SegmentedButtonVM extends MuralBase
     get SelectedFormatsLabel():   string { return this.get_property_value(SegmentedButtonVM.SelectedFormatsLabelKey); }
     set SelectedFormatsLabel(v:  string) { this.set_property_value(SegmentedButtonVM.SelectedFormatsLabelKey, v); }
 
-    constructor() {
+    constructor()
+    {
         super();
         this.Timeframes = new ObservableCollection(['Day', 'Week', 'Month', 'Year']);
         this.SelectedTimeframe = 'Week';
@@ -46,9 +47,11 @@ export class SegmentedButtonVM extends MuralBase
         this.SelectedFormats.Subscribe(() => this._refreshFormatsLabel());
     }
 
-    _refreshFormatsLabel(): void {
+    _refreshFormatsLabel(): void
+    {
         const items = this.SelectedFormats;
-        if (items === undefined || items.Count === 0) {
+        if (items === undefined || items.Count === 0)
+        {
             this.SelectedFormatsLabel = '(none)';
             return;
         }

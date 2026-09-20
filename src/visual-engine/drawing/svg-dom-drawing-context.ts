@@ -264,7 +264,8 @@ export class SvgDomDrawingContext implements DrawingContext
         const fgCss  = fg.ToCss();
         switch (brush.Kind)
         {
-            case PatternKind.Stripes: {
+            case PatternKind.Stripes:
+            {
                 // One horizontal stripe per tile, centred. Angle rotation
                 // applied at the pattern level orients the run.
                 const line = this.doc.createElementNS(SVG_NS, 'line');
@@ -277,7 +278,8 @@ export class SvgDomDrawingContext implements DrawingContext
                 pat.appendChild(line);
                 break;
             }
-            case PatternKind.Dots: {
+            case PatternKind.Dots:
+            {
                 // Centred filled disc, radius = StrokeThickness (so the
                 // dot scales with the stroke knob).
                 const dot = this.doc.createElementNS(SVG_NS, 'circle');
@@ -288,7 +290,8 @@ export class SvgDomDrawingContext implements DrawingContext
                 pat.appendChild(dot);
                 break;
             }
-            case PatternKind.Checker: {
+            case PatternKind.Checker:
+            {
                 // 2×2 grid; foreground fills top-left + bottom-right.
                 const half = size / 2;
                 const a = this.doc.createElementNS(SVG_NS, 'rect');
@@ -306,7 +309,8 @@ export class SvgDomDrawingContext implements DrawingContext
                 pat.appendChild(b);
                 break;
             }
-            case PatternKind.Grid: {
+            case PatternKind.Grid:
+            {
                 // L-shape — one horizontal + one vertical line per tile.
                 // Tiling repeats them into the full grid without
                 // doubling the strokes at the seams.
@@ -324,7 +328,8 @@ export class SvgDomDrawingContext implements DrawingContext
                 pat.appendChild(v);
                 break;
             }
-            case PatternKind.CrossHatch: {
+            case PatternKind.CrossHatch:
+            {
                 // Two diagonals — corner-to-corner and the perpendicular
                 // anti-diagonal. Symmetric under 90° rotation.
                 const d1 = this.doc.createElementNS(SVG_NS, 'line');

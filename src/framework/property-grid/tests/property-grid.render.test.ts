@@ -30,25 +30,31 @@ import { ToggleButton } from '../../buttons/toggle-button.js';
 
 // ── Tree-walk helpers ─────────────────────────────────────────────────────────
 
-function findType<T extends Visual>(root: Visual, ctor: new (...a: never[]) => T): T | undefined {
+function findType<T extends Visual>(root: Visual, ctor: new (...a: never[]) => T): T | undefined
+{
     const stack: Visual[] = [root];
-    while (stack.length > 0) {
+    while (stack.length > 0)
+    {
         const cur = stack.pop()!;
         if (cur instanceof ctor) return cur;
-        for (const c of (cur as unknown as { visualChildren: Iterable<Visual> }).visualChildren) {
+        for (const c of (cur as unknown as { visualChildren: Iterable<Visual> }).visualChildren)
+        {
             stack.push(c);
         }
     }
     return undefined;
 }
 
-function findAllType<T extends Visual>(root: Visual, ctor: new (...a: never[]) => T): T[] {
+function findAllType<T extends Visual>(root: Visual, ctor: new (...a: never[]) => T): T[]
+{
     const out: T[] = [];
     const stack: Visual[] = [root];
-    while (stack.length > 0) {
+    while (stack.length > 0)
+    {
         const cur = stack.pop()!;
         if (cur instanceof ctor) out.push(cur);
-        for (const c of (cur as unknown as { visualChildren: Iterable<Visual> }).visualChildren) {
+        for (const c of (cur as unknown as { visualChildren: Iterable<Visual> }).visualChildren)
+        {
             stack.push(c);
         }
     }
@@ -62,10 +68,12 @@ function findAllType<T extends Visual>(root: Visual, ctor: new (...a: never[]) =
 function makeBag(entries: Record<string, unknown>): {
     bag: MapPropertyBag;
     stored: Record<string, unknown>;
-} {
+}
+{
     const stored: Record<string, unknown> = { ...entries };
     const accessors = new Map<string, PropertyAccessor>();
-    for (const name of Object.keys(stored)) {
+    for (const name of Object.keys(stored))
+    {
         accessors.set(name, {
             id: () => name,
             displayName: () => name,
@@ -81,9 +89,11 @@ function makeBag(entries: Record<string, unknown>): {
 // Read-only bag: accessors expose no setter, so MapPropertyBag.IsReadOnly(name)
 // returns true → PropertyItem.IsReadOnly is true → the read-only editor
 // (TextBlock, not TextBox) is selected.
-function makeReadOnlyBag(entries: Record<string, unknown>): MapPropertyBag {
+function makeReadOnlyBag(entries: Record<string, unknown>): MapPropertyBag
+{
     const accessors = new Map<string, PropertyAccessor>();
-    for (const name of Object.keys(entries)) {
+    for (const name of Object.keys(entries))
+    {
         accessors.set(name, { id: () => name, displayName: () => name, get: () => entries[name] });
     }
     return new MapPropertyBag(accessors);

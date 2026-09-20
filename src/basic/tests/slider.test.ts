@@ -128,7 +128,8 @@ describe('Slider — horizontal thumb geometry', () => {
 describe('Slider — vertical thumb geometry (Min at bottom)', () => {
     beforeEach(() => { initTestApp(); });
 
-    function verticalAt200(): Slider {
+    function verticalAt200(): Slider
+    {
         const sl = new Slider();
         sl.Orientation = Orientation.Vertical;
         sl.Minimum = 0;
@@ -188,7 +189,8 @@ describe('Slider — clamping', () => {
 describe('Slider — keyboard', () => {
     beforeEach(() => { initTestApp(); });
 
-    function focused(): { sl: Slider; im: InputManager } {
+    function focused(): { sl: Slider; im: InputManager }
+    {
         const sl = new Slider();
         sl.Minimum = 0;
         sl.Maximum = 100;

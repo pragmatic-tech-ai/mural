@@ -33,7 +33,8 @@ import { resolveKey } from '../model-internals.js';
 // against an inherited value.
 class Widget extends Element
 {
-    static {
+    static
+    {
         MuralBase.RegisterProperty(Widget, 'Tint',  'default', MetaData.Inherits);
         MuralBase.RegisterProperty(Widget, 'Bias',  0,         MetaData.None);
     }
@@ -57,14 +58,16 @@ class TestPanel extends Panel { }
 // exists).
 class ThemedWidget extends Widget
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(ThemedWidget, Element.DefaultStyleKeyKey, { default_value: ThemedWidget });
     }
 }
 class ChildOfThemed extends ThemedWidget { }
 class OwnThemedChild extends ThemedWidget
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(OwnThemedChild, Element.DefaultStyleKeyKey, { default_value: OwnThemedChild });
     }
 }
@@ -210,7 +213,8 @@ describe('Style — explicit application on Visual.Style', () => {
         // Register a fake attached-style sentinel — same machinery as
         // Canvas.Left, but local to the test so we don't depend on
         // controls-package shape.
-        class Marker { static {
+        class Marker { static
+        {
             MuralBase.RegisterAttachedProperty(Marker, 'Tag', 'none', MetaData.None);
         } }
 
@@ -300,7 +304,8 @@ describe('Style — implicit lookup via TargetType', () => {
 describe('Style — interaction with Binding (Binding shadows Style)', () => {
     test('a Binding installed on a styled property still wins over the styled value', () => {
         // Use a tiny source MuralBase with a getter Binding can target.
-        class Src extends MuralBase {
+        class Src extends MuralBase
+        {
             static { MuralBase.RegisterProperty(Src, 'V', 999, MetaData.None); }
             public get V(): number { return this.get_property_value(resolveKey(this, undefined, 'V')); }
             public set V(v: number) { this.set_property_value(resolveKey(this, undefined, 'V'), v); }
@@ -417,7 +422,8 @@ describe('Style — deferred BasedOn resolver (BasedOn = @key)', () => {
 
 describe('Style — Setter.value supports Binding (via SetterFactory)', () => {
     test('Binding value pushes initial source value into StyleValue tier', () => {
-        class Src extends MuralBase {
+        class Src extends MuralBase
+        {
             static { MuralBase.RegisterProperty(Src, 'V', 42, MetaData.None); }
             public get V(): number { return this.get_property_value(resolveKey(this, undefined, 'V')); }
             public set V(v: number) { this.set_property_value(resolveKey(this, undefined, 'V'), v); }
@@ -434,7 +440,8 @@ describe('Style — Setter.value supports Binding (via SetterFactory)', () => {
     });
 
     test('Binding value updates reactively when the source changes', () => {
-        class Src extends MuralBase {
+        class Src extends MuralBase
+        {
             static { MuralBase.RegisterProperty(Src, 'V', 0, MetaData.None); }
             public get V(): number { return this.get_property_value(resolveKey(this, undefined, 'V')); }
             public set V(v: number) { this.set_property_value(resolveKey(this, undefined, 'V'), v); }
@@ -456,7 +463,8 @@ describe('Style — Setter.value supports Binding (via SetterFactory)', () => {
         // Each target gets its own Binding so their setOnValueChanged
         // callbacks don't overwrite each other. Manifests when both
         // targets observe source mutations.
-        class Src extends MuralBase {
+        class Src extends MuralBase
+        {
             static { MuralBase.RegisterProperty(Src, 'V', 1, MetaData.None); }
             public get V(): number { return this.get_property_value(resolveKey(this, undefined, 'V')); }
             public set V(v: number) { this.set_property_value(resolveKey(this, undefined, 'V'), v); }
@@ -479,7 +487,8 @@ describe('Style — Setter.value supports Binding (via SetterFactory)', () => {
     });
 
     test('replacing a Style disposes its Binding subscriptions', () => {
-        class Src extends MuralBase {
+        class Src extends MuralBase
+        {
             static { MuralBase.RegisterProperty(Src, 'V', 1, MetaData.None); }
             public get V(): number { return this.get_property_value(resolveKey(this, undefined, 'V')); }
             public set V(v: number) { this.set_property_value(resolveKey(this, undefined, 'V'), v); }
@@ -732,7 +741,8 @@ describe('Style — PropertyTrigger', () => {
 // so changes flow through the existing property-change machinery.
 class ItemVM extends MuralBase
 {
-    static {
+    static
+    {
         MuralBase.RegisterProperty(ItemVM, 'IsSelected', false, MetaData.None);
         MuralBase.RegisterProperty(ItemVM, 'Score',      0,     MetaData.None);
     }
@@ -809,7 +819,8 @@ describe('Style — DataTrigger', () => {
         // correctly without disturbing each other.
         class Surface extends Element
         {
-            static {
+            static
+            {
                 MuralBase.RegisterProperty(Surface, 'Mode',   'cold',    MetaData.None);
                 MuralBase.RegisterProperty(Surface, 'Outline', 'thin',   MetaData.None);
                 MuralBase.RegisterProperty(Surface, 'Fill',    'none',   MetaData.None);

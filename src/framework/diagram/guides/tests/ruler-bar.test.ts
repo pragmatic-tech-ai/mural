@@ -5,7 +5,8 @@ import { Orientation } from '../../../../basic/index.js';
 import { RulerBar } from '../ruler-bar.js';
 
 // A recording DrawingContext double capturing DrawRectangle / DrawText calls.
-class RecordingDc {
+class RecordingDc
+{
     public rects: Rect[] = [];
     public texts: { text: unknown; x: number; y: number }[] = [];
     public DrawRectangle(_b: unknown, _p: unknown, rect: Rect): void { this.rects.push(rect); }

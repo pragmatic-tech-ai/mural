@@ -7,7 +7,8 @@
 import { MuralBase } from '@pragmatic-tech-ai/mural/runtime';
 import type { Visual } from '@pragmatic-tech-ai/mural/runtime';
 
-export class RichTextEditorVM extends MuralBase {
+export class RichTextEditorVM extends MuralBase
+{
     /** Set by the bootstrap; the platform calls it after the view
      *  materializes so the toolbar can bind to the editor. */
     OnViewMounted?: (view: Visual) => void;

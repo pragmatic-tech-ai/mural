@@ -17,17 +17,20 @@ import { RadioButton } from '../toggles/radio-button.js';
 // fill the grown bounds and keeps the visible mark centred + unscaled (so
 // the margin-anchored Switch thumb / bordered box never clip).
 
-function walk(v: unknown, name: string): { DesiredSize: Size } | undefined {
+function walk(v: unknown, name: string): { DesiredSize: Size } | undefined
+{
     const node = v as { Name?: string; visualChildren?: readonly unknown[] };
     if (node?.Name === name) return v as { DesiredSize: Size };
-    for (const c of node?.visualChildren ?? []) {
+    for (const c of node?.visualChildren ?? [])
+    {
         const r = walk(c, name);
         if (r) return r;
     }
     return undefined;
 }
 
-function measure(c: { Measure(s: Size): void; Arrange(r: Rect): void; DesiredSize: Size }): Size {
+function measure(c: { Measure(s: Size): void; Arrange(r: Rect): void; DesiredSize: Size }): Size
+{
     c.Measure(new Size(200, 200));
     c.Arrange(new Rect(0, 0, c.DesiredSize.Width, c.DesiredSize.Height));
     return c.DesiredSize;

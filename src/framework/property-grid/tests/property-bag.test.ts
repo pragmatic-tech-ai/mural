@@ -11,12 +11,15 @@ import { MuralBase, MetaData, type CoerceValue } from '../../../runtime/index.js
 // ---------------------------------------------------------------------------
 // Probe class for DpPropertyBag tests
 // ---------------------------------------------------------------------------
-class Probe extends MuralBase {
+class Probe extends MuralBase
+{
     static readonly ValueKey = MuralBase.RegisterProperty<number>(Probe, 'Value', 0, MetaData.None);
-    get Value(): number {
+    get Value(): number
+    {
         return this.get_property_value(Probe.ValueKey);
     }
-    set Value(v: number) {
+    set Value(v: number)
+    {
         this.set_property_value(Probe.ValueKey, v);
     }
 
@@ -27,7 +30,8 @@ class Probe extends MuralBase {
         'initial',
         MetaData.None,
     );
-    get ReadOnly(): string {
+    get ReadOnly(): string
+    {
         return this.get_property_value(Probe.ReadOnlyKey);
     }
 
@@ -41,10 +45,12 @@ class Probe extends MuralBase {
         MetaData.None,
         Probe.clamp,
     );
-    get Clamped(): number {
+    get Clamped(): number
+    {
         return this.get_property_value(Probe.ClampedKey);
     }
-    set Clamped(v: number) {
+    set Clamped(v: number)
+    {
         this.set_property_value(Probe.ClampedKey, v);
     }
 }

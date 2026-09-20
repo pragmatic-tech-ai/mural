@@ -16,7 +16,8 @@ import { Diagram } from '../diagram.js';
 import { Figure } from '../figure.js';
 import { DiagramDocument } from '../diagram-document.js';
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void { /* noop */ }
     public GetFocusedVisual(): Visual | undefined { return undefined; }
@@ -24,7 +25,8 @@ class FakeTarget implements MountableTarget {
 
 // A mounted Diagram with one figure already selected, so the format painter arms
 // and stays armed.
-function armedView(): Diagram {
+function armedView(): Diagram
+{
     const view = new Diagram();
     view.ItemsPanel = new ItemsPanelTemplate(() => new PaginatedCanvas());
     const surface = new Border();

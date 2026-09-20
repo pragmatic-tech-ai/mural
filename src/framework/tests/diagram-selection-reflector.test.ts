@@ -24,7 +24,8 @@ import { SelectionMode } from '../list/list-box.js';
 
 // Leaf VM with the conventional Left/Top/Width/Height + IsSelected
 // quintet. Parent points up the tree (undefined = top-level).
-class LeafVM extends MuralBase {
+class LeafVM extends MuralBase
+{
     public static readonly LeftKey       = MuralBase.RegisterProperty<number>(LeafVM, 'Left',       0,  MetaData.None);
     public static readonly TopKey        = MuralBase.RegisterProperty<number>(LeafVM, 'Top',        0,  MetaData.None);
     public static readonly WidthKey      = MuralBase.RegisterProperty<number>(LeafVM, 'Width',      10, MetaData.None);
@@ -41,7 +42,8 @@ class LeafVM extends MuralBase {
 
 // Group VM with IsSelected + Members. Members presence triggers
 // isGroupShape duck-type (used for chrome dispatch in the demo).
-class GroupMockVM extends MuralBase {
+class GroupMockVM extends MuralBase
+{
     public static readonly LeftKey       = MuralBase.RegisterProperty<number>(GroupMockVM, 'Left',       0,  MetaData.None);
     public static readonly TopKey        = MuralBase.RegisterProperty<number>(GroupMockVM, 'Top',        0,  MetaData.None);
     public static readonly WidthKey      = MuralBase.RegisterProperty<number>(GroupMockVM, 'Width',      10, MetaData.None);
@@ -49,7 +51,8 @@ class GroupMockVM extends MuralBase {
     public static readonly IsSelectedKey = MuralBase.RegisterProperty<boolean>(GroupMockVM, 'IsSelected', false, MetaData.None);
     public Members: LeafVM[];
     public Parent:  GroupMockVM | undefined = undefined;
-    constructor(members: LeafVM[]) {
+    constructor(members: LeafVM[])
+    {
         super();
         this.Members = members;
         for (const m of members) m.Parent = this;
@@ -58,13 +61,15 @@ class GroupMockVM extends MuralBase {
     public set IsSelected(v:  boolean) { this.set_property_value(GroupMockVM.IsSelectedKey, v); }
 }
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void { /* noop */ }
     public GetFocusedVisual(): Visual | undefined { return undefined; }
 }
 
-function setup(items: MuralBase[]): { diagram: Diagram } {
+function setup(items: MuralBase[]): { diagram: Diagram }
+{
     Application.current = null;
     new Application();
     const coll = new ObservableCollection<MuralBase>();
@@ -87,15 +92,18 @@ function setup(items: MuralBase[]): { diagram: Diagram } {
     return { diagram };
 }
 
-function cont(diagram: Diagram, item: unknown): Figure {
+function cont(diagram: Diagram, item: unknown): Figure
+{
     const gen = (diagram as unknown as { _generator: { ContainerFromItem(item: unknown): Visual | undefined } })._generator;
     const c = gen.ContainerFromItem(item);
     assert.ok(c instanceof Figure, 'container should be Figure');
     return c;
 }
 
-function selectMany(diagram: Diagram, items: unknown[]): void {
-    for (let i = 0; i < items.length; i++) {
+function selectMany(diagram: Diagram, items: unknown[]): void
+{
+    for (let i = 0; i < items.length; i++)
+    {
         const c = cont(diagram, items[i]);
         const mods = i === 0
             ? ModifierKeys.None
@@ -158,7 +166,8 @@ describe('Diagram — SelectionReflector (ReflectSelectionToItems)', () => {
 // `protected` is a TypeScript-only annotation; reach through `any` for
 // direct OnKeyDown invocation in tests. Mirrors patterns elsewhere in
 // the framework test suite.
-function dispatchKeyDown(diagram: Diagram, key: Key, mods: { Control?: boolean; Shift?: boolean; Meta?: boolean }): KeyEventArgs {
+function dispatchKeyDown(diagram: Diagram, key: Key, mods: { Control?: boolean; Shift?: boolean; Meta?: boolean }): KeyEventArgs
+{
     const args = new KeyEventArgs('KeyDown', diagram, {
         Key:       key,
         KeyText:       key,

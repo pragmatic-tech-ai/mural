@@ -37,7 +37,8 @@ describe('WrapPanel.IsUniformChildren', () => {
         for (const l of leaves) wp.AddChild(l);
         // width 100 → two 40-wide cells per line (80 <= 100; a third at 120 > 100 wraps)
         layout(wp, 100, 200);
-        for (const l of leaves) {
+        for (const l of leaves)
+        {
             assert.equal(l.ArrangedRect.Width, 40, 'uniform cell width');
             assert.equal(l.ArrangedRect.Height, 30, 'uniform cell height');
         }

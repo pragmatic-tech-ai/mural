@@ -7,7 +7,8 @@ import { type IToolboxDropFactory } from '../toolbox-drop-factory.js';
 import { ToolboxItem } from '../toolbox-item.js';
 import { ToolboxRepository } from '../toolbox-repository.js';
 
-function item(id: string): ToolboxItem {
+function item(id: string): ToolboxItem
+{
     const rk = new ServiceKey<IToolboxVisualResolver>('r');
     const fk = new ServiceKey<IToolboxDropFactory>('f');
     return new ToolboxItem(id, id, new ToolboxVisualDescriptor(rk, id), fk);

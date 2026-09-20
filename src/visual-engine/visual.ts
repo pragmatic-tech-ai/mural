@@ -780,7 +780,8 @@ export class Visual extends MuralBase
     // The LayoutTransform's matrix when set and non-identity, else undefined —
     // the fast-path guard used by measure/arrange so the default path is
     // byte-for-byte unchanged.
-    protected _layoutMatrix(): Matrix | undefined {
+    protected _layoutMatrix(): Matrix | undefined
+    {
         const lt = this.LayoutTransform;
         if (lt === undefined || lt.Matrix.IsIdentity) return undefined;
         return lt.Matrix;
@@ -1272,7 +1273,8 @@ export class Visual extends MuralBase
         // pre-existing path runs verbatim).
         const M = this._layoutMatrix();
         let measureAvail = constrained;
-        if (M !== undefined) {
+        if (M !== undefined)
+        {
             const inv = M.Invert();
             if (inv !== undefined) measureAvail = transformBounds(constrained, inv);
         }
@@ -1405,7 +1407,8 @@ export class Visual extends MuralBase
         // that footprint (the transform, shifted so its bbox min is at the local
         // origin). Undefined/identity → the pre-existing path runs verbatim.
         const M = this._layoutMatrix();
-        if (M !== undefined) {
+        if (M !== undefined)
+        {
             this._renderSize = this.ArrangeOverride(this._layoutLocalSize);
             const rs = this._renderSize;
             const p0 = M.Transform(new Point(0, 0));
@@ -1418,7 +1421,9 @@ export class Visual extends MuralBase
             const fh = Math.max(p0.Y, p1.Y, p2.Y, p3.Y) - by;
             this._effectiveLayout = M.Multiply(Matrix.Translate(-bx, -by));
             this._arrangedRect = new Rect(marginedRect.X + offsetX, marginedRect.Y + offsetY, fw, fh);
-        } else {
+        }
+        else
+        {
             this._effectiveLayout = undefined;
             this._arrangedRect = new Rect(
                 marginedRect.X + offsetX,

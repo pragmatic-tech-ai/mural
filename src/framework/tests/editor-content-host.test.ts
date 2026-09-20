@@ -9,15 +9,18 @@ import { TabControl } from '../tabs/tabs.js';
 import { ContentPresenter } from '../../basic/templates/content-presenter.js';
 
 // A minimal IDocument the host can open.
-class FakeDoc extends MuralBase {
+class FakeDoc extends MuralBase
+{
     constructor(public readonly Id: string, public readonly Title: string) { super(); }
     public readonly IsDirty = false;
     public Save(): void {}
 }
 
-function findByType<T>(root: Visual, ctor: new (...a: never[]) => T): T | undefined {
+function findByType<T>(root: Visual, ctor: new (...a: never[]) => T): T | undefined
+{
     if (root instanceof ctor) return root;
-    for (const c of root.visualChildren) {
+    for (const c of root.visualChildren)
+    {
         const hit = findByType(c, ctor);
         if (hit !== undefined) return hit;
     }

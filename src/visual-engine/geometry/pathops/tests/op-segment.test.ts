@@ -186,11 +186,13 @@ describe('OpSegment.addT — pt-T allocator', () => {
         // Walk head -> ... -> tail and confirm t-order: 0, 0.25, 0.5, 0.75, 1.
         const ts: number[] = [];
         let span = s.head() as OpSpan | undefined;
-        while (span !== undefined) {
+        while (span !== undefined)
+        {
             ts.push(span.t());
             const next = span.next();
             const up = next.upCastable();
-            if (up === undefined) {
+            if (up === undefined)
+            {
                 ts.push(next.t());
                 break;
             }
@@ -301,7 +303,8 @@ describe('OpSegment.subDivide — emit OpCurveCarrier matching Line/Quad/Cubic.s
         const r = s.subDivide(s.head(), s.tail(), out);
         assert.equal(r, false);
         assert.equal(out.value.verb, OpVerb.kLine);
-        if (out.value.verb === OpVerb.kLine) {
+        if (out.value.verb === OpVerb.kLine)
+        {
             assert.ok(out.value.fLine.fPts[0].equals(P(0, 0)));
             assert.ok(out.value.fLine.fPts[1].equals(P(10, 0)));
         }
@@ -314,13 +317,15 @@ describe('OpSegment.subDivide — emit OpCurveCarrier matching Line/Quad/Cubic.s
         s.addT(0.75);
         // Find the spans at t=0.25 and t=0.75 in the chain.
         let a: import('../op-span.js').OpSpanBase | undefined = s.head();
-        while (a !== undefined && a.t() !== 0.25) {
+        while (a !== undefined && a.t() !== 0.25)
+        {
             const up = a.upCastable();
             if (up === undefined) break;
             a = up.next();
         }
         let b: import('../op-span.js').OpSpanBase | undefined = a;
-        while (b !== undefined && b.t() !== 0.75) {
+        while (b !== undefined && b.t() !== 0.75)
+        {
             const up = b.upCastable();
             if (up === undefined) break;
             b = up.next();
@@ -337,8 +342,10 @@ describe('OpSegment.subDivide — emit OpCurveCarrier matching Line/Quad/Cubic.s
         const full = new Quad();
         full.fPts = [P(0, 0), P(1, 2), P(2, 0)];
         const expected = full.subDivide(0.25, 0.75);
-        if (out.value.verb === OpVerb.kQuad) {
-            for (let i = 0; i < 3; ++i) {
+        if (out.value.verb === OpVerb.kQuad)
+        {
+            for (let i = 0; i < 3; ++i)
+            {
                 assert.ok(Math.abs(out.value.fQuad.fPts[i]!.fX - expected.fPts[i]!.fX) < 1e-9);
                 assert.ok(Math.abs(out.value.fQuad.fPts[i]!.fY - expected.fPts[i]!.fY) < 1e-9);
             }
@@ -354,7 +361,8 @@ describe('OpSegment.subDivide — emit OpCurveCarrier matching Line/Quad/Cubic.s
         const r = s.subDivide(s.head(), s.tail(), out);
         assert.equal(r, false, 'endpoint case skips midpoint computation');
         assert.equal(out.value.verb, OpVerb.kCubic);
-        if (out.value.verb === OpVerb.kCubic) {
+        if (out.value.verb === OpVerb.kCubic)
+        {
             // Original control points (p1, p2) preserved.
             assert.ok(out.value.fCubic.fPts[1]!.equals(P(1, 3)));
             assert.ok(out.value.fCubic.fPts[2]!.equals(P(2, -1)));
@@ -375,8 +383,10 @@ describe('OpSegment.subDivide — emit OpCurveCarrier matching Line/Quad/Cubic.s
         const full = new Cubic();
         full.fPts = [P(0, 0), P(1, 3), P(2, -1), P(3, 0)];
         const expected = full.subDivide(0.25, 0.75);
-        if (out.value.verb === OpVerb.kCubic) {
-            for (let i = 0; i < 4; ++i) {
+        if (out.value.verb === OpVerb.kCubic)
+        {
+            for (let i = 0; i < 4; ++i)
+            {
                 assert.ok(Math.abs(out.value.fCubic.fPts[i]!.fX - expected.fPts[i]!.fX) < 1e-9,
                     `cubic.fPts[${i}].x: ${out.value.fCubic.fPts[i]!.fX} vs ${expected.fPts[i]!.fX}`);
                 assert.ok(Math.abs(out.value.fCubic.fPts[i]!.fY - expected.fPts[i]!.fY) < 1e-9);

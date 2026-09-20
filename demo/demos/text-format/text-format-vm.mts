@@ -9,7 +9,8 @@
 import { MetaData, MuralBase } from '@pragmatic-tech-ai/mural/runtime';
 import type { Visual } from '@pragmatic-tech-ai/mural/runtime';
 
-export class TextFormatVM extends MuralBase {
+export class TextFormatVM extends MuralBase
+{
     static FamilyKey    = MuralBase.RegisterProperty<string>( TextFormatVM, 'Family',    'Georgia',      MetaData.None);
     static FontSizeKey  = MuralBase.RegisterProperty<number>( TextFormatVM, 'FontSize',  20,             MetaData.None);
     static BoldKey      = MuralBase.RegisterProperty<boolean>(TextFormatVM, 'Bold',      false,          MetaData.None);

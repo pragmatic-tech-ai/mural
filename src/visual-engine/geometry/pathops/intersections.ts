@@ -58,7 +58,8 @@ import {
 // (9 interior intersections + 4 endpoint touches).
 const MAX_INTERSECTIONS = 13;
 
-export class Intersections {
+export class Intersections
+{
     // Up to 13 intersection points. Skia stores them as fixed array;
     // we follow suit so indices match line-for-line with the C++.
     public fPt:  Point[];

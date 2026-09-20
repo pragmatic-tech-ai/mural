@@ -34,7 +34,8 @@ export class BouncingBallVM extends MuralBase
     private _vx: number;
     private _vy: number;
 
-    constructor() {
+    constructor()
+    {
         super();
         // Plain fields for the simulation — velocity (px / ms) and the
         // playfield bounds. None of these are bound by the view; keeping

@@ -59,7 +59,8 @@ export function attachCanvasDropBehavior(receiver: Visual, diagram: Diagram): ()
         // the host factory to validate. Undefined over empty canvas.
         const container = diagram.ContainerPlacement.containerAt(position);
 
-        if (args.Data.Has(TOOLBOX_ITEM_FORMAT)) {
+        if (args.Data.Has(TOOLBOX_ITEM_FORMAT))
+        {
             // A drop is a diagram interaction — take keyboard focus so the just-dropped
             // node is immediately editable/deletable via shortcuts. No-op when the
             // diagram isn't Focusable (the Visual.Focus contract).

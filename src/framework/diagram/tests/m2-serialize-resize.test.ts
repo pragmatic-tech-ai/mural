@@ -88,7 +88,8 @@ describe('DiagramDocument — Figure serialize round-trip (M2)', () => {
 
 // ── Part B: resize chain (container → VM → geometry) ─────────────────
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void { /* noop */ }
     public GetFocusedVisual(): Visual | undefined { return undefined; }

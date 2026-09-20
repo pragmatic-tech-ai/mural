@@ -11,7 +11,8 @@ import { Diagram } from '../diagram.js';
 import { Figure } from '../figure.js';
 import { ContainerFigure } from '../container-figure.js';
 
-function mount(items: ObservableCollection<Figure>): Diagram {
+function mount(items: ObservableCollection<Figure>): Diagram
+{
     const diagram = new Diagram();
     diagram.SelectionMode = SelectionMode.Extended;
     diagram.ItemsPanel = new ItemsPanelTemplate(() => new Canvas());
@@ -24,7 +25,8 @@ function mount(items: ObservableCollection<Figure>): Diagram {
 }
 
 // Figures are their own containers here, so click them directly to select.
-function selectMany(diagram: Diagram, figs: Figure[]): void {
+function selectMany(diagram: Diagram, figs: Figure[]): void
+{
     for (let i = 0; i < figs.length; i++)
         diagram.HandleContainerClick(figs[i]!, i === 0 ? ModifierKeys.None : ModifierKeys.Control);
 }

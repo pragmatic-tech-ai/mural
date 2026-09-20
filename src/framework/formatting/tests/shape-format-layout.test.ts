@@ -77,7 +77,8 @@ describe('ShapeFormatControl — shared-size 2-column layout', () => {
         const offenders: string[] = [];
         const walk = (v: Visual): void => {
             const r = v.ArrangedRect;
-            if (!finite(r.X) || !finite(r.Y) || !finite(r.Width) || !finite(r.Height)) {
+            if (!finite(r.X) || !finite(r.Y) || !finite(r.Width) || !finite(r.Height))
+            {
                 const nm = (v as unknown as { Name?: string }).Name ?? '';
                 offenders.push(`${v.constructor.name}#${nm} (${r.X},${r.Y},${r.Width},${r.Height})`);
             }

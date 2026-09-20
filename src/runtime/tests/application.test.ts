@@ -23,7 +23,8 @@ import { resolveKey } from '../model-internals.js';
 // minimally.
 class TestLeaf extends Element
 {
-    static {
+    static
+    {
         MuralBase.RegisterProperty(TestLeaf, 'Brush', undefined, MetaData.None);
     }
     public get Brush(): unknown { return this.get_property_value(resolveKey(this, undefined, 'Brush')); }
@@ -287,15 +288,19 @@ describe('Application.initialize', () => {
         // as the default. The Theme ctor's scheme/theme cross-check
         // requires this theme's scheme to target itself, so build a
         // standalone scheme.
-        class OtherLight extends Scheme {
+        class OtherLight extends Scheme
+        {
             public static readonly instance: OtherLight = new OtherLight();
-            private constructor() {
+            private constructor()
+            {
                 super({ name: 'OtherLight', theme: 'Other', tokens: { Token: '_' } });
             }
         }
-        class Other extends Theme {
+        class Other extends Theme
+        {
             public static readonly instance: Other = new Other();
-            private constructor() {
+            private constructor()
+            {
                 super({
                     name: 'Other',
                     dictionaries: [],
@@ -316,21 +321,27 @@ describe('Application.initialize — autoScheme (OS prefers-color-scheme)', () =
     // Tiny test theme — same shape as the Application.initialize
     // describe block above but defined locally so the matchMedia
     // mocking stays scoped.
-    class AutoSchemeLight extends Scheme {
+    class AutoSchemeLight extends Scheme
+    {
         public static readonly instance: AutoSchemeLight = new AutoSchemeLight();
-        private constructor() {
+        private constructor()
+        {
             super({ name: 'AutoSchemeLight', theme: 'AutoSchemeTheme', tokens: { Token: 'L' } });
         }
     }
-    class AutoSchemeDark extends Scheme {
+    class AutoSchemeDark extends Scheme
+    {
         public static readonly instance: AutoSchemeDark = new AutoSchemeDark();
-        private constructor() {
+        private constructor()
+        {
             super({ name: 'AutoSchemeDark', theme: 'AutoSchemeTheme', tokens: { Token: 'D' } });
         }
     }
-    class AutoSchemeTheme extends Theme {
+    class AutoSchemeTheme extends Theme
+    {
         public static readonly instance: AutoSchemeTheme = new AutoSchemeTheme();
-        private constructor() {
+        private constructor()
+        {
             super({
                 name:          'AutoSchemeTheme',
                 dictionaries:  [new ResourceDictionary()],
@@ -339,7 +350,8 @@ describe('Application.initialize — autoScheme (OS prefers-color-scheme)', () =
                 defaultScheme: 'AutoSchemeLight',
             });
         }
-        public static override Activate(scheme?: typeof Scheme): void {
+        public static override Activate(scheme?: typeof Scheme): void
+        {
             const target = scheme ?? AutoSchemeLight;
             ThemeManager.ActivateTheme(AutoSchemeTheme.instance.name, { scheme: target.name });
         }
@@ -347,14 +359,17 @@ describe('Application.initialize — autoScheme (OS prefers-color-scheme)', () =
 
     // Mock MediaQueryList — supports a controllable .matches plus a
     // single 'change' listener (matches Application's usage).
-    class MockMql {
+    class MockMql
+    {
         public matches:    boolean;
         private listener:  ((e: { matches: boolean }) => void) | undefined;
         constructor(initial: boolean) { this.matches = initial; }
-        public addEventListener(_: 'change', l: (e: { matches: boolean }) => void): void {
+        public addEventListener(_: 'change', l: (e: { matches: boolean }) => void): void
+        {
             this.listener = l;
         }
-        public fire(matches: boolean): void {
+        public fire(matches: boolean): void
+        {
             this.matches = matches;
             this.listener?.({ matches });
         }
@@ -363,7 +378,8 @@ describe('Application.initialize — autoScheme (OS prefers-color-scheme)', () =
     let installedMql: MockMql | undefined;
     let originalMatchMedia: ((q: string) => MediaQueryList) | undefined;
 
-    function installMatchMedia(initialDark: boolean): MockMql {
+    function installMatchMedia(initialDark: boolean): MockMql
+    {
         installedMql = new MockMql(initialDark);
         // Cast to escape TS's strict MediaQueryList shape — our mock
         // only needs the matches + addEventListener surface that
@@ -373,7 +389,8 @@ describe('Application.initialize — autoScheme (OS prefers-color-scheme)', () =
         return installedMql;
     }
 
-    function uninstallMatchMedia(): void {
+    function uninstallMatchMedia(): void
+    {
         const g = globalThis as unknown as { matchMedia?: (q: string) => MediaQueryList };
         if (originalMatchMedia !== undefined) g.matchMedia = originalMatchMedia;
         else delete g.matchMedia;
@@ -386,38 +403,44 @@ describe('Application.initialize — autoScheme (OS prefers-color-scheme)', () =
         Application.current = null;
         const g = globalThis as unknown as { matchMedia?: (q: string) => MediaQueryList };
         originalMatchMedia = g.matchMedia;
-        if (ThemeManager.GetTheme('AutoSchemeTheme') === undefined) {
+        if (ThemeManager.GetTheme('AutoSchemeTheme') === undefined)
+        {
             ThemeManager.RegisterTheme(AutoSchemeTheme.instance);
         }
     });
 
     test('autoScheme picks the dark scheme when OS prefers dark', () => {
         installMatchMedia(/* dark */ true);
-        try {
+        try
+        {
             const app = new Application();
             app.initialize({
                 theme:      AutoSchemeTheme,
                 autoScheme: { light: AutoSchemeLight, dark: AutoSchemeDark },
             });
             assert.equal(ThemeManager.ActiveScheme?.name, 'AutoSchemeDark');
-        } finally { uninstallMatchMedia(); }
+        }
+        finally { uninstallMatchMedia(); }
     });
 
     test('autoScheme picks the light scheme when OS prefers light', () => {
         installMatchMedia(/* dark */ false);
-        try {
+        try
+        {
             const app = new Application();
             app.initialize({
                 theme:      AutoSchemeTheme,
                 autoScheme: { light: AutoSchemeLight, dark: AutoSchemeDark },
             });
             assert.equal(ThemeManager.ActiveScheme?.name, 'AutoSchemeLight');
-        } finally { uninstallMatchMedia(); }
+        }
+        finally { uninstallMatchMedia(); }
     });
 
     test('autoScheme takes precedence over scheme when both are supplied', () => {
         installMatchMedia(/* dark */ true);
-        try {
+        try
+        {
             const app = new Application();
             app.initialize({
                 theme:      AutoSchemeTheme,
@@ -426,12 +449,14 @@ describe('Application.initialize — autoScheme (OS prefers-color-scheme)', () =
             });
             assert.equal(ThemeManager.ActiveScheme?.name, 'AutoSchemeDark',
                 'autoScheme overrides the explicit scheme');
-        } finally { uninstallMatchMedia(); }
+        }
+        finally { uninstallMatchMedia(); }
     });
 
     test('listen defaults to true — OS preference flips re-activate the scheme', () => {
         const mql = installMatchMedia(/* dark */ false);
-        try {
+        try
+        {
             const app = new Application();
             app.initialize({
                 theme:      AutoSchemeTheme,
@@ -442,12 +467,14 @@ describe('Application.initialize — autoScheme (OS prefers-color-scheme)', () =
             assert.equal(ThemeManager.ActiveScheme?.name, 'AutoSchemeDark');
             mql.fire(false);
             assert.equal(ThemeManager.ActiveScheme?.name, 'AutoSchemeLight');
-        } finally { uninstallMatchMedia(); }
+        }
+        finally { uninstallMatchMedia(); }
     });
 
     test('listen: false — initial pick honoured, later OS flips ignored', () => {
         const mql = installMatchMedia(/* dark */ true);
-        try {
+        try
+        {
             const app = new Application();
             app.initialize({
                 theme:      AutoSchemeTheme,
@@ -457,7 +484,8 @@ describe('Application.initialize — autoScheme (OS prefers-color-scheme)', () =
             mql.fire(false);
             assert.equal(ThemeManager.ActiveScheme?.name, 'AutoSchemeDark',
                 'no listener attached → ActiveScheme unchanged');
-        } finally { uninstallMatchMedia(); }
+        }
+        finally { uninstallMatchMedia(); }
     });
 
     test('multiple initialize calls with autoScheme do not stack listeners', () => {
@@ -468,12 +496,14 @@ describe('Application.initialize — autoScheme (OS prefers-color-scheme)', () =
         const original = MockMql.prototype.addEventListener;
         MockMql.prototype.addEventListener = function patched(
             this: MockMql, t: 'change', l: (e: { matches: boolean }) => void,
-        ): void {
+        ): void
+        {
             registered++;
             original.call(this, t, l);
         };
         installMatchMedia(/* dark */ false);
-        try {
+        try
+        {
             const app = new Application();
             app.initialize({
                 theme:      AutoSchemeTheme,
@@ -487,7 +517,9 @@ describe('Application.initialize — autoScheme (OS prefers-color-scheme)', () =
             });
             assert.equal(registered, 1,
                 'listener attached exactly once per Application');
-        } finally {
+        }
+        finally
+        {
             MockMql.prototype.addEventListener = original;
             uninstallMatchMedia();
         }
@@ -502,7 +534,8 @@ describe('Application.initialize — autoScheme (OS prefers-color-scheme)', () =
         // otherwise the .mu default sticks and the OS preference is
         // never honoured at startup.
         installMatchMedia(/* dark */ true);
-        try {
+        try
+        {
             const app = new Application();
             app.initialize({ theme: AutoSchemeTheme, scheme: AutoSchemeLight });
             assert.equal(ThemeManager.ActiveScheme?.name, 'AutoSchemeLight',
@@ -513,7 +546,8 @@ describe('Application.initialize — autoScheme (OS prefers-color-scheme)', () =
             });
             assert.equal(ThemeManager.ActiveScheme?.name, 'AutoSchemeDark',
                 'second call with autoScheme re-activates to match OS preference');
-        } finally { uninstallMatchMedia(); }
+        }
+        finally { uninstallMatchMedia(); }
     });
 
     test('no matchMedia available — falls back to the light scheme', () => {
@@ -522,14 +556,17 @@ describe('Application.initialize — autoScheme (OS prefers-color-scheme)', () =
         const g = globalThis as unknown as { matchMedia?: (q: string) => MediaQueryList };
         const prior = g.matchMedia;
         delete g.matchMedia;
-        try {
+        try
+        {
             const app = new Application();
             app.initialize({
                 theme:      AutoSchemeTheme,
                 autoScheme: { light: AutoSchemeLight, dark: AutoSchemeDark },
             });
             assert.equal(ThemeManager.ActiveScheme?.name, 'AutoSchemeLight');
-        } finally {
+        }
+        finally
+        {
             if (prior !== undefined) g.matchMedia = prior;
         }
     });

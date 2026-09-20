@@ -294,8 +294,10 @@ describe('AttachBehaviorAction / DetachBehaviorAction', () => {
 
     test('end-to-end via PropertyTrigger: enter attaches, exit detaches', () => {
         // A target Visual with a Boolean DP the trigger watches.
-        class Widget extends Panel {
-            static {
+        class Widget extends Panel
+        {
+            static
+            {
                 MuralBase.RegisterProperty(Widget, 'IsBusy', false, MetaData.None);
             }
             public get IsBusy(): boolean { return this.get_property_value(Widget.IsBusyKey); }

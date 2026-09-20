@@ -13,9 +13,11 @@ import { ApplicationSettings } from '../shell/services/application-settings-serv
 import { NavigationRail } from '../navigation/navigation-rail.js';
 
 // Depth-first search of a visual subtree for the first instance of a type.
-function findByType<T>(root: Visual, ctor: new (...a: never[]) => T): T | undefined {
+function findByType<T>(root: Visual, ctor: new (...a: never[]) => T): T | undefined
+{
     if (root instanceof ctor) return root;
-    for (const c of root.visualChildren) {
+    for (const c of root.visualChildren)
+    {
         const hit = findByType(c, ctor);
         if (hit !== undefined) return hit;
     }
@@ -31,7 +33,8 @@ describe('EditorShell — full region set', () => {
         // PART_SidePane and the dockable PART_RightDockHost (which hosts inspectors
         // and other panels as tabs) — replacing the old single PART_InspectorHost.
         for (const part of ['PART_HeaderHost', 'PART_CommandHost', 'PART_StatusHost',
-                            'PART_NavHost', 'PART_SidePane', 'PART_RightDockHost', 'PART_ContentHost']) {
+                            'PART_NavHost', 'PART_SidePane', 'PART_RightDockHost', 'PART_ContentHost'])
+                            {
             assert.ok(root.FindName(part) !== undefined, `${part} should be present`);
         }
     });
@@ -111,7 +114,8 @@ describe('Shell — region services', () => {
 
     test('Dispose tears down the scope, disposing its services', async () => {
         let disposed = false;
-        class SpyNav extends NavigationService {
+        class SpyNav extends NavigationService
+        {
             public override dispose(): void { disposed = true; super.dispose(); }
         }
         // Register the spy at the root before constructing, so the shell's

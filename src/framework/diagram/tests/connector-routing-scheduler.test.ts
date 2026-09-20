@@ -8,7 +8,8 @@ import { ConnectorEndpoint } from '../connector-endpoint.js';
 import { ConnectorRoutingScheduler } from '../connector-routing-scheduler.js';
 import { SideEndpointRegistry } from '../side-endpoint-host.js';
 
-function fig(id: string, x: number, y: number): Figure {
+function fig(id: string, x: number, y: number): Figure
+{
     const f = Figure.fromKind('rectangle', x, y, { width: 120, height: 48 });
     f.Id = id;
     f.Fill = new SolidColorBrush(Color.FromHex('#eee'));
@@ -95,12 +96,14 @@ describe('ConnectorRoutingScheduler deferral', () => {
 // A hub with N spokes all landing on its W side — the case the crossing
 // optimizer reorders. Wiring order is fixed so eager vs batched are comparable
 // index-by-index.
-function buildHubGraph(batched: boolean): Connector[] {
+function buildHubGraph(batched: boolean): Connector[]
+{
     const hub = fig('hub', 500, 200);
     const spokes = [fig('a', 0, 0), fig('b', 0, 120), fig('c', 0, 240), fig('d', 0, 360)];
     const cons: Connector[] = [];
     const wire = (): void => {
-        for (const s of spokes) {
+        for (const s of spokes)
+        {
             const c = new Connector();
             c.Source = new ConnectorEndpoint({ Node: s });
             c.Target = new ConnectorEndpoint({ Node: hub });
@@ -114,16 +117,19 @@ function buildHubGraph(batched: boolean): Connector[] {
 // Serialize the outcome the optimizer decides: each connector's resolved source
 // + target anchors (x, y, side). Slot reordering shows up as different anchor
 // positions, so identical serializations ⇒ identical routing outcome.
-function anchorsOf(cons: readonly Connector[]): string {
+function anchorsOf(cons: readonly Connector[]): string
+{
     return JSON.stringify(cons.map(c => [c.CurrentSourceAnchor, c.CurrentTargetAnchor]));
 }
 
 // A hub already wired (routes settled) plus its N spokes, ready to be moved —
 // the drag scenario. Returns the hub so the test can rewrite its Left/Top.
-function buildSettledHub(spokeCount: number): { hub: Figure; cons: Connector[] } {
+function buildSettledHub(spokeCount: number): { hub: Figure; cons: Connector[] }
+{
     const hub = fig('hub', 500, 200);
     const cons: Connector[] = [];
-    for (let i = 0; i < spokeCount; i++) {
+    for (let i = 0; i < spokeCount; i++)
+    {
         const s = fig(`s${i}`, 0, i * 80);
         const c = new Connector();
         c.Source = new ConnectorEndpoint({ Node: s });
@@ -155,11 +161,13 @@ describe('ConnectorRoutingScheduler node-move (drag tick)', () => {
         };
         const orig = proto.optimizeIntersections;
         let calls = 0;
-        proto.optimizeIntersections = function (this: unknown, s: unknown): void {
+        proto.optimizeIntersections = function (this: unknown, s: unknown): void
+        {
             calls++;
             return orig.call(this, s);
         };
-        try {
+        try
+        {
             Application.current = null; new Application();
             const eager = buildSettledHub(8);
             calls = 0;
@@ -178,7 +186,9 @@ describe('ConnectorRoutingScheduler node-move (drag tick)', () => {
 
             assert.ok(batchedCalls < eagerCalls, `batched(${batchedCalls}) must be < eager(${eagerCalls})`);
             assert.ok(batchedCalls <= 2, `expected per-side optimize, got ${batchedCalls}`);
-        } finally {
+        }
+        finally
+        {
             proto.optimizeIntersections = orig;
         }
     });
@@ -207,11 +217,13 @@ describe('ConnectorRoutingScheduler optimize-count', () => {
         };
         const orig = proto.optimizeIntersections;
         let calls = 0;
-        proto.optimizeIntersections = function (this: unknown, s: unknown): void {
+        proto.optimizeIntersections = function (this: unknown, s: unknown): void
+        {
             calls++;
             return orig.call(this, s);
         };
-        try {
+        try
+        {
             Application.current = null; new Application();
             calls = 0;
             buildHubGraph(false);
@@ -228,7 +240,9 @@ describe('ConnectorRoutingScheduler optimize-count', () => {
             // per-connector × hill-climb-iteration cascade the eager path pays.
             assert.ok(batchedCalls < eagerCalls, `batched(${batchedCalls}) must be < eager(${eagerCalls})`);
             assert.ok(batchedCalls <= 2, `expected optimizer invoked per multi-connector side, got ${batchedCalls}`);
-        } finally {
+        }
+        finally
+        {
             proto.optimizeIntersections = orig;
         }
     });

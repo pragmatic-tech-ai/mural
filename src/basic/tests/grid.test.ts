@@ -311,7 +311,8 @@ describe('Grid v2.1 — MinWidth / MaxWidth on definitions', () => {
 describe('Grid v2.2 — SharedSizeGroup cross-Grid coordination', () => {
     // Build two Grids that share a SharedSizeGroup. Mount both under
     // one HeadlessTarget so they live in the same per-target registry.
-    function buildPair(): { target: HeadlessTarget; gA: Grid; gB: Grid; root: StackPanel } {
+    function buildPair(): { target: HeadlessTarget; gA: Grid; gB: Grid; root: StackPanel }
+    {
         const root = new StackPanel();
         const gA = new Grid();
         const gB = new Grid();

@@ -15,7 +15,8 @@ export class NavigationRailVM extends MuralBase
     get ActiveLabel():   string { return this.get_property_value(NavigationRailVM.ActiveLabelKey); }
     set ActiveLabel(v:   string) { this.set_property_value(NavigationRailVM.ActiveLabelKey, v); }
 
-    constructor() {
+    constructor()
+    {
         super();
         const destinations = new ObservableCollection([
             'Home', 'Search', 'Library', 'Settings',

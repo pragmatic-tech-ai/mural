@@ -35,7 +35,8 @@ import { DiagramDocument, type DiagramStorage } from '@pragmatic-tech-ai/mural/f
 type FigureCtor = (new (id: string, left: number, top: number) => Figure) & { DemoKind: string };
 
 // One clipboard entry — the data Cut/Copy stash and Paste replays.
-interface ClipEntry {
+interface ClipEntry
+{
     kind: string;
     left: number;
     top:  number;
@@ -43,7 +44,8 @@ interface ClipEntry {
 
 // Cross-class internal: DiagramDocument's private id counter, reached by
 // CreateNode override to keep node ids monotonic with the base.
-interface DiagramDocumentNextId {
+interface DiagramDocumentNextId
+{
     _nextId: number;
 }
 
@@ -61,12 +63,15 @@ const BG_NOTE    = brush('#fde68a');
 // geometry; the subclass only carries per-instance defaults and an
 // implicit `Style[TargetType=*Figure]` hook for ContextMenu chrome.
 
-export class RectFigure extends Figure {
+export class RectFigure extends Figure
+{
     static DemoKind = 'rect';
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(RectFigure, Visual.FillKey, { default_value: BG_RECT });
     }
-    constructor(id: string, left: number, top: number) {
+    constructor(id: string, left: number, top: number)
+    {
         super();
         this.Id        = id;
         this.Left      = left;
@@ -78,12 +83,15 @@ export class RectFigure extends Figure {
     }
 }
 
-export class EllipseFigure extends Figure {
+export class EllipseFigure extends Figure
+{
     static DemoKind = 'ellipse';
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(EllipseFigure, Visual.FillKey, { default_value: BG_ELLIPSE });
     }
-    constructor(id: string, left: number, top: number) {
+    constructor(id: string, left: number, top: number)
+    {
         super();
         this.Id        = id;
         this.Left      = left;
@@ -95,12 +103,15 @@ export class EllipseFigure extends Figure {
     }
 }
 
-export class NoteFigure extends Figure {
+export class NoteFigure extends Figure
+{
     static DemoKind = 'note';
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(NoteFigure, Visual.FillKey, { default_value: BG_NOTE });
     }
-    constructor(id: string, left: number, top: number) {
+    constructor(id: string, left: number, top: number)
+    {
         super();
         this.Id        = id;
         this.Left      = left;
@@ -171,14 +182,16 @@ export class CommandsVM extends DiagramDocument
     // Cut/Copy stash replayed by Paste. Plain field — view-invisible state.
     private _clipboard: ClipEntry[] = [];
 
-    constructor(storage?: DiagramStorage) {
+    constructor(storage?: DiagramStorage)
+    {
         super(storage);
 
         const setStatus = (msg: string): void => this.set_property_value(DiagramDocument.StatusKey, msg);
         const selected = (): Figure[] => {
             const out: Figure[] = [];
             const nodes = this.Nodes;
-            for (let i = 0; i < nodes.Count; i++) {
+            for (let i = 0; i < nodes.Count; i++)
+            {
                 const v = nodes.Get(i);
                 // This demo only ever creates Figure subclasses via CreateNode,
                 // so every selected node is a Figure (carries Left/Top setters
@@ -216,7 +229,8 @@ export class CommandsVM extends DiagramDocument
         }, hasSel));
         this.set_property_value(CommandsVM.SelectAllCommandKey, new RelayCommand(() => {
             const nodes = this.Nodes;
-            for (let i = 0; i < nodes.Count; i++) {
+            for (let i = 0; i < nodes.Count; i++)
+            {
                 const v = nodes.Get(i);
                 if (v instanceof Figure) v.IsSelected = true;
             }
@@ -259,7 +273,8 @@ export class CommandsVM extends DiagramDocument
     // Base CreateNode returns Figure | null (shapes are self-painting Figures);
     // this demo creates custom Figure subclasses instead, so the override is
     // well-typed with no cast.
-    override CreateNode(kind: string, left: number, top: number): Figure | null {
+    override CreateNode(kind: string, left: number, top: number): Figure | null
+    {
         const Cls = CMD_KIND_TO_CLASS[kind];
         if (Cls === undefined) return null;
         // `_nextId` is the base DiagramDocument's private id counter; reach in
@@ -290,18 +305,21 @@ export class CommandsVM extends DiagramDocument
      *  Flipping HasSelection re-pulses CanExecuteChanged on every
      *  selection-gated command so toolbar / menu / context-menu chrome
      *  refreshes in lockstep. */
-    PublishSelectionState(hasSelection: boolean): void {
+    PublishSelectionState(hasSelection: boolean): void
+    {
         if (this.HasSelection === hasSelection) return;
         this.set_property_value(CommandsVM.HasSelectionKey, hasSelection);
         this._raiseGated();
     }
 
-    _raiseGated(): void {
+    _raiseGated(): void
+    {
         for (const name of [
             'CutCommand', 'CopyCommand', 'DeleteCommand',
             'DuplicateCommand', 'AlignBottomCommand',
             'BringFrontCommand', 'SendBackCommand',
-        ]) {
+        ])
+        {
             // Dynamic getter access over a name list — bridge to the
             // RelayCommand-valued getters via an index signature.
             (this as unknown as Record<string, RelayCommand>)[name].RaiseCanExecuteChanged();
@@ -309,17 +327,20 @@ export class CommandsVM extends DiagramDocument
         this.PasteCommand?.RaiseCanExecuteChanged();
     }
 
-    _align(mode: string): void {
+    _align(mode: string): void
+    {
         const sel: Figure[] = [];
         const nodes = this.Nodes;
-        for (let i = 0; i < nodes.Count; i++) {
+        for (let i = 0; i < nodes.Count; i++)
+        {
             const v = nodes.Get(i);
             // Demo nodes are all Figures (see selected()); narrow for Left/Top
             // writes below (NodeViewModel has no IsSelected).
             if (v instanceof Figure && v.IsSelected) sel.push(v);
         }
         if (sel.length === 0) return;
-        switch (mode) {
+        switch (mode)
+        {
             case 'left':   { const min = Math.min(...sel.map((n) => n.Left));               for (const n of sel) n.Left = min;               break; }
             case 'right':  { const max = Math.max(...sel.map((n) => n.Left + NODE_W));      for (const n of sel) n.Left = max - NODE_W;      break; }
             case 'center': { const avg = sel.reduce((s, n) => s + n.Left + NODE_W / 2, 0) / sel.length; for (const n of sel) n.Left = avg - NODE_W / 2; break; }

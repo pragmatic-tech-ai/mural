@@ -25,7 +25,8 @@ function logicalParentOf(v: Visual | undefined): Visual | undefined
 // covers the inheritance flow test below.
 class Leaf extends Element
 {
-    static {
+    static
+    {
         // Inheritable property — proves walk_inherited rides logical, not visual.
         MuralBase.RegisterProperty(Leaf, 'Tint', 'default', MetaData.Inherits);
     }
@@ -592,8 +593,10 @@ describe('ContentControl — ContentTemplateSelector', () => {
         const groupT = new DataTemplate(() => new TextBlock('group'));
         const leafT  = new DataTemplate(() => new TextBlock('leaf'));
         class GroupVM extends NodeVM {}
-        class KindSelector extends DataTemplateSelector {
-            public SelectTemplate(item: unknown): DataTemplate | undefined {
+        class KindSelector extends DataTemplateSelector
+        {
+            public SelectTemplate(item: unknown): DataTemplate | undefined
+            {
                 return item instanceof GroupVM ? groupT : leafT;
             }
         }

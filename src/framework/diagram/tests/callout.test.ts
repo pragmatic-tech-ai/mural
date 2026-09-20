@@ -4,7 +4,8 @@ import { Application } from '../../../runtime/index.js';
 import { Figure } from '../figure.js';
 import { Callout } from '../callout.js';
 
-function scene(): { c: Callout; target: Figure } {
+function scene(): { c: Callout; target: Figure }
+{
     Application.current = null; new Application();
     const c = new Callout(); c.Left = 0; c.Top = 0; c.Width = 100; c.Height = 40;
     const target = Figure.fromKind('rectangle', 300, 200, { width: 80, height: 60 });

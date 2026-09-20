@@ -24,7 +24,8 @@ import '../drawing/solid-color-brush-animation.js';
 // lives in runtime — only the value type sits in visual-engine.
 class BrushVisualTest extends Element
 {
-    static {
+    static
+    {
         MuralBase.RegisterProperty(BrushVisualTest, 'Brush',
             new SolidColorBrush(Color.Black), MetaData.None);
     }

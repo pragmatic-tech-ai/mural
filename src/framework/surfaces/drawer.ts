@@ -182,7 +182,8 @@ export class Drawer extends Control
     public static readonly ScrimBrushKey = MuralBase.RegisterProperty<Brush | undefined>(Drawer, 'ScrimBrush', undefined,                MetaData.Render);
     public static readonly ContentKey    = MuralBase.RegisterProperty<Visual | undefined>(Drawer, 'Content',   undefined,                MetaData.Measure);
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(Drawer, Element.DefaultStyleKeyKey, { default_value: Drawer });
         // DefaultStyleKey = Drawer → applyDefaultStyle resolves
         // Style[TargetType=Drawer] (surfaces.template.mu), which sets

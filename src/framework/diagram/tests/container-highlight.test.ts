@@ -12,7 +12,8 @@ import { Diagram } from '../diagram.js';
 import { Figure } from '../figure.js';
 import { ContainerFigure } from '../container-figure.js';
 
-function mount(items: ObservableCollection<Figure>): Diagram {
+function mount(items: ObservableCollection<Figure>): Diagram
+{
     const diagram = new Diagram();
     diagram.ItemsPanel = new ItemsPanelTemplate(() => new Canvas());
     diagram.ItemsSource = items;

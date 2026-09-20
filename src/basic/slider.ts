@@ -129,7 +129,8 @@ export class Slider extends TemplatedControl
     );
     public  static readonly IsDraggingKey  = Slider._IsDraggingPriv;
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(Slider, Element.DefaultStyleKeyKey, { default_value: Slider });
     }
 

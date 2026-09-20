@@ -11,7 +11,8 @@ import { Figure } from '../figure.js';
 // directly with an explicit slot (Visual.Arrange assigns RenderSize the return of this
 // method, and the getter is stale during it — hence finalSize is authoritative).
 
-interface Arrangeable {
+interface Arrangeable
+{
     ArrangeOverride(size: Size): Size;
     buildClipGeometry(size: Size): Geometry;
 }

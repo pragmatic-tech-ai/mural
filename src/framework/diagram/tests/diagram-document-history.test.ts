@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { initTestApp } from '../../../basic/tests/test-app.js';
 import { DiagramDocument, type DiagramStorage } from '../diagram-document.js';
 
-class MemoryStorage implements DiagramStorage {
+class MemoryStorage implements DiagramStorage
+{
     private readonly _map = new Map<string, string>();
     public GetItem(key: string): string | null { return this._map.get(key) ?? null; }
     public SetItem(key: string, value: string): void { this._map.set(key, value); }
@@ -11,7 +12,8 @@ class MemoryStorage implements DiagramStorage {
 
 // _deserialize rebuilds nodes as fresh instances, so restored state is read back
 // by id from the live collection, never through a pre-undo reference.
-function nodeById(doc: DiagramDocument, id: string): { Left: number; Top: number } | undefined {
+function nodeById(doc: DiagramDocument, id: string): { Left: number; Top: number } | undefined
+{
     return doc.Nodes.ToArray().find((n) => (n as { Id?: string }).Id === id) as
         { Left: number; Top: number } | undefined;
 }

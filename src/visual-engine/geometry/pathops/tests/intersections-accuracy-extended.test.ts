@@ -78,7 +78,8 @@ describe('Extended accuracy: cubic × line with three roots', () => {
         assert.ok(Math.abs(ts[1]! - 0.5) < TOL_CLOSED, `t2 = ${ts[1]}`);
         assert.ok(Math.abs(ts[2]! - 1)   < TOL_CLOSED, `t3 = ${ts[2]}`);
         // All three intersection points have y ≈ 0.
-        for (const p of getAllPoints(ix)) {
+        for (const p of getAllPoints(ix))
+        {
             assert.ok(Math.abs(p.fY) < TOL_CLOSED, `pt.y = ${p.fY}`);
         }
     });
@@ -134,7 +135,8 @@ describe('Extended accuracy: asymmetric quad × quad', () => {
         assert.ok(n >= 1, `expected at least one intersection, got ${n}`);
         // Each intersection point should lie within both curves' bboxes:
         // x ∈ [0, 3], y ∈ [0, 3].
-        for (const p of getAllPoints(ix)) {
+        for (const p of getAllPoints(ix))
+        {
             assert.ok(p.fX >= -TOL_BISECT && p.fX <= 3 + TOL_BISECT,
                 `x out of bbox: ${p.fX}`);
             assert.ok(p.fY >= -TOL_BISECT && p.fY <= 3 + TOL_BISECT,

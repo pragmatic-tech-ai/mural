@@ -103,10 +103,12 @@ describe('Binding reads plain properties on a MuralBase source', () => {
 // panel exposing its commands/lists/state as plain members bound to nothing
 // (every $-binding resolved undefined; the panel's buttons did nothing).
 describe('DataContextBinding reads plain properties on a MuralBase DataContext', () => {
-    function setText(tb: TextBlock, binding: Binding): void {
+    function setText(tb: TextBlock, binding: Binding): void
+    {
         tb.set_property_value(resolveKey(tb, undefined, 'Text'), binding);
     }
-    function setDataContext(tb: TextBlock, vm: unknown): void {
+    function setDataContext(tb: TextBlock, vm: unknown): void
+    {
         tb.set_property_value(resolveKey(tb, undefined, 'DataContext'), vm);
     }
 

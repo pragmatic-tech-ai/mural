@@ -11,7 +11,8 @@ describe('DiagramInspector render', () => {
     test('each page type resolves a DataTemplate and builds', () => {
         initTestApp();
         const ctx = new Border();
-        for (const page of [new ShapeStylePage(), new SizePositionPage()]) {
+        for (const page of [new ShapeStylePage(), new SizePositionPage()])
+        {
             const tpl = findDataTemplateForType(page.constructor, ctx);
             assert.ok(tpl, `${page.constructor.name} has a DataTemplate`);
             const v = tpl!.Apply(page);

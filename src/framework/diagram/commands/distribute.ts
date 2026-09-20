@@ -11,7 +11,8 @@
 // No-op for fewer than 3 items: alignment-only (2 shapes) is what
 // AlignXxx already provides; distributing 1 is meaningless.
 
-export interface DistributeTarget {
+export interface DistributeTarget
+{
     Left:   number;
     Top:    number;
     Width:  number;

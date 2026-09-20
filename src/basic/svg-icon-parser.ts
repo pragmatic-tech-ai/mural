@@ -502,7 +502,8 @@ function safeHexColor(s: string): Color | undefined
 //     figure's StartPoint).
 //   * After Z, the pen position is the figure's StartPoint until the
 //     next M.
-export function parsePathData(d: string): PathFigure[] {
+export function parsePathData(d: string): PathFigure[]
+{
     const figures: PathFigure[] = [];
 
     // Walk-state. `curX/Y` is the SVG pen; `figureStartX/Y` is the

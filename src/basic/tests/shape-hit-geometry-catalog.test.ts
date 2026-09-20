@@ -13,12 +13,14 @@ import { Squircle } from '../shapes/squircle.js';
 import { Clover } from '../shapes/clover.js';
 
 function arrange(shape: { Measure: (s: Size) => void; Arrange: (r: Rect) => void },
-                 w: number, h: number): void {
+                 w: number, h: number): void
+                 {
     shape.Measure(new Size(w, h));
     shape.Arrange(new Rect(0, 0, w, h));
 }
 
-function drawnGeometries(shape: { Render: (dc: never) => void }): unknown[] {
+function drawnGeometries(shape: { Render: (dc: never) => void }): unknown[]
+{
     const geoms: unknown[] = [];
     shape.Render({
         DrawGeometry: (_b: unknown, _p: unknown, g: unknown) => geoms.push(g),

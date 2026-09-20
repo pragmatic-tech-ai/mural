@@ -30,7 +30,8 @@ export const TOOLBOX_WORDS: string[] = [
 // depending on Math.random's per-page state. The constants are the
 // classic Numerical-Recipes ones; we only need cheap uniform-ish
 // indices, not statistical quality.
-function lcg(seed: number): () => number {
+function lcg(seed: number): () => number
+{
     let s = seed >>> 0;
     return () => {
         s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
@@ -45,11 +46,13 @@ function lcg(seed: number): () => number {
 // from the toolbox.
 export interface ListBoxSeedEntry { Word: string; }
 
-export function buildListBoxSeed(count: number): ListBoxSeedEntry[] {
+export function buildListBoxSeed(count: number): ListBoxSeedEntry[]
+{
     const pool = TOOLBOX_WORDS;
     const rng = lcg(0xc0ffee);
     const out: ListBoxSeedEntry[] = new Array(count);
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < count; i++)
+    {
         const w = pool[rng() % pool.length];
         out[i] = { Word: w };
     }

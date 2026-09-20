@@ -56,7 +56,8 @@ class FakeTarget implements MountableTarget
     public GetFocusedVisual(): Visual | undefined { return undefined; }
 }
 
-function setup() {
+function setup()
+{
     Application.current = null;
     new Application();
     const items   = new ObservableCollection<NodeVM>();
@@ -78,7 +79,8 @@ function setup() {
     return { diagram, surface, items };
 }
 
-function cont(diagram: Diagram, item: unknown): Figure {
+function cont(diagram: Diagram, item: unknown): Figure
+{
     const gen = (diagram as unknown as { _generator: { ContainerFromItem(item: unknown): Visual | undefined } })._generator;
     const c = gen.ContainerFromItem(item);
     assert.ok(c instanceof Figure, 'container should be Figure');
@@ -88,29 +90,34 @@ function cont(diagram: Diagram, item: unknown): Figure {
 // Mirror the alignment math from DiagramVM (kept in-test so the
 // production .mjs surface — JavaScript without a typed contract from
 // TypeScript — doesn't need a parallel .ts shim). Same algorithm.
-function alignLeft(sel: NodeVM[]): void {
+function alignLeft(sel: NodeVM[]): void
+{
     if (sel.length < 2) return;
     const minLeft = Math.min(...sel.map(n => n.Left));
     for (const n of sel) n.Left = minLeft;
 }
-function alignRight(sel: NodeVM[]): void {
+function alignRight(sel: NodeVM[]): void
+{
     if (sel.length < 2) return;
     const sharedRight = Math.max(...sel.map(n => n.Left + n.Width));
     for (const n of sel) n.Left = sharedRight - n.Width;
 }
-function alignTop(sel: NodeVM[]): void {
+function alignTop(sel: NodeVM[]): void
+{
     if (sel.length < 2) return;
     const minTop = Math.min(...sel.map(n => n.Top));
     for (const n of sel) n.Top = minTop;
 }
-function alignMiddle(sel: NodeVM[]): void {
+function alignMiddle(sel: NodeVM[]): void
+{
     if (sel.length < 2) return;
     const top    = Math.min(...sel.map(n => n.Top));
     const bottom = Math.max(...sel.map(n => n.Top + n.Height));
     const midY   = (top + bottom) / 2;
     for (const n of sel) n.Top = midY - n.Height / 2;
 }
-function distributeHorizontal(sel: NodeVM[]): void {
+function distributeHorizontal(sel: NodeVM[]): void
+{
     if (sel.length < 3) return;
     sel.sort((a, b) => a.Left - b.Left);
     const leftmost  = sel[0]!;
@@ -119,12 +126,14 @@ function distributeHorizontal(sel: NodeVM[]): void {
     const widthSum  = sel.reduce((acc, n) => acc + n.Width, 0);
     const gap       = (totalSpan - widthSum) / (sel.length - 1);
     let cursor = leftmost.Left + leftmost.Width + gap;
-    for (let i = 1; i < sel.length - 1; i++) {
+    for (let i = 1; i < sel.length - 1; i++)
+    {
         sel[i]!.Left = cursor;
         cursor += sel[i]!.Width + gap;
     }
 }
-function distributeVertical(sel: NodeVM[]): void {
+function distributeVertical(sel: NodeVM[]): void
+{
     if (sel.length < 3) return;
     sel.sort((a, b) => a.Top - b.Top);
     const topmost    = sel[0]!;
@@ -133,7 +142,8 @@ function distributeVertical(sel: NodeVM[]): void {
     const heightSum = sel.reduce((acc, n) => acc + n.Height, 0);
     const gap       = (totalSpan - heightSum) / (sel.length - 1);
     let cursor = topmost.Top + topmost.Height + gap;
-    for (let i = 1; i < sel.length - 1; i++) {
+    for (let i = 1; i < sel.length - 1; i++)
+    {
         sel[i]!.Top = cursor;
         cursor += sel[i]!.Height + gap;
     }
@@ -270,7 +280,8 @@ describe('Diagram — alignment moves dragged containers (architectural fix)', (
         items.Add(a); items.Add(b); items.Add(c);
 
         // Drag every shape to a new position.
-        for (const vm of [a, b, c]) {
+        for (const vm of [a, b, c])
+        {
             const ctr = cont(diagram, vm);
             ctr.Left = vm.Left + 10;
             ctr.Top  = vm.Top  + 5;

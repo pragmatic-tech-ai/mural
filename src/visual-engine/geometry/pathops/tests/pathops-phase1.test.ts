@@ -213,7 +213,8 @@ describe('pathops/point — Point construction & equality', () => {
 
     test('round-trip add then sub recovers the original', () => {
         const samples: [number, number][] = [[0, 0], [1, 0], [0, 1], [2, 1], [1, 2], [1, 1], [2, 2]];
-        for (const [x, y] of samples) {
+        for (const [x, y] of samples)
+        {
             const orig = new Point(x, y);
             const p = new Point(x, y);
             const v = p.sub(orig);
@@ -592,7 +593,8 @@ describe('pathops/cubic — Cubic evaluation', () => {
         const n = c.findInflections(t);
         // The control polygon crosses itself once → at least one inflection.
         assert.ok(n >= 1);
-        for (let i = 0; i < n; ++i) {
+        for (let i = 0; i < n; ++i)
+        {
             assert.ok(t[i]! > 0 && t[i]! < 1);
         }
     });

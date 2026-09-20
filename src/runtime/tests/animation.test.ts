@@ -29,7 +29,8 @@ import { resolveKey } from '../model-internals.js';
 // behaviour is testable without dragging in a concrete control.
 class AnimTest extends Element
 {
-    static {
+    static
+    {
         MuralBase.RegisterProperty(AnimTest, 'Number',    0,              MetaData.None);
         MuralBase.RegisterProperty(AnimTest, 'Color',     Color.Black,    MetaData.None);
         MuralBase.RegisterProperty(AnimTest, 'Thickness', new Thickness(0), MetaData.None);
@@ -556,7 +557,8 @@ describe('EVD animation slot — coerce integration', () => {
     // un-coerced for the precedence tests above.
     class Capped extends Element
     {
-        static {
+        static
+        {
             MuralBase.RegisterProperty(
                 Capped, 'Value', 0, MetaData.None,
                 (_m, v) => Math.min(v as number, 50),

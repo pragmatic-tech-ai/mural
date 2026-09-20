@@ -62,7 +62,8 @@ describe('ListBox selection survives container recycle by data identity', () => 
         // the initial viewport. Recycle them ALL (simulating a scroll
         // that moves them out of view).
         const initialRealized: ListBoxItem[] = [];
-        for (let i = 0; i < 16; i++) {
+        for (let i = 0; i < 16; i++)
+        {
             const c = lb.Generator.ContainerFromItem(`item-${i}`) as ListBoxItem;
             initialRealized.push(c);
         }
@@ -73,13 +74,15 @@ describe('ListBox selection survives container recycle by data identity', () => 
         // down). After this loop NONE of them should be IsSelected,
         // because none of those new items is in _selectedData.
         const rebound: ListBoxItem[] = [];
-        for (let i = 30; i < 46; i++) {
+        for (let i = 30; i < 46; i++)
+        {
             const c = lb.Generator.ClaimRecycled() as ListBoxItem | undefined;
             if (c === undefined) break;
             lb.RebindContainerForItemOverride(c, `item-${i}`);
             rebound.push(c);
         }
-        for (const c of rebound) {
+        for (const c of rebound)
+        {
             assert.equal(c.IsSelected, false,
                 `recycled container rebound to a non-selected item must not show selection chrome`);
         }
@@ -89,20 +92,24 @@ describe('ListBox selection survives container recycle by data identity', () => 
         // that gets re-bound to item-5 (the originally selected one)
         // MUST re-light its IsSelected.
         for (const c of rebound) lb.Generator.Recycle(c);
-        for (let i = 0; i < 16; i++) {
+        for (let i = 0; i < 16; i++)
+        {
             const c = lb.Generator.ClaimRecycled() as ListBoxItem | undefined;
-            if (c === undefined) {
+            if (c === undefined)
+            {
                 // Fresh container path — for items beyond the pool size
                 // the generator would normally create a new container.
                 // The test doesn't exercise that branch.
                 break;
             }
             lb.RebindContainerForItemOverride(c, `item-${i}`);
-            if (`item-${i}` === 'item-5') {
+            if (`item-${i}` === 'item-5')
+            {
                 assert.equal(c.IsSelected, true,
                     `the originally-selected item must light up again when its row scrolls back into view`);
             }
-            else {
+            else
+            {
                 assert.equal(c.IsSelected, false,
                     `non-selected items must not carry stale selection chrome`);
             }
@@ -168,7 +175,8 @@ describe('ListBox selection survives container recycle by data identity', () => 
         const c32 = lb.Generator.ClaimRecycled() as ListBoxItem;
         lb.RebindContainerForItemOverride(c32, 'item-32');
 
-        for (const c of [c30, c31, c32]) {
+        for (const c of [c30, c31, c32])
+        {
             assert.equal(c.IsSelected, false,
                 `recycled container rebound to a non-selected item must not show IsSelected`);
             const pb = c.visualChildren[0]!.FindName('PART_Border') as Border;
@@ -188,14 +196,16 @@ describe('ListBox selection survives container recycle by data identity', () => 
         // the lowest level: confirm the visual queues the invalidation
         // while detached and replays it once SetTarget makes it
         // attached again.
-        class StubTarget {
+        class StubTarget
+        {
             public readonly renderInvalidations: Visual[] = [];
             public OnRenderInvalidated(v: Visual): void { this.renderInvalidations.push(v); }
             public OnMeasureInvalidated(_v: Visual): void {}
             public OnArrangeInvalidated(_v: Visual): void {}
         }
         const target = new StubTarget();
-        const leaf = new (class extends Element {
+        const leaf = new (class extends Element
+        {
             protected override MeasureOverride(_a: never): never { return undefined as never; }
         })();
         // Attach to the stub target first.

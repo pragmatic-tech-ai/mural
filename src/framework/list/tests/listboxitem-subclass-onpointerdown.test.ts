@@ -10,16 +10,19 @@ import { Border } from '../../../basic/border.js';
 import { ListBoxItem } from '../list-box.js';
 import { initTestApp } from '../../../basic/tests/test-app.js';
 
-class ListBoxItemEx extends ListBoxItem {
+class ListBoxItemEx extends ListBoxItem
+{
     public hits = 0;
-    protected override OnPointerDown(args: PointerEventArgs): void {
+    protected override OnPointerDown(args: PointerEventArgs): void
+    {
         this.hits++;
         super.OnPointerDown(args);
     }
 }
 
 const dc = new Proxy({}, { get: () => () => {} }) as never;
-function pointer(o: Partial<PointerEventInit> = {}): PointerEventInit {
+function pointer(o: Partial<PointerEventInit> = {}): PointerEventInit
+{
     return { HostX: 0, HostY: 0, Button: PointerButton.Primary, Buttons: 1,
         Modifiers: NoModifiers, PointerId: 0, Pressure: 0, PointerType: 'mouse', ...o };
 }
@@ -34,7 +37,8 @@ test('click on a template/content descendant bubbles to ListBoxItem subclass OnP
     // Is `content` actually a visual descendant of the item?
     let v: unknown = content;
     let reachesItem = false;
-    for (let i = 0; i < 50 && v !== undefined; i++) {
+    for (let i = 0; i < 50 && v !== undefined; i++)
+    {
         if (v === item) { reachesItem = true; break; }
         v = (v as { GetVisualParent(): unknown }).GetVisualParent();
     }

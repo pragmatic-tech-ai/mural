@@ -13,13 +13,15 @@ import { Diagram } from '../diagram.js';
 import { Figure } from '../figure.js';
 import { ContainerFigure } from '../container-figure.js';
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void { /* noop */ }
     public GetFocusedVisual(): Visual | undefined { return undefined; }
 }
 
-function pointerArgs(hostX: number, hostY: number): Record<string, unknown> {
+function pointerArgs(hostX: number, hostY: number): Record<string, unknown>
+{
     return {
         HostX: hostX, HostY: hostY,
         Handled: false, IsDoubleClick: false,
@@ -29,13 +31,15 @@ function pointerArgs(hostX: number, hostY: number): Record<string, unknown> {
     };
 }
 
-interface Draggable {
+interface Draggable
+{
     OnPointerDown(a: unknown): void;
     OnPointerMove(a: unknown): void;
     OnPointerUp(a: unknown): void;
 }
 
-function drag(fig: Figure, fromX: number, fromY: number, toX: number, toY: number): void {
+function drag(fig: Figure, fromX: number, fromY: number, toX: number, toY: number): void
+{
     const d = fig as unknown as Draggable;
     d.OnPointerDown(pointerArgs(fromX, fromY));
     d.OnPointerMove(pointerArgs(toX, toY));
@@ -45,7 +49,8 @@ function drag(fig: Figure, fromX: number, fromY: number, toX: number, toY: numbe
 describe('container drag-in / drag-out', () => {
     beforeEach(() => { initTestApp(); });
 
-    function build(): { diagram: Diagram; surface: Border; container: ContainerFigure } {
+    function build(): { diagram: Diagram; surface: Border; container: ContainerFigure }
+    {
         const diagram = new Diagram();
         diagram.ItemsPanel = new ItemsPanelTemplate(() => new PaginatedCanvas());
         const surface = new Border();

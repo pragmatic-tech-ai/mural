@@ -18,13 +18,15 @@ import { TabControl, TabItem } from '../tabs.js';
 // implicit template MORE THAN ONCE (e.g. the tab header wrongly renders the whole
 // document as well as the content slot), the second attach of a shared Visual
 // throws "Visual already has a visual parent".
-class SharedVisualDoc extends MuralBase {
+class SharedVisualDoc extends MuralBase
+{
     public readonly Id = 'seed';
     public readonly Title = 'Untitled';
     public readonly IsDirty = false;
     // Shared Visual "nodes" — can only live in ONE tree at a time.
     public readonly Nodes = new ObservableCollection<Visual>();
-    constructor() {
+    constructor()
+    {
         super();
         this.Nodes.Add(new Border());
         this.Nodes.Add(new Border());
@@ -32,7 +34,8 @@ class SharedVisualDoc extends MuralBase {
     public Save(): void {}
 }
 
-function collect<T>(root: Visual, ctor: new (...a: never[]) => T, out: T[] = []): T[] {
+function collect<T>(root: Visual, ctor: new (...a: never[]) => T, out: T[] = []): T[]
+{
     if (root instanceof ctor) out.push(root);
     for (const c of root.visualChildren) collect(c, ctor, out);
     return out;

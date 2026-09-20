@@ -45,7 +45,8 @@ function approxEqualPt(a: Point, b: Point): boolean
 function canAddCurve(verb: OpVerb, pts: Point[]): boolean
 {
     if (verb === OpVerb.kMove) return false;
-    for (let i = 0; i <= verbToPointsCount(verb); ++i) {
+    for (let i = 0; i <= verbToPointsCount(verb); ++i)
+    {
         pts[i] = forceSmallToZero(pts[i]!);
     }
     return verb !== OpVerb.kLine || !approxEqualPt(pts[0]!, pts[1]!);
@@ -53,7 +54,8 @@ function canAddCurve(verb: OpVerb, pts: Point[]): boolean
 
 function verbToPointsCount(v: OpVerb): number
 {
-    switch (v) {
+    switch (v)
+    {
         case OpVerb.kLine:  return 1;
         case OpVerb.kQuad:  return 2;
         case OpVerb.kCubic: return 3;
@@ -61,7 +63,8 @@ function verbToPointsCount(v: OpVerb): number
     }
 }
 
-export class OpEdgeBuilder {
+export class OpEdgeBuilder
+{
     public fGlobalState: OpGlobalState;
     public fPath: OpPath;
     public fPathPts: Point[]   = [];
@@ -102,7 +105,8 @@ export class OpEdgeBuilder {
         // Pop the trailing kDone marker so the second path appends.
         // We don't emit kDone explicitly — preFetch leaves the tail at
         // a sentinel value (-1 / OpVerb.kDone) instead.
-        if (this.fPathVerbs.length > 0 && this.fPathVerbs[this.fPathVerbs.length - 1] === OpVerb.kDone) {
+        if (this.fPathVerbs.length > 0 && this.fPathVerbs[this.fPathVerbs.length - 1] === OpVerb.kDone)
+        {
             this.fPathVerbs.pop();
         }
         this.fPath = path;
@@ -115,7 +119,8 @@ export class OpEdgeBuilder {
     {
         this.fContourBuilder.flush();
         const contour = this.fContourBuilder.contour();
-        if (contour !== undefined && contour.count() !== 0) {
+        if (contour !== undefined && contour.count() !== 0)
+        {
             contour.complete();
         }
     }
@@ -126,7 +131,8 @@ export class OpEdgeBuilder {
         if (this.fUnparseable || !this.walk()) return false;
         this.complete();
         const contour = this.fContourBuilder.contour();
-        if (contour !== undefined && contour.count() === 0 && contour !== this.fContoursHead) {
+        if (contour !== undefined && contour.count() === 0 && contour !== this.fContoursHead)
+        {
             this.fContoursHead.remove(contour);
         }
         return true;
@@ -137,17 +143,23 @@ export class OpEdgeBuilder {
     // SkOpEdgeBuilder.cpp:75.
     private closeContour(curveEnd: Point, curveStart: Point): void
     {
-        if (!approxEqualPt(curveEnd, curveStart)) {
+        if (!approxEqualPt(curveEnd, curveStart))
+        {
             this.fPathVerbs.push(OpVerb.kLine);
             this.fPathPts.push(curveStart);
-        } else {
+        }
+        else
+        {
             const v = this.fPathVerbs;
             const p = this.fPathPts;
             const last = v[v.length - 1]!;
-            if (last === OpVerb.kLine && p[p.length - 2]!.equals(curveStart)) {
+            if (last === OpVerb.kLine && p[p.length - 2]!.equals(curveStart))
+            {
                 v.pop();
                 p.pop();
-            } else {
+            }
+            else
+            {
                 p[p.length - 1] = curveStart;
             }
         }
@@ -160,10 +172,13 @@ export class OpEdgeBuilder {
         let curveStart = new Point(0, 0);
         const curve: Point[] = [new Point(), new Point(), new Point(), new Point()];
         let lastCurve = false;
-        for (const cmd of this.fPath.iterate()) {
-            switch (cmd.verb) {
+        for (const cmd of this.fPath.iterate())
+        {
+            switch (cmd.verb)
+            {
                 case OpVerb.kMove:
-                    if (!this.fAllowOpenContours && lastCurve) {
+                    if (!this.fAllowOpenContours && lastCurve)
+                    {
                         this.closeContour(curve[0]!, curveStart);
                     }
                     this.fPathVerbs.push(OpVerb.kMove);
@@ -174,9 +189,11 @@ export class OpEdgeBuilder {
                     continue;
                 case OpVerb.kLine:
                     curve[1] = forceSmallToZero(cmd.pts[0]!);
-                    if (approxEqualPt(curve[0]!, curve[1]!)) {
+                    if (approxEqualPt(curve[0]!, curve[1]!))
+                    {
                         const lv = this.fPathVerbs[this.fPathVerbs.length - 1]!;
-                        if (lv !== OpVerb.kLine && lv !== OpVerb.kMove) {
+                        if (lv !== OpVerb.kLine && lv !== OpVerb.kMove)
+                        {
                             curve[0] = curve[1]!;
                             this.fPathPts[this.fPathPts.length - 1] = curve[0]!;
                         }
@@ -205,7 +222,8 @@ export class OpEdgeBuilder {
             curve[0] = curve[ptCount]!;
             lastCurve = true;
         }
-        if (!this.fAllowOpenContours && lastCurve) {
+        if (!this.fAllowOpenContours && lastCurve)
+        {
             this.closeContour(curve[0]!, curveStart);
         }
         this.fPathVerbs.push(OpVerb.kDone);
@@ -220,17 +238,24 @@ export class OpEdgeBuilder {
         const endOfFirstHalf = this.fSecondHalf;
         let contour: OpContour | undefined = this.fContourBuilder.contour();
         let moveToPtrBump = 0;
-        while (verbIdx < this.fPathVerbs.length) {
+        while (verbIdx < this.fPathVerbs.length)
+        {
             const verb = this.fPathVerbs[verbIdx]!;
             if (verb === OpVerb.kDone) break;
             if (verbIdx === endOfFirstHalf) this.fOperand = true;
             ++verbIdx;
-            switch (verb) {
-                case OpVerb.kMove: {
-                    if (contour !== undefined && contour.count() > 0) {
-                        if (this.fAllowOpenContours) {
+            switch (verb)
+            {
+                case OpVerb.kMove:
+                {
+                    if (contour !== undefined && contour.count() > 0)
+                    {
+                        if (this.fAllowOpenContours)
+                        {
                             this.complete();
-                        } else if (!this.close()) {
+                        }
+                        else if (!this.close())
+                        {
                             return false;
                         }
                     }
@@ -246,8 +271,10 @@ export class OpEdgeBuilder {
                     moveToPtrBump = 1;
                     continue;
                 }
-                case OpVerb.kLine: {
-                    if (contour === undefined) {
+                case OpVerb.kLine:
+                {
+                    if (contour === undefined)
+                    {
                         contour = this.fContoursHead.appendContour();
                         this.fContourBuilder.setContour(contour);
                         contour.init(this.fGlobalState, this.fOperand,
@@ -258,8 +285,10 @@ export class OpEdgeBuilder {
                     this.fContourBuilder.addLine([p0, p1]);
                     break;
                 }
-                case OpVerb.kQuad: {
-                    if (contour === undefined) {
+                case OpVerb.kQuad:
+                {
+                    if (contour === undefined)
+                    {
                         contour = this.fContoursHead.appendContour();
                         this.fContourBuilder.setContour(contour);
                         contour.init(this.fGlobalState, this.fOperand,
@@ -268,13 +297,16 @@ export class OpEdgeBuilder {
                     const p0 = this.fPathPts[pointIdx]!;
                     const p1 = this.fPathPts[pointIdx + 1]!;
                     const p2 = this.fPathPts[pointIdx + 2]!;
-                    if (canAddCurve(OpVerb.kQuad, [p0, p1, p2])) {
+                    if (canAddCurve(OpVerb.kQuad, [p0, p1, p2]))
+                    {
                         this.fContourBuilder.addQuad([p0, p1, p2]);
                     }
                     break;
                 }
-                case OpVerb.kCubic: {
-                    if (contour === undefined) {
+                case OpVerb.kCubic:
+                {
+                    if (contour === undefined)
+                    {
                         contour = this.fContoursHead.appendContour();
                         this.fContourBuilder.setContour(contour);
                         contour.init(this.fGlobalState, this.fOperand,
@@ -284,12 +316,14 @@ export class OpEdgeBuilder {
                     const p1 = this.fPathPts[pointIdx + 1]!;
                     const p2 = this.fPathPts[pointIdx + 2]!;
                     const p3 = this.fPathPts[pointIdx + 3]!;
-                    if (canAddCurve(OpVerb.kCubic, [p0, p1, p2, p3])) {
+                    if (canAddCurve(OpVerb.kCubic, [p0, p1, p2, p3]))
+                    {
                         this.fContourBuilder.addCubic([p0, p1, p2, p3]);
                     }
                     break;
                 }
-                case OpVerb.kClose: {
+                case OpVerb.kClose:
+                {
                     if (contour === undefined) return false;
                     if (!this.close()) return false;
                     contour = undefined;

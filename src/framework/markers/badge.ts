@@ -42,7 +42,8 @@ export class Badge extends Control
     public get Count(): number { return this.get_property_value(Badge.CountKey); }
     public set Count(v: number) { this.set_property_value(Badge.CountKey, v); }
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(
             Badge, Element.DefaultStyleKeyKey,
             { default_value: Badge });

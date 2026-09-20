@@ -71,7 +71,8 @@ function findChaseOp(chase: OpSpanBase[],
                      endPtr:   { value: OpSpanBase | undefined }):
     { ok: boolean; result: OpSegment | undefined }
 {
-    while (chase.length > 0) {
+    while (chase.length > 0)
+    {
         const span = chase.pop()!;
         startPtr.value = span.ptT().prev().span();
         const segment = startPtr.value.segment() as OpSegment;
@@ -84,7 +85,8 @@ function findChaseOp(chase: OpSpanBase[],
         // endPtr.value === undefined and AngleWinding's
         // segment.spanToAngle crashed on `end.t()`.
         const last = segment.activeAngle(startPtr.value, startPtr, endPtr, done);
-        if (last !== undefined) {
+        if (last !== undefined)
+        {
             startPtr.value = last.start() as OpSpanBase;
             endPtr.value   = last.end()   as OpSpanBase;
             chase.push(span);
@@ -95,13 +97,15 @@ function findChaseOp(chase: OpSpanBase[],
         if (aw.angle === undefined) return { ok: true, result: undefined };
         if (aw.winding === SK_MIN_S32) continue;
         let sumMiWinding = 0, sumSuWinding = 0;
-        if (aw.sortable) {
+        if (aw.sortable)
+        {
             const seg2 = aw.angle.segment() as OpSegment;
             sumMiWinding = seg2.updateWindingReverseByAngle(aw.angle);
             if (sumMiWinding === SK_MIN_S32) return { ok: true, result: undefined };
             sumSuWinding = seg2.updateOppWindingReverseByAngle(aw.angle);
             if (sumSuWinding === SK_MIN_S32) return { ok: true, result: undefined };
-            if (seg2.operand()) {
+            if (seg2.operand())
+            {
                 const t = sumMiWinding; sumMiWinding = sumSuWinding; sumSuWinding = t;
             }
         }
@@ -115,19 +119,22 @@ function findChaseOp(chase: OpSpanBase[],
         // fresh `w` object per iteration, so the totals never
         // propagated across angles and Intersect's chase walker saw
         // every span with the same (wrong) windings.
-        while (probe !== firstAngle) {
+        while (probe !== firstAngle)
+        {
             const seg3 = probe!.segment() as OpSegment;
             const start = probe!.start() as OpSpanBase;
             const end   = probe!.end()   as OpSpanBase;
             const w = { maxWinding: 0, sumWinding: 0,
                         oppMaxWinding: 0, oppSumWinding: 0,
                         sumMiWinding, sumSuWinding };
-            if (aw.sortable) {
+            if (aw.sortable)
+            {
                 seg3.setUpWindingsBinary(start, end, w);
                 sumMiWinding = w.sumMiWinding;
                 sumSuWinding = w.sumSuWinding;
             }
-            if (!seg3.doneByAngle(probe!)) {
+            if (!seg3.doneByAngle(probe!))
+            {
                 if (first === undefined && (aw.sortable
                     || start.starter(end).windSum() !== SK_MIN_S32))
                 {
@@ -135,7 +142,8 @@ function findChaseOp(chase: OpSpanBase[],
                     startPtr.value = start;
                     endPtr.value   = end;
                 }
-                if (aw.sortable) {
+                if (aw.sortable)
+                {
                     if (!seg3.markAngleBinary(w.maxWinding, w.sumWinding,
                                                 w.oppMaxWinding, w.oppSumWinding,
                                                 probe!, { value: undefined }))
@@ -146,7 +154,8 @@ function findChaseOp(chase: OpSpanBase[],
             }
             probe = probe!.next();
         }
-        if (first !== undefined) {
+        if (first !== undefined)
+        {
             chase.push(span);
             return { ok: true, result: first };
         }
@@ -170,7 +179,8 @@ function bridgeOp(contourList: OpContourHead, op: SkPathOp,
     // never advances. The hard caps are loose enough that any
     // honest contour graph terminates well within them.
     let outerSafety = 1_000;
-    for (;;) {
+    for (;;)
+    {
         if (--outerSafety <= 0) return false;
         const span = FindSortableTop(contourList);
         if (span === undefined) break;
@@ -179,11 +189,14 @@ function bridgeOp(contourList: OpContourHead, op: SkPathOp,
         let endPtr:   { value: OpSpanBase | undefined } = { value: span };
         const chase: OpSpanBase[] = [];
         let chainSafety = 1_000;
-        do {
+        do
+        {
             if (--chainSafety <= 0) return false;
-            if (current!.activeOp(startPtr.value!, endPtr.value!, xorMask, xorOpMask, op)) {
+            if (current!.activeOp(startPtr.value!, endPtr.value!, xorMask, xorOpMask, op))
+            {
                 let innerSafety = 1_000;
-                do {
+                do
+                {
                     if (--innerSafety <= 0) return false;
                     if (!unsortableBox.value && current!.done()) break;
                     const nextStart = { value: startPtr.value };
@@ -192,14 +205,17 @@ function bridgeOp(contourList: OpContourHead, op: SkPathOp,
                     const next = current!.findNextOp(chase, nextStart, nextEnd,
                                                     unsortableBox, simpleBox,
                                                     op, xorMask, xorOpMask);
-                    if (next === undefined) {
+                    if (next === undefined)
+                    {
                         if (!unsortableBox.value && writer.hasMove()
                             && current!.verb() !== 1 /* kLine */
                             && !writer.isClosed())
                         {
                             if (!current!.addCurveTo(startPtr.value!, endPtr.value!, writer))
                                 return false;
-                        } else if (lastSimple) {
+                        }
+                        else if (lastSimple)
+                        {
                             if (!current!.addCurveTo(startPtr.value!, endPtr.value!, writer))
                                 return false;
                         }
@@ -215,16 +231,20 @@ function bridgeOp(contourList: OpContourHead, op: SkPathOp,
                     && !writer.isClosed())
                 {
                     const spanStart = startPtr.value!.starter(endPtr.value!);
-                    if (!spanStart.done()) {
+                    if (!spanStart.done())
+                    {
                         if (!current!.addCurveTo(startPtr.value!, endPtr.value!, writer)) return false;
                         current!.markDone(spanStart);
                     }
                 }
                 writer.finishContour();
-            } else {
+            }
+            else
+            {
                 const lastBox: { value: OpSpanBase | undefined } = { value: undefined };
                 if (!current!.markAndChaseDone(startPtr.value!, endPtr.value!, lastBox)) return false;
-                if (lastBox.value !== undefined && !lastBox.value.chased()) {
+                if (lastBox.value !== undefined && !lastBox.value.chased())
+                {
                     lastBox.value.setChased(true);
                     chase.push(lastBox.value);
                 }
@@ -244,9 +264,11 @@ export function Op(one: OpPath, two: OpPath, op: SkPathOp, result: OpPath): bool
     op = gOpInverse[op]![one.isInverseFillType() ? 1 : 0]![two.isInverseFillType() ? 1 : 0]!;
     const inverseFill = gOutInverse[op]![one.isInverseFillType() ? 1 : 0]![two.isInverseFillType() ? 1 : 0]!;
     const fillType: OpFillType = inverseFill ? OpFillType.kInverseEvenOdd : OpFillType.kEvenOdd;
-    if (one.isEmpty() || two.isEmpty()) {
+    if (one.isEmpty() || two.isEmpty())
+    {
         const work = new OpPath();
-        switch (op) {
+        switch (op)
+        {
             case SkPathOp.kIntersect: break;
             case SkPathOp.kUnion:
             case SkPathOp.kXOR_SkPathOp:
@@ -265,7 +287,8 @@ export function Op(one: OpPath, two: OpPath, op: SkPathOp, result: OpPath): bool
     }
     let minuend = one;
     let subtrahend = two;
-    if (op === SkPathOp.kReverseDifference) {
+    if (op === SkPathOp.kReverseDifference)
+    {
         minuend = two;
         subtrahend = one;
         op = SkPathOp.kDifference;
@@ -292,9 +315,11 @@ export function Op(one: OpPath, two: OpPath, op: SkPathOp, result: OpPath): bool
     const sortedHead = headPtr.value!;
     // Pair-wise intersection sweep.
     let current: OpContour | undefined = sortedHead;
-    while (current !== undefined) {
+    while (current !== undefined)
+    {
         let next: OpContour | undefined = current;
-        while (next !== undefined) {
+        while (next !== undefined)
+        {
             if (!AddIntersectTs(current, next, coincidence)) break;
             next = next.next();
         }
@@ -329,7 +354,8 @@ export function Simplify(path: OpPath, result: OpPath): boolean
 {
     const fillType: OpFillType = path.isInverseFillType()
         ? OpFillType.kInverseEvenOdd : OpFillType.kEvenOdd;
-    if (path.isEmpty()) {
+    if (path.isEmpty())
+    {
         result.reset();
         result.setFillType(fillType);
         return true;
@@ -343,16 +369,19 @@ export function Simplify(path: OpPath, result: OpPath): boolean
     if (!builder.finish()) return false;
     const xorMask = builder.xorMask();
     const headPtr: { value: OpContourHead | undefined } = { value: contour };
-    if (!SortContourList(headPtr, xorMask === OpMask.kEvenOdd, false)) {
+    if (!SortContourList(headPtr, xorMask === OpMask.kEvenOdd, false))
+    {
         result.reset();
         result.setFillType(fillType);
         return true;
     }
     const sortedHead = headPtr.value!;
     let current: OpContour | undefined = sortedHead;
-    while (current !== undefined) {
+    while (current !== undefined)
+    {
         let next: OpContour | undefined = current;
-        while (next !== undefined) {
+        while (next !== undefined)
+        {
             if (!AddIntersectTs(current, next, coincidence)) break;
             next = next.next();
         }
@@ -373,7 +402,8 @@ function bridgeWinding(contourList: OpContourHead, writer: OpPathWriter): boolea
 {
     const unsortableBox = { value: false };
     let outerSafety = 1_000;
-    for (;;) {
+    for (;;)
+    {
         if (--outerSafety <= 0) return false;
         const span = FindSortableTop(contourList);
         if (span === undefined) break;
@@ -382,18 +412,23 @@ function bridgeWinding(contourList: OpContourHead, writer: OpPathWriter): boolea
         let endPtr:   { value: OpSpanBase | undefined } = { value: span };
         const chase: OpSpanBase[] = [];
         let chainSafety = 1_000;
-        do {
+        do
+        {
             if (--chainSafety <= 0) return false;
-            if (current!.activeWinding(startPtr.value!, endPtr.value!)) {
+            if (current!.activeWinding(startPtr.value!, endPtr.value!))
+            {
                 let innerSafety = 1_000;
-                do {
+                do
+                {
                     if (--innerSafety <= 0) return false;
                     if (!unsortableBox.value && current!.done()) break;
                     const nextStart = { value: startPtr.value };
                     const nextEnd   = { value: endPtr.value };
                     const next = current!.findNextWinding(chase, nextStart, nextEnd, unsortableBox);
-                    if (next === undefined) {
-                        if (!unsortableBox.value && writer.hasMove() && current!.verb() !== 1) {
+                    if (next === undefined)
+                    {
+                        if (!unsortableBox.value && writer.hasMove() && current!.verb() !== 1)
+                        {
                             if (!current!.addCurveTo(startPtr.value!, endPtr.value!, writer))
                                 return false;
                         }
@@ -406,10 +441,13 @@ function bridgeWinding(contourList: OpContourHead, writer: OpPathWriter): boolea
                 } while (!writer.isClosed()
                          && (!unsortableBox.value || !startPtr.value!.starter(endPtr.value!).done()));
                 writer.finishContour();
-            } else {
+            }
+            else
+            {
                 const lastBox: { value: OpSpanBase | undefined } = { value: undefined };
                 if (!current!.markAndChaseDone(startPtr.value!, endPtr.value!, lastBox)) return false;
-                if (lastBox.value !== undefined && !lastBox.value.chased()) {
+                if (lastBox.value !== undefined && !lastBox.value.chased())
+                {
                     lastBox.value.setChased(true);
                     chase.push(lastBox.value);
                 }

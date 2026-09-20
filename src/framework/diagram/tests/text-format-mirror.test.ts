@@ -106,7 +106,8 @@ describe('FormatMirror — text channel', () => {
         let pulses = 0;
         const listener = (): void => { pulses += 1; };
         CommandManager.SubscribeRequerySuggested(listener);
-        try {
+        try
+        {
             d.SelectionTextAlignment = TextAlignment.Left;
             assert.ok(pulses >= 1, 'alignment change should pulse RequerySuggested');
             const afterFirst = pulses;
@@ -115,7 +116,9 @@ describe('FormatMirror — text channel', () => {
             const afterAlign = pulses;
             d.SelectionBold = true;
             assert.ok(pulses > afterAlign, 'a decoration toggle change should pulse too');
-        } finally {
+        }
+        finally
+        {
             CommandManager.UnsubscribeRequerySuggested(listener);
         }
     });

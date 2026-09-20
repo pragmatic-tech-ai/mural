@@ -53,7 +53,8 @@ interface InternalGen
     ContainerFromItem(item: unknown): Visual | undefined;
 }
 
-function makeDiagram(): { diagram: Diagram; surface: Border; items: ObservableCollection<TestNodeVM> } {
+function makeDiagram(): { diagram: Diagram; surface: Border; items: ObservableCollection<TestNodeVM> }
+{
     const items   = new ObservableCollection<TestNodeVM>();
     const diagram = new Diagram();
     diagram.SelectionMode = SelectionMode.Extended;

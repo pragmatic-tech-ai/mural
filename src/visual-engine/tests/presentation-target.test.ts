@@ -284,7 +284,8 @@ describe('PresentationTarget.Flush — convergence loop', () => {
         public sibling: CoupledLeaf | undefined;
         public measureCount = 0;
         constructor(private box: Size) { super(); }
-        protected override MeasureOverride(_a: Size): Size {
+        protected override MeasureOverride(_a: Size): Size
+        {
             this.measureCount++;
             // First measure invalidates the sibling exactly ONCE — a real
             // coupling test would gate on some condition, but for the
@@ -303,14 +304,17 @@ describe('PresentationTarget.Flush — convergence loop', () => {
         const b = new CoupledLeaf(new Size(20, 20));
         a.sibling = b;   // a's first measure invalidates b
         // Mount under a simple container that measures both children.
-        class Panel2 extends Element {
+        class Panel2 extends Element
+        {
             private kids: Visual[] = [];
             public override get visualChildren(): readonly Visual[] { return this.kids; }
-            protected override MeasureOverride(av: Size): Size {
+            protected override MeasureOverride(av: Size): Size
+            {
                 for (const c of this.kids) c.Measure(av);
                 return new Size(0, 0);
             }
-            public Add(c: Visual): void {
+            public Add(c: Visual): void
+            {
                 this.kids.push(c);
                 (this as unknown as { AttachVisual: (v: Visual) => void }).AttachVisual(c);
             }
@@ -341,10 +345,12 @@ describe('PresentationTarget.Flush — convergence loop', () => {
         // Two leaves that re-invalidate EACH OTHER on every measure —
         // an infinite ping-pong. The cap should make Flush return
         // after `maxIterations` passes regardless.
-        class Pingpong extends Element {
+        class Pingpong extends Element
+        {
             public partner: Pingpong | undefined;
             public measureCount = 0;
-            protected override MeasureOverride(_a: Size): Size {
+            protected override MeasureOverride(_a: Size): Size
+            {
                 this.measureCount++;
                 this.partner?.InvalidateMeasure();
                 return Size.Zero;
@@ -353,14 +359,17 @@ describe('PresentationTarget.Flush — convergence loop', () => {
         const x = new Pingpong();
         const y = new Pingpong();
         x.partner = y; y.partner = x;
-        class Wrap extends Element {
+        class Wrap extends Element
+        {
             private kids: Visual[] = [];
             public override get visualChildren(): readonly Visual[] { return this.kids; }
-            protected override MeasureOverride(av: Size): Size {
+            protected override MeasureOverride(av: Size): Size
+            {
                 for (const c of this.kids) c.Measure(av);
                 return Size.Zero;
             }
-            public Add(c: Visual): void {
+            public Add(c: Visual): void
+            {
                 this.kids.push(c);
                 (this as unknown as { AttachVisual: (v: Visual) => void }).AttachVisual(c);
             }

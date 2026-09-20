@@ -35,7 +35,8 @@ export class FabVM extends MuralBase
     get ClickExtendedCommand(): RelayCommand | null { return this.get_property_value(FabVM.ClickExtendedCommandKey); }
     get ClickComposeCommand():  RelayCommand | null { return this.get_property_value(FabVM.ClickComposeCommandKey); }
 
-    constructor() {
+    constructor()
+    {
         super();
         this.set_property_value(FabVM.ClickSmallCommandKey,    new RelayCommand(() => { this.SmallClicks    += 1; }));
         this.set_property_value(FabVM.ClickDefaultCommandKey,  new RelayCommand(() => { this.DefaultClicks  += 1; }));

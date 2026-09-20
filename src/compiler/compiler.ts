@@ -3643,7 +3643,8 @@ export class Compiler
             // An empty Behaviors block is a no-op; only structured
             // bodies (zero or more child Behavior elements) make sense
             // here. A string body would be authoring noise.
-            if (body !== null) {
+            if (body !== null)
+            {
                 throw new EmitError(
                     "Behaviors block must contain Behavior element entries",
                     behaviorsElem.span);

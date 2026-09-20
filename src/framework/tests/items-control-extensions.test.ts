@@ -20,7 +20,8 @@ import { ItemsControl } from '@pragmatic-tech-ai/mural/framework';
 // visible value the test can assert on.
 class Leaf extends Element
 {
-    static {
+    static
+    {
         MuralBase.RegisterProperty(Leaf, 'Tag', 'plain', MetaData.None);
     }
     constructor(public readonly source: unknown) { super(); }
@@ -113,7 +114,8 @@ describe('ItemsControl — ItemContainerStyle', () => {
 describe('ItemsControl — AlternationCount / AlternationIndex', () => {
     test('AlternationCount=0 leaves AlternationIndex at default 0', () => {
         const ic = makeIC(['a', 'b', 'c']);
-        for (const item of ['a', 'b', 'c']) {
+        for (const item of ['a', 'b', 'c'])
+        {
             const c = ic.Generator.ContainerFromItem(item)!;
             assert.equal(ItemsControl.GetAlternationIndex(c), 0);
         }
@@ -246,8 +248,10 @@ describe('ItemsControl — ItemTemplateSelector', () => {
         const tplB = new DataTemplate(d => new TagB(d));
         const tplDefault = new DataTemplate(d => new Leaf(d));
 
-        class PickSelector extends DataTemplateSelector {
-            public SelectTemplate(item: unknown): DataTemplate | undefined {
+        class PickSelector extends DataTemplateSelector
+        {
+            public SelectTemplate(item: unknown): DataTemplate | undefined
+            {
                 if (item === 'A') return tplA;
                 if (item === 'B') return tplB;
                 return undefined;   // → ItemTemplate fallback

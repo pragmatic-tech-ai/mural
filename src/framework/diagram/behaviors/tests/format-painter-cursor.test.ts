@@ -9,7 +9,8 @@ import { Diagram } from '../../diagram.js';
 import { Figure } from '../../figure.js';
 import { FORMAT_PAINTER_CURSOR } from '../format-painter-behavior.js';
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void { /* noop */ }
     public GetFocusedVisual(): Visual | undefined { return undefined; }
@@ -18,7 +19,8 @@ class FakeTarget implements MountableTarget {
 describe('format painter — armed cursor', () => {
     beforeEach(() => { initTestApp(); });
 
-    function build(): { diagram: Diagram; surface: Border } {
+    function build(): { diagram: Diagram; surface: Border }
+    {
         const diagram = new Diagram();
         diagram.ItemsPanel = new ItemsPanelTemplate(() => new PaginatedCanvas());
         const surface = new Border();
@@ -28,7 +30,8 @@ describe('format painter — armed cursor', () => {
         return { diagram, surface };
     }
 
-    function layout(surface: Border): void {
+    function layout(surface: Border): void
+    {
         surface.Measure(new Size(800, 600));
         surface.Arrange({ X: 0, Y: 0, Width: 800, Height: 600 } as never);
     }

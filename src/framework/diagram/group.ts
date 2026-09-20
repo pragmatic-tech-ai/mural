@@ -46,7 +46,8 @@ type GroupMember = Figure | Group;
 // structural metadata, so a plain field (per CLAUDE.md MVVM rules).
 export class Group extends ContentControl
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(Group, Element.DefaultStyleKeyKey, { default_value: Group });
     }
 

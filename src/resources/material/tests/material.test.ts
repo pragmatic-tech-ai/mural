@@ -21,7 +21,8 @@ import { SetTheme, CurrentTheme, ToggleTheme } from '../index.js';
 // correctly when bound through `DynamicResource`.
 class BrushTarget extends Element
 {
-    static {
+    static
+    {
         MuralBase.RegisterProperty(BrushTarget, 'Brush', undefined, MetaData.None);
     }
     public get Brush(): SolidColorBrush | undefined
@@ -41,7 +42,8 @@ class BrushTarget extends Element
 // caches the last-applied theme name; without a reset, calling
 // SetTheme('light') after a previous test left it 'light' is a no-op
 // and the dictionary doesn't re-register.
-function resetMaterial(): void {
+function resetMaterial(): void
+{
     // Force re-application by setting the theme to the other one then
     // back. Cheap reliable reset that doesn't reach into module-level
     // state via reflection.

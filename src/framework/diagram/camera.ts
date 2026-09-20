@@ -15,7 +15,8 @@ export function clampZoom(z: number): number { return Math.max(CAMERA_MIN, Math.
 // Content -> viewport affine. Scale applies first, then translate by -offset
 // (the leftmost Multiply factor applies first to a row-vector point), so
 // viewport = c*zoom - offset.
-export function cameraMatrix(c: Camera): Matrix {
+export function cameraMatrix(c: Camera): Matrix
+{
     return Matrix.Scale(c.zoom, c.zoom).Multiply(Matrix.Translate(-c.offsetX, -c.offsetY));
 }
 
@@ -23,7 +24,8 @@ export function cameraMatrix(c: Camera): Matrix {
 // currently under the pivot fixed on screen. Zoom is clamped to the interactive
 // range. The resulting offset may be negative; callers lower-clamp it when
 // writing the scroll offset.
-export function zoomAtPoint(c: Camera, pivot: Point, factor: number): Camera {
+export function zoomAtPoint(c: Camera, pivot: Point, factor: number): Camera
+{
     const zoom = clampZoom(c.zoom * factor);
     // content point currently under the pivot: (pivot + offset) / zoom
     const cx = (pivot.X + c.offsetX) / c.zoom;
@@ -37,7 +39,8 @@ export function zoomAtPoint(c: Camera, pivot: Point, factor: number): Camera {
 // so framing is top-left, not centered. Zoom is clamped to [CAMERA_FIT_FLOOR,
 // CAMERA_MAX] so Fit can go below the interactive floor to frame very large
 // diagrams.
-export function fitBounds(content: Rect, viewport: Size, padding: number): Camera {
+export function fitBounds(content: Rect, viewport: Size, padding: number): Camera
+{
     const availW = Math.max(1, viewport.Width - padding * 2);
     const availH = Math.max(1, viewport.Height - padding * 2);
     const w = Math.max(1, content.Width);

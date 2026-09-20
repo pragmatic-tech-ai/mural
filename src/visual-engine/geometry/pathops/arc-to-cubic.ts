@@ -108,7 +108,8 @@ export function arcToCubics(
     const x1pSq = x1p * x1p;
     const y1pSq = y1p * y1p;
     const lambda = x1pSq / rxSq + y1pSq / rySq;
-    if (lambda > 1) {
+    if (lambda > 1)
+    {
         const sqrtL = Math.sqrt(lambda);
         rx   *= sqrtL;
         ry   *= sqrtL;
@@ -147,13 +148,15 @@ export function arcToCubics(
     const pieceCount = Math.max(1, Math.ceil(Math.abs(delta) / HALF_PI - 1e-9));
     const step       = delta / pieceCount;
     const out: Cubic[] = [];
-    for (let i = 0; i < pieceCount; ++i) {
+    for (let i = 0; i < pieceCount; ++i)
+    {
         const a = theta1 + i * step;
         const b = theta1 + (i + 1) * step;
         const u = unitArcCubic(a, b);
         // Map unit-circle control points back to ellipse space.
         const pts: Point[] = [];
-        for (let k = 0; k < 4; ++k) {
+        for (let k = 0; k < 4; ++k)
+        {
             const ux = u[k * 2]!;
             const uy = u[k * 2 + 1]!;
             const xRot = rx * ux;

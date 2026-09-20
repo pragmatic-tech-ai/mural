@@ -39,7 +39,8 @@ export class FabMenuVM extends MuralBase
     get UploadCommand():  RelayCommand | null { return this.get_property_value(FabMenuVM.UploadCommandKey); }
     get ShareCommand():   RelayCommand | null { return this.get_property_value(FabMenuVM.ShareCommandKey); }
 
-    constructor() {
+    constructor()
+    {
         super();
         this.set_property_value(FabMenuVM.CreateCommandKey,
             new RelayCommand(() => { this.CreateClicks += 1; this.IsOpen = false; }));

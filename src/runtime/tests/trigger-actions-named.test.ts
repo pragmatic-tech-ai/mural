@@ -21,7 +21,8 @@ import { resolveKey } from '../model-internals.js';
 
 class NamedTest extends Element
 {
-    static {
+    static
+    {
         MuralBase.RegisterProperty(NamedTest, 'Width', 0, MetaData.None);
     }
     public get Width(): number { return this.get_property_value(resolveKey(this, undefined, 'Width')); }

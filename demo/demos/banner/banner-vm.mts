@@ -15,7 +15,8 @@ export class BannerVM extends MuralBase
     get Dismiss():   RelayCommand | null { return this.get_property_value(BannerVM.DismissKey); }
     get Restore():   RelayCommand | null { return this.get_property_value(BannerVM.RestoreKey); }
 
-    constructor() {
+    constructor()
+    {
         super();
         this.set_property_value(BannerVM.DismissKey, new RelayCommand(() => { this.Dismissed = true; }));
         this.set_property_value(BannerVM.RestoreKey, new RelayCommand(() => { this.Dismissed = false; }));

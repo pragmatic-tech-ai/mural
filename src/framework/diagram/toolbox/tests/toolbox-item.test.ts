@@ -7,7 +7,8 @@ import { type IToolboxDropFactory } from '../toolbox-drop-factory.js';
 import { ToolboxItem } from '../toolbox-item.js';
 import { TOOLBOX_ITEM_FORMAT } from '../../behaviors/canvas-drop-behavior.js';
 
-function makeItem(): ToolboxItem {
+function makeItem(): ToolboxItem
+{
     const rk = new ServiceKey<IToolboxVisualResolver>('r');
     const fk = new ServiceKey<IToolboxDropFactory>('f');
     return new ToolboxItem('shape:box', 'Box', new ToolboxVisualDescriptor(rk, 'box'), fk);

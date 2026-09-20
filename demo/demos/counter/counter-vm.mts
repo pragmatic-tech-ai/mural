@@ -20,7 +20,8 @@ export class CounterVM extends MuralBase
     get Increment(): ICommand | undefined { return this.get_property_value(CounterVM.IncrementKey); }
     get Reset():     ICommand | undefined { return this.get_property_value(CounterVM.ResetKey); }
 
-    constructor() {
+    constructor()
+    {
         super();
         this.set_property_value(CounterVM.StepsKey, Object.freeze([1, 2, 5]));
         const inc = new RelayCommand(

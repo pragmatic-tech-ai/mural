@@ -88,7 +88,8 @@ export class SelectionGeometryMirror
         if (this._writingBack) return;
         const D = this._d.constructor as typeof import('../diagram.js').Diagram;
         this._seeding = true;
-        try {
+        try
+        {
             this._d.SelectedShapeLeft     = f.Left;
             this._d.SelectedShapeTop      = f.Top;
             this._d.SelectedShapeWidth    = f.Width;
@@ -98,7 +99,8 @@ export class SelectionGeometryMirror
             this._d.set_property_value(D.SelectedShapeBaseHeightKey, Number.isNaN(f.BaseHeight) ? f.Height : f.BaseHeight);
             this._d.SelectedShapeLockAspect = f.LockAspectRatio;
             this._d.SelectedShapeAnchor     = f.PositionFrom;
-        } finally { this._seeding = false; }
+        }
+        finally { this._seeding = false; }
     }
 
     private _writeBack(prop: 'Left' | 'Top' | 'Width' | 'Height' | 'Rotation' | 'LockAspect' | 'Anchor'): void

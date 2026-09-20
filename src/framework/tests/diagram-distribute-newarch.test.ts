@@ -14,7 +14,8 @@ import { Diagram } from '../diagram/diagram.js';
 import { DiagramDocument } from '../diagram/diagram-document.js';
 import { SelectionMode } from '../list/list-box.js';
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void { /* noop */ }
     public GetFocusedVisual(): Visual | undefined { return undefined; }
@@ -27,7 +28,8 @@ class FakeTarget implements MountableTarget {
 describe('Diagram — Distribute on Figure items (new arch, with framework theme)', () => {
     beforeEach(() => { initTestApp(); });
 
-    function build(): { diagram: Diagram; doc: DiagramDocument; surface: Border } {
+    function build(): { diagram: Diagram; doc: DiagramDocument; surface: Border }
+    {
         const doc = new DiagramDocument();
         const diagram = new Diagram();
         diagram.SelectionMode = SelectionMode.Extended;
@@ -43,12 +45,14 @@ describe('Diagram — Distribute on Figure items (new arch, with framework theme
         return { diagram, doc, surface };
     }
 
-    function layout(surface: Border): void {
+    function layout(surface: Border): void
+    {
         surface.Measure(new Size(800, 600));
         surface.Arrange({ X: 0, Y: 0, Width: 800, Height: 600 } as never);
     }
 
-    function selectAll(diagram: Diagram, items: readonly unknown[]): void {
+    function selectAll(diagram: Diagram, items: readonly unknown[]): void
+    {
         items.forEach((item, i) => {
             const mods = i === 0
                 ? ModifierKeys.None
@@ -252,7 +256,8 @@ describe('Diagram — Distribute on Figure items (new arch, with framework theme
         doc.Group([a, b, c]);
         layout(surface);
         const groups = [];
-        for (let i = 0; i < doc.Nodes.Count; i++) {
+        for (let i = 0; i < doc.Nodes.Count; i++)
+        {
             const n = doc.Nodes.Get(i);
             if ((n as { Members?: unknown }).Members !== undefined) groups.push(n);
         }

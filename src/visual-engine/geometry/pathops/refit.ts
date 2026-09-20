@@ -63,14 +63,17 @@ export function collapseCollinearLines(p: OpPath): OpPath
 
     for (const c of p.fCommands)
     {
-        switch (c.verb) {
-            case OpVerb.kMove: {
+        switch (c.verb)
+        {
+            case OpVerb.kMove:
+            {
                 flushPending();
                 out.fCommands.push({ verb: OpVerb.kMove, pts: [c.pts[0]!] });
                 pen = c.pts[0]!;
                 break;
             }
-            case OpVerb.kLine: {
+            case OpVerb.kLine:
+            {
                 const next = c.pts[0]!;
                 if (pen !== undefined && pointsClose(pen, next, ZERO_LEN_EPS))
                 {
@@ -97,7 +100,8 @@ export function collapseCollinearLines(p: OpPath): OpPath
                 break;
             }
             case OpVerb.kQuad:
-            case OpVerb.kCubic: {
+            case OpVerb.kCubic:
+            {
                 flushPending();
                 const copy: OpPathCommand = { verb: c.verb, pts: c.pts.slice() };
                 if (c.prov !== undefined) copy.prov = c.prov;
@@ -105,7 +109,8 @@ export function collapseCollinearLines(p: OpPath): OpPath
                 pen = c.pts[c.pts.length - 1]!;
                 break;
             }
-            case OpVerb.kClose: {
+            case OpVerb.kClose:
+            {
                 flushPending();
                 out.fCommands.push({ verb: OpVerb.kClose, pts: [] });
                 pen = undefined;

@@ -119,7 +119,8 @@ describe('OpEdgeBuilder — Path → contour tree', () => {
         // sentinel.
         let count = 0;
         let contour: import('../op-contour.js').OpContour | undefined = head;
-        while (contour !== undefined) {
+        while (contour !== undefined)
+        {
             count += contour.count();
             contour = contour.next();
         }
@@ -151,7 +152,8 @@ describe('OpEdgeBuilder — Path → contour tree', () => {
         // (including head).
         let count = 0;
         let contour: import('../op-contour.js').OpContour | undefined = head;
-        while (contour !== undefined) {
+        while (contour !== undefined)
+        {
             ++count;
             contour = contour.next();
         }

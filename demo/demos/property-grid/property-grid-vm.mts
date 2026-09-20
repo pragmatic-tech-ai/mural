@@ -57,16 +57,20 @@ export class PropertyGridVM extends MuralBase
         PropertyGridVM, 'MapTarget', undefined, MetaData.None,
     );
 
-    get DpDescriptors(): readonly GridProperty[] | undefined {
+    get DpDescriptors(): readonly GridProperty[] | undefined
+    {
         return this.get_property_value(PropertyGridVM.DpDescriptorsKey);
     }
-    get DpTarget(): IPropertyBag | undefined {
+    get DpTarget(): IPropertyBag | undefined
+    {
         return this.get_property_value(PropertyGridVM.DpTargetKey);
     }
-    get MapDescriptors(): readonly GridProperty[] | undefined {
+    get MapDescriptors(): readonly GridProperty[] | undefined
+    {
         return this.get_property_value(PropertyGridVM.MapDescriptorsKey);
     }
-    get MapTarget(): IPropertyBag | undefined {
+    get MapTarget(): IPropertyBag | undefined
+    {
         return this.get_property_value(PropertyGridVM.MapTargetKey);
     }
 

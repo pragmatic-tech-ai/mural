@@ -13,7 +13,8 @@ import { PaginatedCanvas } from '../../../basic/panels/paginated-canvas.js';
 import { Diagram } from '../diagram.js';
 import { Figure } from '../figure.js';
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void { /* noop */ }
     public GetFocusedVisual(): Visual | undefined { return undefined; }

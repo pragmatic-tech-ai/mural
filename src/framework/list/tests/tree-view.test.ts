@@ -30,7 +30,8 @@ function pointer(mods: Partial<ModifierKeys> = {}): PointerEventInit
 
 // Build the typical "Root → A, B" tree with B having two leaf children
 // for tests that need an interesting visible-items list.
-function buildFixture() {
+function buildFixture()
+{
     const tree = new TreeView();
     const root = new TreeViewItem(); root.Header = 'Root';
     const a    = new TreeViewItem(); a.Header    = 'A';
@@ -48,14 +49,16 @@ function buildFixture() {
 // Drill into a TreeViewItem to its clickable row Border — the bubble
 // origin for selection and expand actions. Row is at
 //   item._outerStack.children[0]  → _row
-function rowOf(item: TreeViewItem) {
+function rowOf(item: TreeViewItem)
+{
     const outerStack = item.visualChildren[0]!;
     return outerStack.visualChildren[0]!;
 }
 
 // The chevron sits inside the row inner StackPanel as the second
 // child (after the indent spacer).
-function chevronOf(item: TreeViewItem) {
+function chevronOf(item: TreeViewItem)
+{
     const row = rowOf(item);
     const inner = row.visualChildren[0]!;
     return inner.visualChildren[1]!;
@@ -63,7 +66,8 @@ function chevronOf(item: TreeViewItem) {
 
 // Spacer = first child of the row's inner horizontal stack — its
 // Width DP is how much horizontal indent the row applies.
-function spacerOf(item: TreeViewItem) {
+function spacerOf(item: TreeViewItem)
+{
     const row = rowOf(item);
     const inner = row.visualChildren[0]!;
     return inner.visualChildren[0]!;
@@ -626,7 +630,8 @@ describe('TreeView — nested collection mutation rebinds recycled rows', () => 
     beforeEach(() => { initTestApp(); });
 
     interface Mut { Name: string; children: ObservableCollection<Mut>; }
-    function mnode(name: string, kids: Mut[] = []): Mut {
+    function mnode(name: string, kids: Mut[] = []): Mut
+    {
         const c = new ObservableCollection<Mut>();
         for (const k of kids) c.Add(k);
         return { Name: name, children: c };

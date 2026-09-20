@@ -40,41 +40,48 @@ import {
     roughly_zero_when_compared_to,
 } from './types.js';
 
-export class Vector {
+export class Vector
+{
     public fX: number = 0;
     public fY: number = 0;
 
-    constructor(x: number = 0, y: number = 0) {
+    constructor(x: number = 0, y: number = 0)
+    {
         this.fX = x;
         this.fY = y;
     }
 
     // In-place v += w  (Skia operator+=).
-    public addEqV(v: Vector): void {
+    public addEqV(v: Vector): void
+    {
         this.fX += v.fX;
         this.fY += v.fY;
     }
 
     // In-place v -= w  (Skia operator-=).
-    public subEqV(v: Vector): void {
+    public subEqV(v: Vector): void
+    {
         this.fX -= v.fX;
         this.fY -= v.fY;
     }
 
     // In-place v /= s  (Skia operator/=).
-    public divEq(s: number): void {
+    public divEq(s: number): void
+    {
         this.fX /= s;
         this.fY /= s;
     }
 
     // In-place v *= s  (Skia operator*=).
-    public mulEq(s: number): void {
+    public mulEq(s: number): void
+    {
         this.fX *= s;
         this.fY *= s;
     }
 
     // 2D cross product (z-component): a.x*b.y - a.y*b.x.
-    public cross(a: Vector): number {
+    public cross(a: Vector): number
+    {
         return this.fX * a.fY - this.fY * a.fX;
     }
 
@@ -82,7 +89,8 @@ export class Vector {
     // partial products agree within 16 ULPs (float precision). Used by
     // collinearity tests where the raw subtraction would otherwise
     // produce noise from finite-precision cancellation.
-    public crossCheck(a: Vector): number {
+    public crossCheck(a: Vector): number
+    {
         const xy = this.fX * a.fY;
         const yx = this.fY * a.fX;
         return AlmostEqualUlps(xy, yx) ? 0 : xy - yx;
@@ -91,78 +99,92 @@ export class Vector {
     // crossNoNormalCheck: same as crossCheck but the ULPS comparator
     // doesn't special-case denormals — used when we know inputs may be
     // very small and want to avoid the "denormals are equal" shortcut.
-    public crossNoNormalCheck(a: Vector): number {
+    public crossNoNormalCheck(a: Vector): number
+    {
         const xy = this.fX * a.fY;
         const yx = this.fY * a.fX;
         return AlmostEqualUlpsNoNormalCheck(xy, yx) ? 0 : xy - yx;
     }
 
-    public dot(a: Vector): number {
+    public dot(a: Vector): number
+    {
         return this.fX * a.fX + this.fY * a.fY;
     }
 
-    public length(): number {
+    public length(): number
+    {
         return Math.sqrt(this.lengthSquared());
     }
 
-    public lengthSquared(): number {
+    public lengthSquared(): number
+    {
         return this.fX * this.fX + this.fY * this.fY;
     }
 
     // In-place normalize. JS divides yield Infinity on /0, matching
     // IEEE behaviour of Skia's sk_ieee_double_divide wrapper.
-    public normalize(): Vector {
+    public normalize(): Vector
+    {
         const inverseLength = 1 / this.length();
         this.fX *= inverseLength;
         this.fY *= inverseLength;
         return this;
     }
 
-    public isFinite(): boolean {
+    public isFinite(): boolean
+    {
         return Number.isFinite(this.fX) && Number.isFinite(this.fY);
     }
 }
 
-export class Point {
+export class Point
+{
     public fX: number = 0;
     public fY: number = 0;
 
-    constructor(x: number = 0, y: number = 0) {
+    constructor(x: number = 0, y: number = 0)
+    {
         this.fX = x;
         this.fY = y;
     }
 
     // Skia operator- :  point - point → vector.
-    public sub(b: Point): Vector {
+    public sub(b: Point): Vector
+    {
         return new Vector(this.fX - b.fX, this.fY - b.fY);
     }
 
     // p += v
-    public addEq(v: Vector): void {
+    public addEq(v: Vector): void
+    {
         this.fX += v.fX;
         this.fY += v.fY;
     }
 
     // p -= v
-    public subEq(v: Vector): void {
+    public subEq(v: Vector): void
+    {
         this.fX -= v.fX;
         this.fY -= v.fY;
     }
 
     // p + v  (returns new point)
-    public add(v: Vector): Point {
+    public add(v: Vector): Point
+    {
         return new Point(this.fX + v.fX, this.fY + v.fY);
     }
 
     // p - v  (returns new point)
-    public subV(v: Vector): Point {
+    public subV(v: Vector): Point
+    {
         return new Point(this.fX - v.fX, this.fY - v.fY);
     }
 
     // Equality predicate — note this is exact equality (`a.fX === b.fX
     // && a.fY === b.fY`), matching Skia's operator==. Use
     // approximatelyEqual / approximatelyDEqual for tolerant comparisons.
-    public equals(b: Point): boolean {
+    public equals(b: Point): boolean
+    {
         return this.fX === b.fX && this.fY === b.fY;
     }
 
@@ -175,11 +197,14 @@ export class Point {
     // largest is max(|fX|, |fY|, |a.fX|, |a.fY|). If adding dist to
     // largest is within ULP tolerance of largest, the points are close
     // relative to their scale.
-    public approximatelyDEqual(a: Point): boolean {
-        if (approximately_equal(this.fX, a.fX) && approximately_equal(this.fY, a.fY)) {
+    public approximatelyDEqual(a: Point): boolean
+    {
+        if (approximately_equal(this.fX, a.fX) && approximately_equal(this.fY, a.fY))
+        {
             return true;
         }
-        if (!RoughlyEqualUlps(this.fX, a.fX) || !RoughlyEqualUlps(this.fY, a.fY)) {
+        if (!RoughlyEqualUlps(this.fX, a.fX) || !RoughlyEqualUlps(this.fY, a.fY))
+        {
             return false;
         }
         const dist = this.distance(a);
@@ -192,11 +217,14 @@ export class Point {
     // approximatelyEqual: same shape as approximatelyDEqual but uses
     // AlmostPequalUlps (ULP epsilon = 8) on the final distance check
     // instead of AlmostDequalUlps (epsilon = 16). Marginally stricter.
-    public approximatelyEqual(a: Point): boolean {
-        if (approximately_equal(this.fX, a.fX) && approximately_equal(this.fY, a.fY)) {
+    public approximatelyEqual(a: Point): boolean
+    {
+        if (approximately_equal(this.fX, a.fX) && approximately_equal(this.fY, a.fY))
+        {
             return true;
         }
-        if (!RoughlyEqualUlps(this.fX, a.fX) || !RoughlyEqualUlps(this.fY, a.fY)) {
+        if (!RoughlyEqualUlps(this.fX, a.fX) || !RoughlyEqualUlps(this.fY, a.fY))
+        {
             return false;
         }
         const dist = this.distance(a);
@@ -208,11 +236,14 @@ export class Point {
 
     // Static form: ApproximatelyEqual on two raw point-like inputs.
     // Mirrors SkPathOpsPoint.h:197.
-    public static ApproximatelyEqual(a: Point, b: Point): boolean {
-        if (approximately_equal(a.fX, b.fX) && approximately_equal(a.fY, b.fY)) {
+    public static ApproximatelyEqual(a: Point, b: Point): boolean
+    {
+        if (approximately_equal(a.fX, b.fX) && approximately_equal(a.fY, b.fY))
+        {
             return true;
         }
-        if (!RoughlyEqualUlps(a.fX, b.fX) || !RoughlyEqualUlps(a.fY, b.fY)) {
+        if (!RoughlyEqualUlps(a.fX, b.fX) || !RoughlyEqualUlps(a.fY, b.fY))
+        {
             return false;
         }
         const dist = a.distance(b);
@@ -222,26 +253,32 @@ export class Point {
         return AlmostDequalUlps(largest, largest + dist);
     }
 
-    public approximatelyZero(): boolean {
+    public approximatelyZero(): boolean
+    {
         return approximately_zero(this.fX) && approximately_zero(this.fY);
     }
 
-    public distance(a: Point): number {
+    public distance(a: Point): number
+    {
         const temp = this.sub(a);
         return temp.length();
     }
 
-    public distanceSquared(a: Point): number {
+    public distanceSquared(a: Point): number
+    {
         const temp = this.sub(a);
         return temp.lengthSquared();
     }
 
-    public static Mid(a: Point, b: Point): Point {
+    public static Mid(a: Point, b: Point): Point
+    {
         return new Point((a.fX + b.fX) / 2, (a.fY + b.fY) / 2);
     }
 
-    public roughlyEqual(a: Point): boolean {
-        if (roughly_equal(this.fX, a.fX) && roughly_equal(this.fY, a.fY)) {
+    public roughlyEqual(a: Point): boolean
+    {
+        if (roughly_equal(this.fX, a.fX) && roughly_equal(this.fY, a.fY))
+        {
             return true;
         }
         const dist = this.distance(a);
@@ -251,8 +288,10 @@ export class Point {
         return RoughlyEqualUlps(largest, largest + dist);
     }
 
-    public static RoughlyEqual(a: Point, b: Point): boolean {
-        if (!RoughlyEqualUlps(a.fX, b.fX) && !RoughlyEqualUlps(a.fY, b.fY)) {
+    public static RoughlyEqual(a: Point, b: Point): boolean
+    {
+        if (!RoughlyEqualUlps(a.fX, b.fX) && !RoughlyEqualUlps(a.fY, b.fY))
+        {
             return false;
         }
         const dist = a.distance(b);
@@ -264,7 +303,8 @@ export class Point {
 
     // Light-weight inequality check — used to gate expensive precise
     // tests. SkPathOpsPoint.h:267.
-    public static WayRoughlyEqual(a: Point, b: Point): boolean {
+    public static WayRoughlyEqual(a: Point, b: Point): boolean
+    {
         const largestNumber = Math.max(
             Math.abs(a.fX),
             Math.abs(a.fY),

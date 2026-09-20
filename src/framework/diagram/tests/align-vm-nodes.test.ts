@@ -14,7 +14,8 @@ import { Figure } from '../figure.js';
 import { NodeViewModel } from '../node-view-model.js';
 
 // Three content-VM nodes, each wrapped in a container Figure that owns geometry.
-function mountVMs(): { diagram: Diagram; vms: NodeViewModel[]; conts: Figure[] } {
+function mountVMs(): { diagram: Diagram; vms: NodeViewModel[]; conts: Figure[] }
+{
     Application.current = null; new Application();
     const vms = [0, 1, 2].map((i) => { const v = new NodeViewModel(); v.Id = 'v' + i; return v; });
     const coll = new ObservableCollection<NodeViewModel>(); vms.forEach((v) => coll.Add(v));
@@ -33,7 +34,8 @@ function mountVMs(): { diagram: Diagram; vms: NodeViewModel[]; conts: Figure[] }
     return { diagram, vms, conts };
 }
 
-function select(diagram: Diagram, item: unknown, mods: ModifierKeys): void {
+function select(diagram: Diagram, item: unknown, mods: ModifierKeys): void
+{
     const container = diagram.Generator.ContainerFromItem(item);
     if (container === undefined) throw new Error('no container');
     diagram.HandleContainerClick(container, mods);

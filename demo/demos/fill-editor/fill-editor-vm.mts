@@ -17,7 +17,8 @@ export class FillEditorDemoVM extends MuralBase
     static OutlinePenKey  = MuralBase.RegisterProperty<Pen | undefined>(FillEditorDemoVM, 'OutlinePen',  undefined, MetaData.None);
     static FillSummaryKey = MuralBase.RegisterProperty<string>(FillEditorDemoVM, 'FillSummary', '',        MetaData.None);
 
-    constructor() {
+    constructor()
+    {
         super();
         this.set_property_value(FillEditorDemoVM.FillKey,       new SolidColorBrush(Color.FromHex('#1976d2')));
         this.set_property_value(FillEditorDemoVM.OutlinePenKey, new Pen(new SolidColorBrush(Color.FromHex('#0f172a')), 1.5));
@@ -31,7 +32,8 @@ export class FillEditorDemoVM extends MuralBase
     set OutlinePen(v:  Pen | undefined) { this.set_property_value(FillEditorDemoVM.OutlinePenKey, v); }
     get FillSummary(): string { return this.get_property_value(FillEditorDemoVM.FillSummaryKey); }
 
-    _installFillWatcher(): void {
+    _installFillWatcher(): void
+    {
         // Listen for Fill DP changes — when the editor swaps the brush
         // we re-summarise. We don't subscribe to brush-internal
         // properties; the editor builds a NEW Brush on every gesture
@@ -39,7 +41,8 @@ export class FillEditorDemoVM extends MuralBase
         this.PropertyChanged(FillEditorDemoVM.FillKey).subscribe(() => this._refreshSummary());
     }
 
-    _refreshSummary(): void {
+    _refreshSummary(): void
+    {
         const b = this.Fill;
         this.set_property_value(FillEditorDemoVM.FillSummaryKey, describe(b));
     }
@@ -49,14 +52,16 @@ export class FillEditorDemoVM extends MuralBase
 // duck-types into. The base Brush type exposes only Opacity/Transform, so we
 // cast through this shape rather than narrowing per subtype — every field is
 // optional because which ones exist depends on the runtime brush class.
-interface BrushSummaryShape {
+interface BrushSummaryShape
+{
     Color?:         { ToHex?(): string };
     GradientStops?: readonly unknown[];
     Kind?:          unknown;
     ImageSource?:   { Uri?: string };
 }
 
-function describe(brush: Brush | undefined): string {
+function describe(brush: Brush | undefined): string
+{
     if (brush === undefined) return 'Fill: (none)';
     const op = `${Math.round((brush.Opacity ?? 1) * 100)}% opacity`;
     const name = brush.constructor?.name ?? 'Brush';

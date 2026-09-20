@@ -21,7 +21,8 @@ import { findFigureAtCanvasPoint } from '../behaviors/connector-interactions-beh
 
 // A minimal stand-in for the two members findFigureAtCanvasPoint touches. The
 // items ARE the figures here, so ContainerFromItem is identity.
-function stubDiagram(figs: Figure[]): Diagram {
+function stubDiagram(figs: Figure[]): Diagram
+{
     const items = new ObservableCollection<Figure>();
     for (const f of figs) items.Add(f);
     return {
@@ -32,7 +33,8 @@ function stubDiagram(figs: Figure[]): Diagram {
 
 // A figure at (x,y) sized 40x30, arranged directly (no layout tree), with an
 // explicit paint z.
-function fig(x: number, y: number, z: number): Figure {
+function fig(x: number, y: number, z: number): Figure
+{
     const f = Figure.fromKind('rectangle', x, y, { width: 40, height: 30 });
     f.Measure(new Size(40, 30));
     f.Arrange(new Rect(x, y, 40, 30));
@@ -73,7 +75,8 @@ describe('figure hover pick sees container-nested figures', () => {
     // A container at (100,100) 220x160 with one child at container-local (22,18)
     // 30x20. ContentOrigin is (8,32), so the child's canvas rect is
     // (100+8+22, 100+32+18) = (130,150) .. (160,170).
-    function containerWithChild(): { container: ContainerFigure; child: Figure } {
+    function containerWithChild(): { container: ContainerFigure; child: Figure }
+    {
         const container = new ContainerFigure();
         container.Left = 100; container.Top = 100; container.Width = 220; container.Height = 160;
         container.Measure(new Size(220, 160));

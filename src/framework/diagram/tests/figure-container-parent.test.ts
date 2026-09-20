@@ -4,7 +4,8 @@ import { Application } from '../../../runtime/index.js';
 import { Figure } from '../figure.js';
 import { diagramSpaceRect } from '../coordinate-space.js';
 
-function fig(l: number, t: number): Figure {
+function fig(l: number, t: number): Figure
+{
     Application.current = null; new Application();
     return Figure.fromKind('rectangle', l, t, { width: 40, height: 30 });
 }

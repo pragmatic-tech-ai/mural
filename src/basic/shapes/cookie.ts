@@ -88,35 +88,40 @@ export class Cookie extends Shape
 
 export class FourSidedCookie extends Cookie
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(FourSidedCookie, Cookie.SidesKey, { default_value: 4 });
     }
 }
 
 export class SixSidedCookie extends Cookie
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(SixSidedCookie, Cookie.SidesKey, { default_value: 6 });
     }
 }
 
 export class SevenSidedCookie extends Cookie
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(SevenSidedCookie, Cookie.SidesKey, { default_value: 7 });
     }
 }
 
 export class NineSidedCookie extends Cookie
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(NineSidedCookie, Cookie.SidesKey, { default_value: 9 });
     }
 }
 
 export class TwelveSidedCookie extends Cookie
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(TwelveSidedCookie, Cookie.SidesKey, { default_value: 12 });
     }
 }
@@ -125,7 +130,8 @@ export class TwelveSidedCookie extends Cookie
 // sit on the cardinal axes (top / right / bottom / left).
 export class Diamond extends Cookie
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(Diamond, Cookie.SidesKey,    { default_value: 4 });
         MuralBase.OverrideMetadata(Diamond, Cookie.RotationKey, { default_value: -90 });
     }
@@ -134,7 +140,8 @@ export class Diamond extends Cookie
 // Pentagon — 5-sided cookie, point-up.
 export class Pentagon extends Cookie
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(Pentagon, Cookie.SidesKey, { default_value: 5 });
     }
 }
@@ -143,7 +150,8 @@ export class Pentagon extends Cookie
 // rotated so the top edge is flat instead of pointing up.
 export class Gem extends Cookie
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(Gem, Cookie.SidesKey,    { default_value: 6 });
         MuralBase.OverrideMetadata(Gem, Cookie.RotationKey, { default_value: 0 });
     }

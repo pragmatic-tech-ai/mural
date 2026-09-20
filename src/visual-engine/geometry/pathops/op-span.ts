@@ -58,7 +58,8 @@ export { SK_MIN_S32 };
 
 // Result of SkOpSpanBase::collapsed(s, e) — three-state for "yes /
 // no / detected an infinite loop walking the pt-T ring".
-export enum OpCollapsed {
+export enum OpCollapsed
+{
     kNo    = 0,
     kYes   = 1,
     kError = 2,
@@ -66,7 +67,8 @@ export enum OpCollapsed {
 
 // ── OpPtT ─────────────────────────────────────────────────────────
 
-export class OpPtT {
+export class OpPtT
+{
     // SkOpPtT.h:27 — kIsAlias / kIsDuplicate bit values. Both 1 in
     // Skia (the enum is just there to give names to a single flag).
     public static readonly kIsAlias     = 1;
@@ -118,7 +120,8 @@ export class OpPtT {
         if (!this.fDeleted) return this;
         let ptT: OpPtT = this;
         const stopPtT = ptT;
-        while ((ptT = ptT.fNext) !== stopPtT) {
+        while ((ptT = ptT.fNext) !== stopPtT)
+        {
             if (ptT.fSpan === this.fSpan && !ptT.fDeleted) return ptT;
         }
         return undefined; // every entry deleted — caller must abort
@@ -156,7 +159,8 @@ export class OpPtT {
         if (this === check) throw new Error('OpPtT.contains: identity check');
         let ptT: OpPtT = this;
         const stopPtT = ptT;
-        while ((ptT = ptT.fNext) !== stopPtT) {
+        while ((ptT = ptT.fNext) !== stopPtT)
+        {
             if (ptT === check) return true;
         }
         return false;
@@ -168,7 +172,8 @@ export class OpPtT {
             throw new Error('OpPtT.containsSegmentPt: same segment');
         let ptT: OpPtT = this;
         const stopPtT = ptT;
-        while ((ptT = ptT.fNext) !== stopPtT) {
+        while ((ptT = ptT.fNext) !== stopPtT)
+        {
             if (ptT.fPt.equals(pt) && ptT.segment() === segment) return true;
         }
         return false;
@@ -178,7 +183,8 @@ export class OpPtT {
     {
         let ptT: OpPtT = this;
         const stopPtT = ptT;
-        while ((ptT = ptT.fNext) !== stopPtT) {
+        while ((ptT = ptT.fNext) !== stopPtT)
+        {
             if (ptT.fT === t && ptT.segment() === segment) return true;
         }
         return false;
@@ -191,7 +197,8 @@ export class OpPtT {
             throw new Error('OpPtT.containsSegment: same segment');
         let ptT: OpPtT = this;
         const stopPtT = ptT;
-        while ((ptT = ptT.fNext) !== stopPtT) {
+        while ((ptT = ptT.fNext) !== stopPtT)
+        {
             if (ptT.segment() === check && !ptT.deleted()) return ptT;
         }
         return undefined;
@@ -202,7 +209,8 @@ export class OpPtT {
     {
         let ptT: OpPtT = this;
         const stopPtT = ptT;
-        do {
+        do
+        {
             if (ptT.segment() === segment && !ptT.deleted()) return ptT;
             ptT = ptT.fNext;
         } while (stopPtT !== ptT);
@@ -226,7 +234,8 @@ export class OpPtT {
         // Skia uses a `this` pointer the loop never moves; we mirror.
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         const self = this;
-        while (self !== check) {
+        while (self !== check)
+        {
             if (self.fPt.equals(check.fPt)) return true;
             check = check.fNext;
         }
@@ -239,7 +248,8 @@ export class OpPtT {
     {
         let result: OpPtT = this;
         let next:   OpPtT = this;
-        while ((next = next.fNext) !== this) {
+        while ((next = next.fNext) !== this)
+        {
             result = next;
         }
         return result;
@@ -272,7 +282,8 @@ export class OpPtT {
     {
         let prev: OpPtT = opp.fNext;
         if (prev === this) return undefined;
-        while (prev.fNext !== opp) {
+        while (prev.fNext !== opp)
+        {
             prev = prev.fNext;
             if (prev === this) return undefined;
         }
@@ -301,7 +312,8 @@ export class OpPtT {
         const eOut = between(s1.fT, end2.fT, e1.fT) ? end2
                   : between(s2.fT, end1.fT, e2.fT) ? end1
                   : undefined;
-        if (sOut === eOut) {
+        if (sOut === eOut)
+        {
             // Skia asserts the disjointness condition; we leave the
             // assertion silent (the caller's overlap === false path
             // already covers it) but mirror the boolean returns.
@@ -314,7 +326,8 @@ export class OpPtT {
 
 // ── OpSpanBase ────────────────────────────────────────────────────
 
-export class OpSpanBase {
+export class OpSpanBase
+{
     // Inlined OpPtT — the canonical pt-T of this span. Other pt-Ts
     // join it through the fNext ring.
     public fPtT: OpPtT;
@@ -416,7 +429,8 @@ export class OpSpanBase {
         let max = min;
         const segment = this.segment();
         let safetyNet = 100000;
-        while ((walk = walk.next()) !== start) {
+        while ((walk = walk.next()) !== start)
+        {
             if (!--safetyNet) return OpCollapsed.kError;
             if (walk === startNext) return OpCollapsed.kError;
             if (walk.segment() !== segment) continue;
@@ -436,7 +450,8 @@ export class OpSpanBase {
         const check = span.fPtT;
         if (start === check) throw new Error('OpSpanBase.containsSpan: identity check');
         let walk: OpPtT = start;
-        while ((walk = walk.next()) !== start) {
+        while ((walk = walk.next()) !== start)
+        {
             if (walk === check) return true;
         }
         return false;
@@ -448,9 +463,11 @@ export class OpSpanBase {
     {
         const start = this.fPtT;
         let walk: OpPtT = start;
-        while ((walk = walk.next()) !== start) {
+        while ((walk = walk.next()) !== start)
+        {
             if (walk.deleted()) continue;
-            if (walk.segment() === segment && walk.span().ptT() === walk) {
+            if (walk.segment() === segment && walk.span().ptT() === walk)
+            {
                 return walk;
             }
         }
@@ -462,7 +479,8 @@ export class OpSpanBase {
     {
         if (this === coin) throw new Error('OpSpanBase.containsCoinEnd: identity check');
         let next: OpSpanBase = this;
-        while ((next = next.fCoinEnd) !== this) {
+        while ((next = next.fCoinEnd) !== this)
+        {
             if (next === coin) return true;
         }
         return false;
@@ -474,7 +492,8 @@ export class OpSpanBase {
         if (this.segment() === segment)
             throw new Error('OpSpanBase.containsCoinEndSegment: same segment');
         let next: OpSpanBase = this;
-        while ((next = next.fCoinEnd) !== this) {
+        while ((next = next.fCoinEnd) !== this)
+        {
             if (next.segment() === segment) return true;
         }
         return false;
@@ -484,7 +503,8 @@ export class OpSpanBase {
     // already linked.
     public insertCoinEnd(coin: OpSpanBase): void
     {
-        if (this.containsCoinEndSpan(coin)) {
+        if (this.containsCoinEndSpan(coin))
+        {
             if (!coin.containsCoinEndSpan(this))
                 throw new Error('OpSpanBase.insertCoinEnd: asymmetric coin ring');
             return;
@@ -505,7 +525,8 @@ export class OpSpanBase {
         if (coins.isEmpty()) return;
         const head = this.fPtT;
         let test: OpPtT = head;
-        do {
+        do
+        {
             if (test.coincident()) coins.markCollapsed(test);
             test = test.next();
         } while (test !== head);
@@ -526,14 +547,17 @@ export class OpSpanBase {
         const remainderHead = spanPtT.next();
         this.ptT().insert(spanPtT);
         let remainder = remainderHead;
-        while (remainder !== spanPtT) {
+        while (remainder !== spanPtT)
+        {
             const next = remainder.next();
             // Check if some existing entry already pairs (span, t)
             let compare = spanPtT.next();
             let dup = false;
-            while (compare !== spanPtT) {
+            while (compare !== spanPtT)
+            {
                 const nextC = compare.next();
-                if (nextC.span() === remainder.span() && nextC.fT === remainder.fT) {
+                if (nextC.span() === remainder.span() && nextC.fT === remainder.fT)
+                {
                     dup = true;
                     break;
                 }
@@ -554,26 +578,36 @@ export class OpSpanBase {
         let test: OpPtT = this.fPtT;
         const stop = test;
         let safetyHatch = 1_000_000;
-        do {
+        do
+        {
             if (!--safetyHatch) return false;
             const testNext = test.next();
-            if (!test.deleted()) {
+            if (!test.deleted())
+            {
                 const testBase = test.span();
                 if (testBase.ptT() !== test) throw new Error('OpSpanBase.mergeMatches: ptT mismatch');
                 const segment = test.segment();
-                if (!segment.done()) {
+                if (!segment.done())
+                {
                     let inner: OpPtT = opp.ptT();
                     const innerStop = inner;
-                    do {
-                        if (inner.segment() === segment && !inner.deleted()) {
+                    do
+                    {
+                        if (inner.segment() === segment && !inner.deleted())
+                        {
                             const innerBase = inner.span();
                             if (innerBase.ptT() !== inner)
                                 throw new Error('OpSpanBase.mergeMatches: inner ptT mismatch');
-                            if (!zero_or_one(inner.fT)) {
+                            if (!zero_or_one(inner.fT))
+                            {
                                 innerBase.upCast().release(test);
-                            } else if (!zero_or_one(test.fT)) {
+                            }
+                            else if (!zero_or_one(test.fT))
+                            {
                                 testBase.upCast().release(inner);
-                            } else {
+                            }
+                            else
+                            {
                                 // Both endpoints — collapse the segment.
                                 segment.markAllDone();
                                 test.setDeleted();
@@ -634,7 +668,8 @@ export class OpSpanBase {
 
 // ── OpSpan ────────────────────────────────────────────────────────
 
-export class OpSpan extends OpSpanBase {
+export class OpSpan extends OpSpanBase
+{
     public fCoincident: OpSpan;
     public fToAngle: OpAngleLike | undefined = undefined;
     public fNext: OpSpanBase | undefined = undefined;
@@ -721,7 +756,8 @@ export class OpSpan extends OpSpanBase {
         // SkOpSpan.cpp:482 — disagreement marks the winding step as
         // failed but does NOT clobber the existing sum. Mirror the
         // soft-fail behaviour.
-        if (this.fWindSum !== SK_MIN_S32 && this.fWindSum !== value) {
+        if (this.fWindSum !== SK_MIN_S32 && this.fWindSum !== value)
+        {
             this.globalState().setWindingFailed();
             return;
         }
@@ -731,7 +767,8 @@ export class OpSpan extends OpSpanBase {
     public oppSum(): number { return this.fOppSum; }
     public setOppSum(value: number): void
     {
-        if (this.fOppSum !== SK_MIN_S32 && this.fOppSum !== value) {
+        if (this.fOppSum !== SK_MIN_S32 && this.fOppSum !== value)
+        {
             this.globalState().setWindingFailed();
             return;
         }
@@ -755,7 +792,8 @@ export class OpSpan extends OpSpanBase {
     {
         if (this === coin) throw new Error('OpSpan.containsCoincidence: identity check');
         let next: OpSpan = this;
-        while ((next = next.fCoincident) !== this) {
+        while ((next = next.fCoincident) !== this)
+        {
             if (next === coin) return true;
         }
         return false;
@@ -767,7 +805,8 @@ export class OpSpan extends OpSpanBase {
         if (this.segment() === segment)
             throw new Error('OpSpan.containsCoincidenceSegment: same segment');
         let next: OpSpan = this.fCoincident;
-        do {
+        do
+        {
             if (next.segment() === segment) return true;
         } while ((next = next.fCoincident) !== this);
         return false;
@@ -776,7 +815,8 @@ export class OpSpan extends OpSpanBase {
     // SkOpSpan.h:468 — splice the two coincident-rings together.
     public insertCoincidence(coin: OpSpan): void
     {
-        if (this.containsCoincidenceSpan(coin)) {
+        if (this.containsCoincidenceSpan(coin))
+        {
             if (!coin.containsCoincidenceSpan(this))
                 throw new Error('OpSpan.insertCoincidence: asymmetric ring');
             return;
@@ -793,21 +833,28 @@ export class OpSpan extends OpSpanBase {
     {
         if (this.containsCoincidenceSegment(segment)) return true;
         let next: OpPtT = this.fPtT;
-        while ((next = next.next()) !== this.fPtT) {
-            if (next.segment() === segment) {
+        while ((next = next.next()) !== this.fPtT)
+        {
+            if (next.segment() === segment)
+            {
                 const base = next.span();
                 let span: OpSpan | undefined;
-                if (!ordered) {
+                if (!ordered)
+                {
                     const spanEndPtT = this.fNext!.containsSegment(segment);
                     if (spanEndPtT === undefined) return false;
                     const spanEnd = spanEndPtT.span();
                     const start = base.ptT().starter(spanEnd.ptT());
                     span = start.span().upCastable();
                     if (span === undefined) return false;
-                } else if (flipped) {
+                }
+                else if (flipped)
+                {
                     span = base.prev();
                     if (span === undefined) return false;
-                } else {
+                }
+                else
+                {
                     span = base.upCastable();
                     if (span === undefined) return false;
                 }
@@ -840,7 +887,8 @@ export class OpSpan extends OpSpanBase {
         const stopPtT = this.ptT();
         let testPtT: OpPtT = stopPtT;
         const keptSpan = kept.span();
-        do {
+        do
+        {
             if (testPtT.span() === this) testPtT.setSpan(keptSpan);
             testPtT = testPtT.next();
         } while (testPtT !== stopPtT);

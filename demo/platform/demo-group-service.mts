@@ -16,7 +16,8 @@ export class DemoVM extends MuralBase
 
     readonly Descriptor: DemoDescriptor;
 
-    constructor(d: DemoDescriptor) {
+    constructor(d: DemoDescriptor)
+    {
         super();
         this.set_property_value(DemoVM.IdKey,       d.id);
         this.set_property_value(DemoVM.LabelKey,    d.title);
@@ -46,11 +47,13 @@ export abstract class DemoGroupService extends DocumentSelectorService
     private _subtitle = '';
     private _content: Visual | undefined = undefined;
 
-    constructor(provider: IServiceProvider, descriptors: readonly DemoDescriptor[]) {
+    constructor(provider: IServiceProvider, descriptors: readonly DemoDescriptor[])
+    {
         super(provider);
         const sorted = [...descriptors].sort((a, b) => a.title.localeCompare(b.title));
         for (const d of sorted) this.Demos.Add(new DemoVM(d));
-        if (this.SelectedItem === undefined && this.Demos.Count > 0) {
+        if (this.SelectedItem === undefined && this.Demos.Count > 0)
+        {
             this.SelectedItem = this.Demos.Get(0);
         }
     }
@@ -61,7 +64,8 @@ export abstract class DemoGroupService extends DocumentSelectorService
     get Subtitle():     string                       { return this._subtitle; }
     get Content():      Visual | undefined           { return this._content; }
 
-    private instantiate(vm: DemoVM): Visual {
+    private instantiate(vm: DemoVM): Visual
+    {
         const hit = this._cache.get(vm.Id);
         if (hit !== undefined) return hit;
         const built = vm.Descriptor.factory();
@@ -69,7 +73,8 @@ export abstract class DemoGroupService extends DocumentSelectorService
         return built;
     }
 
-    protected override OnSelectedItemChanged(item: object | undefined): void {
+    protected override OnSelectedItemChanged(item: object | undefined): void
+    {
         const sel = item instanceof DemoVM ? item : undefined;
         const content = sel ? this.instantiate(sel) : undefined;
         const oldTitle = this._title, oldSubtitle = this._subtitle, oldContent = this._content;

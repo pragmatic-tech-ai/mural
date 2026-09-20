@@ -36,8 +36,10 @@ import {
     approximately_zero_or_more_double,
 } from './types.js';
 
-declare module './intersections.js' {
-    interface Intersections {
+declare module './intersections.js'
+{
+    interface Intersections
+    {
         intersectCubicLine(cubic: Cubic, line: Line): number;
         intersectRayCubicLine(cubic: Cubic, line: Line): number;
         horizontalCubic(cubic: Cubic, left: number, right: number, y: number, flipped: boolean): number;
@@ -87,7 +89,8 @@ function cubicNearPoint(cubic: Cubic, xy: Point, opp: Point): number
     return probe._get_fT(0, minIndex);
 }
 
-class LineCubicIntersections {
+class LineCubicIntersections
+{
     private readonly fCubic: Cubic;
     private readonly fLine: Line;
     private readonly fIntersections: Intersections;

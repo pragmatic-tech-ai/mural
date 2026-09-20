@@ -14,7 +14,8 @@ import '../container-figure.js';
 import '../text-node.js';
 import '../callout.js';
 
-function diagram(): Diagram {
+function diagram(): Diagram
+{
     Application.current = null;
     new Application();
     const d = new Diagram();
@@ -25,19 +26,22 @@ function diagram(): Diagram {
 // In a diagram, an item Figure is its OWN selection container (self-container
 // ItemsControl), so select by handing the figure straight to the selection core
 // and firing the change the FormatMirror listens for — no mounted view needed.
-interface SelectorCore {
+interface SelectorCore
+{
     setSelectedContainers(containers: readonly unknown[]): void;
     refreshExposedSelection(): void;
     fireSelectionChanged(): void;
 }
-function selectLeaf(d: Diagram, fig: Figure): void {
+function selectLeaf(d: Diagram, fig: Figure): void
+{
     const core = d as unknown as SelectorCore;
     core.setSelectedContainers([fig]);
     core.refreshExposedSelection();
     core.fireSelectionChanged();
 }
 
-for (const kind of ['rectangle', 'container', 'text', 'callout']) {
+for (const kind of ['rectangle', 'container', 'text', 'callout'])
+{
     test(`selecting a ${kind} seeds an editable Stroke pen`, () => {
         const d = diagram();
         const fig = Figure.fromKind(kind, 0, 0);

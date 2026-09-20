@@ -155,7 +155,8 @@ function placementOf(selector: unknown): ContainerPlacementLike | undefined
 
 export class Figure extends ContentControl implements ISideEndpointHost
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(Figure, Element.DefaultStyleKeyKey, { default_value: Figure });
         // Figure's fill is the inherited Visual.Fill; keep Figure's historic
         // default brush by overriding the metadata for the Figure subtree.

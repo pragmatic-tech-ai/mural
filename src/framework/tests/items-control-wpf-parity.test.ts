@@ -19,7 +19,8 @@ import { ItemsControl } from '@pragmatic-tech-ai/mural/framework';
 // has somewhere visible to land.
 class Leaf extends Element
 {
-    static {
+    static
+    {
         MuralBase.RegisterProperty(Leaf, 'Tag', 'plain', MetaData.None);
     }
     constructor(public readonly source: unknown) { super(); }

@@ -29,7 +29,8 @@ export class DrawerVM extends MuralBase
     get OpenOptions():  ICommand | undefined { return this.get_property_value(DrawerVM.OpenOptionsKey); }
     get CloseOptions(): ICommand | undefined { return this.get_property_value(DrawerVM.CloseOptionsKey); }
 
-    constructor() {
+    constructor()
+    {
         super();
         this.set_property_value(DrawerVM.ToggleNavKey,
             new RelayCommand(() => { this.NavOpen = !this.NavOpen; }));
@@ -42,18 +43,23 @@ export class DrawerVM extends MuralBase
     // Walks the freshly-rendered view, finds each Temporary Drawer and
     // wires a Closed listener back into OptionsOpen. ContentControl /
     // PageView calls this once when the DataTemplate is applied.
-    OnViewMounted(view: Visual): void {
-        for (const d of findAllByType(view, Drawer)) {
-            if (d.Variant === DrawerVariant.Temporary) {
+    OnViewMounted(view: Visual): void
+    {
+        for (const d of findAllByType(view, Drawer))
+        {
+            if (d.Variant === DrawerVariant.Temporary)
+            {
                 d.AddClosedListener(() => { this.OptionsOpen = false; });
             }
         }
     }
 }
 
-function findAllByType<T extends Visual>(visual: Visual, ctor: new (...args: never[]) => T, out: T[] = []): T[] {
+function findAllByType<T extends Visual>(visual: Visual, ctor: new (...args: never[]) => T, out: T[] = []): T[]
+{
     if (visual instanceof ctor) out.push(visual);
-    for (const child of visual.visualChildren) {
+    for (const child of visual.visualChildren)
+    {
         findAllByType(child, ctor, out);
     }
     return out;

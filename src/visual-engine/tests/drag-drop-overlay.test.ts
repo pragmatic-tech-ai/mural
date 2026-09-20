@@ -30,7 +30,8 @@ function makeDom(): { dom: JSDOM; host: HTMLElement; document: Document }
     const win = dom.window as unknown as Window & typeof globalThis;
     (globalThis as unknown as { window: Window }).window     = win;
     (globalThis as unknown as { document: Document }).document = win.document;
-    (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = class {
+    (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = class
+    {
         observe():    void {}
         disconnect(): void {}
         unobserve():  void {}

@@ -12,7 +12,8 @@ import { Point } from '../../../../visual-engine/index.js';
 import { RoutingMode } from '../../routing/router.js';
 import '../../routing/straight-router.js';
 
-function mount(items: ObservableCollection<Figure>): Diagram {
+function mount(items: ObservableCollection<Figure>): Diagram
+{
     const diagram = new Diagram();
     diagram.SelectionMode = SelectionMode.Extended;
     diagram.ItemsPanel = new ItemsPanelTemplate(() => new Canvas());
@@ -24,12 +25,14 @@ function mount(items: ObservableCollection<Figure>): Diagram {
     return diagram;
 }
 
-function select(diagram: Diagram, figs: Figure[]): void {
+function select(diagram: Diagram, figs: Figure[]): void
+{
     for (let i = 0; i < figs.length; i++)
         diagram.HandleContainerClick(figs[i]!, i === 0 ? ModifierKeys.None : ModifierKeys.Control);
 }
 
-function rect(x: number, y: number): Figure {
+function rect(x: number, y: number): Figure
+{
     return Figure.fromKind('rectangle', x, y, { width: 40, height: 30 });
 }
 
@@ -64,7 +67,8 @@ test('SendToBack gives the selected figure the bottom ZIndex', () => {
     assert.ok(Panel.GetZIndex(b) < Panel.GetZIndex(a));
 });
 
-function makeConnector(): Connector {
+function makeConnector(): Connector
+{
     const c = new Connector();
     c.RoutingMode = RoutingMode.Straight;
     c.Source = new ConnectorEndpoint({ FreePoint: new Point(0, 0) });
@@ -74,7 +78,8 @@ function makeConnector(): Connector {
 
 // Push a connector through the Connectors DP so the materializer mounts it
 // onto the same canvas as the figures.
-function addConnector(diagram: Diagram, c: Connector): void {
+function addConnector(diagram: Diagram, c: Connector): void
+{
     let col = diagram.Connectors;
     if (col === undefined) { col = new ObservableCollection<MuralBase>([]); diagram.Connectors = col; }
     col.Add(c);

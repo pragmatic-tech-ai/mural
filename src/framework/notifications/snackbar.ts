@@ -27,7 +27,8 @@ export class Snackbar extends ContentControl
     public get Actions(): Visual | undefined { return this.get_property_value(Snackbar.ActionsKey); }
     public set Actions(v: Visual | undefined) { this.set_property_value(Snackbar.ActionsKey, v); }
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(
             Snackbar, Element.DefaultStyleKeyKey,
             { default_value: Snackbar });

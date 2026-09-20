@@ -18,7 +18,8 @@ import { Diagram } from '../diagram.js';
 import { Figure } from '../figure.js';
 import { NodeViewModel } from '../node-view-model.js';
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void {}
     public GetFocusedVisual(): Visual | undefined { return undefined; }
@@ -44,7 +45,8 @@ describe('Figure — SizeToContent', () => {
         );
     });
 
-    function build(): { diagram: Diagram; surface: Border } {
+    function build(): { diagram: Diagram; surface: Border }
+    {
         const diagram = new Diagram();
         diagram.ItemsPanel = new ItemsPanelTemplate(() => new PaginatedCanvas());
         const surface = new Border();
@@ -54,15 +56,18 @@ describe('Figure — SizeToContent', () => {
         return { diagram, surface };
     }
 
-    function layout(surface: Border): void {
+    function layout(surface: Border): void
+    {
         // A couple of passes so the content-fit write settles.
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 3; i++)
+        {
             surface.Measure(new Size(800, 600));
             surface.Arrange({ X: 0, Y: 0, Width: 800, Height: 600 } as never);
         }
     }
 
-    function place(vm: TileVM): { diagram: Diagram; surface: Border; container: Figure } {
+    function place(vm: TileVM): { diagram: Diagram; surface: Border; container: Figure }
+    {
         const { diagram, surface } = build();
         const col = new ObservableCollection<TileVM>();
         col.Add(vm);

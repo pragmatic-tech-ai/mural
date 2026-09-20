@@ -339,7 +339,8 @@ describe('TextBlock LetterSpacing (M3 tracking)', () => {
 
         const lines = (t as unknown as { _lines: Array<{ text: string; metrics: { Width: number } }> })._lines;
         assert.ok(lines.length >= 2, `text wrapped to multiple lines (got ${lines.length})`);
-        for (const l of lines) {
+        for (const l of lines)
+        {
             const advance = l.metrics.Width + 2 * Array.from(l.text).length;
             assert.ok(advance <= t.DesiredSize.Width + 1e-6,
                 `line "${l.text}" advance ${advance} fits the block ${t.DesiredSize.Width}`);

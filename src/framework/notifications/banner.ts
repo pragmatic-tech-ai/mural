@@ -35,7 +35,8 @@ export class Banner extends ContentControl
     public get Actions(): Visual | undefined { return this.get_property_value(Banner.ActionsKey); }
     public set Actions(v: Visual | undefined) { this.set_property_value(Banner.ActionsKey, v); }
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(
             Banner, Element.DefaultStyleKeyKey,
             { default_value: Banner });

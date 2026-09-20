@@ -21,7 +21,8 @@ describe('parser — TemplateSelector resource form', () =>
         // Locate the TemplateSelector resource-form anywhere in the tree.
         const forms: any[] = [];
         const walk = (o: any) => {
-            if (o && typeof o === 'object') {
+            if (o && typeof o === 'object')
+            {
                 if (o.kind === 'resource-form' && o.keyword === 'TemplateSelector') forms.push(o);
                 for (const k of Object.keys(o)) walk(o[k]);
             }

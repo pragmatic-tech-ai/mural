@@ -132,7 +132,8 @@ describe('Round-3 accuracy: cubic × cubic with 4+ crossings', () => {
         // (0,0) and (3,0) must be among the reported points.
         let hasStart = false;
         let hasEnd   = false;
-        for (let i = 0; i < n; ++i) {
+        for (let i = 0; i < n; ++i)
+        {
             const p = ix.pt(i);
             if (Math.abs(p.fX) < TOL_BISECT && Math.abs(p.fY) < TOL_BISECT) hasStart = true;
             if (Math.abs(p.fX - 3) < TOL_BISECT && Math.abs(p.fY) < TOL_BISECT) hasEnd = true;
@@ -153,8 +154,10 @@ describe('Round-3 accuracy: cubic × cubic with 4+ crossings', () => {
         // Origin should be one of the crossings (both curves are odd
         // around origin so by symmetry it's a fixed point).
         let originIdx = -1;
-        for (let i = 0; i < n; ++i) {
-            if (Math.abs(ix.pt(i).fX) < TOL_BISECT && Math.abs(ix.pt(i).fY) < TOL_BISECT) {
+        for (let i = 0; i < n; ++i)
+        {
+            if (Math.abs(ix.pt(i).fX) < TOL_BISECT && Math.abs(ix.pt(i).fY) < TOL_BISECT)
+            {
                 originIdx = i;
                 break;
             }
@@ -163,7 +166,8 @@ describe('Round-3 accuracy: cubic × cubic with 4+ crossings', () => {
         // Non-origin crossings should sum to (0, 0) by point symmetry.
         let xSum = 0;
         let ySum = 0;
-        for (let i = 0; i < n; ++i) {
+        for (let i = 0; i < n; ++i)
+        {
             if (i === originIdx) continue;
             xSum += ix.pt(i).fX;
             ySum += ix.pt(i).fY;
@@ -190,7 +194,8 @@ describe('Round-3 accuracy: cubic × cubic with 4+ crossings', () => {
         assert.ok(Math.abs(ts[1]! - 0.5) < TOL_CLOSED, `t2 = ${ts[1]}`);
         assert.ok(Math.abs(ts[2]! - 1)   < TOL_CLOSED, `t3 = ${ts[2]}`);
         // All three crossings on x-axis (y = 0).
-        for (let i = 0; i < n; ++i) {
+        for (let i = 0; i < n; ++i)
+        {
             assert.ok(Math.abs(ix.pt(i).fY) < TOL_BISECT,
                 `pt[${i}].y = ${ix.pt(i).fY}`);
         }
@@ -206,7 +211,8 @@ describe('Round-3 accuracy: near-tangent precision sweep on quad × line', () =>
     test('below apex: 2 real roots holds down to eps ≈ 1e-9', () => {
         const q = Q(P(0, 0), P(1, 2), P(2, 0));
         const epsValues = [1e-1, 1e-2, 1e-3, 1e-4, 1e-5, 1e-6, 1e-7, 1e-8, 1e-9];
-        for (const eps of epsValues) {
+        for (const eps of epsValues)
+        {
             const ix = new Intersections();
             const line = new Line(P(-5, 1 - eps), P(5, 1 - eps));
             const n = ix.intersectQuadLine(q, line);
@@ -227,7 +233,8 @@ describe('Round-3 accuracy: near-tangent precision sweep on quad × line', () =>
         // refinement), this will break — that's the intended signal.
         const q = Q(P(0, 0), P(1, 2), P(2, 0));
         const epsValues = [1e-10, 1e-11, 1e-12];
-        for (const eps of epsValues) {
+        for (const eps of epsValues)
+        {
             const ix = new Intersections();
             const line = new Line(P(-5, 1 - eps), P(5, 1 - eps));
             const n = ix.intersectQuadLine(q, line);
@@ -241,7 +248,8 @@ describe('Round-3 accuracy: near-tangent precision sweep on quad × line', () =>
     test('above apex: 0 roots holds down to eps ≈ 1e-5', () => {
         const q = Q(P(0, 0), P(1, 2), P(2, 0));
         const epsValues = [1e-1, 1e-2, 1e-3, 1e-4, 1e-5];
-        for (const eps of epsValues) {
+        for (const eps of epsValues)
+        {
             const ix = new Intersections();
             const line = new Line(P(-5, 1 + eps), P(5, 1 + eps));
             const n = ix.intersectQuadLine(q, line);
@@ -256,7 +264,8 @@ describe('Round-3 accuracy: near-tangent precision sweep on quad × line', () =>
         // This is a documented finite-precision artefact, not a bug.
         const q = Q(P(0, 0), P(1, 2), P(2, 0));
         const epsValues = [1e-6, 1e-7, 1e-8, 1e-9, 1e-12];
-        for (const eps of epsValues) {
+        for (const eps of epsValues)
+        {
             const ix = new Intersections();
             const line = new Line(P(-5, 1 + eps), P(5, 1 + eps));
             const n = ix.intersectQuadLine(q, line);

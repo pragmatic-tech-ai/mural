@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { initTestApp } from '../../../basic/tests/test-app.js';
 import { MuralBase, MetaData, PropertyKey } from '../../../runtime/index.js';
 
-class Probe extends MuralBase {
+class Probe extends MuralBase
+{
   static readonly LabelKey = MuralBase.RegisterProperty<string>(Probe, 'Label', 'init', MetaData.None);
   get Label(): string { return this.get_property_value(Probe.LabelKey); }
   set Label(v: string) { this.set_property_value(Probe.LabelKey, v); }

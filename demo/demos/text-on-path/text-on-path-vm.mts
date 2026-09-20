@@ -22,11 +22,13 @@ import { PATHS } from './paths.mjs';
 
 // Each picker row exposes Key + Label as DPs so the binding pipeline
 // can read them through the standard property path syntax in the .mu.
-class PathOption extends MuralBase {
+class PathOption extends MuralBase
+{
     static KeyKey   = MuralBase.RegisterProperty(PathOption, 'Key',   '', MetaData.None);
     static LabelKey = MuralBase.RegisterProperty(PathOption, 'Label', '', MetaData.None);
 
-    constructor(key: string, label: string) {
+    constructor(key: string, label: string)
+    {
         super();
         this.set_property_value(PathOption.KeyKey,   key);
         this.set_property_value(PathOption.LabelKey, label);
@@ -35,7 +37,8 @@ class PathOption extends MuralBase {
     get Label():  string { return this.get_property_value(PathOption.LabelKey); }
 }
 
-export class TextOnPathVM extends MuralBase {
+export class TextOnPathVM extends MuralBase
+{
     static TextKey               = MuralBase.RegisterProperty(TextOnPathVM, 'Text',               'Text running along a curve — try a different path', MetaData.None);
     static PathKeyKey            = MuralBase.RegisterProperty(TextOnPathVM, 'PathKey',            'wave',          MetaData.None);
     static FontSizeKey           = MuralBase.RegisterProperty(TextOnPathVM, 'FontSize',           28,              MetaData.None);
@@ -51,7 +54,8 @@ export class TextOnPathVM extends MuralBase {
     static PathColorHexKey       = MuralBase.RegisterProperty(TextOnPathVM, 'PathColorHex',       '#94a3b8',       MetaData.None);
     static GlyphColorHexKey      = MuralBase.RegisterProperty(TextOnPathVM, 'GlyphColorHex',      '#0f172a',       MetaData.None);
 
-    constructor() {
+    constructor()
+    {
         super();
         // Paths collection — instantiated per-VM so Add / Remove on it
         // doesn't leak across re-mounts.
@@ -65,7 +69,8 @@ export class TextOnPathVM extends MuralBase {
         // SelectedPathOption, mirror its Key onto PathKey so the
         // behavior's PathKey listener wakes up.
         this.PropertyChanged(TextOnPathVM.SelectedPathOptionKey).subscribe(({ newValue: n }) => {
-            if (n !== undefined) {
+            if (n !== undefined)
+            {
                 this.set_property_value(TextOnPathVM.PathKeyKey, (n as { Key: string }).Key);
             }
         });

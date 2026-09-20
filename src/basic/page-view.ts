@@ -37,7 +37,8 @@ export class PageView extends TemplatedControl
     public static readonly SubtitleKey = MuralBase.RegisterProperty<string>(                 PageView, 'Subtitle', '',        MetaData.Measure | MetaData.Render);
     public static readonly ContentKey  = MuralBase.RegisterProperty<Visual | MuralBase | undefined>(PageView, 'Content',  undefined, MetaData.Measure);
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(PageView, Element.DefaultStyleKeyKey, { default_value: PageView });
     }
 

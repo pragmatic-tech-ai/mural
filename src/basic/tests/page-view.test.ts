@@ -12,14 +12,16 @@ import { ContentControl } from '../../framework/base/content-control.js';
 
 // Locate the title TextBlock inside the page's header strip. Saves
 // every test reaching the same five accessors deep.
-function titleOf(pv: PageView): TextBlock {
+function titleOf(pv: PageView): TextBlock
+{
     const dock = pv.visualChildren[0]!;            // DockPanel
     const header = dock.visualChildren[0]!;        // Border
     const stack  = header.visualChildren[0]!;      // StackPanel
     return stack.visualChildren[0] as TextBlock;
 }
 
-function subtitleStack(pv: PageView) {
+function subtitleStack(pv: PageView)
+{
     const dock = pv.visualChildren[0]!;
     const header = dock.visualChildren[0]!;
     return header.visualChildren[0]!;
@@ -214,9 +216,11 @@ describe('Visual.Tag DP', () => {
         // Internal flags aren't public; the observable signal is that
         // a subsequent same-size Measure short-circuits (no override
         // call). Probe by replacing Border with a counter subclass.
-        class Counted extends Border {
+        class Counted extends Border
+        {
             public measures = 0;
-            protected override MeasureOverride(a: Size): Size {
+            protected override MeasureOverride(a: Size): Size
+            {
                 this.measures++;
                 return super.MeasureOverride(a);
             }

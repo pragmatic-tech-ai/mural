@@ -10,7 +10,8 @@
 // via a trigger) and sets Text; anything in the app can resolve this
 // service to post a status message without reaching the status bar
 // control.
-export class StatusService extends ServiceBase {
+export class StatusService extends ServiceBase
+{
     public static readonly Key = new ServiceKey<StatusService>('StatusService');
 
     private _text = '';
@@ -20,7 +21,8 @@ export class StatusService extends ServiceBase {
     // Arbitrary app models — the StatusBar wraps each in a StatusBarItem.
     private readonly _items = new ObservableCollection<unknown>();
 
-    constructor(provider: IServiceProvider) {
+    constructor(provider: IServiceProvider)
+    {
         super(provider);
     }
 

@@ -84,7 +84,8 @@ describe('Accuracy: line × quad at analytical t-values', () => {
         assert.ok(Math.abs(got[1]! - t2Expected) < TOL_T,
             `t2: expected ${t2Expected}, got ${got[1]}`);
         // Both intersection points should have y ≈ 0.5.
-        for (let i = 0; i < 2; ++i) {
+        for (let i = 0; i < 2; ++i)
+        {
             assert.ok(Math.abs(ix.pt(i).fY - 0.5) < TOL_COORD);
         }
     });
@@ -111,7 +112,8 @@ describe('Accuracy: line × cubic at known crossings', () => {
         ix.intersectCubicLine(c, line);
         assert.equal(ix.used(), 2);
         // Both crossing points at y = 3.
-        for (let i = 0; i < 2; ++i) {
+        for (let i = 0; i < 2; ++i)
+        {
             assert.ok(Math.abs(ix.pt(i).fY - 3) < TOL_COORD,
                 `pt[${i}].y = ${ix.pt(i).fY}, expected 3`);
         }
@@ -129,7 +131,8 @@ describe('Accuracy: line × cubic at known crossings', () => {
         assert.ok(ix.used() >= 1);
         // First intersection should be cubic t = 0.
         let endpointFound = false;
-        for (let i = 0; i < ix.used(); ++i) {
+        for (let i = 0; i < ix.used(); ++i)
+        {
             if (Math.abs(ix.fT[0]![i]!) < TOL_T) endpointFound = true;
         }
         assert.ok(endpointFound, 'endpoint t=0 should be in result');
@@ -154,7 +157,8 @@ describe('Accuracy: quad × quad through BinarySearch', () => {
         // Both crossings should be found.
         assert.equal(n, 2, `expected 2 intersections, got ${n}`);
         // Both intersection points should have y ≈ 0.5.
-        for (let i = 0; i < n; ++i) {
+        for (let i = 0; i < n; ++i)
+        {
             assert.ok(Math.abs(ix.pt(i).fY - 0.5) < 1e-4,
                 `pt[${i}].y = ${ix.pt(i).fY}, expected 0.5`);
         }
@@ -195,8 +199,10 @@ describe('Accuracy: cubic × cubic through BinarySearch', () => {
         // least at origin.
         assert.ok(n >= 1, `expected ≥1 cubic×cubic intersection, got ${n}`);
         let originFound = false;
-        for (let i = 0; i < n; ++i) {
-            if (Math.abs(ix.pt(i).fX) < 1e-4 && Math.abs(ix.pt(i).fY) < 1e-4) {
+        for (let i = 0; i < n; ++i)
+        {
+            if (Math.abs(ix.pt(i).fX) < 1e-4 && Math.abs(ix.pt(i).fY) < 1e-4)
+            {
                 originFound = true;
                 break;
             }

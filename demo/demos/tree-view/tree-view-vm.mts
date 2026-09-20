@@ -12,7 +12,8 @@ import { TreeView } from '@pragmatic-tech-ai/mural/framework';
 // A small file-tree-shaped data set. Each node has Name (consumed by
 // TreeViewItem.Header via the displayString Label/Name/Text
 // convention) and optional `children`.
-interface FsNode {
+interface FsNode
+{
     Name: string;
     children?: FsNode[];
 }
@@ -55,7 +56,8 @@ const FS: FsNode = {
 
 export class TreeViewVM extends MuralBase
 {
-    OnViewMounted(view: Visual): void {
+    OnViewMounted(view: Visual): void
+    {
         const tv = view.FindName('bound');
         if (!(tv instanceof TreeView)) throw new Error('tree-view.mu missing x:name="bound" TreeView');
 

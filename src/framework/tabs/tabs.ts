@@ -21,7 +21,8 @@ import { Selector } from '../list/selector.js';
 // for either context without subclassing.
 export class TabControl extends Selector
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(
             TabControl, Element.DefaultStyleKeyKey,
             { default_value: TabControl });
@@ -181,7 +182,8 @@ export class TabItem extends HeaderedContentControl
     public static readonly IsSelectedKey = MuralBase.RegisterProperty<boolean>(
         TabItem, 'IsSelected', false, MetaData.Render);
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(
             TabItem, Element.DefaultStyleKeyKey,
             { default_value: TabItem });

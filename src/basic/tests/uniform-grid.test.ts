@@ -148,8 +148,10 @@ describe('UniformGrid — measure', () => {
         // measures against (availW/cols, availH/rows) and arranges into
         // that cell.
         let observed: Size | undefined;
-        class Probe extends Element {
-            protected override MeasureOverride(a: Size): Size {
+        class Probe extends Element
+        {
+            protected override MeasureOverride(a: Size): Size
+            {
                 observed = a;
                 return new Size(0, 0);
             }
@@ -189,7 +191,8 @@ describe('UniformGrid — arrange', () => {
             [0, 40],   // index 4: row 2 col 0
             [20, 40],  // index 5: row 2 col 1
         ];
-        for (let i = 0; i < expected.length; i++) {
+        for (let i = 0; i < expected.length; i++)
+        {
             const [x, y] = expected[i]!;
             assert.equal(all[i]!.ArrangedRect.X, x, `child ${i} X`);
             assert.equal(all[i]!.ArrangedRect.Y, y, `child ${i} Y`);

@@ -5,7 +5,8 @@ import { Application, Visual, Size, Rect, Panel } from '../../runtime/index.js';
 import { Border, Canvas } from '../../basic/index.js';
 import { SvgRenderer, VISUAL_BACKREF } from '../index.js';
 
-function makeDom(): { document: Document; surface: SVGSVGElement } {
+function makeDom(): { document: Document; surface: SVGSVGElement }
+{
     const dom = new JSDOM('<!doctype html><html><body></body></html>');
     const doc = dom.window.document;
     const surface = doc.createElementNS('http://www.w3.org/2000/svg', 'svg') as SVGSVGElement;
@@ -13,7 +14,8 @@ function makeDom(): { document: Document; surface: SVGSVGElement } {
     return { document: doc, surface };
 }
 
-function outerOf(surface: SVGSVGElement, v: Visual): Element | null {
+function outerOf(surface: SVGSVGElement, v: Visual): Element | null
+{
     for (const g of surface.querySelectorAll('g.mural-visual'))
         if ((g as unknown as { [VISUAL_BACKREF]?: Visual })[VISUAL_BACKREF] === v) return g;
     return null;

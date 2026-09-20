@@ -18,14 +18,16 @@ import { PaginatedCanvas } from '../../../basic/panels/paginated-canvas.js';
 import { Diagram } from '../diagram.js';
 import { Figure } from '../figure.js';
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void { /* noop */ }
     public GetFocusedVisual(): Visual | undefined { return undefined; }
 }
 
 // Mutable duck-typed PointerEventArgs covering the fields the drag handlers read.
-function pointerArgs(hostX: number, hostY: number): Record<string, unknown> {
+function pointerArgs(hostX: number, hostY: number): Record<string, unknown>
+{
     return {
         HostX: hostX, HostY: hostY,
         Handled: false, IsDoubleClick: false,
@@ -35,12 +37,14 @@ function pointerArgs(hostX: number, hostY: number): Record<string, unknown> {
     };
 }
 
-interface Draggable {
+interface Draggable
+{
     OnPointerDown(a: unknown): void;
     OnPointerMove(a: unknown): void;
 }
 
-function build(): { diagram: Diagram; surface: Border } {
+function build(): { diagram: Diagram; surface: Border }
+{
     const diagram = new Diagram();
     diagram.ItemsPanel = new ItemsPanelTemplate(() => new PaginatedCanvas());
     const surface = new Border();
@@ -50,12 +54,14 @@ function build(): { diagram: Diagram; surface: Border } {
     return { diagram, surface };
 }
 
-function layout(surface: Border): void {
+function layout(surface: Border): void
+{
     surface.Measure(new Size(800, 600));
     surface.Arrange({ X: 0, Y: 0, Width: 800, Height: 600 } as never);
 }
 
-function placeFigure(diagram: Diagram, surface: Border, left: number, top: number): Figure {
+function placeFigure(diagram: Diagram, surface: Border, left: number, top: number): Figure
+{
     const fig = Figure.fromKind('rectangle', left, top);
     const col = new ObservableCollection<Figure>();
     col.Add(fig);

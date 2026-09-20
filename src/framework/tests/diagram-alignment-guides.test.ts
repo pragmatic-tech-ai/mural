@@ -22,12 +22,14 @@ import { Diagram } from '../diagram/diagram.js';
 import { Figure } from '../diagram/figure.js';
 import { SelectionMode } from '../list/list-box.js';
 
-class FigureVM extends MuralBase {
+class FigureVM extends MuralBase
+{
     public static readonly LeftKey   = MuralBase.RegisterProperty<number>(FigureVM, 'Left',   0,  MetaData.None);
     public static readonly TopKey    = MuralBase.RegisterProperty<number>(FigureVM, 'Top',    0,  MetaData.None);
     public static readonly WidthKey  = MuralBase.RegisterProperty<number>(FigureVM, 'Width',  10, MetaData.None);
     public static readonly HeightKey = MuralBase.RegisterProperty<number>(FigureVM, 'Height', 10, MetaData.None);
-    constructor(left: number, top: number, w: number = 10, h: number = 10) {
+    constructor(left: number, top: number, w: number = 10, h: number = 10)
+    {
         super();
         this.set_property_value(FigureVM.LeftKey,   left);
         this.set_property_value(FigureVM.TopKey,    top);
@@ -38,13 +40,15 @@ class FigureVM extends MuralBase {
     public get Top():    number { return this.get_property_value(FigureVM.TopKey); }
 }
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void { /* noop */ }
     public GetFocusedVisual(): Visual | undefined { return undefined; }
 }
 
-function setup(items: FigureVM[]): { diagram: Diagram } {
+function setup(items: FigureVM[]): { diagram: Diagram }
+{
     Application.current = null;
     new Application();
     const coll = new ObservableCollection<FigureVM>();
@@ -140,7 +144,8 @@ describe('Diagram — alignment guides DP surface', () => {
 // and computes guides inside the PositionSnap callback. These tests exercise
 // that path with real Figure items (Items-are-Figures).
 describe('Diagram — alignment guides drag integration', () => {
-    function setupFigures(): { diagram: Diagram; a: Figure; b: Figure } {
+    function setupFigures(): { diagram: Diagram; a: Figure; b: Figure }
+    {
         initTestApp();   // Diagram theme → item containers realize + arrange
         const a = new Figure(); a.Left = 100; a.Top = 100; a.Width = 80; a.Height = 60;
         const b = new Figure(); b.Left = 300; b.Top = 100; b.Width = 80; b.Height = 60;
@@ -161,7 +166,8 @@ describe('Diagram — alignment guides drag integration', () => {
 
     // Drive the Diagram's tunnel (preview) pointer virtual directly — the same
     // point real routing invokes before a descendant Figure consumes the event.
-    function previewPointer(diagram: Diagram, kind: 'PointerDown' | 'PointerUp', source: Figure): void {
+    function previewPointer(diagram: Diagram, kind: 'PointerDown' | 'PointerUp', source: Figure): void
+    {
         const args = { Kind: kind, Source: source, Visual: source, Handled: false };
         const seam = diagram as unknown as {
             OnPreviewPointerDown(a: unknown): void;

@@ -17,7 +17,8 @@ const CENTER_LABEL   = 'Center';
 // (used by the conversion logic + tests); Visual.Width/Height are left alone.
 export class SizePositionControl extends TemplatedControl
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(SizePositionControl, Element.DefaultStyleKeyKey, { default_value: SizePositionControl });
     }
 
@@ -45,7 +46,8 @@ export class SizePositionControl extends TemplatedControl
 
     private _syncing = false;
 
-    constructor() {
+    constructor()
+    {
         super();
         this.set_property_value(SizePositionControl.FromLabelsKey, [TOP_LEFT_LABEL, CENTER_LABEL]);
         this.applyDefaultStyle();
@@ -88,8 +90,10 @@ export class SizePositionControl extends TemplatedControl
         super.OnPropertyChanged(d, oldValue, newValue);
         if (this._syncing) return;
         this._syncing = true;
-        try {
-            switch (d.Name) {
+        try
+        {
+            switch (d.Name)
+            {
                 case 'PositionFrom':
                     this.SelectedFromLabel = this.PositionFrom === PositionAnchor.Center ? CENTER_LABEL : TOP_LEFT_LABEL;
                     this._recomputeDerived();
@@ -126,16 +130,20 @@ export class SizePositionControl extends TemplatedControl
                     this._recomputeDerived();
                     break;
             }
-        } finally { this._syncing = false; }
+        }
+        finally { this._syncing = false; }
     }
 
-    private _linkHeight(oldW: number, newW: number): void {
+    private _linkHeight(oldW: number, newW: number): void
+    {
         if (oldW > 0 && newW > 0) this.HeightValue = this.HeightValue * (newW / oldW);
     }
-    private _linkWidth(oldH: number, newH: number): void {
+    private _linkWidth(oldH: number, newH: number): void
+    {
         if (oldH > 0 && newH > 0) this.WidthValue = this.WidthValue * (newH / oldH);
     }
-    private _recomputeDerived(): void {
+    private _recomputeDerived(): void
+    {
         const centered = this.PositionFrom === PositionAnchor.Center;
         this.HorizontalPosition = centered ? this.Left + this.WidthValue / 2 : this.Left;
         this.VerticalPosition   = centered ? this.Top + this.HeightValue / 2 : this.Top;

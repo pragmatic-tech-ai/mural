@@ -98,7 +98,8 @@ describe('ComboBox — selection model', () => {
 // Mount a combo box into a HeadlessTarget large enough to lay everything
 // out and flush so the combo's target is wired and arranged rectangles
 // are realistic before the assertions run.
-function mountInTarget(cb: ComboBox): HeadlessTarget {
+function mountInTarget(cb: ComboBox): HeadlessTarget
+{
     const root = new Root();
     root.AddChild(cb);
     const target = new HeadlessTarget(400, 300);
@@ -116,7 +117,8 @@ function mountInTarget(cb: ComboBox): HeadlessTarget {
 //               └─ ComboBoxItemList (internal ItemsControl)
 //                    └─ items panel (StackPanel)
 //                         └─ item containers (ClickableBorder…)
-function popupItems(target: HeadlessTarget): readonly Visual[] {
+function popupItems(target: HeadlessTarget): readonly Visual[]
+{
     const overlay = target.OverlayRoot!;
     const popupHost = overlay.visualChildren[0] as unknown as { FindName(n: string): Visual | undefined };
     // popup → ScrollViewer → ComboBoxItemList → items panel (StackPanel) → rows.

@@ -22,7 +22,8 @@ import { DataContextBinding } from '../../../runtime/binding/data-context-bindin
 // half-updated figure mid-gesture (which clobbered the sibling field and left
 // the control desynced, so the NEXT edit scaled from a stale old-width and the
 // shape grew non-uniformly: 80x80 -> 81x81 -> 82x83 instead of 82x82).
-function wire(lock: boolean): { fig: Figure; ctl: SizePositionControl; spin: (f: string) => SpinEdit } {
+function wire(lock: boolean): { fig: Figure; ctl: SizePositionControl; spin: (f: string) => SpinEdit }
+{
     const fig = Figure.fromKind('rectangle', 10, 20, { width: 80, height: 80 }); fig.Id = 'a';
     const coll = new ObservableCollection<Figure>(); coll.Add(fig);
     const d = new Diagram(); d.SelectionMode = SelectionMode.Extended;

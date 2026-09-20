@@ -4,7 +4,8 @@ import { Application } from '../../../runtime/index.js';
 import { DiagramDocument, type DiagramStorage } from '../diagram-document.js';
 import { Figure } from '../figure.js';
 
-class Mem implements DiagramStorage {
+class Mem implements DiagramStorage
+{
     private m = new Map<string, string>();
     GetItem(k: string): string | null { return this.m.get(k) ?? null; }
     SetItem(k: string, v: string): void { this.m.set(k, v); }

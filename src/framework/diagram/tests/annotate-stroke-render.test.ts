@@ -17,7 +17,8 @@ import '../container-figure.js';
 // non-zero) — the same path figure-render.test.ts uses to prove a shape Figure
 // self-paints its silhouette. A box node paints its rounded-rect card in
 // RenderOverride, so its Stroke pen must reach the SVG.
-function renderKind(kind: string): string {
+function renderKind(kind: string): string
+{
     const fig = Figure.fromKind(kind, 40, 40, { width: 160, height: 90 });
     (fig as unknown as { Stroke: Pen }).Stroke = new Pen(new SolidColorBrush(Color.FromHex('#ff0000')), 4);
     fig.Measure(new Size(160, 90));
@@ -34,7 +35,8 @@ function renderKind(kind: string): string {
 describe('annotate figures paint their Stroke pen (colour + width)', () => {
     beforeEach(() => { initTestApp(); });
 
-    for (const kind of ['text', 'container']) {
+    for (const kind of ['text', 'container'])
+    {
         test(`${kind}: rendered outline reflects the Stroke pen (#ff0000, width 4)`, () => {
             const svg = renderKind(kind);
             // The SvgRenderer emits colours as rgb(...) (not hex); accept either.

@@ -201,8 +201,10 @@ describe('inline expressions — end-to-end', () => {
     beforeEach(() => { (Application as any).current = null; });
 
     test('reactive `{{ $a + $b }}` watches both paths and recomputes', () => {
-        class M extends MuralBase {
-            static {
+        class M extends MuralBase
+        {
+            static
+            {
                 MuralBase.RegisterProperty(M, 'A', 0, MetaData.None);
                 MuralBase.RegisterProperty(M, 'B', 0, MetaData.None);
             }
@@ -236,8 +238,10 @@ describe('inline expressions — end-to-end', () => {
     });
 
     test('reactive text body interpolation refreshes on data change', () => {
-        class M extends MuralBase {
-            static {
+        class M extends MuralBase
+        {
+            static
+            {
                 MuralBase.RegisterProperty(M, 'Name',  '', MetaData.None);
                 MuralBase.RegisterProperty(M, 'Count', 0,  MetaData.None);
             }

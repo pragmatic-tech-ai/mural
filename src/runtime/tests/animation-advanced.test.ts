@@ -25,7 +25,8 @@ import { resolveKey } from '../model-internals.js';
 
 class AnimTest extends Element
 {
-    static {
+    static
+    {
         MuralBase.RegisterProperty(AnimTest, 'Number',    0,                MetaData.None);
         MuralBase.RegisterProperty(AnimTest, 'Color',     Color.Black,      MetaData.None);
         MuralBase.RegisterProperty(AnimTest, 'Thickness', new Thickness(0), MetaData.None);

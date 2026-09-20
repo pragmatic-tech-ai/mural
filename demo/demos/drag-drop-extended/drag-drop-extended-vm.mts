@@ -30,7 +30,8 @@ export class RowVM extends MuralBase
 
     private _indexInList: number;
 
-    constructor(label: string, indexInList: number) {
+    constructor(label: string, indexInList: number)
+    {
         super();
         const id = 'r' + (_nextId++);
         this.set_property_value(RowVM.IdKey,    id);
@@ -53,7 +54,8 @@ export class DroppedFileVM extends MuralBase
     static NameKey = MuralBase.RegisterProperty(DroppedFileVM, 'Name', '', MetaData.None);
     static SizeKey = MuralBase.RegisterProperty(DroppedFileVM, 'Size', '', MetaData.None);
 
-    constructor(name: string, sizeBytes: number) {
+    constructor(name: string, sizeBytes: number)
+    {
         super();
         this.set_property_value(DroppedFileVM.NameKey, name);
         this.set_property_value(DroppedFileVM.SizeKey, formatSize(sizeBytes));
@@ -62,7 +64,8 @@ export class DroppedFileVM extends MuralBase
     get Size(): string { return this.get_property_value(DroppedFileVM.SizeKey); }
 }
 
-function formatSize(bytes: number): string {
+function formatSize(bytes: number): string
+{
     if (typeof bytes !== 'number' || !Number.isFinite(bytes)) return '?';
     if (bytes < 1024) return bytes + ' B';
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
@@ -80,7 +83,8 @@ export class DragDropExtendedVM extends MuralBase
     static ShiftHintKey    = MuralBase.RegisterProperty(DragDropExtendedVM, 'ShiftHint',    'Hold Shift to cancel the drag.', MetaData.None);
     static FileStatusKey   = MuralBase.RegisterProperty(DragDropExtendedVM, 'FileStatus',   'Drag OS files here.',            MetaData.None);
 
-    constructor() {
+    constructor()
+    {
         super();
         const rows = new ObservableCollection<RowVM>();
         // 30 rows — long enough to exercise auto-scroll on a moderate
@@ -101,7 +105,8 @@ export class DragDropExtendedVM extends MuralBase
         // the closure captures `this` (the host VM) — the source-side
         // hooks update LastEffect / status on the host, not on the
         // row.
-        for (let i = 0; i < rows.Count; i++) {
+        for (let i = 0; i < rows.Count; i++)
+        {
             const row = rows.Get(i);
             if (row === undefined) continue;
             row.set_property_value(RowVM.BeginDragDataKey, (): DragStartSpec => {
@@ -146,7 +151,8 @@ export class DragDropExtendedVM extends MuralBase
     // Pushes a DroppedFileVM into the bound collection and updates the
     // status line. Mirrors the way the reorder behavior calls VM
     // methods through the existing wiring.
-    OnFileDropped(name: string, sizeBytes: number): void {
+    OnFileDropped(name: string, sizeBytes: number): void
+    {
         const dropped = this.DroppedFiles;
         if (dropped === undefined) return;
         const file = new DroppedFileVM(name, sizeBytes);
@@ -157,17 +163,20 @@ export class DragDropExtendedVM extends MuralBase
         );
     }
 
-    _indexOf(row: RowVM): number {
+    _indexOf(row: RowVM): number
+    {
         const rows = this.Rows;
         if (rows === undefined) return -1;
-        for (let i = 0; i < rows.Count; i++) {
+        for (let i = 0; i < rows.Count; i++)
+        {
             if (rows.Get(i) === row) return i;
         }
         return -1;
     }
 }
 
-function effectName(effect: DragDropEffects): string {
+function effectName(effect: DragDropEffects): string
+{
     if (effect & DragDropEffects.Copy) return 'Copy';
     if (effect & DragDropEffects.Move) return 'Move';
     if (effect & DragDropEffects.Link) return 'Link';

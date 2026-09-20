@@ -34,7 +34,8 @@ export class ButtonGroupVM extends MuralBase
     get CopyCommand():  RelayCommand | null { return this.get_property_value(ButtonGroupVM.CopyCommandKey); }
     get PasteCommand(): RelayCommand | null { return this.get_property_value(ButtonGroupVM.PasteCommandKey); }
 
-    constructor() {
+    constructor()
+    {
         super();
         this.set_property_value(ButtonGroupVM.UndoCommandKey,  new RelayCommand(() => { this.UndoClicks  += 1; }));
         this.set_property_value(ButtonGroupVM.RedoCommandKey,  new RelayCommand(() => { this.RedoClicks  += 1; }));

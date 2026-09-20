@@ -4,7 +4,8 @@ import { Application } from '../../../runtime/index.js';
 import { PositionAnchor } from '../position-anchor.js';
 import { SizePositionControl } from '../size-position-control.js';
 
-function make(): SizePositionControl {
+function make(): SizePositionControl
+{
     Application.current = null; new Application();
     const c = new SizePositionControl();
     c.BaseWidth = 100; c.BaseHeight = 50;

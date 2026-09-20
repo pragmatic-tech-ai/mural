@@ -26,7 +26,8 @@ class StubRow extends Element
     protected override MeasureOverride(_a: Size): Size { return Size.Zero; }
 }
 
-function buildItemsControl(items: readonly unknown[]): { ic: ItemsControl; rows: StubRow[]; coll: ObservableCollection<unknown> } {
+function buildItemsControl(items: readonly unknown[]): { ic: ItemsControl; rows: StubRow[]; coll: ObservableCollection<unknown> }
+{
     const ic   = new ItemsControl();
     const coll = new ObservableCollection<unknown>();
     for (const v of items) coll.Add(v);
@@ -124,7 +125,8 @@ describe('ListReorderBehavior — receiver-side drop logic', () => {
     });
 });
 
-function snapshot<T>(c: ObservableCollection<T>): T[] {
+function snapshot<T>(c: ObservableCollection<T>): T[]
+{
     const out: T[] = [];
     for (let i = 0; i < c.Count; i++) out.push(c.Get(i)!);
     return out;
@@ -135,7 +137,8 @@ function snapshot<T>(c: ObservableCollection<T>): T[] {
 // behavior's cursor-to-cell and adorner-placement math has to use cell
 // strides (cell + spacing), not raw ItemWidth / ItemHeight.
 describe('ListReorderBehavior — VirtualizingWrapPanel with spacing', () => {
-    class Cell extends Element {
+    class Cell extends Element
+    {
         protected override MeasureOverride(_a: Size): Size { return new Size(100, 100); }
     }
 
@@ -146,7 +149,8 @@ describe('ListReorderBehavior — VirtualizingWrapPanel with spacing', () => {
             horizontalSpacing?: number;
             verticalSpacing?:   number;
         },
-    ): { ic: ItemsControl; panel: VirtualizingWrapPanel; coll: ObservableCollection<string> } {
+    ): { ic: ItemsControl; panel: VirtualizingWrapPanel; coll: ObservableCollection<string> }
+    {
         const panel = new VirtualizingWrapPanel();
         panel.ItemWidth         = 100;
         panel.ItemHeight        = 100;
@@ -164,7 +168,8 @@ describe('ListReorderBehavior — VirtualizingWrapPanel with spacing', () => {
         return { ic, panel, coll };
     }
 
-    function dropAt(hostX: number, hostY: number, fromIndex: number): DragEventArgs {
+    function dropAt(hostX: number, hostY: number, fromIndex: number): DragEventArgs
+    {
         return new DragEventArgs('Drop', new StubRow(), {
             HostX: hostX, HostY: hostY,
             Data: new DataObject().Set('@pragmatic-tech-ai/mural/reorder/from-index', fromIndex),
@@ -225,7 +230,8 @@ describe('ListReorderBehavior — VirtualizingWrapPanel with spacing', () => {
         // Stride X = 130. Cell 0 left = 0; cell 1 left = 130; cell 2
         // left = 260. The gap between cells 0 and 1 spans x = [100, 130);
         // its center is x = 115 = col(1)*130 − 30/2.
-        const target = new (class {
+        const target = new (class
+        {
             public readonly attached: Visual[] = [];
             public AttachOverlay(v: Visual): void { this.attached.push(v); }
             public DetachOverlay(_v: Visual): void { }
@@ -237,7 +243,8 @@ describe('ListReorderBehavior — VirtualizingWrapPanel with spacing', () => {
         });
         (ic as unknown as { _target: typeof target })._target = target;
         const beh = new ListReorderBehavior();
-        beh.InsertionAdornerTemplate = new DataTemplate(() => new (class extends Element {
+        beh.InsertionAdornerTemplate = new DataTemplate(() => new (class extends Element
+        {
             protected override MeasureOverride(_a: Size): Size { return new Size(0, 0); }
         })());
         ic.AddBehavior(beh);
@@ -286,23 +293,27 @@ describe('ListReorderBehavior — insertion-line adorner (8.5)', () => {
     // on its overlay. Pluggable directly into the ItemsControl's
     // `target` field bypassing the renderer; the behavior reads
     // `host['target']` and calls AttachOverlay / DetachOverlay on it.
-    class StubTarget {
+    class StubTarget
+    {
         public readonly attached: Visual[] = [];
         public readonly detached: Visual[] = [];
         public AttachOverlay(v: Visual): void { this.attached.push(v); }
         public DetachOverlay(v: Visual): void { this.detached.push(v); }
     }
 
-    function lineTemplate(): DataTemplate {
+    function lineTemplate(): DataTemplate
+    {
         return new DataTemplate(() => {
-            const line = new (class extends Element {
+            const line = new (class extends Element
+            {
                 protected override MeasureOverride(_a: Size): Size { return new Size(0, 2); }
             })();
             return line;
         });
     }
 
-    function dragOverArgs(hostY: number, session: DragSession): DragEventArgs {
+    function dragOverArgs(hostY: number, session: DragSession): DragEventArgs
+    {
         const data = session.Data;
         data.Set('@pragmatic-tech-ai/mural/reorder/from-index', 0);
         return new DragEventArgs('DragOver', new StubRow(), {

@@ -9,7 +9,8 @@ import { TextNode } from '../text-node.js';
 import { Diagram } from '../diagram.js';
 import { Figure, resolveEditTarget } from '../figure.js';
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void { /* noop */ }
     public GetFocusedVisual(): Visual | undefined { return undefined; }

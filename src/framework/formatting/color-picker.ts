@@ -247,7 +247,8 @@ export class ColorPicker extends TemplatedControl
     public set SchemeGalleryTemplate(v: ControlTemplate | undefined){ this.set_property_value(ColorPicker.SchemeGalleryTemplateKey, v); }
     public get SwatchBrush():    SolidColorBrush | undefined { return this.get_property_value(ColorPicker.SwatchBrushKey); }
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(ColorPicker, Element.DefaultStyleKeyKey, { default_value: ColorPicker });
     }
 
@@ -381,7 +382,8 @@ export class ColorPicker extends TemplatedControl
     {
         if (this._syncing) return;
         this._syncing = true;
-        try {
+        try
+        {
             const hsv = rgbToHsv(c.R, c.G, c.B);
             this.Hue        = hsv.h;
             this.Saturation = hsv.s;
@@ -394,7 +396,8 @@ export class ColorPicker extends TemplatedControl
             this.set_property_value(ColorPicker.SwatchBrushKey, new SolidColorBrush(c));
             this.pushAllToDialog();
             this.refreshGradientBox();
-        } finally { this._syncing = false; }
+        }
+        finally { this._syncing = false; }
     }
 
     private onHexChanged(hex: string): void
@@ -404,7 +407,8 @@ export class ColorPicker extends TemplatedControl
         try { parsed = Color.FromHex(hex); }
         catch { return; }
         this._syncing = true;
-        try {
+        try
+        {
             this.Color = parsed;
             const hsv = rgbToHsv(parsed.R, parsed.G, parsed.B);
             this.Hue        = hsv.h;
@@ -420,7 +424,8 @@ export class ColorPicker extends TemplatedControl
             // Deliberately NOT pushing back to PART_HexInput — the user
             // is mid-edit; rewriting their own text would clobber the
             // cursor and surprise them.
-        } finally { this._syncing = false; }
+        }
+        finally { this._syncing = false; }
     }
 
     private onHsvChanged(): void
@@ -430,7 +435,8 @@ export class ColorPicker extends TemplatedControl
         // Preserve the current Alpha — HSV sliders don't touch it.
         const c = new Color(rgb.r, rgb.g, rgb.b, this.Alpha);
         this._syncing = true;
-        try {
+        try
+        {
             this.Color    = c;
             this.ColorHex = c.ToHex();
             this.Red      = c.R;
@@ -440,7 +446,8 @@ export class ColorPicker extends TemplatedControl
             this.pushHexToInput();
             this.refreshGradientBox();
             // HSV is the source for this edit; no need to push back to it.
-        } finally { this._syncing = false; }
+        }
+        finally { this._syncing = false; }
     }
 
     private onRgbaChanged(): void
@@ -448,7 +455,8 @@ export class ColorPicker extends TemplatedControl
         if (this._syncing) return;
         const c = new Color(this.Red, this.Green, this.Blue, this.Alpha);
         this._syncing = true;
-        try {
+        try
+        {
             this.Color    = c;
             this.ColorHex = c.ToHex();
             const hsv = rgbToHsv(c.R, c.G, c.B);
@@ -459,7 +467,8 @@ export class ColorPicker extends TemplatedControl
             this.pushHexToInput();
             this.refreshGradientBox();
             // RGBA sliders ARE the source; no need to push back to them.
-        } finally { this._syncing = false; }
+        }
+        finally { this._syncing = false; }
     }
 
     // Programmatic writes into the dialog's edit parts. Each guarded write
@@ -494,7 +503,8 @@ export class ColorPicker extends TemplatedControl
         const c = this.Color;
         const hsv = rgbToHsv(c.R, c.G, c.B);
         this._syncing = true;
-        try {
+        try
+        {
             this.Hue        = hsv.h;
             this.Saturation = hsv.s;
             this.Brightness = hsv.v;
@@ -504,7 +514,8 @@ export class ColorPicker extends TemplatedControl
             this.Alpha      = c.A;
             this.ColorHex   = c.ToHex();
             this.set_property_value(ColorPicker.SwatchBrushKey, new SolidColorBrush(c));
-        } finally { this._syncing = false; }
+        }
+        finally { this._syncing = false; }
     }
 
     // ── Office dropdown ────────────────────────────────────────────────
@@ -863,7 +874,8 @@ export class ColorPicker extends TemplatedControl
         this.clearPreviewBaseline();
         this.Color = Color.Transparent;
         this._syncing = true;
-        try { this.Alpha = 255; } finally { this._syncing = false; }
+        try { this.Alpha = 255; }
+        finally { this._syncing = false; }
         this.IsDropDownOpen = false;
     }
 
@@ -939,13 +951,15 @@ export class ColorPicker extends TemplatedControl
         // Seed initial values — guarded so the resulting Value-change
         // listeners don't re-write the same value back into the picker.
         this._syncing = true;
-        try {
+        try
+        {
             if (this._rSlider    !== undefined) this._rSlider.Value    = this.Red;
             if (this._gSlider    !== undefined) this._gSlider.Value    = this.Green;
             if (this._blueSlider !== undefined) this._blueSlider.Value = this.Blue;
             if (this._aSlider    !== undefined) this._aSlider.Value    = this.Alpha;
             if (this._hexInput   !== undefined) this._hexInput.Text    = this.ColorHex;
-        } finally { this._syncing = false; }
+        }
+        finally { this._syncing = false; }
 
         const wire = (
             part:   Slider | TextBox | undefined,
@@ -1104,10 +1118,12 @@ export class ColorPicker extends TemplatedControl
     {
         if (this._syncing) return;
         this._syncing = true;
-        try {
+        try
+        {
             this.Hue        = h;
             this.Saturation = s;
-        } finally { this._syncing = false; }
+        }
+        finally { this._syncing = false; }
         this.onHsvChanged();
     }
 

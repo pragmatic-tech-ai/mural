@@ -74,7 +74,8 @@ export class SplitButton extends ContentControl
     public get PopupTemplate():    ControlTemplate | undefined { return this.get_property_value(SplitButton.PopupTemplateKey); }
     public set PopupTemplate(v:    ControlTemplate | undefined) { this.set_property_value(SplitButton.PopupTemplateKey, v); }
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(SplitButton, Element.DefaultStyleKeyKey,
             { default_value: SplitButton });
     }

@@ -28,7 +28,8 @@ export class ToolBarVM extends MuralBase
     readonly DeleteCommand:          RelayCommand;
     readonly ToggleSelectionCommand: RelayCommand;
 
-    constructor() {
+    constructor()
+    {
         super();
         const setStatus = (msg: string): void => this.set_property_value(ToolBarVM.StatusKey, msg);
         this.SaveCommand   = new RelayCommand(() => setStatus('Save — saved.'));

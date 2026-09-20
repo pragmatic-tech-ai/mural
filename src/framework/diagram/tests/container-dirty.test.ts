@@ -23,13 +23,15 @@ registerNodeSerializer({
     deserialize: () => new NodeViewModel(),
 });
 
-class MemoryStorage implements DiagramStorage {
+class MemoryStorage implements DiagramStorage
+{
     private readonly _m = new Map<string, string>();
     public GetItem(k: string): string | null { return this._m.get(k) ?? null; }
     public SetItem(k: string, v: string): void { this._m.set(k, v); }
 }
 
-function payload(): string {
+function payload(): string
+{
     return JSON.stringify({
         version: 3,
         nodes: [{ id: 'a', type: VM_TYPE, data: {} }],
@@ -39,7 +41,8 @@ function payload(): string {
     });
 }
 
-function mountView(doc: DiagramDocument): Diagram {
+function mountView(doc: DiagramDocument): Diagram
+{
     const diagram = new Diagram();
     diagram.ItemsPanel = new ItemsPanelTemplate(() => new Canvas());
     diagram.DataContext = doc;

@@ -21,7 +21,8 @@ import { Figure } from '../figure.js';
 // renders through the real SvgRenderer (with a theme, so RenderSize > 0) to guard
 // that; a headless Figure without a theme has RenderSize 0 and can't.
 
-interface Seams {
+interface Seams
+{
     buildPaintGeometry(size: Size, inset: number): Geometry;
     buildClipGeometry(size: Size): Geometry;
     buildChildClipGeometry(size: Size): Geometry | undefined;

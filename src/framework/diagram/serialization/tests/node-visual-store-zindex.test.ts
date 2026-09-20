@@ -4,7 +4,8 @@ import { Panel } from '../../../../runtime/index.js';
 import { Figure } from '../../figure.js';
 import { NodeVisualStore } from '../node-visual-store.js';
 
-function fig(): Figure {
+function fig(): Figure
+{
     const f = new Figure();
     f.Left = 0; f.Top = 0; f.Width = 10; f.Height = 10;
     return f;

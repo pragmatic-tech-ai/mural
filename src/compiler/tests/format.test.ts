@@ -160,7 +160,8 @@ describe('formatter — corpus sweep (repo .mu files)', () =>
         return acc;
     }
 
-    const files = (() => { try { return [...allMu('src'), ...allMu('demo')]; } catch { return []; } })();
+    const files = (() => { try { return [...allMu('src'), ...allMu('demo')]; }
+    catch { return []; } })();
 
     for (const f of files)
     {
@@ -179,13 +180,17 @@ describe('formatter — corpus sweep (repo .mu files)', () =>
 });
 
 // Walk the parsed document to the first include-form node.
-function findIncludeForm(src: string): { colored: boolean; key?: string; path: string } {
+function findIncludeForm(src: string): { colored: boolean; key?: string; path: string }
+{
     const doc = new Parser(src, { isStringBody }).ParseDocument();
     const stack: unknown[] = [doc];
-    while (stack.length) {
+    while (stack.length)
+    {
         const n = stack.pop();
-        if (n && typeof n === 'object') {
-            if ((n as { kind?: string }).kind === 'include-form') {
+        if (n && typeof n === 'object')
+        {
+            if ((n as { kind?: string }).kind === 'include-form')
+            {
                 return n as { colored: boolean; key?: string; path: string };
             }
             for (const k of Object.keys(n)) stack.push((n as Record<string, unknown>)[k]);

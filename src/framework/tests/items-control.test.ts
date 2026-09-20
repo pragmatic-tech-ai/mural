@@ -33,7 +33,8 @@ function logicalParentOf(v: Visual | undefined): Visual | undefined
 // container) down to the container.
 class ItemLeaf extends Element
 {
-    static {
+    static
+    {
         MuralBase.RegisterProperty(ItemLeaf, 'Tint', 'default', MetaData.Inherits);
     }
     constructor(public readonly source: unknown) { super(); }

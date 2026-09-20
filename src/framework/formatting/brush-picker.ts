@@ -143,7 +143,8 @@ export class BrushPicker extends TemplatedControl
     public get PatternStroke():     number { return this.get_property_value(BrushPicker.PatternStrokeKey); }
     public set PatternStroke(v:     number){ this.set_property_value(BrushPicker.PatternStrokeKey, v); }
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(BrushPicker, Element.DefaultStyleKeyKey, { default_value: BrushPicker });
     }
 

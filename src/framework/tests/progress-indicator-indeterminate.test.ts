@@ -6,24 +6,28 @@ import { TranslateTransform } from '../../visual-engine/index.js';
 import { Border } from '../../basic/border.js';
 import { ProgressIndicator, ProgressIndicatorVariant } from '../notifications/progress-indicator.js';
 
-function walk(v: unknown, name: string): { Name?: string; [k: string]: unknown } | undefined {
+function walk(v: unknown, name: string): { Name?: string; [k: string]: unknown } | undefined
+{
     const node = v as { Name?: string; visualChildren?: readonly unknown[] };
     if (node?.Name === name) return node as { Name?: string };
-    for (const c of node?.visualChildren ?? []) {
+    for (const c of node?.visualChildren ?? [])
+    {
         const r = walk(c, name);
         if (r) return r;
     }
     return undefined;
 }
 
-function partFill(pi: ProgressIndicator): Border {
+function partFill(pi: ProgressIndicator): Border
+{
     const fill = walk(pi, 'PART_Fill');
     assert.ok(fill instanceof Border, 'PART_Fill should be a Border');
     return fill;
 }
 
 // Force a layout pass so the control learns its track width (the sweep span).
-function layout(pi: ProgressIndicator, width = 200): void {
+function layout(pi: ProgressIndicator, width = 200): void
+{
     pi.Measure(new Size(width, 4));
     pi.Arrange(new Rect(0, 0, width, 4));
 }

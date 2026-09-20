@@ -29,7 +29,8 @@ import { DiagramSettings } from '../diagram-settings.js';
 // math (the demo's DiagramVM.ApplySelectionResize does this) but it
 // requires a `Members`-walk contract beyond plain IFigure.
 
-interface FigureSnapshot {
+interface FigureSnapshot
+{
     item:    MuralBase;
     leftKey: PropertyKey<unknown>;
     topKey:  PropertyKey<unknown>;

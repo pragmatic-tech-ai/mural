@@ -19,7 +19,8 @@ import { initTestApp } from '../../basic/tests/test-app.js';
 // unique-contribution) and two bool props to drive triggers.
 class Box extends Element
 {
-    static {
+    static
+    {
         MuralBase.RegisterProperty(Box, 'Ink',  'black', MetaData.None);
         MuralBase.RegisterProperty(Box, 'Size', 10,      MetaData.None);
         MuralBase.RegisterProperty(Box, 'Hot',  false,   MetaData.None);
@@ -48,7 +49,8 @@ class Other extends Element
 // registration doesn't leak into the Box-based tests above.
 class ThemedBox extends Element
 {
-    static {
+    static
+    {
         MuralBase.RegisterProperty(ThemedBox, 'Ink',  'black', MetaData.None);
         MuralBase.RegisterProperty(ThemedBox, 'Size', 10,      MetaData.None);
     }

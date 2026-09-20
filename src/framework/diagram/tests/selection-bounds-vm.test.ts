@@ -15,7 +15,8 @@ import { Diagram } from '../diagram.js';
 import { Figure } from '../figure.js';
 import { NodeViewModel } from '../node-view-model.js';
 
-function mountVM(): { diagram: Diagram; vm: NodeViewModel; container: Figure } {
+function mountVM(): { diagram: Diagram; vm: NodeViewModel; container: Figure }
+{
     Application.current = null; new Application();
     const vm = new NodeViewModel(); vm.Id = 'v';
     const coll = new ObservableCollection<NodeViewModel>(); coll.Add(vm);
@@ -31,7 +32,8 @@ function mountVM(): { diagram: Diagram; vm: NodeViewModel; container: Figure } {
     return { diagram, vm, container };
 }
 
-function select(diagram: Diagram, item: unknown, mods: ModifierKeys = ModifierKeys.None): void {
+function select(diagram: Diagram, item: unknown, mods: ModifierKeys = ModifierKeys.None): void
+{
     const container = diagram.Generator.ContainerFromItem(item);
     if (container === undefined) throw new Error('no container');
     diagram.HandleContainerClick(container, mods);

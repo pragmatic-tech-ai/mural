@@ -9,12 +9,15 @@ const Desktop = new HostKind('desktop');
 // A plain IModule — Targets + RegisterServices only, with NONE of the shell
 // members (Capabilities / Resources / HasServiceRegistrations). This is the
 // shape a headless engine module (e.g. a non-UI package's IModule) has.
-class PlainModule implements IModule {
+class PlainModule implements IModule
+{
     public readonly Targets: ReadonlySet<HostKind>;
-    constructor(private readonly key: ServiceKey<{ id: string }>, private readonly id: string, targets: HostKind[]) {
+    constructor(private readonly key: ServiceKey<{ id: string }>, private readonly id: string, targets: HostKind[])
+    {
         this.Targets = new Set(targets);
     }
-    public RegisterServices(container: IServiceContainer): void {
+    public RegisterServices(container: IServiceContainer): void
+    {
         container.register(this.key, () => ({ id: this.id }), ServiceLifetime.Singleton);
     }
 }

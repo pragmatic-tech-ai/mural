@@ -14,7 +14,8 @@ export class BadgeVM extends MuralBase
     get Increment(): RelayCommand | null { return this.get_property_value(BadgeVM.IncrementKey); }
     get Reset():     RelayCommand | null { return this.get_property_value(BadgeVM.ResetKey); }
 
-    constructor() {
+    constructor()
+    {
         super();
         this.set_property_value(BadgeVM.IncrementKey, new RelayCommand(() => { this.Count += 1; }));
         this.set_property_value(BadgeVM.ResetKey,     new RelayCommand(() => { this.Count  = 0; }));

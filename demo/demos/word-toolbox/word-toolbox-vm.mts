@@ -36,7 +36,8 @@ export class WordVM extends MuralBase
     static WordKey          = MuralBase.RegisterProperty(WordVM, 'Word',          '',        MetaData.None);
     static BeginDragDataKey = MuralBase.RegisterProperty<(() => DragStartSpec) | undefined>(WordVM, 'BeginDragData', undefined, MetaData.None);
 
-    constructor(word: string) {
+    constructor(word: string)
+    {
         super();
         this.set_property_value(WordVM.WordKey, word);
     }
@@ -54,14 +55,16 @@ export class WordToolboxVM extends MuralBase
     // Tiny status string — counts only, no per-item details.
     static StatusKey       = MuralBase.RegisterProperty(WordToolboxVM, 'Status',       '',        MetaData.None);
 
-    constructor() {
+    constructor()
+    {
         super();
 
         // Toolbox catalog — fixed at construction. Each tile gets a
         // Copy-mode drag factory that publishes the word in the
         // FMT_WORD_COPY format.
         const toolbox = new ObservableCollection<WordVM>();
-        for (const w of TOOLBOX_WORDS) {
+        for (const w of TOOLBOX_WORDS)
+        {
             const vm = new WordVM(w);
             vm.set_property_value(WordVM.BeginDragDataKey, () => ({
                 data:    new DataObject().Set(FMT_WORD_COPY, w),
@@ -76,7 +79,8 @@ export class WordToolboxVM extends MuralBase
         // owner collection at drag-start time (not at construction
         // time — the index moves under reorders).
         const list = new ObservableCollection<WordVM>();
-        for (const entry of buildListBoxSeed(LIST_SEED_COUNT)) {
+        for (const entry of buildListBoxSeed(LIST_SEED_COUNT))
+        {
             const vm = new WordVM(entry.Word);
             vm.set_property_value(WordVM.BeginDragDataKey, () => ({
                 data:    new DataObject().Set(FMT_FROM_INDEX, this._indexOf(vm)),
@@ -99,7 +103,8 @@ export class WordToolboxVM extends MuralBase
     // Called by the toolbox-copy drop receiver attached in the
     // bootstrap. Appends a fresh WordVM for `word` with a reorder-
     // mode drag factory installed (same shape as the seed entries).
-    OnWordCopied(word: string): void {
+    OnWordCopied(word: string): void
+    {
         const list = this.ListBoxWords;
         if (list === undefined) return;
         const vm = new WordVM(word);
@@ -111,16 +116,19 @@ export class WordToolboxVM extends MuralBase
         this._refreshStatus();
     }
 
-    _indexOf(target: WordVM): number {
+    _indexOf(target: WordVM): number
+    {
         const list = this.ListBoxWords;
         if (list === undefined) return -1;
-        for (let i = 0; i < list.Count; i++) {
+        for (let i = 0; i < list.Count; i++)
+        {
             if (list.Get(i) === target) return i;
         }
         return -1;
     }
 
-    _refreshStatus(): void {
+    _refreshStatus(): void
+    {
         const list = this.ListBoxWords;
         const toolbox = this.ToolboxWords;
         this.set_property_value(

@@ -31,7 +31,8 @@ export class SliderSpinEdit extends TemplatedControl
     public static readonly DecimalPlacesKey = MuralBase.RegisterProperty<number>( SliderSpinEdit, 'DecimalPlaces', 0,   MetaData.None);
     public static readonly UnitKey          = MuralBase.RegisterProperty<string>( SliderSpinEdit, 'Unit',          '',  MetaData.None);
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(SliderSpinEdit, Element.DefaultStyleKeyKey, { default_value: SliderSpinEdit });
     }
 
@@ -76,7 +77,8 @@ export class SliderSpinEdit extends TemplatedControl
         this.PropertyChanged(SliderSpinEdit.ValueKey).subscribe(() => {
             if (this._sync) return;
             this._sync = true;
-            try { this.pushToChildren(); } finally { this._sync = false; }
+            try { this.pushToChildren(); }
+            finally { this._sync = false; }
         });
         this._slider.PropertyChanged(Slider.ValueKey).subscribe(() => {
             if (this._sync) return;

@@ -8,12 +8,14 @@ import { ToolboxVisualPresenter } from '../toolbox-visual-presenter.js';
 
 // A fake resolver: returns a placeholder Border until markReady(key), then
 // returns a distinct "real" Border and fires changed.
-class FakeResolver implements IToolboxVisualResolver {
+class FakeResolver implements IToolboxVisualResolver
+{
     private readonly listeners = new Set<(k: string) => void>();
     private readonly ready = new Set<string>();
     public readonly placeholder = new Border();
     public readonly real = new Border();
-    Resolve(d: ToolboxVisualDescriptor, _c: VisualContext): Visual {
+    Resolve(d: ToolboxVisualDescriptor, _c: VisualContext): Visual
+    {
         return this.ready.has(d.Key) ? this.real : this.placeholder;
     }
     AddChangedListener(cb: (k: string) => void): void { this.listeners.add(cb); }
@@ -22,7 +24,8 @@ class FakeResolver implements IToolboxVisualResolver {
     get listenerCount(): number { return this.listeners.size; }
 }
 
-function withApp(): { app: Application; prior: Application | null } {
+function withApp(): { app: Application; prior: Application | null }
+{
     const prior = Application.current;
     const app = new Application();
     Application.current = app;
@@ -31,7 +34,8 @@ function withApp(): { app: Application; prior: Application | null } {
 
 test('presenter resolves to placeholder, then swaps to real on changed', () => {
     const { app, prior } = withApp();
-    try {
+    try
+    {
         const resolverKey = new ServiceKey<IToolboxVisualResolver>('fake');
         const resolver = new FakeResolver();
         app.Services.registerInstance(resolverKey, resolver);
@@ -44,14 +48,17 @@ test('presenter resolves to placeholder, then swaps to real on changed', () => {
         assert.equal(presenter.Content, resolver.placeholder);
         resolver.markReady('k1');
         assert.equal(presenter.Content, resolver.real);
-    } finally {
+    }
+    finally
+    {
         Application.current = prior;
     }
 });
 
 test('presenter unsubscribes on detach (no leak)', () => {
     const { app, prior } = withApp();
-    try {
+    try
+    {
         const resolverKey = new ServiceKey<IToolboxVisualResolver>('fake');
         const resolver = new FakeResolver();
         app.Services.registerInstance(resolverKey, resolver);
@@ -62,7 +69,9 @@ test('presenter unsubscribes on detach (no leak)', () => {
         assert.equal(resolver.listenerCount, 1);
         (presenter as unknown as { _forceDetachedForTest(): void })._forceDetachedForTest();
         assert.equal(resolver.listenerCount, 0);
-    } finally {
+    }
+    finally
+    {
         Application.current = prior;
     }
 });

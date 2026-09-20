@@ -73,7 +73,8 @@ function displayString(item: unknown): string
 // container-prep / Tag-based identity / declarative-child routing glue.
 export class ListBox extends Selector
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(ListBox, Element.DefaultStyleKeyKey, { default_value: ListBox });
     }
 
@@ -164,7 +165,8 @@ export class ListBox extends Selector
         li.Content     = this.contentForItem(item);
     }
 
-    private contentForItem(item: unknown): Visual | MuralBase {
+    private contentForItem(item: unknown): Visual | MuralBase
+    {
         // A Visual item is shown directly — WPF parity: a UIElement item
         // bypasses templating (ItemTemplate applies to DATA only).
         if (item instanceof Visual) return item;
@@ -341,7 +343,8 @@ export class ListBoxItem extends ContentControl
         ListBoxItem, 'IsThreeLine', false, MetaData.None);
     public static readonly IsThreeLineKey = ListBoxItem._IsThreeLinePriv;
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(ListBoxItem, Element.DefaultStyleKeyKey, { default_value: ListBoxItem });
     }
 

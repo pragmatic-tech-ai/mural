@@ -12,11 +12,15 @@ const status = document.getElementById('status') as HTMLPreElement
 app.initialize({ theme: Material, autoScheme: { light: MaterialLight, dark: MaterialDark } })
 ThemeManager.Density = Density.Compact
 
-async function mount(): Promise<void> {
-  try {
+async function mount(): Promise<void>
+{
+  try
+  {
     await document.fonts.load('24px "Material Symbols Outlined"')
     app.initialize(new HtmlTarget(document.getElementById('app') as HTMLElement))
-  } catch (e) {
+  }
+  catch (e)
+  {
     status.textContent = 'Error: ' + ((e as Error)?.message ?? String(e))
     console.error(e)
   }

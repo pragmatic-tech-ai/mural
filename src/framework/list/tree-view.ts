@@ -242,7 +242,8 @@ export class TreeView extends Selector
         TreeView, 'SelectedDataItem', undefined,
         MetaData.None | MetaData.BindsTwoWayByDefault);
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(TreeView, Element.DefaultStyleKeyKey, { default_value: TreeView });
     }
 
@@ -644,7 +645,8 @@ export class TreeViewItem extends HeaderedItemsControl
         TreeViewItem, 'IsThreeLine', false, MetaData.None);
     public static readonly IsThreeLineKey = TreeViewItem._IsThreeLinePriv;
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(TreeViewItem, Element.DefaultStyleKeyKey, { default_value: TreeViewItem });
     }
 

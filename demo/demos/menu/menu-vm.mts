@@ -28,7 +28,8 @@ export class MenuVM extends MuralBase
     readonly ShowGridCommand:   RelayCommand;
     readonly SnapToGridCommand: RelayCommand;
 
-    constructor() {
+    constructor()
+    {
         super();
         const setStatus = (msg: string): void => this.set_property_value(MenuVM.StatusKey, msg);
         this.NewCommand    = new RelayCommand(() => setStatus('New — empty document.'));

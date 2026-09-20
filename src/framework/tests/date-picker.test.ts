@@ -10,13 +10,16 @@ import { DatePicker } from '../pickers/date-picker.js';
 // July 2026 — a stable fixture month (31 days).
 const JULY_2026 = () => new Date(2026, 6, 1);
 
-function dayGrid(dp: DatePicker): UniformGrid {
+function dayGrid(dp: DatePicker): UniformGrid
+{
     return dp.GetTemplateChild('PART_DayGrid') as UniformGrid;
 }
-function cells(dp: DatePicker): readonly Visual[] {
+function cells(dp: DatePicker): readonly Visual[]
+{
     return dayGrid(dp).visualChildren;
 }
-function monthLabel(dp: DatePicker): string {
+function monthLabel(dp: DatePicker): string
+{
     return (dp.GetTemplateChild('PART_MonthLabel') as TextBlock).Text;
 }
 

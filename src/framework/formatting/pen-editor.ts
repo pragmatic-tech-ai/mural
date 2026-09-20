@@ -93,7 +93,8 @@ export class PenEditor extends TemplatedControl
     public get MiterLimit(): number    { return this.get_property_value(PenEditor.MiterLimitKey); }
     public set MiterLimit(v: number)   { this.set_property_value(PenEditor.MiterLimitKey, v); }
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(PenEditor, Element.DefaultStyleKeyKey, { default_value: PenEditor });
     }
 
@@ -155,11 +156,13 @@ export class PenEditor extends TemplatedControl
         {
             const fe = this._brushEditor;
             this._syncing = true;
-            try { fe.Fill = this.Brush; } finally { this._syncing = false; }
+            try { fe.Fill = this.Brush; }
+            finally { this._syncing = false; }
             const handler = (): void => {
                 if (this._syncing) return;
                 this._syncing = true;
-                try { this.Brush = fe.Fill; } finally { this._syncing = false; }
+                try { this.Brush = fe.Fill; }
+                finally { this._syncing = false; }
                 this.pushToPen('Brush');
             };
             const key = resolveKey(fe, undefined, 'Fill');
@@ -176,13 +179,15 @@ export class PenEditor extends TemplatedControl
         ): void => {
             if (slider === undefined) return;
             this._syncing = true;
-            try { slider.Value = initial; } finally { this._syncing = false; }
+            try { slider.Value = initial; }
+            finally { this._syncing = false; }
             if (readout !== undefined) readout.Text = formatReadout(initial);
             const handler = (): void => {
                 if (readout !== undefined) readout.Text = formatReadout(slider.Value);
                 if (this._syncing) return;
                 this._syncing = true;
-                try { pushMirror(slider.Value); } finally { this._syncing = false; }
+                try { pushMirror(slider.Value); }
+                finally { this._syncing = false; }
                 pushPen();
             };
             const key = resolveKey(slider, undefined, 'Value');
@@ -213,13 +218,15 @@ export class PenEditor extends TemplatedControl
             if (combo === undefined) return;
             const found = options.find(o => equals(o.Value, initial));
             this._syncing = true;
-            try { combo.SelectedItem = found ?? options[0]; } finally { this._syncing = false; }
+            try { combo.SelectedItem = found ?? options[0]; }
+            finally { this._syncing = false; }
             const handler = (): void => {
                 if (this._syncing) return;
                 const sel = combo.SelectedItem as OptionItem<T> | undefined;
                 if (sel === undefined) return;
                 this._syncing = true;
-                try { pushMirror(sel.Value); } finally { this._syncing = false; }
+                try { pushMirror(sel.Value); }
+                finally { this._syncing = false; }
                 pushPen();
             };
             const key = resolveKey(combo, undefined, 'SelectedItem');
@@ -254,7 +261,8 @@ export class PenEditor extends TemplatedControl
         const pen = this.Pen;
         if (pen === undefined) return;
         this._syncing = true;
-        try {
+        try
+        {
             switch (name)
             {
                 case 'Brush':      pen.Brush      = this.Brush;      break;
@@ -264,7 +272,8 @@ export class PenEditor extends TemplatedControl
                 case 'LineJoin':   pen.LineJoin   = this.LineJoin;   break;
                 case 'MiterLimit': pen.MiterLimit = this.MiterLimit; break;
             }
-        } finally { this._syncing = false; }
+        }
+        finally { this._syncing = false; }
     }
 
     // MiterLimit is only meaningful when Join = Miter; flip BOTH the
@@ -314,7 +323,8 @@ export class PenEditor extends TemplatedControl
         const pen = this.Pen;
         if (pen === undefined) return;
         this._syncing = true;
-        try {
+        try
+        {
             switch (name)
             {
                 case 'Brush':      pen.Brush      = newValue as Brush | undefined; break;
@@ -324,7 +334,8 @@ export class PenEditor extends TemplatedControl
                 case 'LineJoin':   pen.LineJoin   = newValue as LineJoin;          break;
                 case 'MiterLimit': pen.MiterLimit = newValue as number;            break;
             }
-        } finally { this._syncing = false; }
+        }
+        finally { this._syncing = false; }
     }
 
     // Push the mirror DP's current value into the matching template
@@ -335,7 +346,8 @@ export class PenEditor extends TemplatedControl
     private pushMirrorToParts(name: string): void
     {
         this._syncing = true;
-        try {
+        try
+        {
             switch (name)
             {
                 case 'Brush':
@@ -372,7 +384,8 @@ export class PenEditor extends TemplatedControl
                     if (this._miterRead   !== undefined) this._miterRead.Text    = `${formatNum(this.MiterLimit)}`;
                     break;
             }
-        } finally { this._syncing = false; }
+        }
+        finally { this._syncing = false; }
     }
 
     // Seed mirror DPs from a Pen and subscribe to its property changes
@@ -381,14 +394,16 @@ export class PenEditor extends TemplatedControl
     private seedFromPen(pen: Pen): void
     {
         this._syncing = true;
-        try {
+        try
+        {
             this.Brush      = pen.Brush;
             this.Thickness  = pen.Thickness;
             this.DashStyle  = pen.DashStyle;
             this.LineCap    = pen.LineCap;
             this.LineJoin   = pen.LineJoin;
             this.MiterLimit = pen.MiterLimit;
-        } finally { this._syncing = false; }
+        }
+        finally { this._syncing = false; }
 
         const wire = (prop: string, apply: () => void): void => {
             const handler = (): void => {

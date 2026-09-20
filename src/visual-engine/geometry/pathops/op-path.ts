@@ -18,7 +18,8 @@ import { OpVerb } from './op-fwd.js';
 // `seg` field is an opaque object reference used only for identity
 // comparison; `sourcePts` is a snapshot so the post-pass doesn't have
 // to reach back into the live engine state.
-export interface CurveProvenance {
+export interface CurveProvenance
+{
     seg:        object;
     tStart:     number;
     tEnd:       number;
@@ -26,21 +27,24 @@ export interface CurveProvenance {
     sourcePts:  Point[];
 }
 
-export interface OpPathCommand {
+export interface OpPathCommand
+{
     verb: OpVerb;        // kMove | kLine | kQuad | kCubic | kClose
     pts:  Point[];       // 1 for move, 1 for line, 2 for quad, 3 for cubic, 0 for close
     weight?: number;     // conic only (not currently in mural's port)
     prov?:   CurveProvenance;
 }
 
-export enum OpFillType {
+export enum OpFillType
+{
     kWinding = 0,
     kEvenOdd = 1,
     kInverseWinding = 2,
     kInverseEvenOdd = 3,
 }
 
-export class OpPath {
+export class OpPath
+{
     public fCommands: OpPathCommand[] = [];
     public fFillType: OpFillType = OpFillType.kWinding;
     // Track the last issued point so lineTo / quadTo / cubicTo can
@@ -122,7 +126,8 @@ export class OpPath {
     // "extend with the other path's commands" version.
     public addPath(other: OpPath): void
     {
-        for (const c of other.fCommands) {
+        for (const c of other.fCommands)
+        {
             const copy: OpPathCommand = { verb: c.verb, pts: c.pts.slice(), weight: c.weight };
             if (c.prov !== undefined) copy.prov = c.prov;
             this.fCommands.push(copy);
@@ -140,23 +145,27 @@ export class OpPath {
         if (other.fCommands.length === 0) return;
         // Find the starting point of `other` (its first move).
         let firstPt: Point | undefined = undefined;
-        for (const c of other.fCommands) {
+        for (const c of other.fCommands)
+        {
             if (c.verb === OpVerb.kMove) { firstPt = c.pts[0]!; break; }
         }
         if (firstPt === undefined) return;
         // Build a list of (verb, prevPt, cmd) and emit in reverse.
         const stack: Array<{ verb: OpVerb; prev: Point; cmd: OpPathCommand }> = [];
         let prev: Point = firstPt;
-        for (const c of other.fCommands) {
+        for (const c of other.fCommands)
+        {
             stack.push({ verb: c.verb, prev, cmd: c });
             if (c.pts.length > 0) prev = c.pts[c.pts.length - 1]!;
         }
         // Emit in reverse — last endpoint becomes our moveTo target.
         const last = stack[stack.length - 1]!;
         this.moveTo(last.cmd.pts.length > 0 ? last.cmd.pts[last.cmd.pts.length - 1]! : last.prev);
-        for (let i = stack.length - 1; i >= 0; --i) {
+        for (let i = stack.length - 1; i >= 0; --i)
+        {
             const item = stack[i]!;
-            switch (item.verb) {
+            switch (item.verb)
+            {
                 case OpVerb.kLine:
                     this.lineTo(item.prev);
                     break;

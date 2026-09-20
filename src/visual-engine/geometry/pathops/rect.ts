@@ -26,13 +26,15 @@
 import { approximately_between } from './types.js';
 import type { Point } from './point.js';
 
-export class Rect {
+export class Rect
+{
     public fLeft:   number = 0;
     public fTop:    number = 0;
     public fRight:  number = 0;
     public fBottom: number = 0;
 
-    constructor(left: number = 0, top: number = 0, right: number = 0, bottom: number = 0) {
+    constructor(left: number = 0, top: number = 0, right: number = 0, bottom: number = 0)
+    {
         this.fLeft   = left;
         this.fTop    = top;
         this.fRight  = right;
@@ -40,7 +42,8 @@ export class Rect {
     }
 
     // Expand `this` to include `pt`. Skia's Rect.add (header:24).
-    public add(pt: Point): void {
+    public add(pt: Point): void
+    {
         if (pt.fX < this.fLeft)   this.fLeft   = pt.fX;
         if (pt.fY < this.fTop)    this.fTop    = pt.fY;
         if (pt.fX > this.fRight)  this.fRight  = pt.fX;
@@ -50,7 +53,8 @@ export class Rect {
     // approximately_between on both axes — Skia uses this slack so a
     // point landing exactly on the edge counts as inside even after
     // finite-precision arithmetic nudges it slightly outside.
-    public contains(pt: Point): boolean {
+    public contains(pt: Point): boolean
+    {
         return approximately_between(this.fLeft, pt.fX, this.fRight)
             && approximately_between(this.fTop,  pt.fY, this.fBottom);
     }
@@ -59,7 +63,8 @@ export class Rect {
     // responsible for ensuring both rects are normalised (left ≤ right,
     // top ≤ bottom) — Skia debug-asserts this; we leave the contract
     // implicit because asserting on every call is expensive in JS.
-    public intersects(r: Rect): boolean {
+    public intersects(r: Rect): boolean
+    {
         return r.fLeft <= this.fRight
             && this.fLeft <= r.fRight
             && r.fTop <= this.fBottom
@@ -69,22 +74,26 @@ export class Rect {
     // Reset to the degenerate "rectangle of one point" at `pt`. Skia
     // uses this as the seed for accumulating bounds (set first point,
     // then `add()` the rest).
-    public set(pt: Point): void {
+    public set(pt: Point): void
+    {
         this.fLeft = this.fRight  = pt.fX;
         this.fTop  = this.fBottom = pt.fY;
     }
 
-    public width(): number {
+    public width(): number
+    {
         return this.fRight - this.fLeft;
     }
 
-    public height(): number {
+    public height(): number
+    {
         return this.fBottom - this.fTop;
     }
 
     // Sanity check — false rectangles can arise if caller forgot to
     // call set() before add().
-    public valid(): boolean {
+    public valid(): boolean
+    {
         return this.fLeft <= this.fRight && this.fTop <= this.fBottom;
     }
 }

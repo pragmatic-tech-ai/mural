@@ -14,7 +14,8 @@ export class BottomAppBarVM extends MuralBase
     set LastAction(v:  string) { this.set_property_value(BottomAppBarVM.LastActionKey, v); }
     get Tap():         RelayCommand | null { return this.get_property_value(BottomAppBarVM.TapKey); }
 
-    constructor() {
+    constructor()
+    {
         super();
         this.set_property_value(
             BottomAppBarVM.TapKey,

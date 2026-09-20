@@ -24,7 +24,8 @@ export class CardVM extends MuralBase
     get ElevatedActionCommand(): RelayCommand | null { return this.get_property_value(CardVM.ElevatedActionCommandKey); }
     get OutlinedActionCommand(): RelayCommand | null { return this.get_property_value(CardVM.OutlinedActionCommandKey); }
 
-    constructor() {
+    constructor()
+    {
         super();
         this.set_property_value(CardVM.FilledActionCommandKey,   new RelayCommand(() => { this.FilledActions   += 1; }));
         this.set_property_value(CardVM.ElevatedActionCommandKey, new RelayCommand(() => { this.ElevatedActions += 1; }));

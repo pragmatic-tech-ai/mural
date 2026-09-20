@@ -13,7 +13,8 @@ let built = 0;
 const desc = (id: string, title: string): DemoDescriptor =>
     ({ id, title, factory: () => { built++; return new TextBlock(); } });
 
-class TestGroup extends DemoGroupService {
+class TestGroup extends DemoGroupService
+{
     constructor(provider: IServiceProvider, d: readonly DemoDescriptor[]) { super(provider, d); }
 }
 

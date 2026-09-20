@@ -31,7 +31,8 @@ import {
 
 // ── Pure-math tests — exercise the helpers directly ─────────────────
 
-function mkTarget(left: number, top: number, w: number, h: number): AlignTarget {
+function mkTarget(left: number, top: number, w: number, h: number): AlignTarget
+{
     return { Left: left, Top: top, Width: w, Height: h };
 }
 
@@ -127,13 +128,15 @@ class FigureVM extends MuralBase
     public get Height(): number  { return this.get_property_value(FigureVM.HeightKey); }
 }
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void { /* noop */ }
     public GetFocusedVisual(): Visual | undefined { return undefined; }
 }
 
-function setup(items: FigureVM[]): { diagram: Diagram } {
+function setup(items: FigureVM[]): { diagram: Diagram }
+{
     Application.current = null;
     new Application();
     const coll = new ObservableCollection<FigureVM>();
@@ -156,15 +159,18 @@ function setup(items: FigureVM[]): { diagram: Diagram } {
     return { diagram };
 }
 
-function cont(diagram: Diagram, item: unknown): Figure {
+function cont(diagram: Diagram, item: unknown): Figure
+{
     const gen = (diagram as unknown as { _generator: { ContainerFromItem(item: unknown): Visual | undefined } })._generator;
     const c = gen.ContainerFromItem(item);
     assert.ok(c instanceof Figure, 'container should be Figure');
     return c;
 }
 
-function selectMany(diagram: Diagram, items: unknown[]): void {
-    for (let i = 0; i < items.length; i++) {
+function selectMany(diagram: Diagram, items: unknown[]): void
+{
+    for (let i = 0; i < items.length; i++)
+    {
         const c = cont(diagram, items[i]);
         const mods = i === 0
             ? ModifierKeys.None

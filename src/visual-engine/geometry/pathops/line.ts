@@ -24,17 +24,20 @@ import {
     between,
 } from './types.js';
 
-export class Line {
+export class Line
+{
     public fPts: [Point, Point];
 
-    constructor(p0?: Point, p1?: Point) {
+    constructor(p0?: Point, p1?: Point)
+    {
         this.fPts = [p0 ?? new Point(), p1 ?? new Point()];
     }
 
     // Interpolate along the line at parameter t (0 → fPts[0], 1 → fPts[1]).
     // Skia short-circuits the endpoints to preserve exact values past the
     // floating-point multiply.
-    public ptAtT(t: number): Point {
+    public ptAtT(t: number): Point
+    {
         if (t === 0) return this.fPts[0];
         if (t === 1) return this.fPts[1];
         const one_t = 1 - t;
@@ -47,7 +50,8 @@ export class Line {
     // exactPoint: returns 0 if xy === fPts[0], 1 if xy === fPts[1],
     // otherwise -1. Used as the cheapest "is this point a vertex?" test
     // before expensive geometric queries.
-    public exactPoint(xy: Point): number {
+    public exactPoint(xy: Point): number
+    {
         if (xy.equals(this.fPts[0])) return 0;
         if (xy.equals(this.fPts[1])) return 1;
         return -1;
@@ -60,9 +64,11 @@ export class Line {
     //
     // `unequal` is an out-parameter (Skia takes `bool*`). We return it
     // as part of a result object so the call site can ignore it cleanly.
-    public nearPoint(xy: Point): { t: number, unequal: boolean } {
+    public nearPoint(xy: Point): { t: number, unequal: boolean }
+    {
         if (!AlmostBetweenUlps(this.fPts[0].fX, xy.fX, this.fPts[1].fX)
-            || !AlmostBetweenUlps(this.fPts[0].fY, xy.fY, this.fPts[1].fY)) {
+            || !AlmostBetweenUlps(this.fPts[0].fY, xy.fY, this.fPts[1].fY))
+            {
             return { t: -1, unequal: false };
         }
         // Project a perpendicular ray from the point to the line; find
@@ -90,7 +96,8 @@ export class Line {
     // nearRay: like nearPoint but doesn't require the projection to
     // fall within the segment. Just asks: is xy close to the
     // (infinite) line containing this segment?
-    public nearRay(xy: Point): boolean {
+    public nearRay(xy: Point): boolean
+    {
         const len = this.fPts[1].sub(this.fPts[0]);
         const denom = len.fX * len.fX + len.fY * len.fY;
         const ab0 = xy.sub(this.fPts[0]);
@@ -108,15 +115,18 @@ export class Line {
     // the intersection code when one of the lines is horizontal or
     // vertical so we can skip the general 2D projection.
 
-    public static ExactPointH(xy: Point, left: number, right: number, y: number): number {
-        if (xy.fY === y) {
+    public static ExactPointH(xy: Point, left: number, right: number, y: number): number
+    {
+        if (xy.fY === y)
+        {
             if (xy.fX === left)  return 0;
             if (xy.fX === right) return 1;
         }
         return -1;
     }
 
-    public static NearPointH(xy: Point, left: number, right: number, y: number): number {
+    public static NearPointH(xy: Point, left: number, right: number, y: number): number
+    {
         if (!AlmostBequalUlps(xy.fY, y)) return -1;
         if (!AlmostBetweenUlps(left, xy.fX, right)) return -1;
         let t = (xy.fX - left) / (right - left);
@@ -132,15 +142,18 @@ export class Line {
         return t;
     }
 
-    public static ExactPointV(xy: Point, top: number, bottom: number, x: number): number {
-        if (xy.fX === x) {
+    public static ExactPointV(xy: Point, top: number, bottom: number, x: number): number
+    {
+        if (xy.fX === x)
+        {
             if (xy.fY === top)    return 0;
             if (xy.fY === bottom) return 1;
         }
         return -1;
     }
 
-    public static NearPointV(xy: Point, top: number, bottom: number, x: number): number {
+    public static NearPointV(xy: Point, top: number, bottom: number, x: number): number
+    {
         if (!AlmostBequalUlps(xy.fX, x)) return -1;
         if (!AlmostBetweenUlps(top, xy.fY, bottom)) return -1;
         let t = (xy.fY - top) / (bottom - top);

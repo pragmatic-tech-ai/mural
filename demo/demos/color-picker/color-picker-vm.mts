@@ -4,7 +4,8 @@
 // colour ride live.
 import { MetaData, MuralBase } from '@pragmatic-tech-ai/mural/runtime';
 
-export class ColorPickerVM extends MuralBase {
+export class ColorPickerVM extends MuralBase
+{
     static SurfaceHexKey = MuralBase.RegisterProperty<string>(ColorPickerVM, 'SurfaceHex', '#bbdefb',   MetaData.None);
     static AccentHexKey  = MuralBase.RegisterProperty<string>(ColorPickerVM, 'AccentHex',  '#ec407a',   MetaData.None);
     static InkHexKey     = MuralBase.RegisterProperty<string>(ColorPickerVM, 'InkHex',     '#0f172a',   MetaData.None);

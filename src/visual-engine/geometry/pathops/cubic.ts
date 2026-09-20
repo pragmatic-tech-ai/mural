@@ -47,23 +47,27 @@ const PI = 3.141592653589793;
 
 // Cubic Bezier split into two halves — pts[0..3] is the first cubic,
 // pts[3..6] is the second. Shared midpoint at pts[3].
-export class CubicPair {
+export class CubicPair
+{
     public pts: [Point, Point, Point, Point, Point, Point, Point];
 
-    constructor() {
+    constructor()
+    {
         this.pts = [
             new Point(), new Point(), new Point(), new Point(),
             new Point(), new Point(), new Point(),
         ];
     }
 
-    public first(): Cubic {
+    public first(): Cubic
+    {
         const c = new Cubic();
         c.fPts = [this.pts[0], this.pts[1], this.pts[2], this.pts[3]];
         return c;
     }
 
-    public second(): Cubic {
+    public second(): Cubic
+    {
         const c = new Cubic();
         c.fPts = [this.pts[3], this.pts[4], this.pts[5], this.pts[6]];
         return c;
@@ -74,7 +78,8 @@ export class CubicPair {
 // routines to pick which scalar coord to project against. Kept here
 // so callers can already import it; the routines that consume it land
 // in Phase 5.
-export enum SearchAxis {
+export enum SearchAxis
+{
     kXAxis = 0,
     kYAxis = 1,
 }
@@ -82,11 +87,13 @@ export enum SearchAxis {
 // Given any two indices in {0,1,2,3}, return the XOR mask that yields
 // the other two indices. Used by the convex-hull walk and otherPts.
 // See the proof in SkPathOpsCubic.h:156-169.
-export function other_two(one: number, two: number): number {
+export function other_two(one: number, two: number): number
+{
     return (1 >> (3 - (one ^ two))) ^ 3;
 }
 
-export class Cubic {
+export class Cubic
+{
     public static readonly kPointCount = 4;
     public static readonly kPointLast = 3;
     public static readonly kMaxIntersections = 9;
@@ -94,7 +101,8 @@ export class Cubic {
 
     public fPts: [Point, Point, Point, Point];
 
-    constructor(p0?: Point, p1?: Point, p2?: Point, p3?: Point) {
+    constructor(p0?: Point, p1?: Point, p2?: Point, p3?: Point)
+    {
         this.fPts = [
             p0 ?? new Point(),
             p1 ?? new Point(),
@@ -104,7 +112,8 @@ export class Cubic {
     }
 
     // True when every control collapses to (approximately) one point.
-    public collapsed(): boolean {
+    public collapsed(): boolean
+    {
         return this.fPts[0].approximatelyEqual(this.fPts[1])
             && this.fPts[0].approximatelyEqual(this.fPts[2])
             && this.fPts[0].approximatelyEqual(this.fPts[3]);
@@ -113,7 +122,8 @@ export class Cubic {
     // True when both handles project between the endpoints along the
     // chord — a non-S-curve, non-loop cubic. Used by the boolean
     // engine to fast-path normal-shape input.
-    public controlsInside(): boolean {
+    public controlsInside(): boolean
+    {
         const v01 = this.fPts[0].sub(this.fPts[1]);
         const v02 = this.fPts[0].sub(this.fPts[2]);
         const v03 = this.fPts[0].sub(this.fPts[3]);
@@ -123,19 +133,22 @@ export class Cubic {
             && v03.dot(v13) > 0 && v03.dot(v23) > 0;
     }
 
-    public endsAreExtremaInXOrY(): boolean {
+    public endsAreExtremaInXOrY(): boolean
+    {
         return (between(this.fPts[0].fX, this.fPts[1].fX, this.fPts[3].fX)
                 && between(this.fPts[0].fX, this.fPts[2].fX, this.fPts[3].fX))
             || (between(this.fPts[0].fY, this.fPts[1].fY, this.fPts[3].fY)
                 && between(this.fPts[0].fY, this.fPts[2].fY, this.fPts[3].fY));
     }
 
-    public monotonicInX(): boolean {
+    public monotonicInX(): boolean
+    {
         return precisely_between(this.fPts[0].fX, this.fPts[1].fX, this.fPts[3].fX)
             && precisely_between(this.fPts[0].fX, this.fPts[2].fX, this.fPts[3].fX);
     }
 
-    public monotonicInY(): boolean {
+    public monotonicInY(): boolean
+    {
         return precisely_between(this.fPts[0].fY, this.fPts[1].fY, this.fPts[3].fY)
             && precisely_between(this.fPts[0].fY, this.fPts[2].fY, this.fPts[3].fY);
     }
@@ -144,7 +157,8 @@ export class Cubic {
     // Order matches SkPathOpsCubic.cpp:344 — uses !SkToBool(index) to
     // start at fPts[1] when index==0, fPts[0] when index!=0, then
     // iterates forward.
-    public otherPts(index: number): [Point, Point, Point] {
+    public otherPts(index: number): [Point, Point, Point]
+    {
         const offset = (index === 0 ? 1 : 0) as 0 | 1;
         const a = this.fPts[offset];
         const b = this.fPts[(offset + 1) as 0 | 1 | 2 | 3];
@@ -155,7 +169,8 @@ export class Cubic {
     // align: snap dstPt's X / Y to the endpoint's X / Y when the
     // endpoint shares an exact value with the named control. Used
     // during subdivision to preserve axis-aligned chord directions.
-    public align(endIndex: number, ctrlIndex: number, dstPt: Point): void {
+    public align(endIndex: number, ctrlIndex: number, dstPt: Point): void
+    {
         const end  = this.fPts[endIndex  as 0 | 1 | 2 | 3];
         const ctrl = this.fPts[ctrlIndex as 0 | 1 | 2 | 3];
         if (end.fX === ctrl.fX) dstPt.fX = end.fX;
@@ -164,7 +179,8 @@ export class Cubic {
 
     // Rough geometric scale of the curve. Used to bound iteration
     // accuracy in curvature analysis.
-    public calcPrecision(): number {
+    public calcPrecision(): number
+    {
         return (this.fPts[1].sub(this.fPts[0]).length()
               + this.fPts[2].sub(this.fPts[1]).length()
               + this.fPts[3].sub(this.fPts[2]).length()) / Cubic.gPrecisionUnit;
@@ -172,7 +188,8 @@ export class Cubic {
 
     // ----- evaluation -----
 
-    public ptAtT(t: number): Point {
+    public ptAtT(t: number): Point
+    {
         if (t === 0) return this.fPts[0];
         if (t === 1) return this.fPts[3];
         const one_t = 1 - t;
@@ -194,14 +211,17 @@ export class Cubic {
     //
     // Falls back to the chord direction at endpoints where the
     // analytic derivative collapses to (0,0).
-    public dxdyAtT(t: number): Vector {
+    public dxdyAtT(t: number): Vector
+    {
         const fx = derivative_at_t_axis(this, 0, t);
         const fy = derivative_at_t_axis(this, 1, t);
         let result = new Vector(fx, fy);
-        if (result.fX === 0 && result.fY === 0) {
+        if (result.fX === 0 && result.fY === 0)
+        {
             if (t === 0)       result = this.fPts[2].sub(this.fPts[0]);
             else if (t === 1)  result = this.fPts[3].sub(this.fPts[1]);
-            if (result.fX === 0 && result.fY === 0 && zero_or_one(t)) {
+            if (result.fX === 0 && result.fY === 0 && zero_or_one(t))
+            {
                 result = this.fPts[3].sub(this.fPts[0]);
             }
         }
@@ -224,20 +244,25 @@ export class Cubic {
     //   substitute t = x - a/3 → depressed cubic x³ + Qx = R (no x² term)
     //   discriminant R²-Q³ < 0 → 3 real roots via cos(theta/3)
     //   discriminant ≥ 0 → 1 real root via cube root
-    public static RootsReal(A: number, B: number, C: number, D: number, s: number[]): number {
+    public static RootsReal(A: number, B: number, C: number, D: number, s: number[]): number
+    {
         if (approximately_zero(A)
             && approximately_zero_when_compared_to(A, B)
             && approximately_zero_when_compared_to(A, C)
-            && approximately_zero_when_compared_to(A, D)) {
+            && approximately_zero_when_compared_to(A, D))
+            {
             return Quad.RootsReal(B, C, D, s);
         }
         if (approximately_zero_when_compared_to(D, A)
             && approximately_zero_when_compared_to(D, B)
-            && approximately_zero_when_compared_to(D, C)) {
+            && approximately_zero_when_compared_to(D, C))
+            {
             const quadRoots: [number, number] = [0, 0];
             const num = Quad.RootsReal(A, B, C, quadRoots);
-            for (let i = 0; i < num; ++i) {
-                if (approximately_zero(quadRoots[i]!)) {
+            for (let i = 0; i < num; ++i)
+            {
+                if (approximately_zero(quadRoots[i]!))
+                {
                     s[0] = quadRoots[0];
                     if (num > 1) s[1] = quadRoots[1];
                     return num;
@@ -248,11 +273,14 @@ export class Cubic {
             s[num] = 0;
             return num + 1;
         }
-        if (approximately_zero(A + B + C + D)) {
+        if (approximately_zero(A + B + C + D))
+        {
             const quadRoots: [number, number] = [0, 0];
             const num = Quad.RootsReal(A, A + B, -D, quadRoots);
-            for (let i = 0; i < num; ++i) {
-                if (AlmostDequalUlps(quadRoots[i]!, 1)) {
+            for (let i = 0; i < num; ++i)
+            {
+                if (AlmostDequalUlps(quadRoots[i]!, 1))
+                {
                     s[0] = quadRoots[0];
                     if (num > 1) s[1] = quadRoots[1];
                     return num;
@@ -275,7 +303,8 @@ export class Cubic {
         const R2MinusQ3 = R2 - Q3;
         const adiv3 = a / 3;
         let count = 0;
-        if (R2MinusQ3 < 0) {
+        if (R2MinusQ3 < 0)
+        {
             // 3 real roots — trigonometric formula. acos input may
             // slip outside [-1, 1] due to round-off; clamp.
             const cosArg = Math.max(-1, Math.min(1, R / Math.sqrt(Q3)));
@@ -286,10 +315,13 @@ export class Cubic {
             const r1 = neg2RootQ * Math.cos((theta + 2 * PI) / 3) - adiv3;
             if (!AlmostDequalUlps(r0, r1)) s[count++] = r1;
             const r2 = neg2RootQ * Math.cos((theta - 2 * PI) / 3) - adiv3;
-            if (!AlmostDequalUlps(r0, r2) && (count === 1 || !AlmostDequalUlps(s[1]!, r2))) {
+            if (!AlmostDequalUlps(r0, r2) && (count === 1 || !AlmostDequalUlps(s[1]!, r2)))
+            {
                 s[count++] = r2;
             }
-        } else {
+        }
+        else
+        {
             const sqrtR2MinusQ3 = Math.sqrt(R2MinusQ3);
             let At = Math.abs(R) + sqrtR2MinusQ3;
             At = Math.cbrt(At);
@@ -297,7 +329,8 @@ export class Cubic {
             if (At !== 0) At += Q / At;
             const r = At - adiv3;
             s[count++] = r;
-            if (AlmostDequalUlps(R2, Q3)) {
+            if (AlmostDequalUlps(R2, Q3))
+            {
                 const r2 = -At / 2 - adiv3;
                 if (!AlmostDequalUlps(s[0]!, r2)) s[count++] = r2;
             }
@@ -309,21 +342,28 @@ export class Cubic {
     // when slightly outside the range — matches Skia's SkPathOpsCubic
     // .cpp:382 closely (including the 0.00005 slack window past the
     // approximately_one_or_less check).
-    public static RootsValidT(A: number, B: number, C: number, D: number, t: number[]): number {
+    public static RootsValidT(A: number, B: number, C: number, D: number, t: number[]): number
+    {
         const s: [number, number, number] = [0, 0, 0];
         const realRoots = Cubic.RootsReal(A, B, C, D, s);
         let foundRoots = Quad.AddValidTs(s, realRoots, t);
-        for (let index = 0; index < realRoots; ++index) {
+        for (let index = 0; index < realRoots; ++index)
+        {
             const tValue = s[index]!;
-            if (!approximately_one_or_less(tValue) && between(1, tValue, 1.00005)) {
+            if (!approximately_one_or_less(tValue) && between(1, tValue, 1.00005))
+            {
                 let alreadyHave = false;
-                for (let idx2 = 0; idx2 < foundRoots; ++idx2) {
+                for (let idx2 = 0; idx2 < foundRoots; ++idx2)
+                {
                     if (approximately_equal(t[idx2]!, 1)) { alreadyHave = true; break; }
                 }
                 if (!alreadyHave) t[foundRoots++] = 1;
-            } else if (!approximately_zero_or_more(tValue) && between(-0.00005, tValue, 0)) {
+            }
+            else if (!approximately_zero_or_more(tValue) && between(-0.00005, tValue, 0))
+            {
                 let alreadyHave = false;
-                for (let idx2 = 0; idx2 < foundRoots; ++idx2) {
+                for (let idx2 = 0; idx2 < foundRoots; ++idx2)
+                {
                     if (approximately_equal(t[idx2]!, 0)) { alreadyHave = true; break; }
                 }
                 if (!alreadyHave) t[foundRoots++] = 0;
@@ -352,7 +392,8 @@ export class Cubic {
 
     // FindExtrema: solve C'(t) = 0 for the scalar coordinate
     // [p0, p1, p2, p3]. Returns 0/1/2 t-values in (0, 1).
-    public static FindExtrema(p0: number, p1: number, p2: number, p3: number, tValues: number[]): number {
+    public static FindExtrema(p0: number, p1: number, p2: number, p3: number, tValues: number[]): number
+    {
         const A = p3 - p0 + 3 * (p1 - p2);
         const B = 2 * (p0 - p1 - p1 + p2);
         const C = p1 - p0;
@@ -361,7 +402,8 @@ export class Cubic {
 
     // findInflections: t-values where C''(t) × C'(t) = 0 (inflection
     // points of the cubic — where curvature changes sign).
-    public findInflections(tValues: number[]): number {
+    public findInflections(tValues: number[]): number
+    {
         const Ax = this.fPts[1].fX - this.fPts[0].fX;
         const Ay = this.fPts[1].fY - this.fPts[0].fY;
         const Bx = this.fPts[2].fX - 2 * this.fPts[1].fX + this.fPts[0].fX;
@@ -380,7 +422,8 @@ export class Cubic {
     // Combines the F'·F'' coefficient polynomials of X and Y components
     // and feeds them to the cubic root finder. Mirrors
     // SkPathOpsCubic.cpp:580.
-    public findMaxCurvature(tValues: number[]): number {
+    public findMaxCurvature(tValues: number[]): number
+    {
         const coeffX: [number, number, number, number] = [0, 0, 0, 0];
         const coeffY: [number, number, number, number] = [0, 0, 0, 0];
         formulate_F1DotF2(this, 0, coeffX);
@@ -402,32 +445,38 @@ export class Cubic {
     // step's worth of t producing the same float-rounded point twice.
     //
     // Mirrors SkPathOpsCubic.cpp:binarySearch (~line 295).
-    public binarySearch(min: number, max: number, axisIntercept: number, xAxis: SearchAxis): number {
+    public binarySearch(min: number, max: number, axisIntercept: number, xAxis: SearchAxis): number
+    {
         let t = (min + max) / 2;
         let step = (t - min) / 2;
         let cubicAtT = this.ptAtT(t);
         const coordOf = (p: Point) => xAxis === SearchAxis.kXAxis ? p.fX : p.fY;
         let calcPos  = coordOf(cubicAtT);
         let calcDist = calcPos - axisIntercept;
-        do {
+        do
+        {
             const priorT = Math.max(min, t - step);
             const lessPt = this.ptAtT(priorT);
             if (approximately_equal_half(lessPt.fX, cubicAtT.fX)
-                && approximately_equal_half(lessPt.fY, cubicAtT.fY)) {
+                && approximately_equal_half(lessPt.fY, cubicAtT.fY))
+                {
                 return -1; // binary search found no point at this axis intercept
             }
             const lessDist = coordOf(lessPt) - axisIntercept;
             const lastStep = step;
             step /= 2;
-            if (calcDist > 0 ? calcDist > lessDist : calcDist < lessDist) {
+            if (calcDist > 0 ? calcDist > lessDist : calcDist < lessDist)
+            {
                 t = priorT;
             }
-            else {
+            else
+            {
                 const nextT = t + lastStep;
                 if (nextT > max) return -1;
                 const morePt = this.ptAtT(nextT);
                 if (approximately_equal_half(morePt.fX, cubicAtT.fX)
-                    && approximately_equal_half(morePt.fY, cubicAtT.fY)) {
+                    && approximately_equal_half(morePt.fY, cubicAtT.fY))
+                    {
                     return -1;
                 }
                 const moreDist = coordOf(morePt) - axisIntercept;
@@ -451,10 +500,12 @@ export class Cubic {
     public searchRoots(
         extremeTs: number[], extremaIn: number, axisIntercept: number,
         xAxis: SearchAxis, validRoots: number[],
-    ): number {
+    ): number
+    {
         let extrema = extremaIn + this.findInflections(extremeTs.slice(extremaIn));
         // findInflections wrote into a SLICE; merge back.
-        for (let i = extremaIn; i < extrema; ++i) {
+        for (let i = extremaIn; i < extrema; ++i)
+        {
             extremeTs[i] = extremeTs.slice(extremaIn)[i - extremaIn]!;
         }
         extremeTs[extrema++] = 0;
@@ -464,12 +515,14 @@ export class Cubic {
         const head = extremeTs.slice(0, extrema + 1).sort((a, b) => a - b);
         for (let i = 0; i <= extrema; ++i) extremeTs[i] = head[i]!;
         let validCount = 0;
-        for (let index = 0; index < extrema; ) {
+        for (let index = 0; index < extrema; )
+        {
             const min = extremeTs[index]!;
             const max = extremeTs[++index]!;
             if (min === max) continue;
             const newT = this.binarySearch(min, max, axisIntercept, xAxis);
-            if (newT >= 0) {
+            if (newT >= 0)
+            {
                 if (validCount >= 3) return 0;
                 validRoots[validCount++] = newT;
             }
@@ -481,17 +534,20 @@ export class Cubic {
     // point along the curve over [startT, endT]. Returns the t-value of
     // the winner and writes the point into topPt. Returns -1 if no
     // extremum found.
-    public top(dCurve: Cubic, startT: number, endT: number, topPt: Point): number {
+    public top(dCurve: Cubic, startT: number, endT: number, topPt: Point): number
+    {
         const extremeTs: number[] = [];
         let topT = -1;
         const roots = Cubic.FindExtrema(
             this.fPts[0].fY, this.fPts[1].fY, this.fPts[2].fY, this.fPts[3].fY,
             extremeTs,
         );
-        for (let index = 0; index < roots; ++index) {
+        for (let index = 0; index < roots; ++index)
+        {
             const t = startT + (endT - startT) * extremeTs[index]!;
             const mid = dCurve.ptAtT(t);
-            if (topPt.fY > mid.fY || (topPt.fY === mid.fY && topPt.fX > mid.fX)) {
+            if (topPt.fY > mid.fY || (topPt.fY === mid.fY && topPt.fX > mid.fX))
+            {
                 topT = t;
                 topPt.fX = mid.fX;
                 topPt.fY = mid.fY;
@@ -504,9 +560,11 @@ export class Cubic {
 
     // chopAt(t): split into two cubics meeting at t. Special-cases
     // t == 0.5 with closed-form expressions to maximise precision.
-    public chopAt(t: number): CubicPair {
+    public chopAt(t: number): CubicPair
+    {
         const dst = new CubicPair();
-        if (t === 0.5) {
+        if (t === 0.5)
+        {
             dst.pts[0] = this.fPts[0];
             dst.pts[1].fX = (this.fPts[0].fX + this.fPts[1].fX) / 2;
             dst.pts[1].fY = (this.fPts[0].fY + this.fPts[1].fY) / 2;
@@ -531,8 +589,10 @@ export class Cubic {
     // :610-654: compute endpoints by direct evaluation, then sample
     // two extra reference points at (2t1+t2)/3 and (t1+2t2)/3 to back
     // out the missing inner controls.
-    public subDivide(t1: number, t2: number): Cubic {
-        if (t1 === 0 || t2 === 1) {
+    public subDivide(t1: number, t2: number): Cubic
+    {
+        if (t1 === 0 || t2 === 1)
+        {
             if (t1 === 0 && t2 === 1) return this;
             const pair = this.chopAt(t1 === 0 ? t2 : t1);
             return t1 === 0 ? pair.first() : pair.second();
@@ -565,22 +625,27 @@ export class Cubic {
     //
     // Writes hull indices into `order[]` in winding order; returns the
     // hull point count (3 or 4).
-    public convexHull(order: number[]): number {
+    public convexHull(order: number[]): number
+    {
         // Find topmost point (smallest fY, ties broken by smaller fX).
         const pts = this.fPts;
         let yMin = 0;
-        for (let i = 1; i < 4; ++i) {
+        for (let i = 1; i < 4; ++i)
+        {
             if (pts[yMin]!.fY > pts[i]!.fY
                 || (pts[yMin]!.fY === pts[i]!.fY
-                    && pts[yMin]!.fX > pts[i]!.fX)) {
+                    && pts[yMin]!.fX > pts[i]!.fX))
+                    {
                 yMin = i;
             }
         }
         order[0] = yMin;
         let midX = -1;
         let backupYMin = -1;
-        for (let pass = 0; pass < 2; ++pass) {
-            for (let index = 0; index < 4; ++index) {
+        for (let pass = 0; pass < 2; ++pass)
+        {
+            for (let index = 0; index < 4; ++index)
+            {
                 if (index === yMin) continue;
                 const mask = other_two(yMin, index);
                 const side1 = yMin ^ mask;
@@ -591,23 +656,28 @@ export class Cubic {
                     new Point(this.fPts[2].fX, this.fPts[2].fY),
                     new Point(this.fPts[3].fX, this.fPts[3].fY),
                 );
-                if (!rotate_into(this, yMin, index, rotPath)) {
+                if (!rotate_into(this, yMin, index, rotPath))
+                {
                     order[1] = side1;
                     order[2] = side2;
                     return 3;
                 }
                 let sides = side(rotPath.fPts[side1]!.fY - rotPath.fPts[yMin]!.fY);
                 sides ^= side(rotPath.fPts[side2]!.fY - rotPath.fPts[yMin]!.fY);
-                if (sides === 2) {
-                    if (midX >= 0) {
+                if (sides === 2)
+                {
+                    if (midX >= 0)
+                    {
                         // Degenerate: control point coincides with an end point.
                         order[0] = 0;
                         order[1] = 3;
-                        if (this.fPts[1].equals(this.fPts[0]) || this.fPts[1].equals(this.fPts[3])) {
+                        if (this.fPts[1].equals(this.fPts[0]) || this.fPts[1].equals(this.fPts[3]))
+                        {
                             order[2] = 2;
                             return 3;
                         }
-                        if (this.fPts[2].equals(this.fPts[0]) || this.fPts[2].equals(this.fPts[3])) {
+                        if (this.fPts[2].equals(this.fPts[0]) || this.fPts[2].equals(this.fPts[3]))
+                        {
                             order[2] = 1;
                             return 3;
                         }
@@ -617,13 +687,16 @@ export class Cubic {
                         const dist2_3 = this.fPts[2].distanceSquared(this.fPts[3]);
                         const smallest1 = Math.min(dist1_0, dist1_3);
                         const smallest2 = Math.min(dist2_0, dist2_3);
-                        if (approximately_zero(Math.min(smallest1, smallest2))) {
+                        if (approximately_zero(Math.min(smallest1, smallest2)))
+                        {
                             order[2] = smallest1 < smallest2 ? 2 : 1;
                             return 3;
                         }
                     }
                     midX = index;
-                } else if (sides === 0) {
+                }
+                else if (sides === 0)
+                {
                     backupYMin = index;
                 }
             }
@@ -644,13 +717,15 @@ export class Cubic {
             new Point(this.fPts[2].fX, this.fPts[2].fY),
             new Point(this.fPts[3].fX, this.fPts[3].fY),
         );
-        if (!rotate_into(this, least, most, midPath)) {
+        if (!rotate_into(this, least, most, midPath))
+        {
             order[2] = midX;
             return 3;
         }
         let midSides = side(midPath.fPts[yMin]!.fY - midPath.fPts[least]!.fY);
         midSides ^= side(midPath.fPts[midX]!.fY - midPath.fPts[least]!.fY);
-        if (midSides !== 2) {
+        if (midSides !== 2)
+        {
             order[2] = most;
             return 3;
         }
@@ -662,19 +737,22 @@ export class Cubic {
     // boundingRect(): axis-aligned bounding box. Endpoints first, then
     // expand to include x and y extrema. Mirrors Skia's
     // Rect::setBounds(Cubic).
-    public boundingRect(): Rect {
+    public boundingRect(): Rect
+    {
         const rect = new Rect();
         rect.set(this.fPts[0]);
         rect.add(this.fPts[3]);
         const tValues: number[] = [];
-        if (!this.monotonicInX()) {
+        if (!this.monotonicInX())
+        {
             const tx: number[] = [];
             const n = Cubic.FindExtrema(
                 this.fPts[0].fX, this.fPts[1].fX, this.fPts[2].fX, this.fPts[3].fX, tx,
             );
             for (let i = 0; i < n; ++i) tValues.push(tx[i]!);
         }
-        if (!this.monotonicInY()) {
+        if (!this.monotonicInY())
+        {
             const ty: number[] = [];
             const n = Cubic.FindExtrema(
                 this.fPts[0].fY, this.fPts[1].fY, this.fPts[2].fY, this.fPts[3].fY, ty,
@@ -700,14 +778,16 @@ export class Cubic {
     // Mirrors SkPathOpsCubic.cpp:158. Overloads route through this
     // ptCount-parameterised core: hullIntersects(c2) passes ptCount=4,
     // hullIntersects(quad) passes ptCount=3.
-    public hullIntersectsPts(pts: readonly Point[], ptCount: number, isLinear: { value: boolean }): boolean {
+    public hullIntersectsPts(pts: readonly Point[], ptCount: number, isLinear: { value: boolean }): boolean
+    {
         let linear = true;
         const hullOrder: number[] = [0, 0, 0, 0];
         const hullCount = this.convexHull(hullOrder);
         let end1 = hullOrder[0]!;
         let hullIndex = 0;
         let endPt0: Point = this.fPts[end1 as 0|1|2|3]!;
-        do {
+        do
+        {
             hullIndex = (hullIndex + 1) % hullCount;
             const end2 = hullOrder[hullIndex]!;
             const endPt1: Point = this.fPts[end2 as 0|1|2|3]!;
@@ -723,16 +803,19 @@ export class Cubic {
             const sign2 = (this.fPts[oddMan2 as 0|1|2|3]!.fY - origY) * adj
                         - (this.fPts[oddMan2 as 0|1|2|3]!.fX - origX) * opp;
             if (sign * sign2 < 0) continue;
-            if (approximately_zero(sign)) {
+            if (approximately_zero(sign))
+            {
                 sign = sign2;
                 if (approximately_zero(sign)) continue;
             }
             linear = false;
             let foundOutlier = false;
-            for (let n = 0; n < ptCount; ++n) {
+            for (let n = 0; n < ptCount; ++n)
+            {
                 const test = (pts[n]!.fY - origY) * adj
                            - (pts[n]!.fX - origX) * opp;
-                if (test * sign > 0 && !precisely_zero_cubic_pathops(test)) {
+                if (test * sign > 0 && !precisely_zero_cubic_pathops(test))
+                {
                     foundOutlier = true;
                     break;
                 }
@@ -766,7 +849,8 @@ function precisely_zero_cubic_pathops(x: number): boolean
 // Cubic derivative scalar formula. Mirrors derivative_at_t in
 // SkPathOpsCubic.cpp:245, parameterised by axis so we can call it for
 // x or y without juggling pointers.
-function derivative_at_t_axis(c: Cubic, axis: 0 | 1, t: number): number {
+function derivative_at_t_axis(c: Cubic, axis: 0 | 1, t: number): number
+{
     const k = axis === 0 ? 'fX' : 'fY';
     const one_t = 1 - t;
     const a = c.fPts[0][k];
@@ -783,7 +867,8 @@ function interp_cubic_chop(
     c: Cubic, axis: 0 | 1,
     dstPts: [Point, Point, Point, Point, Point, Point, Point],
     t: number,
-): void {
+): void
+{
     const k = axis === 0 ? 'fX' : 'fY';
     const src0 = c.fPts[0][k];
     const src2 = c.fPts[1][k];
@@ -808,7 +893,8 @@ function interp_cubic_chop(
 // interp_cubic_chop, returns only the abcd (sample point) value
 // without recording the intermediates. Mirrors interp_cubic_coords in
 // SkPathOpsCubic.cpp:656.
-function interp_cubic_full(c: Cubic, axis: 0 | 1, t: number): number {
+function interp_cubic_full(c: Cubic, axis: 0 | 1, t: number): number
+{
     const k = axis === 0 ? 'fX' : 'fY';
     const src0 = c.fPts[0][k];
     const src2 = c.fPts[1][k];
@@ -824,7 +910,8 @@ function interp_cubic_full(c: Cubic, axis: 0 | 1, t: number): number {
 
 // F'·F'' coefficient polynomial. Used by findMaxCurvature.
 // SkPathOpsCubic.cpp:539-547.
-function formulate_F1DotF2(c: Cubic, axis: 0 | 1, coeff: number[]): void {
+function formulate_F1DotF2(c: Cubic, axis: 0 | 1, coeff: number[]): void
+{
     const k = axis === 0 ? 'fX' : 'fY';
     const a = c.fPts[1][k] - c.fPts[0][k];
     const b = c.fPts[2][k] - 2 * c.fPts[1][k] + c.fPts[0][k];
@@ -840,32 +927,39 @@ function formulate_F1DotF2(c: Cubic, axis: 0 | 1, coeff: number[]): void {
 // which side of a chord the other two control points fall on. Returns
 // false when the chord has zero length (degenerate input). Mirrors
 // `rotate` in SkOpCubicHull.cpp:14.
-function rotate_into(cubic: Cubic, zero: number, index: number, rotPath: Cubic): boolean {
+function rotate_into(cubic: Cubic, zero: number, index: number, rotPath: Cubic): boolean
+{
     const cp = cubic.fPts;
     const rp = rotPath.fPts;
     const dy = cp[index]!.fY - cp[zero]!.fY;
     const dx = cp[index]!.fX - cp[zero]!.fX;
-    if (approximately_zero(dy)) {
+    if (approximately_zero(dy))
+    {
         if (approximately_zero(dx)) return false;
-        for (let i = 0; i < 4; ++i) {
+        for (let i = 0; i < 4; ++i)
+        {
             rp[i]!.fX = cp[i]!.fX;
             rp[i]!.fY = cp[i]!.fY;
         }
-        if (dy !== 0) {
+        if (dy !== 0)
+        {
             rp[index]!.fY = cp[zero]!.fY;
             const mask = other_two(index, zero);
             const side1 = index ^ mask;
             const side2 = zero ^ mask;
-            if (approximately_equal(cp[side1]!.fY, cp[zero]!.fY)) {
+            if (approximately_equal(cp[side1]!.fY, cp[zero]!.fY))
+            {
                 rp[side1]!.fY = cp[zero]!.fY;
             }
-            if (approximately_equal(cp[side2]!.fY, cp[zero]!.fY)) {
+            if (approximately_equal(cp[side2]!.fY, cp[zero]!.fY))
+            {
                 rp[side2]!.fY = cp[zero]!.fY;
             }
         }
         return true;
     }
-    for (let i = 0; i < 4; ++i) {
+    for (let i = 0; i < 4; ++i)
+    {
         rp[i]!.fX = cp[i]!.fX * dx + cp[i]!.fY * dy;
         rp[i]!.fY = cp[i]!.fY * dx - cp[i]!.fX * dy;
     }
@@ -874,6 +968,7 @@ function rotate_into(cubic: Cubic, zero: number, index: number, rotPath: Cubic):
 
 // 0 if negative, 1 if zero, 2 if positive. Mirrors `side` in
 // SkOpCubicHull.cpp:45.
-function side(x: number): number {
+function side(x: number): number
+{
     return (x > 0 ? 1 : 0) + (x >= 0 ? 1 : 0);
 }

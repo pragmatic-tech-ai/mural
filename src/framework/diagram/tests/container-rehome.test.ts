@@ -13,7 +13,8 @@ import { ContainerFigure } from '../container-figure.js';
 import { DiagramDocument } from '../diagram-document.js';
 import { diagramSpaceRect } from '../coordinate-space.js';
 
-function mount(items: ObservableCollection<Figure>): Diagram {
+function mount(items: ObservableCollection<Figure>): Diagram
+{
     const diagram = new Diagram();
     diagram.ItemsPanel = new ItemsPanelTemplate(() => new Canvas());
     diagram.ItemsSource = items;
@@ -24,7 +25,8 @@ function mount(items: ObservableCollection<Figure>): Diagram {
     return diagram;
 }
 
-function mountDoc(doc: DiagramDocument): Diagram {
+function mountDoc(doc: DiagramDocument): Diagram
+{
     const diagram = new Diagram();
     diagram.ItemsPanel = new ItemsPanelTemplate(() => new Canvas());
     diagram.DataContext = doc;

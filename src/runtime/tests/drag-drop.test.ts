@@ -479,7 +479,8 @@ describe('InputManager — drag session lifecycle', () => {
         resetPendingDrag();
         const im   = new InputManager();
         const root = new DropPanel('root');     // root has AllowDrop=true
-        const v = new (class extends Panel {
+        const v = new (class extends Panel
+        {
             protected override OnPointerDown(args: PointerEventArgs): void
             {
                 DragDrop.DoDragDrop(

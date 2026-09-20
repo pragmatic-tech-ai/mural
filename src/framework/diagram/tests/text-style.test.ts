@@ -126,13 +126,15 @@ describe('ShapeText — character-format routing', () => {
 });
 
 describe('Diagram — character-style channel + decoration commands', () => {
-    class FakeTarget implements MountableTarget {
+    class FakeTarget implements MountableTarget
+    {
         public Content: Visual | undefined;
         public SetFocus(_v: Visual | undefined): void { /* noop */ }
         public GetFocusedVisual(): Visual | undefined { return undefined; }
     }
 
-    function setup(figs: readonly Figure[]): Diagram {
+    function setup(figs: readonly Figure[]): Diagram
+    {
         const diagram = new Diagram();
         diagram.SelectionMode = SelectionMode.Extended;
         diagram.ItemsPanel    = new ItemsPanelTemplate(() => new Canvas());
@@ -145,7 +147,8 @@ describe('Diagram — character-style channel + decoration commands', () => {
         (surface as Visual).Arrange({ X: 0, Y: 0, Width: 800, Height: 600 } as never);
         return diagram;
     }
-    function select(d: Diagram, f: Figure): void {
+    function select(d: Diagram, f: Figure): void
+    {
         const c = d.Generator.ContainerFromItem(f);
         if (c === undefined) throw new Error('no container');
         d.HandleContainerClick(c, ModifierKeys.Control);

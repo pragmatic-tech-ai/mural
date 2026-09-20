@@ -19,7 +19,8 @@
 // horizontal centre lines up on a shared axis, with the axis derived
 // from the selection bbox's midpoint.
 
-export interface AlignTarget {
+export interface AlignTarget
+{
     Left:   number;
     Top:    number;
     Width:  number;

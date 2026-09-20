@@ -73,7 +73,8 @@ export class ProgressIndicator extends TemplatedControl
     public get IsIndeterminate(): boolean { return this.get_property_value(ProgressIndicator.IsIndeterminateKey); }
     public set IsIndeterminate(v: boolean) { this.set_property_value(ProgressIndicator.IsIndeterminateKey, v); }
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(
             ProgressIndicator, Element.DefaultStyleKeyKey,
             { default_value: ProgressIndicator });

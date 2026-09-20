@@ -14,14 +14,17 @@ import { ModifierKeys } from '../../runtime/index.js';
 class SvcA extends MuralBase {}
 class SvcB extends MuralBase {}
 
-function collect<T>(root: Visual, ctor: new (...a: never[]) => T, out: T[] = []): T[] {
+function collect<T>(root: Visual, ctor: new (...a: never[]) => T, out: T[] = []): T[]
+{
     if (root instanceof ctor) out.push(root);
     for (const c of root.visualChildren) collect(c, ctor, out);
     return out;
 }
-function findWhere(root: Visual, pred: (v: Visual) => boolean): Visual | undefined {
+function findWhere(root: Visual, pred: (v: Visual) => boolean): Visual | undefined
+{
     if (pred(root)) return root;
-    for (const c of root.visualChildren) {
+    for (const c of root.visualChildren)
+    {
         const hit = findWhere(c, pred);
         if (hit !== undefined) return hit;
     }

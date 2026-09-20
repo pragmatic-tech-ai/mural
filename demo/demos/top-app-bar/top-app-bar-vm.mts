@@ -38,7 +38,8 @@ export class TopAppBarVM extends MuralBase
     get MediumVariant():        TopAppBarVariant { return this.get_property_value(TopAppBarVM.MediumVariantKey); }
     get LargeVariant():         TopAppBarVariant { return this.get_property_value(TopAppBarVM.LargeVariantKey); }
 
-    constructor() {
+    constructor()
+    {
         super();
         this.set_property_value(TopAppBarVM.NavCommandKey,    new RelayCommand(() => { this.NavClicks    += 1; }));
         this.set_property_value(TopAppBarVM.SearchCommandKey, new RelayCommand(() => { this.SearchClicks += 1; }));

@@ -24,7 +24,8 @@ export class BottomSheetVM extends MuralBase
     set PostureLabel(v: string) { this.set_property_value(BottomSheetVM.PostureLabelKey, v); }
     get TogglePosture(): RelayCommand | null { return this.get_property_value(BottomSheetVM.TogglePostureKey); }
 
-    constructor() {
+    constructor()
+    {
         super();
         this.set_property_value(BottomSheetVM.TogglePostureKey, new RelayCommand(() => {
             this.Expanded     = !this.Expanded;

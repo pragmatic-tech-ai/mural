@@ -21,12 +21,14 @@ import { Figure } from '../diagram/figure.js';
 import { SelectionMode } from '../list/list-box.js';
 import { DiagramSelectionSource } from '../diagram/behaviors/diagram-selection-source.js';
 
-class FigureVM extends MuralBase {
+class FigureVM extends MuralBase
+{
     public static readonly LeftKey   = MuralBase.RegisterProperty<number>(FigureVM, 'Left',   0,  MetaData.None);
     public static readonly TopKey    = MuralBase.RegisterProperty<number>(FigureVM, 'Top',    0,  MetaData.None);
     public static readonly WidthKey  = MuralBase.RegisterProperty<number>(FigureVM, 'Width',  10, MetaData.None);
     public static readonly HeightKey = MuralBase.RegisterProperty<number>(FigureVM, 'Height', 10, MetaData.None);
-    constructor(left: number, top: number, w: number = 10, h: number = 10) {
+    constructor(left: number, top: number, w: number = 10, h: number = 10)
+    {
         super();
         this.set_property_value(FigureVM.LeftKey,   left);
         this.set_property_value(FigureVM.TopKey,    top);
@@ -42,19 +44,22 @@ class FigureVM extends MuralBase {
 // A figure-shaped item that also carries the LockAspectRatio DP (real Figures
 // do; the plain FigureVM above does not). DiagramSelectionSource reads the flag
 // duck-typed off the geometry host, so this exercises the aspect-lock path.
-class LockFigureVM extends FigureVM {
+class LockFigureVM extends FigureVM
+{
     public static readonly LockAspectRatioKey = MuralBase.RegisterProperty<boolean>(LockFigureVM, 'LockAspectRatio', false, MetaData.None);
     public get LockAspectRatio(): boolean { return this.get_property_value(LockFigureVM.LockAspectRatioKey); }
     public set LockAspectRatio(v: boolean) { this.set_property_value(LockFigureVM.LockAspectRatioKey, v); }
 }
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void { /* noop */ }
     public GetFocusedVisual(): Visual | undefined { return undefined; }
 }
 
-function setup(items: FigureVM[]): { diagram: Diagram } {
+function setup(items: FigureVM[]): { diagram: Diagram }
+{
     Application.current = null;
     new Application();
     const coll = new ObservableCollection<FigureVM>();
@@ -77,15 +82,18 @@ function setup(items: FigureVM[]): { diagram: Diagram } {
     return { diagram };
 }
 
-function cont(diagram: Diagram, item: unknown): Figure {
+function cont(diagram: Diagram, item: unknown): Figure
+{
     const gen = (diagram as unknown as { _generator: { ContainerFromItem(item: unknown): Visual | undefined } })._generator;
     const c = gen.ContainerFromItem(item);
     assert.ok(c instanceof Figure, 'container should be Figure');
     return c;
 }
 
-function selectMany(diagram: Diagram, items: unknown[]): void {
-    for (let i = 0; i < items.length; i++) {
+function selectMany(diagram: Diagram, items: unknown[]): void
+{
+    for (let i = 0; i < items.length; i++)
+    {
         const c = cont(diagram, items[i]);
         const mods = i === 0
             ? ModifierKeys.None

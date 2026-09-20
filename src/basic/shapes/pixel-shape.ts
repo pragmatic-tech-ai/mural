@@ -106,7 +106,8 @@ export class PixelArt extends Shape
 // PixelCircle — PixelArt with `Source = Circle` baked in.
 export class PixelCircle extends PixelArt
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(PixelCircle, PixelArt.SourceKey, { default_value: PixelSource.Circle });
     }
 }
@@ -114,7 +115,8 @@ export class PixelCircle extends PixelArt
 // PixelTriangle — PixelArt with `Source = Triangle` baked in.
 export class PixelTriangle extends PixelArt
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(PixelTriangle, PixelArt.SourceKey, { default_value: PixelSource.Triangle });
     }
 }

@@ -116,14 +116,16 @@ export class Clover extends Shape
 
 export class FourLeafClover extends Clover
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(FourLeafClover, Clover.LeavesKey, { default_value: 4 });
     }
 }
 
 export class EightLeafClover extends Clover
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(EightLeafClover, Clover.LeavesKey, { default_value: 8 });
     }
 }

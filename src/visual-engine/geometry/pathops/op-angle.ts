@@ -59,7 +59,8 @@ import './cubic-line-intersection.js';
 // by [0..verbToPoints(verb)]. Slots beyond the verb are unused but
 // allocated so the indices line up with Skia's union layout.
 
-interface AngleCurve {
+interface AngleCurve
+{
     pts:    [Point, Point, Point, Point];
     verb:   OpVerb;
     weight: number;
@@ -78,7 +79,8 @@ function copyAngleCurve(dst: AngleCurve, src: AngleCurve): void
 {
     dst.verb   = src.verb;
     dst.weight = src.weight;
-    for (let i = 0; i < 4; ++i) {
+    for (let i = 0; i < 4; ++i)
+    {
         dst.pts[i] = new Point(src.pts[i]!.fX, src.pts[i]!.fY);
     }
 }
@@ -93,19 +95,23 @@ function curveIntersectRay(verb: OpVerb, pts: readonly Point[], _weight: number,
                             rayP0: Point, rayP1: Point, ix: Intersections): void
 {
     const rayLine = new Line(rayP0, rayP1);
-    switch (verb) {
-        case OpVerb.kLine: {
+    switch (verb)
+    {
+        case OpVerb.kLine:
+        {
             const seg = new Line(pts[0]!, pts[1]!);
             ix.intersectRayLineLine(seg, rayLine);
             return;
         }
-        case OpVerb.kQuad: {
+        case OpVerb.kQuad:
+        {
             const q = new Quad();
             q.fPts = [pts[0]!, pts[1]!, pts[2]!];
             ix.intersectRayQuadLine(q, rayLine);
             return;
         }
-        case OpVerb.kCubic: {
+        case OpVerb.kCubic:
+        {
             const c = new Cubic();
             c.fPts = [pts[0]!, pts[1]!, pts[2]!, pts[3]!];
             ix.intersectRayCubicLine(c, rayLine);
@@ -118,14 +124,17 @@ function curveIntersectRay(verb: OpVerb, pts: readonly Point[], _weight: number,
 
 function dPtAtT(verb: OpVerb, pts: readonly Point[], _weight: number, t: number): Point
 {
-    switch (verb) {
+    switch (verb)
+    {
         case OpVerb.kLine: return new Line(pts[0]!, pts[1]!).ptAtT(t);
-        case OpVerb.kQuad: {
+        case OpVerb.kQuad:
+        {
             const q = new Quad();
             q.fPts = [pts[0]!, pts[1]!, pts[2]!];
             return q.ptAtT(t);
         }
-        case OpVerb.kCubic: {
+        case OpVerb.kCubic:
+        {
             const c = new Cubic();
             c.fPts = [pts[0]!, pts[1]!, pts[2]!, pts[3]!];
             return c.ptAtT(t);
@@ -137,16 +146,20 @@ function dPtAtT(verb: OpVerb, pts: readonly Point[], _weight: number, t: number)
 
 function dSlopeAtT(verb: OpVerb, pts: readonly Point[], _weight: number, t: number): Vector
 {
-    switch (verb) {
-        case OpVerb.kLine: {
+    switch (verb)
+    {
+        case OpVerb.kLine:
+        {
             return new Vector(pts[1]!.fX - pts[0]!.fX, pts[1]!.fY - pts[0]!.fY);
         }
-        case OpVerb.kQuad: {
+        case OpVerb.kQuad:
+        {
             const q = new Quad();
             q.fPts = [pts[0]!, pts[1]!, pts[2]!];
             return q.dxdyAtT(t);
         }
-        case OpVerb.kCubic: {
+        case OpVerb.kCubic:
+        {
             const c = new Cubic();
             c.fPts = [pts[0]!, pts[1]!, pts[2]!, pts[3]!];
             return c.dxdyAtT(t);
@@ -158,7 +171,8 @@ function dSlopeAtT(verb: OpVerb, pts: readonly Point[], _weight: number, t: numb
 
 // ── AngleIncludeType ─────────────────────────────────────────────
 
-export enum AngleIncludeType {
+export enum AngleIncludeType
+{
     kUnaryWinding = 0,
     kUnaryXor     = 1,
     kBinarySingle = 2,
@@ -167,7 +181,8 @@ export enum AngleIncludeType {
 
 // ── OpAngle ─────────────────────────────────────────────────────
 
-export class OpAngle implements OpAngleLike {
+export class OpAngle implements OpAngleLike
+{
     // Sub-arc covering [fStart.t(), fEnd.t()]. Skia's SkDCurveSweep
     // bundles the sub-curve + sweep vectors; we flatten directly.
     public fPart: AngleCurve = makeAngleCurve();
@@ -237,7 +252,8 @@ export class OpAngle implements OpAngleLike {
     public lastMarked(): OpSpanBase | undefined
     {
         // SkOpAngle.cpp:801 — consume-on-read: returns and chases.
-        if (this.fLastMarked !== undefined) {
+        if (this.fLastMarked !== undefined)
+        {
             if (this.fLastMarked.chased()) return undefined;
             this.fLastMarked.setChased(true);
         }
@@ -266,7 +282,8 @@ export class OpAngle implements OpAngleLike {
         if (this.fNext === undefined)
             throw new Error('OpAngle.previous: not linked into a loop');
         let last: OpAngle = this.fNext;
-        for (;;) {
+        for (;;)
+        {
             const next: OpAngle | undefined = last.fNext;
             if (next === undefined)
                 throw new Error('OpAngle.previous: broken ring');
@@ -280,7 +297,8 @@ export class OpAngle implements OpAngleLike {
         let count = 0;
         const first: OpAngle = this;
         let next:    OpAngle | undefined = this;
-        do {
+        do
+        {
             next = next!.fNext;
             ++count;
         } while (next !== undefined && next !== first);
@@ -295,7 +313,8 @@ export class OpAngle implements OpAngleLike {
         const tSegment = angle.fStart!.segment();
         const tStart   = angle.fStart!.t();
         const tEnd     = angle.fEnd!.t();
-        do {
+        do
+        {
             const lSegment = loop.fStart!.segment();
             if (lSegment !== tSegment) { loop = loop.fNext!; continue; }
             const lStart = loop.fStart!.t();
@@ -318,7 +337,8 @@ export class OpAngle implements OpAngleLike {
         const pts  = this.fPart.pts;
         this.fOrdered = true;
         this.fSweep[0] = new Vector(pts[1]!.fX - pts[0]!.fX, pts[1]!.fY - pts[0]!.fY);
-        if (verb === OpVerb.kLine) {
+        if (verb === OpVerb.kLine)
+        {
             this.fSweep[1] = new Vector(this.fSweep[0].fX, this.fSweep[0].fY);
             this.fIsCurve = false;
             return;
@@ -326,12 +346,15 @@ export class OpAngle implements OpAngleLike {
         this.fSweep[1] = new Vector(pts[2]!.fX - pts[0]!.fX, pts[2]!.fY - pts[0]!.fY);
         let maxVal = 0;
         const n = verbToPoints(verb);
-        for (let idx = 0; idx <= n; ++idx) {
+        for (let idx = 0; idx <= n; ++idx)
+        {
             maxVal = Math.max(maxVal, Math.abs(pts[idx]!.fX), Math.abs(pts[idx]!.fY));
         }
-        if (verb !== OpVerb.kCubic) {
+        if (verb !== OpVerb.kCubic)
+        {
             if (roughly_zero_when_compared_to(this.fSweep[0].fX, maxVal)
-                && roughly_zero_when_compared_to(this.fSweep[0].fY, maxVal)) {
+                && roughly_zero_when_compared_to(this.fSweep[0].fY, maxVal))
+                {
                 this.fSweep[0] = new Vector(this.fSweep[1].fX, this.fSweep[1].fY);
             }
             this.fIsCurve = this.fSweep[0].crossCheck(this.fSweep[1]) !== 0;
@@ -339,11 +362,13 @@ export class OpAngle implements OpAngleLike {
         }
         // Cubic branch.
         const thirdSweep = new Vector(pts[3]!.fX - pts[0]!.fX, pts[3]!.fY - pts[0]!.fY);
-        if (this.fSweep[0].fX === 0 && this.fSweep[0].fY === 0) {
+        if (this.fSweep[0].fX === 0 && this.fSweep[0].fY === 0)
+        {
             this.fSweep[0] = new Vector(this.fSweep[1].fX, this.fSweep[1].fY);
             this.fSweep[1] = new Vector(thirdSweep.fX, thirdSweep.fY);
             if (roughly_zero_when_compared_to(this.fSweep[0].fX, maxVal)
-                && roughly_zero_when_compared_to(this.fSweep[0].fY, maxVal)) {
+                && roughly_zero_when_compared_to(this.fSweep[0].fY, maxVal))
+                {
                 this.fSweep[0] = new Vector(this.fSweep[1].fX, this.fSweep[1].fY);
                 this.fPart.pts[1] = new Point(pts[3]!.fX, pts[3]!.fY);
             }
@@ -352,12 +377,14 @@ export class OpAngle implements OpAngleLike {
         }
         const s1x3 = this.fSweep[0].crossCheck(thirdSweep);
         const s3x2 = thirdSweep.crossCheck(this.fSweep[1]);
-        if (s1x3 * s3x2 >= 0) {
+        if (s1x3 * s3x2 >= 0)
+        {
             this.fIsCurve = this.fSweep[0].crossCheck(this.fSweep[1]) !== 0;
             return;
         }
         const s2x1 = this.fSweep[1].crossCheck(this.fSweep[0]);
-        if (s3x2 * s2x1 < 0) {
+        if (s3x2 * s2x1 < 0)
+        {
             this.fSweep[0] = new Vector(this.fSweep[1].fX, this.fSweep[1].fY);
             this.fOrdered = false;
         }
@@ -370,7 +397,8 @@ export class OpAngle implements OpAngleLike {
     {
         this.fUnorderable = false;
         this.fLastMarked  = undefined;
-        if (this.fStart === undefined) {
+        if (this.fStart === undefined)
+        {
             this.fUnorderable = true;
             return;
         }
@@ -382,7 +410,8 @@ export class OpAngle implements OpAngleLike {
         copyAngleCurve(this.fOriginalCurvePart, this.fPart);
         this.setCurveHullSweep();
         // Curve degenerated to a line — treat as line for tangent math.
-        if (verb !== OpVerb.kLine && !this.fIsCurve) {
+        if (verb !== OpVerb.kLine && !this.fIsCurve)
+        {
             const n = verbToPoints(verb);
             this.fPart.pts[1] = new Point(this.fPart.pts[n]!.fX, this.fPart.pts[n]!.fY);
             this.fOriginalCurvePart.pts[1] = new Point(this.fPart.pts[1]!.fX, this.fPart.pts[1]!.fY);
@@ -390,8 +419,10 @@ export class OpAngle implements OpAngleLike {
             this.fTangentHalf.lineEndPoints(lineHalf);
             this.fSide = 0;
         }
-        switch (verb) {
-            case OpVerb.kLine: {
+        switch (verb)
+        {
+            case OpVerb.kLine:
+            {
                 if (this.fStart === this.fEnd)
                     throw new Error('OpAngle.setSpans: line start === end');
                 const cP1Index = this.fStart.t() < this.fEnd!.t() ? 1 : 0;
@@ -400,7 +431,8 @@ export class OpAngle implements OpAngleLike {
                 this.fSide = 0;
                 return;
             }
-            case OpVerb.kQuad: {
+            case OpVerb.kQuad:
+            {
                 const tangentPart = new LineParameters();
                 const q = new Quad();
                 q.fPts = [this.fPart.pts[0]!, this.fPart.pts[1]!, this.fPart.pts[2]!];
@@ -408,7 +440,8 @@ export class OpAngle implements OpAngleLike {
                 this.fSide = -tangentPart.pointDistance(this.fPart.pts[2]!);
                 return;
             }
-            case OpVerb.kCubic: {
+            case OpVerb.kCubic:
+            {
                 const tangentPart = new LineParameters();
                 const c = new Cubic();
                 c.fPts = [this.fPart.pts[0]!, this.fPart.pts[1]!, this.fPart.pts[2]!, this.fPart.pts[3]!];
@@ -423,7 +456,8 @@ export class OpAngle implements OpAngleLike {
                 const endT   = this.fEnd!.t();
                 const limitT = endT;
                 let testCount = inflCount;
-                for (let i = 0; i < testCount; ++i) {
+                for (let i = 0; i < testCount; ++i)
+                {
                     if (!skiaBetween(startT, inflTs[i]!, limitT)) inflTs[i] = -1;
                 }
                 inflTs[testCount++] = startT;
@@ -435,7 +469,8 @@ export class OpAngle implements OpAngleLike {
                 let i = 0;
                 while (i < testCount && inflTs[i]! < 0) ++i;
                 let idx = i << 1;
-                for (; idx < testCases; ++idx) {
+                for (; idx < testCases; ++idx)
+                {
                     const ti = idx >> 1;
                     let testT = inflTs[ti]!;
                     if (idx & 1) testT = (testT + inflTs[ti + 1]!) / 2;
@@ -475,21 +510,27 @@ export class OpAngle implements OpAngleLike {
         out.pts[n] = new Point(endPtT.fPt.fX, endPtT.fPt.fY);
         if (verb === OpVerb.kLine) return;
         // Endpoint case — direct copy of control points.
-        if ((startT === 0 || endT === 0) && (startT === 1 || endT === 1)) {
-            if (verb === OpVerb.kQuad) {
+        if ((startT === 0 || endT === 0) && (startT === 1 || endT === 1))
+        {
+            if (verb === OpVerb.kQuad)
+            {
                 out.pts[1] = new Point(pts[1]!.fX, pts[1]!.fY);
                 return;
             }
-            if (startT === 0) {
+            if (startT === 0)
+            {
                 out.pts[1] = new Point(pts[1]!.fX, pts[1]!.fY);
                 out.pts[2] = new Point(pts[2]!.fX, pts[2]!.fY);
-            } else {
+            }
+            else
+            {
                 out.pts[1] = new Point(pts[2]!.fX, pts[2]!.fY);
                 out.pts[2] = new Point(pts[1]!.fX, pts[1]!.fY);
             }
             return;
         }
-        if (verb === OpVerb.kQuad) {
+        if (verb === OpVerb.kQuad)
+        {
             const full = new Quad();
             full.fPts = [pts[0]!, pts[1]!, pts[2]!];
             const sub = full.subDivide(startT, endT);
@@ -533,22 +574,26 @@ export class OpAngle implements OpAngleLike {
         const segment = this.fStart.segment();
         const verb = segment.verb();
         this.fSectorStart = this.findSector(verb, this.fSweep[0].fX, this.fSweep[0].fY);
-        if (this.fSectorStart < 0) {
+        if (this.fSectorStart < 0)
+        {
             this._deferSector();
             return;
         }
-        if (!this.fIsCurve) {
+        if (!this.fIsCurve)
+        {
             this.fSectorEnd = this.fSectorStart;
             this.fSectorMask = 1 << this.fSectorStart;
             return;
         }
         if (verb === OpVerb.kLine) throw new Error('OpAngle.setSector: line marked curve');
         this.fSectorEnd = this.findSector(verb, this.fSweep[1].fX, this.fSweep[1].fY);
-        if (this.fSectorEnd < 0) {
+        if (this.fSectorEnd < 0)
+        {
             this._deferSector();
             return;
         }
-        if (this.fSectorEnd === this.fSectorStart && (this.fSectorStart & 3) !== 3) {
+        if (this.fSectorEnd === this.fSectorStart && (this.fSectorStart & 3) !== 3)
+        {
             this.fSectorMask = 1 << this.fSectorStart;
             return;
         }
@@ -556,19 +601,24 @@ export class OpAngle implements OpAngleLike {
         let crossesZero = this.checkCrossesZero();
         const minSector = Math.min(this.fSectorStart, this.fSectorEnd);
         const curveBendsCCW = (this.fSectorStart === minSector) !== crossesZero;
-        if ((this.fSectorStart & 3) === 3) {
+        if ((this.fSectorStart & 3) === 3)
+        {
             this.fSectorStart = (this.fSectorStart + (curveBendsCCW ? 1 : 31)) & 0x1f;
         }
-        if ((this.fSectorEnd & 3) === 3) {
+        if ((this.fSectorEnd & 3) === 3)
+        {
             this.fSectorEnd = (this.fSectorEnd + (curveBendsCCW ? 31 : 1)) & 0x1f;
         }
         crossesZero = this.checkCrossesZero();
         const start = Math.min(this.fSectorStart, this.fSectorEnd);
         const end   = Math.max(this.fSectorStart, this.fSectorEnd);
-        if (!crossesZero) {
+        if (!crossesZero)
+        {
             // (uint32) -1 >> (31 - end + start) << start
             this.fSectorMask = ((0xFFFFFFFF >>> (31 - end + start)) << start) >>> 0;
-        } else {
+        }
+        else
+        {
             this.fSectorMask = ((0xFFFFFFFF >>> (31 - start))
                               | ((0xFFFFFFFF << end) >>> 0)) >>> 0;
         }
@@ -596,18 +646,22 @@ export class OpAngle implements OpAngleLike {
         this.fComputedSector = true;
         const stepUp = this.fStart!.t() < this.fEnd!.t();
         let checkEnd: OpSpanBase | undefined = this.fEnd;
-        if (checkEnd!.final() && stepUp) {
+        if (checkEnd!.final() && stepUp)
+        {
             this.fUnorderable = true;
             return false;
         }
-        outer: while (checkEnd !== undefined) {
+        outer: while (checkEnd !== undefined)
+        {
             // Walk every other span on the segment looking for a t-match.
             const other = checkEnd.segment();
             let oSpan: OpSpanBase | undefined = other.head() as unknown as OpSpanBase;
-            while (oSpan !== undefined) {
+            while (oSpan !== undefined)
+            {
                 if (oSpan.segment() !== this.segment()) { /* skip */ }
                 else if (oSpan === checkEnd) { /* skip */ }
-                else if (Math.abs(oSpan.t() - checkEnd.t()) < 1e-12) {
+                else if (Math.abs(oSpan.t() - checkEnd.t()) < 1e-12)
+                {
                     // Approximate t-equality match — found another span at the
                     // computed checkEnd parameter; stop walking and rebuild.
                     break outer;
@@ -622,12 +676,14 @@ export class OpAngle implements OpAngleLike {
         const computedEnd: OpSpanBase | undefined = stepUp
             ? (checkEnd !== undefined ? checkEnd.prev() : (this.fEnd!.segment().head() as unknown as OpSpanBase))
             : (checkEnd !== undefined ? (checkEnd as OpSpan).next() : this.fEnd!.segment().tail() as unknown as OpSpanBase);
-        if (checkEnd === this.fEnd || computedEnd === this.fEnd || computedEnd === this.fStart) {
+        if (checkEnd === this.fEnd || computedEnd === this.fEnd || computedEnd === this.fStart)
+        {
             this.fUnorderable = true;
             return false;
         }
         if (computedEnd === undefined) { this.fUnorderable = true; return false; }
-        if (stepUp !== (this.fStart!.t() < computedEnd.t())) {
+        if (stepUp !== (this.fStart!.t() < computedEnd.t()))
+        {
             this.fUnorderable = true;
             return false;
         }
@@ -650,13 +706,15 @@ export class OpAngle implements OpAngleLike {
         const testVerb = test.segment().verb();
         const iMax = verbToPoints(testVerb);
         const testCurve = useOriginal ? test.fOriginalCurvePart : test.fPart;
-        for (let idx = 1; idx <= iMax; ++idx) {
+        for (let idx = 1; idx <= iMax; ++idx)
+        {
             const xy1 = line.fX * (testCurve.pts[idx]!.fY - origin.fY);
             const xy2 = line.fY * (testCurve.pts[idx]!.fX - origin.fX);
             crosses[idx - 1] = AlmostBequalUlps(xy1, xy2) ? 0 : xy1 - xy2;
         }
         if (crosses[0]! * crosses[1]! < 0) return -1;
-        if (testVerb === OpVerb.kCubic) {
+        if (testVerb === OpVerb.kCubic)
+        {
             if (crosses[0]! * crosses[2]! < 0 || crosses[1]! * crosses[2]! < 0) return -1;
         }
         if (crosses[0]) return crosses[0] < 0 ? 1 : 0;
@@ -674,7 +732,8 @@ export class OpAngle implements OpAngleLike {
         const line = new Vector(this.fPart.pts[1]!.fX - origin.fX,
                                 this.fPart.pts[1]!.fY - origin.fY);
         let result = this.lineOnOneSideOrigin(origin, line, test, useOriginal);
-        if (result === -2) {
+        if (result === -2)
+        {
             this.fUnorderable = true;
             result = -1;
         }
@@ -691,7 +750,8 @@ export class OpAngle implements OpAngleLike {
                                   this.fOriginalCurvePart.pts[1]!.fY - origin.fY);
         const dots:    [number, number] = [0, 0];
         const crosses: [number, number] = [0, 0];
-        for (let i = 0; i < 2; ++i) {
+        for (let i = 0; i < 2; ++i)
+        {
             const testPt = test.fOriginalCurvePart.pts[i]!;
             const tl = new Vector(testPt.fX - origin.fX, testPt.fY - origin.fY);
             const xy1 = line.fX * tl.fY;
@@ -721,7 +781,8 @@ export class OpAngle implements OpAngleLike {
                                  test.fPart.pts[1]!.fY - xOrigin.fY);
         const oLine = new Vector(test.fOriginalCurvePart.pts[1]!.fX - oOrigin.fX,
                                  test.fOriginalCurvePart.pts[1]!.fY - oOrigin.fY);
-        for (let i = 1; i <= iMax; ++i) {
+        for (let i = 1; i <= iMax; ++i)
+        {
             const testPt = this.fPart.pts[i]!;
             const dx1 = testPt.fX - xOrigin.fX, dy1 = testPt.fY - xOrigin.fY;
             const dx2 = testPt.fX - oOrigin.fX, dy2 = testPt.fY - oOrigin.fY;
@@ -745,8 +806,10 @@ export class OpAngle implements OpAngleLike {
         const segment = this.segment();
         const ptCount = verbToPoints(segment.verb());
         const pts = segment.pts();
-        for (let i1 = 0; i1 <= ptCount - 1; ++i1) {
-            for (let i2 = i1 + 1; i2 <= ptCount; ++i2) {
+        for (let i1 = 0; i1 <= ptCount - 1; ++i1)
+        {
+            for (let i2 = i1 + 1; i2 <= ptCount; ++i2)
+            {
                 if (i1 === i2) continue;
                 const dx = pts[i2]!.fX - pts[i1]!.fX;
                 const dy = pts[i2]!.fY - pts[i1]!.fY;
@@ -795,7 +858,8 @@ export class OpAngle implements OpAngleLike {
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         const oppPts = verbToPoints(oppVerb);
         const curve = rh.fPart.pts;
-        for (let i = 0; i <= oppPts; ++i) {
+        for (let i = 0; i <= oppPts; ++i)
+        {
             if (curve[i]!.fX < minX) minX = curve[i]!.fX;
             if (curve[i]!.fY < minY) minY = curve[i]!.fY;
             if (curve[i]!.fX > maxX) maxX = curve[i]!.fX;
@@ -856,7 +920,8 @@ export class OpAngle implements OpAngleLike {
         const s0xt0 = sweep.crossCheck(tweep);
         if (this.tangentsDiverge(rh, s0xt0)) return s0xt0 < 0;
         const inside = { value: false };
-        if (!this.fEnd!.containsSpan(rh.fEnd!)) {
+        if (!this.fEnd!.containsSpan(rh.fEnd!))
+        {
             if (this.endToSide(rh, inside)) return inside.value;
             if (rh.endToSide(this, inside)) return !inside.value;
         }
@@ -872,7 +937,8 @@ export class OpAngle implements OpAngleLike {
         const m0 = new Vector(m0Pt.fX - this.fPart.pts[0]!.fX, m0Pt.fY - this.fPart.pts[0]!.fY);
         const m1 = new Vector(m1Pt.fX - rh.fPart.pts[0]!.fX, m1Pt.fY - rh.fPart.pts[0]!.fY);
         const m0xm1 = m0.crossCheck(m1);
-        if (m0xm1 === 0) {
+        if (m0xm1 === 0)
+        {
             this.fUnorderable = true;
             rh.fUnorderable = true;
             return true;
@@ -928,7 +994,8 @@ export class OpAngle implements OpAngleLike {
         if (this.fEnd!.containsSpan(rh.fEnd!)) return this.checkParallel(rh);
         const smallTs: [number, number] = [-1, -1];
         const limited: [boolean, boolean] = [false, false];
-        for (let index = 0; index < 2; ++index) {
+        for (let index = 0; index < 2; ++index)
+        {
             const cVerb = index ? rVerb : lVerb;
             if (cVerb === OpVerb.kLine) continue;
             const segment = index ? rh.segment() : this.segment();
@@ -940,7 +1007,8 @@ export class OpAngle implements OpAngleLike {
             const tEnd = computedEnd;
             const testAscends = tStart < computedEnd;
             let t = testAscends ? 0 : 1;
-            for (let i = 0; i < ix.used(); ++i) {
+            for (let i = 0; i < ix.used(); ++i)
+            {
                 const testT = ix.fT[0]![i]!;
                 if (!approximately_between_orderable(tStart, testT, tEnd)) continue;
                 if (approximately_equal_orderable(tStart, testT)) continue;
@@ -953,12 +1021,14 @@ export class OpAngle implements OpAngleLike {
         let sCeptT = -1;
         let sIndex = -1;
         let useIntersect = false;
-        for (let index = 0; index < 2; ++index) {
+        for (let index = 0; index < 2; ++index)
+        {
             if (smallTs[index]! < 0) continue;
             const segment = index ? rh.segment() : this.segment();
             const dPt = dPtAtT(segment.verb(), segment.pts(), segment.weight(), smallTs[index]!);
             const cept = new Vector(dPt.fX - rays[index]![0].fX, dPt.fY - rays[index]![0].fY);
-            if ((index ? lPts : rPts) === 1) {
+            if ((index ? lPts : rPts) === 1)
+            {
                 const total = new Vector(rays[index]![1].fX - rays[index]![0].fX,
                                           rays[index]![1].fY - rays[index]![0].fY);
                 if (cept.lengthSquared() * 2 < total.lengthSquared()) continue;
@@ -969,7 +1039,8 @@ export class OpAngle implements OpAngleLike {
             const rayDist = cept.length();
             const endDist = endVec.length();
             const rayLonger = rayDist > endDist;
-            if (limited[0] && limited[1] && rayLonger) {
+            if (limited[0] && limited[1] && rayLonger)
+            {
                 useIntersect = true;
                 sRayLonger = rayLonger;
                 sCept = cept;
@@ -981,7 +1052,8 @@ export class OpAngle implements OpAngleLike {
             let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
             const curve = index ? rh.fPart : this.fPart;
             const ptCount = index ? rPts : lPts;
-            for (let i = 0; i <= ptCount; ++i) {
+            for (let i = 0; i <= ptCount; ++i)
+            {
                 if (curve.pts[i]!.fX < minX) minX = curve.pts[i]!.fX;
                 if (curve.pts[i]!.fY < minY) minY = curve.pts[i]!.fY;
                 if (curve.pts[i]!.fX > maxX) maxX = curve.pts[i]!.fX;
@@ -998,14 +1070,17 @@ export class OpAngle implements OpAngleLike {
                 const line = new Vector(rh.fOriginalCurvePart.pts[count]!.fX - origin.fX,
                                          rh.fOriginalCurvePart.pts[count]!.fY - origin.fY);
                 const originalSide  = rh.lineOnOneSideOrigin(origin, line, this, true);
-                if (originalSide >= 0) {
+                if (originalSide >= 0)
+                {
                     const translatedSide = rh.lineOnOneSideOrigin(origin, line, this, false);
                     if (originalSide !== translatedSide) continue;
                 }
             }
-            if (delta > 1e-3) {
+            if (delta > 1e-3)
+            {
                 useIntersect = !useIntersect;
-                if (useIntersect) {
+                if (useIntersect)
+                {
                     sRayLonger = rayLonger;
                     sCept = cept;
                     sCeptT = smallTs[index]!;
@@ -1013,7 +1088,8 @@ export class OpAngle implements OpAngleLike {
                 }
             }
         }
-        if (useIntersect) {
+        if (useIntersect)
+        {
             const curve = sIndex ? rh.fPart : this.fPart;
             const segment = sIndex ? rh.segment() : this.segment();
             const tStart = sIndex ? rh.fStart!.t() : this.fStart!.t();
@@ -1032,15 +1108,18 @@ export class OpAngle implements OpAngleLike {
     public orderable(rh: OpAngle): number
     {
         let result: number;
-        if (!this.fIsCurve) {
-            if (!rh.fIsCurve) {
+        if (!this.fIsCurve)
+        {
+            if (!rh.fIsCurve)
+            {
                 const leftX = this.fTangentHalf.dx();
                 const leftY = this.fTangentHalf.dy();
                 const rightX = rh.fTangentHalf.dx();
                 const rightY = rh.fTangentHalf.dy();
                 const x_ry = leftX * rightY;
                 const rx_y = rightX * leftY;
-                if (x_ry === rx_y) {
+                if (x_ry === rx_y)
+                {
                     if (leftX * rightX < 0 || leftY * rightY < 0) return 1;
                     this.fUnorderable = true;
                     rh.fUnorderable = true;
@@ -1049,19 +1128,25 @@ export class OpAngle implements OpAngleLike {
                 return x_ry < rx_y ? 1 : 0;
             }
             if ((result = this.lineOnOneSide(rh, false)) >= 0) return result;
-            if (this.fUnorderable || approximately_zero(rh.fSide)) {
+            if (this.fUnorderable || approximately_zero(rh.fSide))
+            {
                 this.fUnorderable = true;
                 rh.fUnorderable = true;
                 return -1;
             }
-        } else if (!rh.fIsCurve) {
+        }
+        else if (!rh.fIsCurve)
+        {
             if ((result = rh.lineOnOneSide(this, false)) >= 0) return result ? 0 : 1;
-            if (rh.fUnorderable || approximately_zero(this.fSide)) {
+            if (rh.fUnorderable || approximately_zero(this.fSide))
+            {
                 this.fUnorderable = true;
                 rh.fUnorderable = true;
                 return -1;
             }
-        } else if ((result = this.convexHullOverlaps(rh)) >= 0) {
+        }
+        else if ((result = this.convexHullOverlaps(rh)) >= 0)
+        {
             return result;
         }
         return this.endsIntersect(rh) ? 1 : 0;
@@ -1087,59 +1172,83 @@ export class OpAngle implements OpAngleLike {
         const ltrOverlap = ((lh.fSectorMask | rh.fSectorMask) & this.fSectorMask) !== 0;
         const lrOverlap  = (lh.fSectorMask & rh.fSectorMask) !== 0;
         let lrOrder: number;
-        if (!lrOverlap) {
-            if (!ltrOverlap) {
+        if (!lrOverlap)
+        {
+            if (!ltrOverlap)
+            {
                 return ((lh.fSectorEnd > rh.fSectorStart) ? 1 : 0)
                      ^ ((this.fSectorStart > lh.fSectorEnd) ? 1 : 0)
                      ^ ((this.fSectorStart > rh.fSectorStart) ? 1 : 0) ? true : false;
             }
             const lrGap = (rh.fSectorStart - lh.fSectorStart + 32) & 0x1f;
             lrOrder = lrGap > 20 ? 0 : lrGap > 11 ? -1 : 1;
-        } else {
+        }
+        else
+        {
             lrOrder = lh.orderable(rh);
             if (!ltrOverlap && lrOrder >= 0) return lrOrder ? false : true;
         }
         let ltOrder: number;
-        if ((lh.fSectorMask & this.fSectorMask) !== 0) {
+        if ((lh.fSectorMask & this.fSectorMask) !== 0)
+        {
             ltOrder = lh.orderable(this);
-        } else {
+        }
+        else
+        {
             const ltGap = (this.fSectorStart - lh.fSectorStart + 32) & 0x1f;
             ltOrder = ltGap > 20 ? 0 : ltGap > 11 ? -1 : 1;
         }
         let trOrder: number;
-        if ((rh.fSectorMask & this.fSectorMask) !== 0) {
+        if ((rh.fSectorMask & this.fSectorMask) !== 0)
+        {
             trOrder = this.orderable(rh);
-        } else {
+        }
+        else
+        {
             const trGap = (rh.fSectorStart - this.fSectorStart + 32) & 0x1f;
             trOrder = trGap > 20 ? 0 : trGap > 11 ? -1 : 1;
         }
         this.alignmentSameSide(lh, { value: ltOrder });
         this.alignmentSameSide(rh, { value: trOrder });
-        if (lrOrder >= 0 && ltOrder >= 0 && trOrder >= 0) {
+        if (lrOrder >= 0 && ltOrder >= 0 && trOrder >= 0)
+        {
             return (lrOrder ? (ltOrder & trOrder) : (ltOrder | trOrder)) !== 0;
         }
-        if (ltOrder === 0 && lrOrder === 0) {
+        if (ltOrder === 0 && lrOrder === 0)
+        {
             return lh.oppositePlanes(this);
-        } else if (ltOrder === 1 && trOrder === 0) {
+        }
+        else if (ltOrder === 1 && trOrder === 0)
+        {
             return this.oppositePlanes(rh);
-        } else if (lrOrder === 1 && trOrder === 1) {
+        }
+        else if (lrOrder === 1 && trOrder === 1)
+        {
             return lh.oppositePlanes(rh);
         }
-        if (this.fUnorderable || lh.fUnorderable || rh.fUnorderable) {
-            if (!this.fIsCurve && !lh.fIsCurve && !rh.fIsCurve) {
+        if (this.fUnorderable || lh.fUnorderable || rh.fUnorderable)
+        {
+            if (!this.fIsCurve && !lh.fIsCurve && !rh.fIsCurve)
+            {
                 const ltShare = lh.fOriginalCurvePart.pts[0]!.equals(this.fOriginalCurvePart.pts[0]!) ? 1 : 0;
                 const lrShare = lh.fOriginalCurvePart.pts[0]!.equals(rh.fOriginalCurvePart.pts[0]!) ? 1 : 0;
                 const trShare = this.fOriginalCurvePart.pts[0]!.equals(rh.fOriginalCurvePart.pts[0]!) ? 1 : 0;
-                if (ltShare + lrShare + trShare === 1) {
-                    if (lrShare) {
+                if (ltShare + lrShare + trShare === 1)
+                {
+                    if (lrShare)
+                    {
                         const ltOO = lh.linesOnOriginalSide(this);
                         const rtOO = rh.linesOnOriginalSide(this);
                         if ((rtOO ^ ltOO) === 1) return ltOO !== 0;
-                    } else if (trShare) {
+                    }
+                    else if (trShare)
+                    {
                         const tlOO = this.linesOnOriginalSide(lh);
                         const rlOO = rh.linesOnOriginalSide(lh);
                         if ((tlOO ^ rlOO) === 1) return rlOO !== 0;
-                    } else {
+                    }
+                    else
+                    {
                         const trOO = rh.linesOnOriginalSide(this);
                         const lrOO = lh.linesOnOriginalSide(rh);
                         if ((lrOO ^ trOO) === 1) return trOO !== 0;
@@ -1147,7 +1256,8 @@ export class OpAngle implements OpAngleLike {
                 }
             }
         }
-        if (lrOrder < 0) {
+        if (lrOrder < 0)
+        {
             if (ltOrder < 0) return trOrder !== 0;
             return ltOrder !== 0;
         }
@@ -1157,12 +1267,18 @@ export class OpAngle implements OpAngleLike {
     // SkOpAngle.cpp:749.
     public insert(angle: OpAngle): boolean
     {
-        if (angle.fNext !== undefined) {
-            if (this.loopCount() >= angle.loopCount()) {
+        if (angle.fNext !== undefined)
+        {
+            if (this.loopCount() >= angle.loopCount())
+            {
                 if (!this.merge(angle)) return true;
-            } else if (this.fNext !== undefined) {
+            }
+            else if (this.fNext !== undefined)
+            {
                 if (!angle.merge(this)) return true;
-            } else {
+            }
+            else
+            {
                 angle.insert(this);
             }
             return true;
@@ -1170,11 +1286,15 @@ export class OpAngle implements OpAngleLike {
         const singleton = this.fNext === undefined;
         if (singleton) this.fNext = this;
         let next: OpAngle = this.fNext!;
-        if (next.fNext === this) {
-            if (singleton || angle.after(this)) {
+        if (next.fNext === this)
+        {
+            if (singleton || angle.after(this))
+            {
                 this.fNext = angle;
                 angle.fNext = next;
-            } else {
+            }
+            else
+            {
                 next.fNext = angle;
                 angle.fNext = this;
             }
@@ -1182,17 +1302,20 @@ export class OpAngle implements OpAngleLike {
         }
         let last: OpAngle = this;
         let flipAmbiguity = false;
-        for (;;) {
+        for (;;)
+        {
             if (last.fNext !== next) throw new Error('OpAngle.insert: ring corruption');
             const afterFlag = angle.after(last);
             const flipBit = (angle.tangentsAmbiguous() && flipAmbiguity) ? 1 : 0;
-            if (((afterFlag ? 1 : 0) ^ flipBit) === 1) {
+            if (((afterFlag ? 1 : 0) ^ flipBit) === 1)
+            {
                 last.fNext = angle;
                 angle.fNext = next;
                 break;
             }
             last = next;
-            if (last === this) {
+            if (last === this)
+            {
                 if (flipAmbiguity) return true;
                 flipAmbiguity = true;
             }
@@ -1207,11 +1330,13 @@ export class OpAngle implements OpAngleLike {
         if (this.fNext === undefined || angle.fNext === undefined)
             throw new Error('OpAngle.merge: ring not initialised');
         let working: OpAngle = angle;
-        do {
+        do
+        {
             if (this === working) return false;
             working = working.fNext!;
         } while (working !== angle);
-        do {
+        do
+        {
             const next: OpAngle = working.fNext!;
             working.fNext = undefined;
             this.insert(working);
@@ -1224,7 +1349,8 @@ export class OpAngle implements OpAngleLike {
     // skeleton port. Production code now uses insert().
     public _appendTestOnly(angle: OpAngle): void
     {
-        if (this.fNext === undefined) {
+        if (this.fNext === undefined)
+        {
             this.fNext = angle;
             angle.fNext = this;
             return;

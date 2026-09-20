@@ -27,21 +27,25 @@ import { SolidColorBrushAnimation } from '@pragmatic-tech-ai/mural/visual-engine
 // AddClickHandler / Content / Width / Fill), so we cast the
 // FindName results through these minimal shapes rather than pull in the
 // host control classes just for typing.
-interface ClickSource {
+interface ClickSource
+{
     AddClickHandler(handler: () => void): void;
     Content: { Text: string };
 }
-interface AnimatableElement {
+interface AnimatableElement
+{
     Width: number;
     BeginAnimation(propertyName: string, timeline: AnimationTimeline): Storyboard;
 }
-interface BrushTarget {
+interface BrushTarget
+{
     Fill: unknown;
 }
 
 export class AnimationVM extends MuralBase
 {
-    OnViewMounted(view: Visual): void {
+    OnViewMounted(view: Visual): void
+    {
         // ── Row 1: slide ─────────────────────────────────────────────
         const slideBtn    = view.FindName('slideBtn')    as unknown as ClickSource;
         const slideTarget = view.FindName('slideTarget') as unknown as AnimatableElement;
@@ -67,7 +71,8 @@ export class AnimationVM extends MuralBase
         const loopLabel  = loopBtn.Content;            // TextBlock inside the Button
         let   loopSb: Storyboard | undefined;
         loopBtn.AddClickHandler(() => {
-            if (loopSb !== undefined && loopSb.State === StoryboardState.Running) {
+            if (loopSb !== undefined && loopSb.State === StoryboardState.Running)
+            {
                 loopSb.Stop();
                 loopLabel.Text = 'Start';
                 return;

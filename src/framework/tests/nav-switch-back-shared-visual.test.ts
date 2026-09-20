@@ -14,7 +14,8 @@ import { ModifierKeys } from '../../runtime/index.js';
 
 // A capability service that exposes a SHARED Visual (like the shared toolbox preview Visual
 // — a Figure held on the model and bound into a tile's ContentControl.Content).
-class SharedVisualSvc extends MuralBase {
+class SharedVisualSvc extends MuralBase
+{
     public static readonly PreviewKey = MuralBase.RegisterProperty<Visual | undefined>(
         SharedVisualSvc, 'Preview', undefined, MetaData.None);
     constructor() { super(); this.set_property_value(SharedVisualSvc.PreviewKey, new Border()); }
@@ -22,7 +23,8 @@ class SharedVisualSvc extends MuralBase {
 }
 class OtherSvc extends MuralBase {}
 
-function collect<T>(root: Visual, ctor: new (...a: never[]) => T, out: T[] = []): T[] {
+function collect<T>(root: Visual, ctor: new (...a: never[]) => T, out: T[] = []): T[]
+{
     if (root instanceof ctor) out.push(root);
     for (const c of root.visualChildren) collect(c, ctor, out);
     return out;

@@ -41,7 +41,8 @@ export class RadioButton extends ToggleButton
     public get GroupName(): string { return this.get_property_value(RadioButton.GroupNameKey); }
     public set GroupName(v: string) { this.set_property_value(RadioButton.GroupNameKey, v); }
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(
             RadioButton, Element.DefaultStyleKeyKey,
             { default_value: RadioButton });

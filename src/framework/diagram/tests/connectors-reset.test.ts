@@ -7,13 +7,15 @@ import { Border, Canvas, ItemsPanelTemplate } from '../../../basic/index.js';
 import { Diagram } from '../diagram.js';
 import { Connector } from '../connector.js';
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void {}
     public GetFocusedVisual(): Visual | undefined { return undefined; }
 }
 
-function mount(diagram: Diagram): void {
+function mount(diagram: Diagram): void
+{
     const surface = new Border();
     (surface as unknown as { Child: Visual }).Child = diagram;
     const target = new FakeTarget();

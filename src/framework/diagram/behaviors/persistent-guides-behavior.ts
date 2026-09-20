@@ -62,7 +62,8 @@ export function attachPersistentGuides(diagram: Diagram): () => void
 
     const findAncestor = <T>(v: unknown, ctor: new (...a: never[]) => T): T | undefined => {
         let cur = v as { GetVisualParent?(): Visual | undefined } | undefined;
-        while (cur !== undefined && cur !== null) {
+        while (cur !== undefined && cur !== null)
+        {
             if (cur instanceof ctor) return cur;
             cur = (cur as { GetVisualParent?(): Visual | undefined }).GetVisualParent?.();
         }
@@ -78,7 +79,8 @@ export function attachPersistentGuides(diagram: Diagram): () => void
         const out: Rect[] = [];
         const items = diagram.ItemsSource;
         if (items === undefined) return out;
-        for (const it of items as Iterable<unknown>) {
+        for (const it of items as Iterable<unknown>)
+        {
             const c = diagram.Generator.ContainerFromItem(it);
             if (!(c instanceof Figure)) continue;
             const r = c.ArrangedRect;
@@ -91,7 +93,8 @@ export function attachPersistentGuides(diagram: Diagram): () => void
     // Which existing guide (if any) the point is within grab tolerance of.
     const guideNear = (p: { x: number; y: number }): number => {
         const tol = DiagramSettings.GuideGrabTolerance() / (diagram.Zoom || 1);
-        for (let i = 0; i < diagram.Guides.length; i++) {
+        for (let i = 0; i < diagram.Guides.length; i++)
+        {
             const g = diagram.Guides[i]!;
             const coord = g.axis === AlignmentAxis.X ? p.x : p.y;
             if (Math.abs(coord - g.position) <= tol) return i;
@@ -144,12 +147,14 @@ export function attachPersistentGuides(diagram: Diagram): () => void
         const items = diagram.ItemsSource;
         if (items === undefined || delta === 0 || guide.glued.length === 0) return;
         const byId = new Map<string, Figure>();
-        for (const it of items as Iterable<unknown>) {
+        for (const it of items as Iterable<unknown>)
+        {
             const id = nodeIdOf(it);
             const c = diagram.Generator.ContainerFromItem(it);
             if (id !== undefined && c instanceof Figure) byId.set(id, c);
         }
-        for (const g of guide.glued) {
+        for (const g of guide.glued)
+        {
             const c = byId.get(g.nodeId);
             if (c === undefined) continue;
             if (guide.axis === AlignmentAxis.X) c.Left = c.Left + delta;
@@ -179,7 +184,8 @@ export function attachPersistentGuides(diagram: Diagram): () => void
         // active — yield to it: don't advertise a guide affordance and, crucially,
         // don't clearHover() (that would stomp the tool's cursor on every move,
         // reverting it to the default arrow). Clear only our own stale preview.
-        if (diagram.FormatPainterActive) {
+        if (diagram.FormatPainterActive)
+        {
             if (diagram.GuidePreview !== undefined) diagram.GuidePreview = undefined;
             return;
         }
@@ -187,14 +193,16 @@ export function attachPersistentGuides(diagram: Diagram): () => void
         if (findAncestor(args.Source, RulerBar) !== undefined) { clearHover(); return; }
         const p = contentPoint(args);
         // Over an existing guide -> grab affordance (no preview; it already shows).
-        if (guideNear(p) >= 0) {
+        if (guideNear(p) >= 0)
+        {
             if (diagram.Cursor !== GRAB_CURSOR) diagram.Cursor = GRAB_CURSOR;
             if (diagram.GuidePreview !== undefined) diagram.GuidePreview = undefined;
             return;
         }
         // In a create band next to a ruler -> resize cursor + preview at the drop line.
         const edge = createEdgeAxis(p);
-        if (edge !== undefined) {
+        if (edge !== undefined)
+        {
             const cursor = guideCursorFor(edge);
             if (diagram.Cursor !== cursor) diagram.Cursor = cursor;
             diagram.GuidePreview = { axis: edge, position: edge === AlignmentAxis.X ? p.x : p.y };
@@ -208,7 +216,8 @@ export function attachPersistentGuides(diagram: Diagram): () => void
         clearHover();   // a gesture is starting; the committed guide (if any) takes over
         // 1) on a ruler -> create (top ruler -> Y guide, left ruler -> X guide)
         const ruler = findAncestor(args.Source, RulerBar);
-        if (ruler !== undefined) {
+        if (ruler !== undefined)
+        {
             startCreate(ruler.Orientation === Orientation.Horizontal ? AlignmentAxis.Y : AlignmentAxis.X, contentPoint(args));
             claim(args);
             return;
@@ -216,7 +225,8 @@ export function attachPersistentGuides(diagram: Diagram): () => void
         const p = contentPoint(args);
         // 2) grab an existing guide -> select + reposition
         const gi = guideNear(p);
-        if (gi >= 0) {
+        if (gi >= 0)
+        {
             diagram.SelectedGuide = gi;
             mode = Mode.Reposition; guideIndex = gi; axis = diagram.Guides[gi]!.axis;
             downPos = diagram.Guides[gi]!.position; lastPos = downPos; moved = false;
@@ -225,7 +235,8 @@ export function attachPersistentGuides(diagram: Diagram): () => void
         }
         // 3) drag out of the canvas margin next to a ruler -> create
         const edge = createEdgeAxis(p);
-        if (edge !== undefined) {
+        if (edge !== undefined)
+        {
             startCreate(edge, p);
             claim(args);
             return;
@@ -249,13 +260,18 @@ export function attachPersistentGuides(diagram: Diagram): () => void
     };
 
     const onUp = (args: PointerEventArgs): void => {
-        if (mode === Mode.Create) {
+        if (mode === Mode.Create)
+        {
             const overRuler = findAncestor(args.Source, RulerBar) !== undefined;
             if (overRuler || !moved) removeGuide(guideIndex);       // click/no-drag or dropped back on ruler -> cancel
             else                     diagram.SelectedGuide = guideIndex;
-        } else if (mode === Mode.Reposition) {
+        }
+        else if (mode === Mode.Reposition)
+        {
             if (findAncestor(args.Source, RulerBar) !== undefined) { removeGuide(guideIndex); diagram.SelectedGuide = -1; }
-        } else if (mode === Mode.NodeDrag && activeNode !== undefined) {
+        }
+        else if (mode === Mode.NodeDrag && activeNode !== undefined)
+        {
             const r = activeNode.ArrangedRect;
             const finalRect = new Rect(activeNode.Left, activeNode.Top, r?.Width ?? 0, r?.Height ?? 0);
             const res = snapRectToGuides(finalRect, diagram.Guides);
@@ -295,7 +311,8 @@ function reglue(diagram: Diagram, nodeId: string, res: GuideSnap): void
 {
     const guides = diagram.Guides.map(g => ({ ...g, glued: g.glued.slice() as GuideGlue[] }));
     const applyAxis = (axisSnap: { edge: EdgeKind; guide: number } | undefined, wantAxis: AlignmentAxis): void => {
-        for (let i = 0; i < guides.length; i++) {
+        for (let i = 0; i < guides.length; i++)
+        {
             if (guides[i]!.axis !== wantAxis) continue;
             guides[i]!.glued = guides[i]!.glued.filter(g => g.nodeId !== nodeId);
         }

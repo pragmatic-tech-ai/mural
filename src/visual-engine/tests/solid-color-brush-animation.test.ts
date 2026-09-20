@@ -104,7 +104,8 @@ describe('SolidColorBrushAnimation', () => {
 describe('SolidColorBrushAnimation — DynamicResource scheme-transition integration', () => {
     class BrushHost extends Element
     {
-        static {
+        static
+        {
             MuralBase.RegisterProperty(BrushHost, 'Background', undefined, MetaData.None);
         }
         public get Background(): unknown { return this.get_property_value(resolveKey(this, undefined, 'Background')); }

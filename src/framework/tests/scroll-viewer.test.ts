@@ -293,7 +293,8 @@ describe('ScrollViewer — auto-scroll near edges during drag (8.4)', () => {
         // bar takes 10px of WIDTH, which these y-axis edge tests ignore.)
         sv.HorizontalScrollEnabled = false;
         // Inflate content so the viewport has scrollable extent.
-        sv.Content = new (class extends Element {
+        sv.Content = new (class extends Element
+        {
             protected override MeasureOverride(_a: Size): Size { return new Size(500, 500); }
         })();
         sv.Measure(new Size(100, 100));
@@ -549,7 +550,8 @@ class Growable extends Element
 describe('ScrollViewer — AutoScrollToEnd (sticky)', () => {
     beforeEach(() => { initTestApp(); });
 
-    function layout(sv: ScrollViewer): void {
+    function layout(sv: ScrollViewer): void
+    {
         sv.Measure(new Size(100, 100));
         sv.Arrange(new Rect(0, 0, 100, 100));
     }

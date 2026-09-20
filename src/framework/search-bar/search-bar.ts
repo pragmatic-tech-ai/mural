@@ -32,7 +32,8 @@ export class SearchBar extends TextBox
     public get Trailing(): Visual | undefined { return this.get_property_value(SearchBar.TrailingKey); }
     public set Trailing(v: Visual | undefined) { this.set_property_value(SearchBar.TrailingKey, v); }
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(
             SearchBar, Element.DefaultStyleKeyKey,
             { default_value: SearchBar });

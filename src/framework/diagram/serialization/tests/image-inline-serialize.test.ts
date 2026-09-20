@@ -9,7 +9,8 @@ import { serializeFlowDocument, deserializeFlowDocument, cloneFlowDocument, isEf
 
 function newApp(): void { Application.current = null; new Application(); }
 
-function firstImage(doc: FlowDocument): ImageInline | undefined {
+function firstImage(doc: FlowDocument): ImageInline | undefined
+{
     const p = doc.Blocks.ToArray()[0] as Paragraph;
     return p.Inlines.ToArray().find((e) => e instanceof ImageInline) as ImageInline | undefined;
 }

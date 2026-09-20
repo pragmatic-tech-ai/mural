@@ -10,7 +10,8 @@ import { Application, ServiceKey } from '../../runtime/index.js';
 // Compiles a `.services:` block on an Application and returns the emitted
 // JS. NavigationService / PanelDockService / StatusService resolve via
 // DEFAULT_SYMBOLS; DiagramStorageKey is a real ServiceKey token.
-function svc(body: string): string {
+function svc(body: string): string
+{
     return compile(`
         Application{
             .services: {
@@ -96,15 +97,18 @@ describe('instantiate — .services: registers + resolves on Application.Service
     // Service classes follow the new contract: every ctor takes the
     // provider and resolves its own collaborators from it. Doc pulls Clock
     // from the provider rather than declaring a markup dep list.
-    class Clock {
+    class Clock
+    {
         public static readonly Key = new ServiceKey<Clock>('Clock');
         constructor(_provider: unknown) { /* no deps */ }
         public now(): number { return 7; }
     }
-    class Doc {
+    class Doc
+    {
         public static readonly Key = new ServiceKey<Doc>('Doc');
         public readonly clock: Clock;
-        constructor(provider: runtime.IServiceProvider) {
+        constructor(provider: runtime.IServiceProvider)
+        {
             this.clock = provider.getRequired(Clock.Key);
         }
     }
@@ -139,7 +143,8 @@ describe('instantiate — .services: inline config seeds + injects', () => {
 
     // A service with a settable DP (seed target) and a slot for an injected
     // collaborator (injection target). Both ctors take the provider.
-    class Greeter extends runtime.MuralBase {
+    class Greeter extends runtime.MuralBase
+    {
         public static readonly Key = new ServiceKey<Greeter>('Greeter');
         public static readonly MsgKey = runtime.MuralBase.RegisterProperty<string>(
             Greeter, 'Msg', '', runtime.MetaData.None);
@@ -147,7 +152,8 @@ describe('instantiate — .services: inline config seeds + injects', () => {
         public get Msg(): string { return this.get_property_value(Greeter.MsgKey); }
         public set Msg(v: string) { this.set_property_value(Greeter.MsgKey, v); }
     }
-    class Consumer extends runtime.MuralBase {
+    class Consumer extends runtime.MuralBase
+    {
         public static readonly Key = new ServiceKey<Consumer>('Consumer');
         public static readonly DepKey = runtime.MuralBase.RegisterProperty<unknown>(
             Consumer, 'Dep', undefined, runtime.MetaData.None);

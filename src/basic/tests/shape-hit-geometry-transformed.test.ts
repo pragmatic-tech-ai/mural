@@ -6,7 +6,8 @@ import { Puffy, PuffyDiamond } from '../shapes/puffy.js';
 import { Slanted } from '../shapes/slanted.js';
 
 function arrange(shape: { Measure: (s: Size) => void; Arrange: (r: Rect) => void },
-                 w: number, h: number): void {
+                 w: number, h: number): void
+                 {
     shape.Measure(new Size(w, h));
     shape.Arrange(new Rect(0, 0, w, h));
 }

@@ -29,7 +29,8 @@ import {
 // IFigure-shaped FigureVM with a Geometry property. Geometry's value
 // is opaque to the framework (combine() is called consumer-side); a
 // non-undefined value is enough for isGeometricItem to return true.
-class FigureWithGeometryVM extends MuralBase {
+class FigureWithGeometryVM extends MuralBase
+{
     public static readonly LeftKey      = MuralBase.RegisterProperty<number>(FigureWithGeometryVM, 'Left',     0,  MetaData.None);
     public static readonly TopKey       = MuralBase.RegisterProperty<number>(FigureWithGeometryVM, 'Top',      0,  MetaData.None);
     public static readonly WidthKey     = MuralBase.RegisterProperty<number>(FigureWithGeometryVM, 'Width',   10, MetaData.None);
@@ -38,7 +39,8 @@ class FigureWithGeometryVM extends MuralBase {
     // at the property, not the descriptor table. Real consumers can
     // use a DP if they want notifications; not required by the contract.
     public Geometry: unknown;
-    constructor(left: number, top: number, geometry: unknown) {
+    constructor(left: number, top: number, geometry: unknown)
+    {
         super();
         this.set_property_value(FigureWithGeometryVM.LeftKey, left);
         this.set_property_value(FigureWithGeometryVM.TopKey,  top);
@@ -46,20 +48,23 @@ class FigureWithGeometryVM extends MuralBase {
     }
 }
 
-class FigureWithoutGeometryVM extends MuralBase {
+class FigureWithoutGeometryVM extends MuralBase
+{
     public static readonly LeftKey   = MuralBase.RegisterProperty<number>(FigureWithoutGeometryVM, 'Left',   0,  MetaData.None);
     public static readonly TopKey    = MuralBase.RegisterProperty<number>(FigureWithoutGeometryVM, 'Top',    0,  MetaData.None);
     public static readonly WidthKey  = MuralBase.RegisterProperty<number>(FigureWithoutGeometryVM, 'Width',  10, MetaData.None);
     public static readonly HeightKey = MuralBase.RegisterProperty<number>(FigureWithoutGeometryVM, 'Height', 10, MetaData.None);
 }
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void { /* noop */ }
     public GetFocusedVisual(): Visual | undefined { return undefined; }
 }
 
-function setup(items: MuralBase[]): { diagram: Diagram } {
+function setup(items: MuralBase[]): { diagram: Diagram }
+{
     Application.current = null;
     new Application();
     const coll = new ObservableCollection<MuralBase>();
@@ -82,15 +87,18 @@ function setup(items: MuralBase[]): { diagram: Diagram } {
     return { diagram };
 }
 
-function cont(diagram: Diagram, item: unknown): Figure {
+function cont(diagram: Diagram, item: unknown): Figure
+{
     const gen = (diagram as unknown as { _generator: { ContainerFromItem(item: unknown): Visual | undefined } })._generator;
     const c = gen.ContainerFromItem(item);
     assert.ok(c instanceof Figure, 'container should be Figure');
     return c;
 }
 
-function selectMany(diagram: Diagram, items: unknown[]): void {
-    for (let i = 0; i < items.length; i++) {
+function selectMany(diagram: Diagram, items: unknown[]): void
+{
+    for (let i = 0; i < items.length; i++)
+    {
         const c = cont(diagram, items[i]);
         const mods = i === 0
             ? ModifierKeys.None
@@ -168,7 +176,8 @@ describe('Diagram — DiagramCommands.CombineXxx', () => {
         assert.equal(requests[3].Mode, GeometryCombineMode.Xor);
 
         // Every request carries both selected items (filtered to geometric).
-        for (const r of requests) {
+        for (const r of requests)
+        {
             assert.equal(r.Items.length, 2);
             assert.ok(r.Items.includes(g1));
             assert.ok(r.Items.includes(g2));

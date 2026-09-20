@@ -5,7 +5,8 @@ import { Application } from '../../runtime/index.js';
 import { Figure } from '../diagram/figure.js';
 import { Group } from '../diagram/group.js';
 
-function freshFigure(left: number, top: number, w: number, h: number): Figure {
+function freshFigure(left: number, top: number, w: number, h: number): Figure
+{
     const f = new Figure();
     f.Left   = left;
     f.Top    = top;
@@ -14,7 +15,8 @@ function freshFigure(left: number, top: number, w: number, h: number): Figure {
     return f;
 }
 
-function freshGroup(members: Figure[]): Group {
+function freshGroup(members: Figure[]): Group
+{
     Application.current = null;
     new Application();
     return new Group(members);

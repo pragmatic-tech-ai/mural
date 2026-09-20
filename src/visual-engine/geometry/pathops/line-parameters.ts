@@ -35,7 +35,8 @@ import {
     approximately_zero,
 } from './types.js';
 
-export class LineParameters {
+export class LineParameters
+{
     private fA: number = 0;
     private fB: number = 0;
     private fC: number = 0;

@@ -40,7 +40,8 @@ export function attachListBoxDrop(listBox: Visual, vm: DragDropVM, side: 'left' 
     listBox.AddRoutedEventListener('DragOver', onDragOver);
     listBox.AddRoutedEventListener('Drop',     onDrop);
 
-    return function detach() {
+    return function detach()
+    {
         listBox.AllowDrop = false;
         listBox.RemoveRoutedEventListener('DragOver', onDragOver);
         listBox.RemoveRoutedEventListener('Drop',     onDrop);

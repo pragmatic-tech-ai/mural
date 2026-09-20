@@ -38,7 +38,8 @@ export function AngleWinding(start: OpSpanBase, end: OpSpanBase):
     let loop = false;
     let unorderable = false;
     let winding = SK_MIN_S32;
-    do {
+    do
+    {
         angle = angle.next();
         if (angle === undefined) return { angle: undefined, winding: SK_MIN_S32, sortable: false };
         unorderable = unorderable || angle.unorderable();
@@ -48,17 +49,20 @@ export function AngleWinding(start: OpSpanBase, end: OpSpanBase):
         segment = angle.segment() as OpSegment;
         winding = segment.windSum(angle);
     } while (winding === SK_MIN_S32);
-    if (computeWinding) {
+    if (computeWinding)
+    {
         let probe: OpAngle = angle!;
         const firstProbe = probe;
         winding = SK_MIN_S32;
-        do {
+        do
+        {
             const startSpan = probe.start() as OpSpanBase;
             const endSpan   = probe.end()   as OpSpanBase;
             const lesser = startSpan.starter(endSpan);
             let testWinding = lesser.windSum();
             if (testWinding === SK_MIN_S32) testWinding = lesser.computeWindSum();
-            if (testWinding !== SK_MIN_S32) {
+            if (testWinding !== SK_MIN_S32)
+            {
                 winding = testWinding;
             }
             probe = probe.next()!;
@@ -71,8 +75,10 @@ export function AngleWinding(start: OpSpanBase, end: OpSpanBase):
 export function FindUndone(contourHead: OpContourHead): OpSpan | undefined
 {
     let contour: OpContour | undefined = contourHead;
-    while (contour !== undefined) {
-        if (!contour.done()) {
+    while (contour !== undefined)
+    {
+        if (!contour.done())
+        {
             const result = contour.undoneSpan();
             if (result !== undefined) return result;
         }
@@ -86,7 +92,8 @@ export function FindChase(chase: OpSpanBase[],
                           startPtr: { value: OpSpanBase | undefined },
                           endPtr:   { value: OpSpanBase | undefined }): OpSegment | undefined
 {
-    while (chase.length > 0) {
+    while (chase.length > 0)
+    {
         const span = chase.pop()!;
         const segment = span.segment() as OpSegment;
         startPtr.value = span.ptT().next().span();
@@ -98,7 +105,8 @@ export function FindChase(chase: OpSpanBase[],
         // back; endPtr.value stayed undefined and the AngleWinding
         // call below crashed in segment.spanToAngle's `end.t()` read.
         const last = segment.activeAngle(startPtr.value!, startPtr, endPtr, done);
-        if (last !== undefined) {
+        if (last !== undefined)
+        {
             startPtr.value = last.start() as OpSpanBase;
             endPtr.value   = last.end()   as OpSpanBase;
             chase.push(span);
@@ -109,32 +117,38 @@ export function FindChase(chase: OpSpanBase[],
         if (aw.angle === undefined) return undefined;
         if (aw.winding === SK_MIN_S32) continue;
         let sumWinding = 0;
-        if (aw.sortable) {
+        if (aw.sortable)
+        {
             const seg2 = aw.angle.segment() as OpSegment;
             sumWinding = seg2.updateWindingReverseByAngle(aw.angle);
         }
         let first: OpSegment | undefined = undefined;
         const firstAngle = aw.angle;
         let probe: OpAngle | undefined = aw.angle.next();
-        while (probe !== firstAngle) {
+        while (probe !== firstAngle)
+        {
             const seg3 = probe!.segment() as OpSegment;
             const start = probe!.start() as OpSpanBase;
             const end   = probe!.end()   as OpSpanBase;
             const w = { maxWinding: 0, sumWinding };
             if (aw.sortable) seg3.setUpWinding(start, end, w);
-            if (!seg3.doneByAngle(probe!)) {
-                if (first === undefined && (aw.sortable || start.starter(end).windSum() !== SK_MIN_S32)) {
+            if (!seg3.doneByAngle(probe!))
+            {
+                if (first === undefined && (aw.sortable || start.starter(end).windSum() !== SK_MIN_S32))
+                {
                     first = seg3;
                     startPtr.value = start;
                     endPtr.value   = end;
                 }
-                if (aw.sortable) {
+                if (aw.sortable)
+                {
                     seg3.markAngle(w.maxWinding, w.sumWinding, probe!, { value: undefined });
                 }
             }
             probe = probe!.next();
         }
-        if (first !== undefined) {
+        if (first !== undefined)
+        {
             chase.push(span);
             return first;
         }
@@ -148,15 +162,18 @@ export function SortContourList(contourListPtr: { value: OpContourHead | undefin
 {
     const list: OpContour[] = [];
     let contour: OpContour | undefined = contourListPtr.value;
-    while (contour !== undefined) {
-        if (contour.count() > 0) {
+    while (contour !== undefined)
+    {
+        if (contour.count() > 0)
+        {
             contour.setOppXor(contour.operand() ? evenOdd : oppEvenOdd);
             list.push(contour);
         }
         contour = contour.next();
     }
     if (list.length === 0) return false;
-    if (list.length > 1) {
+    if (list.length > 1)
+    {
         list.sort((a, b) =>
             a.bounds().fTop === b.bounds().fTop
                 ? a.bounds().fLeft - b.bounds().fLeft
@@ -165,7 +182,8 @@ export function SortContourList(contourListPtr: { value: OpContourHead | undefin
     const head = list[0]! as OpContourHead;
     contourListPtr.value = head;
     head.globalState().setContourHead(head);
-    for (let i = 1; i < list.length; ++i) {
+    for (let i = 1; i < list.length; ++i)
+    {
         list[i - 1]!.setNext(list[i]!);
     }
     list[list.length - 1]!.setNext(undefined);
@@ -182,7 +200,8 @@ function missingCoincidence(contourHead: OpContourHead): boolean
 {
     let c: OpContour | undefined = contourHead;
     let result = false;
-    while (c !== undefined) {
+    while (c !== undefined)
+    {
         if (c.missingCoincidence()) result = true;
         c = c.next();
     }
@@ -192,7 +211,8 @@ function missingCoincidence(contourHead: OpContourHead): boolean
 function moveMultiples(contourHead: OpContourHead): boolean
 {
     let c: OpContour | undefined = contourHead;
-    while (c !== undefined) {
+    while (c !== undefined)
+    {
         if (!c.moveMultiples()) return false;
         c = c.next();
     }
@@ -202,7 +222,8 @@ function moveMultiples(contourHead: OpContourHead): boolean
 function moveNearby(contourHead: OpContourHead): boolean
 {
     let c: OpContour | undefined = contourHead;
-    while (c !== undefined) {
+    while (c !== undefined)
+    {
         if (!c.moveNearby()) return false;
         c = c.next();
     }
@@ -212,7 +233,8 @@ function moveNearby(contourHead: OpContourHead): boolean
 function sortAngles(contourHead: OpContourHead): boolean
 {
     let c: OpContour | undefined = contourHead;
-    while (c !== undefined) {
+    while (c !== undefined)
+    {
         if (!c.sortAngles()) return false;
         c = c.next();
     }
@@ -229,14 +251,16 @@ export function HandleCoincidence(contourHead: OpContourHead,
     coincidence.correctEnds();
     if (!coincidence.addEndMovedSpans()) return false;
     let safetyHatch = 3;
-    for (;;) {
+    for (;;)
+    {
         const addedOut = { value: false };
         if (!coincidence.addMissing(addedOut)) return false;
         if (!addedOut.value) break;
         if (!--safetyHatch) return false;
         moveNearby(contourHead);
     }
-    if (coincidence.expand()) {
+    if (coincidence.expand())
+    {
         const addedOut = { value: false };
         if (!coincidence.addMissing(addedOut)) return false;
         if (!coincidence.addExpanded())        return false;
@@ -245,11 +269,14 @@ export function HandleCoincidence(contourHead: OpContourHead,
     }
     if (!coincidence.addExpanded()) return false;
     coincidence.mark();
-    if (missingCoincidence(contourHead)) {
+    if (missingCoincidence(contourHead))
+    {
         coincidence.expand();
         if (!coincidence.addExpanded()) return false;
         if (!coincidence.mark())        return false;
-    } else {
+    }
+    else
+    {
         coincidence.expand();
     }
     coincidence.expand();
@@ -257,7 +284,8 @@ export function HandleCoincidence(contourHead: OpContourHead,
     // until no overlap pairs remain.
     const overlaps = new OpCoincidence(contourHead.globalState());
     safetyHatch = 3;
-    do {
+    do
+    {
         const pairs = overlaps.isEmpty() ? coincidence : overlaps;
         if (!pairs.apply())                          return false;
         if (!pairs.findOverlaps(overlaps))           return false;

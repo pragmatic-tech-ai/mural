@@ -102,7 +102,8 @@ export class SpinEdit extends TemplatedControl
         SpinEdit, 'IsEditHovered', false, MetaData.None);
     public  static readonly IsEditHoveredKey  = SpinEdit._IsEditHoveredPriv;
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(SpinEdit, Element.DefaultStyleKeyKey, { default_value: SpinEdit });
     }
 

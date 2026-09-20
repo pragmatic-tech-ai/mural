@@ -17,7 +17,8 @@ import { initTestApp } from '../../../basic/tests/test-app.js';
 // nothing. TabControl resolves selection through realized containers by Tag
 // (ListBox parity), so it no longer depends on the generator map.
 
-class Doc extends MuralBase {
+class Doc extends MuralBase
+{
     public static readonly TitleKey = MuralBase.RegisterProperty<string>(Doc, 'Title', '', MetaData.None);
     public get Title(): string { return this.get_property_value(Doc.TitleKey); }
     public set Title(v: string) { this.set_property_value(Doc.TitleKey, v); }
@@ -25,7 +26,8 @@ class Doc extends MuralBase {
 
 // Evict the generator's item→container reverse map to simulate the stale-map
 // condition, WITHOUT disturbing the realized containers themselves.
-function clearGeneratorItemMap(tc: TabControl): void {
+function clearGeneratorItemMap(tc: TabControl): void
+{
     const gen = tc.Generator as unknown as { itemToContainer?: Map<unknown, unknown> };
     gen.itemToContainer?.clear();
 }

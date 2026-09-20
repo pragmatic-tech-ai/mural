@@ -6,7 +6,8 @@ import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 // never masked by stale cached modules. Must run before app 'ready'.
 if (is.dev) app.commandLine.appendSwitch('disable-http-cache')
 
-function createWindow(): void {
+function createWindow(): void
+{
   const win = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -24,9 +25,12 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+  if (is.dev && process.env['ELECTRON_RENDERER_URL'])
+  {
     win.loadURL(process.env['ELECTRON_RENDERER_URL'])
-  } else {
+  }
+  else
+  {
     win.loadFile(join(__dirname, '../renderer/index.html'))
   }
 }

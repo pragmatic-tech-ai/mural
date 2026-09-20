@@ -6,13 +6,16 @@ import { ClickableBorder } from '../../basic/clickable-border.js';
 import { TextBlock } from '../../basic/text-block.js';
 import { TimePicker } from '../pickers/time-picker.js';
 
-function face(tp: TimePicker): Canvas {
+function face(tp: TimePicker): Canvas
+{
     return tp.GetTemplateChild('PART_ClockFace') as Canvas;
 }
 
 // Find the dial number cell whose label reads `text`.
-function numberCell(tp: TimePicker, text: string): ClickableBorder | undefined {
-    for (const c of face(tp).visualChildren) {
+function numberCell(tp: TimePicker, text: string): ClickableBorder | undefined
+{
+    for (const c of face(tp).visualChildren)
+    {
         const cb = c as ClickableBorder;
         const label = cb.child as TextBlock | undefined;
         if (label instanceof TextBlock && label.Text === text) return cb;
@@ -20,10 +23,12 @@ function numberCell(tp: TimePicker, text: string): ClickableBorder | undefined {
     return undefined;
 }
 
-function labelText(tp: TimePicker, part: string): string {
+function labelText(tp: TimePicker, part: string): string
+{
     return (tp.GetTemplateChild(part) as TextBlock).Text;
 }
-function part(tp: TimePicker, name: string): ClickableBorder {
+function part(tp: TimePicker, name: string): ClickableBorder
+{
     return tp.GetTemplateChild(name) as ClickableBorder;
 }
 

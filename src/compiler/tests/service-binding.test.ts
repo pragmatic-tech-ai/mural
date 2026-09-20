@@ -34,7 +34,8 @@ describe('compile — $service(Token) binding emit', () => {
 describe('instantiate — $service binding resolves + reacts', () => {
     beforeEach(() => { Application.current = null; });
 
-    class Status extends MuralBase {
+    class Status extends MuralBase
+    {
         public static readonly Key = new ServiceKey<Status>('Status');
         public static readonly MsgKey = MuralBase.RegisterProperty<string>(Status, 'Msg', '', MetaData.None);
         public get Msg(): string { return this.get_property_value(Status.MsgKey); }

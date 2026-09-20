@@ -40,7 +40,8 @@ export class ContextMenuVM extends MuralBase
     readonly ShowRulersCommand: RelayCommand;
     readonly BookmarkCommand:   RelayCommand;
 
-    constructor() {
+    constructor()
+    {
         super();
         const setStatus = (msg: string): void => this.set_property_value(ContextMenuVM.StatusKey, msg);
 

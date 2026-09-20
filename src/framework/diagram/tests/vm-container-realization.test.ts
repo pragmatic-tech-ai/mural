@@ -13,7 +13,8 @@ import { ContentContainerFigure } from '../content-container-figure.js';
 class ContainerVM extends NodeViewModel { public readonly IsContainer = true; }
 class PlainVM     extends NodeViewModel {}
 
-function mount(col: ObservableCollection<NodeViewModel>): Diagram {
+function mount(col: ObservableCollection<NodeViewModel>): Diagram
+{
     const diagram = new Diagram();
     diagram.ItemsPanel = new ItemsPanelTemplate(() => new Canvas());
     diagram.ItemsSource = col;

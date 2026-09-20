@@ -6,7 +6,8 @@ import { ContainerFigure } from '../container-figure.js';
 
 function doc(): DiagramDocument { Application.current = null; new Application(); return new DiagramDocument(); }
 
-function* containerNodes(d: DiagramDocument): Iterable<ContainerFigure> {
+function* containerNodes(d: DiagramDocument): Iterable<ContainerFigure>
+{
     for (let i = 0; i < d.Nodes.Count; i++) { const n = d.Nodes.Get(i); if (n instanceof ContainerFigure) yield n; }
 }
 

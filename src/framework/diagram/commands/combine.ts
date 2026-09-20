@@ -28,7 +28,8 @@ export { GeometryCombineMode };
 // CanExecute gate (installed by DiagramCommands): ≥ 2 selected items
 // that satisfy IGeometricItem.
 
-export interface IGeometricItem {
+export interface IGeometricItem
+{
     // The §19 `combine` op accepts any `Geometry` subclass — declared
     // as `unknown` here to avoid the framework depending on a specific
     // PathGeometry shape that consumers might not implement (they may

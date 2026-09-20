@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { Point } from '../../../visual-engine/index.js';
 import { diagramSpaceRect, toParentSpace, type ContainerLike, type SpatialNode } from '../coordinate-space.js';
 
-function container(left: number, top: number, originX: number, originY: number, parent?: ContainerLike): ContainerLike {
+function container(left: number, top: number, originX: number, originY: number, parent?: ContainerLike): ContainerLike
+{
     return { Left: left, Top: top, Width: 200, Height: 200, ContentOrigin: new Point(originX, originY), ContainerParent: parent };
 }
 

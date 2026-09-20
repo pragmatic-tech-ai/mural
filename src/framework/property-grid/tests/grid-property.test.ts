@@ -7,7 +7,8 @@ import { GridProperty, PropertyKind } from '../grid-property.js';
 // ---------------------------------------------------------------------------
 // Probe class for describeDpTarget tests
 // ---------------------------------------------------------------------------
-class Probe extends MuralBase {
+class Probe extends MuralBase
+{
     static readonly LabelKey = MuralBase.RegisterProperty<string>(Probe, 'Label', 'hello', MetaData.None);
     get Label(): string { return this.get_property_value(Probe.LabelKey); }
     set Label(v: string) { this.set_property_value(Probe.LabelKey, v); }
@@ -324,7 +325,8 @@ describe('GridProperty.describeDpTarget — DP inference', () => {
     test('Category defaults to "General" for inferred properties', () => {
         const probe = new Probe();
         const props = GridProperty.describeDpTarget(probe);
-        for (const p of props) {
+        for (const p of props)
+        {
             assert.equal(p.Category, 'General', `expected 'General' for ${p.Name}`);
         }
     });
@@ -332,7 +334,8 @@ describe('GridProperty.describeDpTarget — DP inference', () => {
     test('DisplayName equals Name for inferred properties', () => {
         const probe = new Probe();
         const props = GridProperty.describeDpTarget(probe);
-        for (const p of props) {
+        for (const p of props)
+        {
             assert.equal(p.DisplayName, p.Name, `expected DisplayName===Name for ${p.Name}`);
         }
     });

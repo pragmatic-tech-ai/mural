@@ -8,7 +8,8 @@ import { ContentPresenter } from '../../../basic/templates/content-presenter.js'
 import { ShellSideContentPane } from '../shell-side-content-pane.js';
 
 // A fixed-size leaf used as Content / Commands so slotting is observable.
-class Leaf extends Border {
+class Leaf extends Border
+{
     constructor(private box = new Size(20, 12)) { super(); }
     protected override MeasureOverride(): Size { return this.box; }
 }
@@ -18,7 +19,8 @@ describe('ShellSideContentPane', () => {
 
     test('applies its default template with all named parts', () => {
         const root = new ShellSideContentPane().visualChildren[0]!;
-        for (const part of ['PART_Header', 'PART_Title', 'PART_Commands', 'PART_ContentHost']) {
+        for (const part of ['PART_Header', 'PART_Title', 'PART_Commands', 'PART_ContentHost'])
+        {
             assert.ok(root.FindName(part) !== undefined, `${part} present`);
         }
     });

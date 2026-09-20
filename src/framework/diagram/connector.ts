@@ -106,7 +106,8 @@ export class Connector extends Shape
     // default TargetCapTemplate=@ArrowCap). Without this the ctor's
     // applyDefaultStyle() resolves nothing and connectors get no default
     // cap. Same pattern as Figure ([figure.ts:77-79](./figure.ts#L77)).
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(Connector, Element.DefaultStyleKeyKey, { default_value: Connector });
     }
 

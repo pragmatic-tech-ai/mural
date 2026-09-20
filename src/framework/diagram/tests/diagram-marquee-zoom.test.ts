@@ -15,7 +15,8 @@ import { SelectionMode } from '../../list/selector.js';
 import { Diagram } from '../diagram.js';
 import { Figure } from '../figure.js';
 
-function pointer(overrides: Partial<PointerEventInit> = {}): PointerEventInit {
+function pointer(overrides: Partial<PointerEventInit> = {}): PointerEventInit
+{
     return {
         HostX: 0, HostY: 0,
         Button: PointerButton.Primary, Buttons: 1,
@@ -27,7 +28,8 @@ function pointer(overrides: Partial<PointerEventInit> = {}): PointerEventInit {
 // A Diagram at a known zoom with two figures at fixed CONTENT positions.
 // The marquee gesture arrives in HOST pixels; the behavior must map it back
 // through the camera (÷ Zoom) to hit-test against the figures' content rects.
-function buildZoomedDiagram(zoom: number): { diagram: Diagram; a: Figure; b: Figure; panel: Visual } {
+function buildZoomedDiagram(zoom: number): { diagram: Diagram; a: Figure; b: Figure; panel: Visual }
+{
     const a = Figure.fromKind('rectangle', 10, 20, { width: 100, height: 50 }); a.Id = 'a';
     const b = Figure.fromKind('rectangle', 200, 60, { width: 80,  height: 40 }); b.Id = 'b';
     const coll = new ObservableCollection<Figure>(); coll.Add(a); coll.Add(b);

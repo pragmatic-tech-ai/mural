@@ -31,7 +31,8 @@ import {
  *   `displayName` falls back to the name (a DP carries no human label).
  * - Any operation on an unregistered name throws a descriptive `Error`.
  */
-export class DpPropertyBag implements IPropertyBag {
+export class DpPropertyBag implements IPropertyBag
+{
     private readonly _target: MuralBase;
     private readonly _keys: Map<string, PropertyKey<unknown>>;
     // Lazily-created per-name change channels and the DP listener bridging each
@@ -39,36 +40,45 @@ export class DpPropertyBag implements IPropertyBag {
     private readonly _signals: Map<string, Signal<PropertyChangedEventArgs>> = new Map();
     private readonly _bridges: Map<string, Disposable> = new Map();
 
-    constructor(target: MuralBase) {
+    constructor(target: MuralBase)
+    {
         this._target = target;
         this._keys = new Map();
-        for (const descriptor of MuralBase.EnumerateProperties(target.constructor as Function)) {
+        for (const descriptor of MuralBase.EnumerateProperties(target.constructor as Function))
+        {
             this._keys.set(descriptor.Name, new PropertyKey(descriptor));
         }
     }
 
-    public *[Symbol.iterator](): Iterator<[string, IReadOnlyPropertyAccessor]> {
-        for (const name of this._keys.keys()) {
+    public *[Symbol.iterator](): Iterator<[string, IReadOnlyPropertyAccessor]>
+    {
+        for (const name of this._keys.keys())
+        {
             yield [name, this.accessorFor(name)];
         }
     }
 
-    public GetValue(name: string): unknown {
+    public GetValue(name: string): unknown
+    {
         return this._target.get_property_value(this.key(name));
     }
 
-    public SetValue(name: string, value: unknown): void {
+    public SetValue(name: string, value: unknown): void
+    {
         this._target.set_property_value(this.key(name), value);
     }
 
-    public IsReadOnly(name: string): boolean {
+    public IsReadOnly(name: string): boolean
+    {
         return this.key(name).descriptor.IsReadOnly;
     }
 
-    public Observe(name: string): Signal<PropertyChangedEventArgs> {
+    public Observe(name: string): Signal<PropertyChangedEventArgs>
+    {
         const key = this.key(name);
         let signal = this._signals.get(name);
-        if (signal === undefined) {
+        if (signal === undefined)
+        {
             signal = new Signal<PropertyChangedEventArgs>();
             this._signals.set(name, signal);
             // Bridge the DP change channel into the bag's Signal, forwarding the
@@ -86,8 +96,10 @@ export class DpPropertyBag implements IPropertyBag {
     }
 
     /** Detach every DP bridge subscription wired by `Observe`. */
-    public dispose(): void {
-        for (const sub of this._bridges.values()) {
+    public dispose(): void
+    {
+        for (const sub of this._bridges.values())
+        {
             sub.dispose();
         }
         this._bridges.clear();
@@ -96,7 +108,8 @@ export class DpPropertyBag implements IPropertyBag {
 
     // A read-only accessor view over one DP. A DP has no human label, so
     // displayName falls back to the property name.
-    private accessorFor(name: string): IReadOnlyPropertyAccessor {
+    private accessorFor(name: string): IReadOnlyPropertyAccessor
+    {
         return {
             id: () => name,
             displayName: () => name,
@@ -104,9 +117,11 @@ export class DpPropertyBag implements IPropertyBag {
         };
     }
 
-    private key(name: string): PropertyKey<unknown> {
+    private key(name: string): PropertyKey<unknown>
+    {
         const k = this._keys.get(name);
-        if (k === undefined) {
+        if (k === undefined)
+        {
             throw new Error(`DpPropertyBag: unknown property '${name}'`);
         }
         return k;

@@ -48,7 +48,8 @@ describe('attachTooltip', () => {
         tooltip.Content = 'hi';
 
         const detach = attachTooltip(host, tooltip, 10);
-        try {
+        try
+        {
             const im = new InputManager();
             im.InjectPointerMove(host, pointer({ HostX: 25, HostY: 25 }));
             assert.equal(target.OverlayRoot, undefined,
@@ -68,7 +69,9 @@ describe('attachTooltip', () => {
             assert.ok(hostChildren.Get(0) instanceof Tooltip, 'positioner hosts the pooled Tooltip');
             assert.equal((hostChildren.Get(0) as Tooltip).Content, tooltip,
                 'pooled Tooltip\'s Content is the Visual we asked the helper to show');
-        } finally {
+        }
+        finally
+        {
             detach();
         }
     });
@@ -83,7 +86,8 @@ describe('attachTooltip', () => {
 
         const tooltip = new Tooltip();
         const detach = attachTooltip(host, tooltip, 50);
-        try {
+        try
+        {
             const im = new InputManager();
             im.InjectPointerMove(host, pointer({ HostX: 25, HostY: 25 }));
             // Leave before the delay fires.
@@ -91,7 +95,9 @@ describe('attachTooltip', () => {
             await new Promise<void>(r => setTimeout(r, 80));
             assert.equal(target.OverlayRoot, undefined,
                 'leave cancels the pending mount → overlay never created');
-        } finally {
+        }
+        finally
+        {
             detach();
         }
     });

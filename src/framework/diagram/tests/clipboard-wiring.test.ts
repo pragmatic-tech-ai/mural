@@ -10,7 +10,8 @@ import { CLIPBOARD_KIND } from '../serialization/clipboard-payload.js';
 
 // A DiagramMutator whose clipboard methods are spies; everything else no-ops.
 interface SpyRec { copies: { items: readonly unknown[] }[]; pastes: number }
-function spyMutator(): { mutator: DiagramMutator; rec: SpyRec } {
+function spyMutator(): { mutator: DiagramMutator; rec: SpyRec }
+{
     const rec: SpyRec = { copies: [], pastes: 0 };
     const mutator: DiagramMutator = {
         Group() {}, Ungroup() {}, WrapInContainer() {}, UnwrapContainer() {},
@@ -21,7 +22,8 @@ function spyMutator(): { mutator: DiagramMutator; rec: SpyRec } {
     return { mutator, rec };
 }
 
-function newDiagram(): Diagram {
+function newDiagram(): Diagram
+{
     Application.current = null;
     new Application();
     return new Diagram();

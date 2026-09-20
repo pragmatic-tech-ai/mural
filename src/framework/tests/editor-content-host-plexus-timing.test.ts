@@ -11,22 +11,26 @@ import { TabControl, TabItem } from '../tabs/tabs.js';
 
 // A document whose body renders through a registered DataTemplate — mirrors
 // the Plexus DiagramDocument (DataTemplate[DiagramDocument] → a Diagram).
-class DemoDoc extends MuralBase {
+class DemoDoc extends MuralBase
+{
     constructor(public readonly Id: string, public readonly Title: string) { super(); }
     public readonly IsDirty = false;
     public Save(): void {}
 }
 
-function findWhere(root: Visual, pred: (v: Visual) => boolean): Visual | undefined {
+function findWhere(root: Visual, pred: (v: Visual) => boolean): Visual | undefined
+{
     if (pred(root)) return root;
-    for (const c of root.visualChildren) {
+    for (const c of root.visualChildren)
+    {
         const hit = findWhere(c, pred);
         if (hit !== undefined) return hit;
     }
     return undefined;
 }
 
-function findByType<T>(root: Visual, ctor: new (...a: never[]) => T): T | undefined {
+function findByType<T>(root: Visual, ctor: new (...a: never[]) => T): T | undefined
+{
     return findWhere(root, (v) => v instanceof ctor) as T | undefined;
 }
 

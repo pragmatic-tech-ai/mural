@@ -16,7 +16,8 @@ import { Diagram } from '../diagram.js';
 import { Figure } from '../figure.js';
 import { NodeViewModel } from '../node-view-model.js';
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void { /* noop */ }
     public GetFocusedVisual(): Visual | undefined { return undefined; }

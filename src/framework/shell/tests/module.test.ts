@@ -65,7 +65,8 @@ describe('ShellModule targets', () => {
 });
 
 describe('module resources merge into Application.Resources', () => {
-    function moduleWith(key: string, value: unknown): ShellModule {
+    function moduleWith(key: string, value: unknown): ShellModule
+    {
         const mod = new ShellModule();
         mod.Resources.Set(key, value);
         return mod;

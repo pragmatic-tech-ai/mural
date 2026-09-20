@@ -28,7 +28,8 @@ test('ensureToolboxDefaults adds the annotate page (container, text, callout)', 
     assert.ok(page, 'annotate page exists');
     assert.equal(page!.Title, 'Callouts, Text & Containers');
     assert.deepEqual(page!.Items.ToArray().map((it) => it.Id), ['kind:container', 'kind:text', 'kind:callout']);
-    for (const it of page!.Items.ToArray()) {
+    for (const it of page!.Items.ToArray())
+    {
         assert.equal(it.FactoryKey, FigureKindDropFactoryKey, 'each annotate item drops via FigureKindDropFactory');
     }
 });

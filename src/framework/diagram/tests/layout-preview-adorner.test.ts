@@ -10,7 +10,8 @@ import type { LayoutPreview } from '../layout-preview.js';
 // A DrawingContext that records every DrawGeometry call so a headless test can
 // assert what the self-painting adorner emitted.
 interface DrawCall { brush: unknown; pen: unknown; geometry: unknown }
-function recordingDc(): { dc: DrawingContext; calls: DrawCall[] } {
+function recordingDc(): { dc: DrawingContext; calls: DrawCall[] }
+{
     const calls: DrawCall[] = [];
     const dc = {
         DrawGeometry: (brush: unknown, pen: unknown, geometry: unknown) => calls.push({ brush, pen, geometry }),
@@ -20,7 +21,8 @@ function recordingDc(): { dc: DrawingContext; calls: DrawCall[] } {
 }
 
 // Build an adorner arranged over a 400×300 layer, with the given matrix.
-function arrangedAdorner(matrix?: Matrix): { adorner: LayoutPreviewAdorner; diagram: Diagram } {
+function arrangedAdorner(matrix?: Matrix): { adorner: LayoutPreviewAdorner; diagram: Diagram }
+{
     Application.current = null;
     new Application();
     const diagram = new Diagram();
@@ -43,7 +45,8 @@ const PREVIEW: LayoutPreview = {
     edges: [{ from: 'a', to: 'b' }],
 };
 
-function render(adorner: LayoutPreviewAdorner): DrawCall[] {
+function render(adorner: LayoutPreviewAdorner): DrawCall[]
+{
     const { dc, calls } = recordingDc();
     (adorner as unknown as { RenderOverride(dc: DrawingContext): void }).RenderOverride(dc);
     return calls;

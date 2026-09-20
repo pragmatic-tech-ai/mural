@@ -36,7 +36,8 @@ function nextKindId(doc: DiagramDocument, kind: string): string
 {
     const prefix = `${kind}:`;
     let max = 0;
-    for (const n of doc.Nodes.ToArray()) {
+    for (const n of doc.Nodes.ToArray())
+    {
         const id = (n as { Id?: string }).Id;
         if (id === undefined || !id.startsWith(prefix)) continue;
         const k = Number(id.slice(prefix.length));

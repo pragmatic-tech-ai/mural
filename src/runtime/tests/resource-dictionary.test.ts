@@ -24,7 +24,8 @@ import { resolveKey } from '../model-internals.js';
 // target. Plain Visual doesn't expose anything settable, so we wrap.
 class TargetLeaf extends Element
 {
-    static {
+    static
+    {
         MuralBase.RegisterProperty(TargetLeaf, 'Brush', undefined, MetaData.None);
     }
     public get Brush(): unknown { return this.get_property_value(resolveKey(this, undefined, 'Brush')); }

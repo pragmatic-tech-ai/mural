@@ -118,7 +118,8 @@ export class FabMenu extends FloatingActionButton
     private _iconRotate:  RotateTransform | undefined;
     private _rotationStoryboard: Storyboard | undefined;
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(FabMenu, Element.DefaultStyleKeyKey,
             { default_value: FabMenu });
     }

@@ -161,7 +161,8 @@ describe('Drawer — Persistent variant', () => {
 describe('Drawer — Temporary variant', () => {
     beforeEach(() => { initTestApp(); });
 
-    function mount(d: Drawer): HeadlessTarget {
+    function mount(d: Drawer): HeadlessTarget
+    {
         const root = new Root();
         root.AddChild(d);
         const target = new HeadlessTarget(400, 300);
@@ -323,7 +324,8 @@ function makePaneTemplate(tag: string): ControlTemplate
 describe('Drawer — Template DP migration + swap-while-active (§18.12)', () => {
     beforeEach(() => { initTestApp(); });
 
-    function mount(d: Drawer): HeadlessTarget {
+    function mount(d: Drawer): HeadlessTarget
+    {
         const root = new Root();
         root.AddChild(d);
         const target = new HeadlessTarget(400, 300);

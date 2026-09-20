@@ -5,7 +5,8 @@ import { Border, ContentPresenter, DataTemplate } from '../../basic/index.js';
 
 // A focusable leaf whose Focus() we spy — asserts the INTENT (focus requested)
 // without wiring a real InputManager/target.
-class FocusableLeaf extends Element {
+class FocusableLeaf extends Element
+{
     public focusCount = 0;
     constructor() { super(); this.Focusable = true; }
     protected override MeasureOverride(_a: Size): Size { return new Size(10, 10); }

@@ -11,7 +11,8 @@ import { Connector } from '../connector.js';
 
 // A plain source VM exposing an ObservableCollection the Diagram's
 // Connectors DP binds to — mirrors `Connectors=$Connectors` in markup.
-class GraphVM extends Observable {
+class GraphVM extends Observable
+{
     public readonly Connectors = new ObservableCollection<MuralBase>();
 }
 
@@ -20,7 +21,8 @@ class GraphVM extends Observable {
 // items-are-Connectors convention in the materializer's _instantiate).
 class EdgeItem extends MuralBase {}
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void {}
     public GetFocusedVisual(): Visual | undefined { return undefined; }
@@ -51,7 +53,8 @@ describe('Diagram.Connectors identity guard', () => {
         (surface as Visual).Arrange({ X: 0, Y: 0, Width: 800, Height: 600 } as never);
 
         const M = 50;
-        for (let i = 0; i < M; i++) {
+        for (let i = 0; i < M; i++)
+        {
             vm.Connectors.Add(new EdgeItem());   // each Add pulses the bound DP
         }
 

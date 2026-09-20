@@ -85,7 +85,8 @@ export class Splitter extends Thumb
     public static readonly RestBrushKey = MuralBase.RegisterProperty<Brush | undefined>(
         Splitter, 'RestBrush', undefined, MetaData.None);
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(Splitter, Element.DefaultStyleKeyKey, { default_value: Splitter });
     }
 

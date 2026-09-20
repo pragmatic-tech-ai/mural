@@ -270,7 +270,8 @@ export class InputManager
 
     public SetCaptureBridge(
         bridge: ((target: Element | undefined, pointerId: number) => void) | undefined,
-    ): void {
+    ): void
+    {
         this._captureBridge = bridge;
     }
 
@@ -320,7 +321,8 @@ export class InputManager
     // mechanics.
     public SetCursorBridge(
         bridge: ((cursor: string | undefined) => void) | undefined,
-    ): void {
+    ): void
+    {
         this._cursorBridge = bridge;
     }
 

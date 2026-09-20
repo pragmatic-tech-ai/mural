@@ -98,7 +98,8 @@ import './cubic-line-intersection.js';
 type OpContourFwd = import('./op-contour.js').OpContour;
 
 // SkPathOps.h — the four path-op primitives. Indexes into gActiveEdge.
-export enum SkPathOp {
+export enum SkPathOp
+{
     kDifference        = 0,   // mi - su
     kIntersect         = 1,   // mi & su
     kUnion             = 2,   // mi | su
@@ -136,16 +137,20 @@ const gActiveEdge: ReadonlyArray<ReadonlyArray<ReadonlyArray<ReadonlyArray<Reado
 
 function pointAtT(verb: OpVerb, pts: readonly Point[], _weight: number, t: number): Point
 {
-    switch (verb) {
-        case OpVerb.kLine: {
+    switch (verb)
+    {
+        case OpVerb.kLine:
+        {
             const ln = new Line(pts[0]!, pts[1]!);
             return ln.ptAtT(t);
         }
-        case OpVerb.kQuad: {
+        case OpVerb.kQuad:
+        {
             const q = new Quad(); q.fPts = [pts[0]!, pts[1]!, pts[2]!];
             return q.ptAtT(t);
         }
-        case OpVerb.kCubic: {
+        case OpVerb.kCubic:
+        {
             const c = new Cubic(); c.fPts = [pts[0]!, pts[1]!, pts[2]!, pts[3]!];
             return c.ptAtT(t);
         }
@@ -157,8 +162,10 @@ function pointAtT(verb: OpVerb, pts: readonly Point[], _weight: number, t: numbe
 function slopeAtT(verb: OpVerb, pts: readonly Point[], _weight: number, t: number):
     { x: number; y: number }
 {
-    switch (verb) {
-        case OpVerb.kLine: {
+    switch (verb)
+    {
+        case OpVerb.kLine:
+        {
             // Slope of a line segment is the (constant) direction
             // vector. We construct so the slope flips sign at t≈0 vs
             // t≈1 if the line is degenerate; for normal lines we just
@@ -167,12 +174,14 @@ function slopeAtT(verb: OpVerb, pts: readonly Point[], _weight: number, t: numbe
             const dy = pts[1]!.fY - pts[0]!.fY;
             return { x: dx, y: dy };
         }
-        case OpVerb.kQuad: {
+        case OpVerb.kQuad:
+        {
             const q = new Quad(); q.fPts = [pts[0]!, pts[1]!, pts[2]!];
             const v = q.dxdyAtT(t);
             return { x: v.fX, y: v.fY };
         }
-        case OpVerb.kCubic: {
+        case OpVerb.kCubic:
+        {
             const c = new Cubic(); c.fPts = [pts[0]!, pts[1]!, pts[2]!, pts[3]!];
             const v = c.dxdyAtT(t);
             return { x: v.fX, y: v.fY };
@@ -204,7 +213,8 @@ function setLineBounds(pts: readonly Point[], rect: Rect): void
 
 // ── OpSegment ─────────────────────────────────────────────────────
 
-export class OpSegment implements OpSegmentLike {
+export class OpSegment implements OpSegmentLike
+{
     // Sentinel spans always present.
     public fHead:  OpSpan;
     public fTail:  OpSpanBase;
@@ -301,7 +311,8 @@ export class OpSegment implements OpSegmentLike {
     // double-touched segments.
     public visited(): boolean
     {
-        if (!this.fVisited) {
+        if (!this.fVisited)
+        {
             this.fVisited = true;
             return false;
         }
@@ -338,17 +349,21 @@ export class OpSegment implements OpSegmentLike {
         const startT = startPtT.fT;
         const endT   = endPtT.fT;
 
-        switch (this.fVerb) {
-            case OpVerb.kLine: {
+        switch (this.fVerb)
+        {
+            case OpVerb.kLine:
+            {
                 const ln = new Line();
                 ln.fPts = [startPtT.fPt, endPtT.fPt];
                 edge.value = { verb: OpVerb.kLine, fLine: ln };
                 return false;
             }
-            case OpVerb.kQuad: {
+            case OpVerb.kQuad:
+            {
                 const q = new Quad();
                 // Endpoints already match — use them directly.
-                if ((startT === 0 || endT === 0) && (startT === 1 || endT === 1)) {
+                if ((startT === 0 || endT === 0) && (startT === 1 || endT === 1))
+                {
                     q.fPts = [startPtT.fPt, this.fPts[1]!, endPtT.fPt];
                     edge.value = { verb: OpVerb.kQuad, fQuad: q };
                     return false;
@@ -360,12 +375,17 @@ export class OpSegment implements OpSegmentLike {
                 edge.value = { verb: OpVerb.kQuad, fQuad: sub };
                 return true;
             }
-            case OpVerb.kCubic: {
+            case OpVerb.kCubic:
+            {
                 const c = new Cubic();
-                if ((startT === 0 || endT === 0) && (startT === 1 || endT === 1)) {
-                    if (startT === 0) {
+                if ((startT === 0 || endT === 0) && (startT === 1 || endT === 1))
+                {
+                    if (startT === 0)
+                    {
                         c.fPts = [startPtT.fPt, this.fPts[1]!, this.fPts[2]!, endPtT.fPt];
-                    } else {
+                    }
+                    else
+                    {
                         c.fPts = [startPtT.fPt, this.fPts[2]!, this.fPts[1]!, endPtT.fPt];
                     }
                     edge.value = { verb: OpVerb.kCubic, fCubic: c };
@@ -490,14 +510,17 @@ export class OpSegment implements OpSegmentLike {
     {
         const point = pt !== undefined ? pt : this.ptAtT(t);
         let spanBase: OpSpanBase | undefined = this.fHead;
-        while (spanBase !== undefined) {
+        while (spanBase !== undefined)
+        {
             const result = spanBase.ptT();
             if (t === result.fT
-                || (!zero_or_one(t) && this.matchPtT(result, this, t, point))) {
+                || (!zero_or_one(t) && this.matchPtT(result, this, t, point)))
+                {
                 spanBase.bumpSpanAdds();
                 return result;
             }
-            if (t < result.fT) {
+            if (t < result.fT)
+            {
                 const prev = result.span().prev();
                 if (prev === undefined) return undefined;
                 const span = this.insert(prev);
@@ -521,7 +544,8 @@ export class OpSegment implements OpSegmentLike {
     {
         if (this !== base.segment())
             throw new Error('OpSegment.matchPtT: base is not on this segment');
-        if (this === testParent) {
+        if (this === testParent)
+        {
             if (precisely_equal(base.fT, testT)) return true;
         }
         // Skia's SkDPoint::ApproximatelyEqual is per-axis ULP-equal
@@ -572,7 +596,8 @@ export class OpSegment implements OpSegmentLike {
     public collapsed(s: number, e: number): OpCollapsed
     {
         let span: OpSpanBase | undefined = this.fHead;
-        while (span !== undefined) {
+        while (span !== undefined)
+        {
             const r = span.collapsed(s, e);
             if (r !== OpCollapsed.kNo) return r;
             const up = span.upCastable();
@@ -585,7 +610,8 @@ export class OpSegment implements OpSegmentLike {
     public contains(t: number): boolean
     {
         let span: OpSpanBase | undefined = this.fHead;
-        while (span !== undefined) {
+        while (span !== undefined)
+        {
             if (span.t() === t) return true;
             const up = span.upCastable();
             if (up === undefined) break;
@@ -610,7 +636,8 @@ export class OpSegment implements OpSegmentLike {
     public markAllDone(): void
     {
         let span: OpSpan = this.head();
-        for (;;) {
+        for (;;)
+        {
             this.markDone(span);
             const next = span.next();
             const up = next.upCastable();
@@ -647,7 +674,8 @@ export class OpSegment implements OpSegmentLike {
     public clearAll(): void
     {
         let span: OpSpan = this.head();
-        for (;;) {
+        for (;;)
+        {
             this.clearOne(span);
             const next = span.next();
             const up = next.upCastable();
@@ -680,7 +708,8 @@ export class OpSegment implements OpSegmentLike {
     public spanToAngle(start: OpSpanBase, end: OpSpanBase): OpAngle | undefined
     {
         if (start === end) throw new Error('OpSegment.spanToAngle: start === end');
-        if (start.t() < end.t()) {
+        if (start.t() < end.t())
+        {
             return start.upCast().toAngle() as OpAngle | undefined;
         }
         return start.fromAngle() as OpAngle | undefined;
@@ -694,13 +723,16 @@ export class OpSegment implements OpSegmentLike {
     public calcAngles(): void
     {
         let activePrior = !this.fHead.isCanceled();
-        if (activePrior && !this.fHead.simple()) {
+        if (activePrior && !this.fHead.simple())
+        {
             this.addStartSpan();
         }
         let prior: OpSpan = this.fHead;
         let spanBase: OpSpanBase = this.fHead.next();
-        while (spanBase !== this.fTail) {
-            if (activePrior) {
+        while (spanBase !== this.fTail)
+        {
+            if (activePrior)
+            {
                 const priorAngle = new OpAngle();
                 priorAngle.set(spanBase, prior);
                 spanBase.setFromAngle(priorAngle);
@@ -708,7 +740,8 @@ export class OpSegment implements OpSegmentLike {
             const span = spanBase.upCast();
             const active = !span.isCanceled();
             const next = span.next();
-            if (active) {
+            if (active)
+            {
                 const angle = new OpAngle();
                 angle.set(span, next);
                 span.setToAngle(angle);
@@ -717,7 +750,8 @@ export class OpSegment implements OpSegmentLike {
             prior = span;
             spanBase = next;
         }
-        if (activePrior && !this.fTail.simple()) {
+        if (activePrior && !this.fTail.simple())
+        {
             this.addEndSpan();
         }
     }
@@ -762,7 +796,8 @@ export class OpSegment implements OpSegmentLike {
     {
         const deltaSum = OpSegment.SpanSign(start, end);
         out.maxWinding = out.sumWinding;
-        if (out.sumWinding !== (-0x80000000 | 0)) {
+        if (out.sumWinding !== (-0x80000000 | 0))
+        {
             out.sumWinding -= deltaSum;
         }
     }
@@ -799,7 +834,8 @@ export class OpSegment implements OpSegmentLike {
     {
         let sumMiWinding = this.updateWinding(end, start);
         let sumSuWinding = this.updateOppWinding(end, start);
-        if (this.operand()) {
+        if (this.operand())
+        {
             const t = sumMiWinding; sumMiWinding = sumSuWinding; sumSuWinding = t;
         }
         return this.activeOpFull(xorMiMask, xorSuMask, start, end, op, sumMiWinding, sumSuWinding);
@@ -836,12 +872,15 @@ export class OpSegment implements OpSegmentLike {
         ref.sumMiWinding = w.sumMiWinding;
         ref.sumSuWinding = w.sumSuWinding;
         let miFrom: boolean, miTo: boolean, suFrom: boolean, suTo: boolean;
-        if (this.operand()) {
+        if (this.operand())
+        {
             miFrom = (w.oppMaxWinding & xorMiMask) !== 0;
             miTo   = (w.oppSumWinding & xorMiMask) !== 0;
             suFrom = (w.maxWinding    & xorSuMask) !== 0;
             suTo   = (w.sumWinding    & xorSuMask) !== 0;
-        } else {
+        }
+        else
+        {
             miFrom = (w.maxWinding    & xorMiMask) !== 0;
             miTo   = (w.sumWinding    & xorMiMask) !== 0;
             suFrom = (w.oppMaxWinding & xorSuMask) !== 0;
@@ -890,15 +929,20 @@ export class OpSegment implements OpSegmentLike {
                             doneOut:     { value: boolean }): OpAngle | undefined
     {
         const upSpan = start.upCastable();
-        if (upSpan !== undefined) {
-            if (upSpan.windValue() !== 0 || upSpan.oppValue() !== 0) {
+        if (upSpan !== undefined)
+        {
+            if (upSpan.windValue() !== 0 || upSpan.oppValue() !== 0)
+            {
                 const next = upSpan.next();
-                if (endPtrOut.value === undefined) {
+                if (endPtrOut.value === undefined)
+                {
                     startPtrOut.value = start;
                     endPtrOut.value   = next;
                 }
-                if (!upSpan.done()) {
-                    if (upSpan.windSum() !== SK_MIN_S32) {
+                if (!upSpan.done())
+                {
+                    if (upSpan.windSum() !== SK_MIN_S32)
+                    {
                         return this.spanToAngle(start, next);
                     }
                     doneOut.value = false;
@@ -906,14 +950,19 @@ export class OpSegment implements OpSegmentLike {
             }
         }
         const downSpan = start.prev();
-        if (downSpan !== undefined) {
-            if (downSpan.windValue() !== 0 || downSpan.oppValue() !== 0) {
-                if (endPtrOut.value === undefined) {
+        if (downSpan !== undefined)
+        {
+            if (downSpan.windValue() !== 0 || downSpan.oppValue() !== 0)
+            {
+                if (endPtrOut.value === undefined)
+                {
                     startPtrOut.value = start;
                     endPtrOut.value   = downSpan;
                 }
-                if (!downSpan.done()) {
-                    if (downSpan.windSum() !== SK_MIN_S32) {
+                if (!downSpan.done())
+                {
+                    if (downSpan.windSum() !== SK_MIN_S32)
+                    {
                         return this.spanToAngle(start, downSpan);
                     }
                     doneOut.value = false;
@@ -966,7 +1015,8 @@ export class OpSegment implements OpSegmentLike {
     {
         const lesser = start.starter(end);
         let winding = lesser.windSum();
-        if (winding === SK_MIN_S32) {
+        if (winding === SK_MIN_S32)
+        {
             winding = lesser.computeWindSum();
         }
         if (winding === SK_MIN_S32) return winding;
@@ -1006,14 +1056,17 @@ export class OpSegment implements OpSegmentLike {
     {
         const deltaSum     = OpSegment.SpanSign(start, end);
         const oppDeltaSum  = OpSegment.OppSign(start, end);
-        if (this.operand()) {
+        if (this.operand())
+        {
             w.maxWinding    = w.sumSuWinding;
             w.sumSuWinding -= deltaSum;
             w.sumWinding    = w.sumSuWinding;
             w.oppMaxWinding = w.sumMiWinding;
             w.sumMiWinding -= oppDeltaSum;
             w.oppSumWinding = w.sumMiWinding;
-        } else {
+        }
+        else
+        {
             w.maxWinding    = w.sumMiWinding;
             w.sumMiWinding -= deltaSum;
             w.sumWinding    = w.sumMiWinding;
@@ -1067,11 +1120,13 @@ export class OpSegment implements OpSegmentLike {
         let priorDone: OpSpan | undefined = undefined;
         let lastDone:  OpSpan | undefined = undefined;
         let safetyNet = 100_000;
-        while ((other = other.nextChase(startBox, stepBox, minBox, lastBox)) !== undefined) {
+        while ((other = other.nextChase(startBox, stepBox, minBox, lastBox)) !== undefined)
+        {
             if (!--safetyNet) return false;
             if (other.done()) break;
             const cur = minBox.value!;
-            if (lastDone === cur || priorDone === cur) {
+            if (lastDone === cur || priorDone === cur)
+            {
                 if (foundPtr) foundPtr.value = undefined;
                 return true;
             }
@@ -1094,7 +1149,8 @@ export class OpSegment implements OpSegmentLike {
         const lastBox: { value: OpSpanBase | undefined } = { value: undefined };
         let other: OpSegment | undefined = this;
         let safetyNet = 100_000;
-        while ((other = other.nextChase(startBox, stepBox, minBox, lastBox)) !== undefined) {
+        while ((other = other.nextChase(startBox, stepBox, minBox, lastBox)) !== undefined)
+        {
             if (!--safetyNet) return false;
             const cur = minBox.value!;
             if (cur.windSum() !== SK_MIN_S32) break;
@@ -1116,24 +1172,33 @@ export class OpSegment implements OpSegmentLike {
         const lastBox: { value: OpSpanBase | undefined } = { value: undefined };
         let other: OpSegment | undefined = this;
         let safetyNet = 100_000;
-        while ((other = other.nextChase(startBox, stepBox, minBox, lastBox)) !== undefined) {
+        while ((other = other.nextChase(startBox, stepBox, minBox, lastBox)) !== undefined)
+        {
             if (!--safetyNet) return false;
             const cur = minBox.value!;
-            if (cur.windSum() !== SK_MIN_S32) {
-                if (this.operand() === other.operand()) {
-                    if (cur.windSum() !== winding || cur.oppSum() !== oppWinding) {
+            if (cur.windSum() !== SK_MIN_S32)
+            {
+                if (this.operand() === other.operand())
+                {
+                    if (cur.windSum() !== winding || cur.oppSum() !== oppWinding)
+                    {
                         this.globalState().setWindingFailed();
                         return true;
                     }
-                } else {
+                }
+                else
+                {
                     if (cur.windSum() !== oppWinding) return false;
                     if (cur.oppSum() !== winding)    return false;
                 }
                 break;
             }
-            if (this.operand() === other.operand()) {
+            if (this.operand() === other.operand())
+            {
                 void other.markWindingValueBinary(cur, winding, oppWinding);
-            } else {
+            }
+            else
+            {
                 void other.markWindingValueBinary(cur, oppWinding, winding);
             }
         }
@@ -1190,7 +1255,8 @@ export class OpSegment implements OpSegmentLike {
         let foundSpan: OpSpanBase | undefined;
         let otherEnd:  OpSpanBase | undefined;
         let other: OpSegment | undefined;
-        if (angle === undefined) {
+        if (angle === undefined)
+        {
             if (endSpan.t() !== 0 && endSpan.t() !== 1) return undefined;
             const otherPtT = endSpan.ptT().next();
             other = otherPtT.segment() as OpSegment;
@@ -1199,7 +1265,9 @@ export class OpSegment implements OpSegmentLike {
             otherEnd = step > 0
                 ? (fUp !== undefined ? fUp.next() : undefined)
                 : foundSpan.prev();
-        } else {
+        }
+        else
+        {
             const lc = angle.loopCount();
             if (lc > 2) { lastPtr.value = endSpan; return undefined; }
             const next = angle.next();
@@ -1253,46 +1321,56 @@ export class OpSegment implements OpSegmentLike {
         let angle = firstAngle0.previous();
         let next  = angle.next()!;
         let firstAngle = next;
-        do {
+        do
+        {
             const prior = angle;
             angle = next;
             next  = angle.next()!;
-            if (prior.unorderable() || angle.unorderable() || next.unorderable()) {
+            if (prior.unorderable() || angle.unorderable() || next.unorderable())
+            {
                 baseAngle = undefined;
                 continue;
             }
             const testWinding = angle.starter().windSum();
-            if (testWinding !== SK_MIN_S32) {
+            if (testWinding !== SK_MIN_S32)
+            {
                 baseAngle = angle;
                 tryReverse = true;
                 continue;
             }
-            if (baseAngle !== undefined) {
+            if (baseAngle !== undefined)
+            {
                 OpSegment.ComputeOneSum(baseAngle, angle, includeType);
                 baseAngle = angle.starter().windSum() !== SK_MIN_S32 ? angle : undefined;
             }
         } while (next !== firstAngle);
-        if (baseAngle !== undefined && firstAngle.starter().windSum() === SK_MIN_S32) {
+        if (baseAngle !== undefined && firstAngle.starter().windSum() === SK_MIN_S32)
+        {
             firstAngle = baseAngle;
             tryReverse = true;
         }
-        if (tryReverse) {
+        if (tryReverse)
+        {
             baseAngle = undefined;
             let prior = firstAngle;
-            do {
+            do
+            {
                 angle = prior;
                 prior = angle.previous();
                 next  = angle.next()!;
-                if (prior.unorderable() || angle.unorderable() || next.unorderable()) {
+                if (prior.unorderable() || angle.unorderable() || next.unorderable())
+                {
                     baseAngle = undefined;
                     continue;
                 }
                 const testWinding = angle.starter().windSum();
-                if (testWinding !== SK_MIN_S32) {
+                if (testWinding !== SK_MIN_S32)
+                {
                     baseAngle = angle;
                     continue;
                 }
-                if (baseAngle !== undefined) {
+                if (baseAngle !== undefined)
+                {
                     OpSegment.ComputeOneSumReverse(baseAngle, angle, includeType);
                     baseAngle = angle.starter().windSum() !== SK_MIN_S32 ? angle : undefined;
                 }
@@ -1308,15 +1386,18 @@ export class OpSegment implements OpSegmentLike {
         let sumMiWinding = baseSegment.updateWindingReverseByAngle(baseAngle);
         let sumSuWinding = 0;
         const binary = includeType >= AngleIncludeType.kBinarySingle;
-        if (binary) {
+        if (binary)
+        {
             sumSuWinding = baseSegment.updateOppWindingReverseByAngle(baseAngle);
-            if (baseSegment.operand()) {
+            if (baseSegment.operand())
+            {
                 const t = sumMiWinding; sumMiWinding = sumSuWinding; sumSuWinding = t;
             }
         }
         const nextSegment = nextAngle.segment() as OpSegment;
         const lastPtr: { value: OpSpanBase | undefined } = { value: undefined };
-        if (binary) {
+        if (binary)
+        {
             const w = { maxWinding: 0, sumWinding: 0, oppMaxWinding: 0, oppSumWinding: 0,
                         sumMiWinding, sumSuWinding };
             nextSegment.setUpWindingsBinary(nextAngle.start() as OpSpanBase,
@@ -1324,7 +1405,9 @@ export class OpSegment implements OpSegmentLike {
             if (!nextSegment.markAngleBinary(w.maxWinding, w.sumWinding,
                                               w.oppMaxWinding, w.oppSumWinding,
                                               nextAngle, lastPtr)) return false;
-        } else {
+        }
+        else
+        {
             const w = { maxWinding: 0, sumWinding: sumMiWinding };
             nextSegment.setUpWinding(nextAngle.start() as OpSpanBase,
                                       nextAngle.end()   as OpSpanBase, w);
@@ -1341,15 +1424,18 @@ export class OpSegment implements OpSegmentLike {
         let sumMiWinding = baseSegment.updateWindingByAngle(baseAngle);
         let sumSuWinding = 0;
         const binary = includeType >= AngleIncludeType.kBinarySingle;
-        if (binary) {
+        if (binary)
+        {
             sumSuWinding = baseSegment.updateOppWindingByAngle(baseAngle);
-            if (baseSegment.operand()) {
+            if (baseSegment.operand())
+            {
                 const t = sumMiWinding; sumMiWinding = sumSuWinding; sumSuWinding = t;
             }
         }
         const nextSegment = nextAngle.segment() as OpSegment;
         const lastPtr: { value: OpSpanBase | undefined } = { value: undefined };
-        if (binary) {
+        if (binary)
+        {
             const w = { maxWinding: 0, sumWinding: 0, oppMaxWinding: 0, oppSumWinding: 0,
                         sumMiWinding, sumSuWinding };
             nextSegment.setUpWindingsBinary(nextAngle.end()   as OpSpanBase,
@@ -1357,7 +1443,9 @@ export class OpSegment implements OpSegmentLike {
             if (!nextSegment.markAngleBinary(w.maxWinding, w.sumWinding,
                                               w.oppMaxWinding, w.oppSumWinding,
                                               nextAngle, lastPtr)) return false;
-        } else {
+        }
+        else
+        {
             const w = { maxWinding: 0, sumWinding: sumMiWinding };
             nextSegment.setUpWinding(nextAngle.end()   as OpSpanBase,
                                       nextAngle.start() as OpSpanBase, w);
@@ -1373,7 +1461,8 @@ export class OpSegment implements OpSegmentLike {
     {
         let span: OpSpan = this.fHead;
         let next: OpSpanBase;
-        for (;;) {
+        for (;;)
+        {
             next = span.next();
             if (!span.done()) return span;
             if (next.final()) break;
@@ -1410,7 +1499,8 @@ export class OpSegment implements OpSegmentLike {
         const stepBox = { value: start.step(end) };
         const isSimpleResult = this.isSimple(nextStart, stepBox);
         simple.value = isSimpleResult !== undefined;
-        if (isSimpleResult !== undefined) {
+        if (isSimpleResult !== undefined)
+        {
             const startSpan = start.starter(end);
             if (startSpan.done()) return undefined;
             this.markDone(startSpan);
@@ -1421,19 +1511,22 @@ export class OpSegment implements OpSegmentLike {
         }
         const calcWinding = this.computeSum(start, end, AngleIncludeType.kBinaryOpp);
         const sortable = calcWinding !== SK_MIN_S32;
-        if (!sortable) {
+        if (!sortable)
+        {
             unsortable.value = true;
             this.markDone(start.starter(end));
             return undefined;
         }
         const angle = this.spanToAngle(end, start);
-        if (angle === undefined || angle.unorderable()) {
+        if (angle === undefined || angle.unorderable())
+        {
             unsortable.value = true;
             this.markDone(start.starter(end));
             return undefined;
         }
         let sumMiWinding = this.updateWinding(end, start);
-        if (sumMiWinding === SK_MIN_S32) {
+        if (sumMiWinding === SK_MIN_S32)
+        {
             unsortable.value = true;
             this.markDone(start.starter(end));
             return undefined;
@@ -1451,21 +1544,25 @@ export class OpSegment implements OpSegmentLike {
         let foundDone = false;
         let nextSegment: OpSegment;
         let activeCount = 0;
-        do {
+        do
+        {
             nextSegment = nextAngle.segment() as OpSegment;
             const isActive = nextSegment.activeOpFullRef(xorMiMask, xorSuMask,
                                                          nextAngle.start() as OpSpanBase,
                                                          nextAngle.end()   as OpSpanBase,
                                                          op, sumRef);
-            if (isActive) {
+            if (isActive)
+            {
                 ++activeCount;
-                if (foundAngle === undefined || (foundDone && (activeCount & 1))) {
+                if (foundAngle === undefined || (foundDone && (activeCount & 1)))
+                {
                     foundAngle = nextAngle;
                     foundDone = nextSegment.doneByAngle(nextAngle);
                 }
             }
             if (nextSegment.done()) { nextAngle = nextAngle.next()!; continue; }
-            if (!isActive) {
+            if (!isActive)
+            {
                 void nextSegment.markAndChaseDone(nextAngle.start() as OpSpanBase,
                                                   nextAngle.end()   as OpSpanBase, undefined);
             }
@@ -1489,7 +1586,8 @@ export class OpSegment implements OpSegmentLike {
         const end   = nextEnd.value!;
         const stepBox = { value: start.step(end) };
         const isSimpleResult = this.isSimple(nextStart, stepBox);
-        if (isSimpleResult !== undefined) {
+        if (isSimpleResult !== undefined)
+        {
             const startSpan = start.starter(end);
             if (startSpan.done()) return undefined;
             this.markDone(startSpan);
@@ -1500,13 +1598,15 @@ export class OpSegment implements OpSegmentLike {
         }
         const calcWinding = this.computeSum(start, end, AngleIncludeType.kUnaryWinding);
         const sortable = calcWinding !== SK_MIN_S32;
-        if (!sortable) {
+        if (!sortable)
+        {
             unsortable.value = true;
             this.markDone(start.starter(end));
             return undefined;
         }
         const angle = this.spanToAngle(end, start);
-        if (angle === undefined || angle.unorderable()) {
+        if (angle === undefined || angle.unorderable())
+        {
             unsortable.value = true;
             this.markDone(start.starter(end));
             return undefined;
@@ -1517,22 +1617,26 @@ export class OpSegment implements OpSegmentLike {
         let foundDone = false;
         let nextSegment: OpSegment;
         let activeCount = 0;
-        do {
+        do
+        {
             nextSegment = nextAngle.segment() as OpSegment;
             const sumOut = { sum: sumWinding };
             const isActive = nextSegment.activeWindingFull(nextAngle.start() as OpSpanBase,
                                                             nextAngle.end()   as OpSpanBase,
                                                             sumOut);
             sumWinding = sumOut.sum;
-            if (isActive) {
+            if (isActive)
+            {
                 ++activeCount;
-                if (foundAngle === undefined || (foundDone && (activeCount & 1))) {
+                if (foundAngle === undefined || (foundDone && (activeCount & 1)))
+                {
                     foundAngle = nextAngle;
                     foundDone = nextSegment.doneByAngle(nextAngle);
                 }
             }
             if (nextSegment.done()) { nextAngle = nextAngle.next()!; continue; }
-            if (!isActive) {
+            if (!isActive)
+            {
                 void nextSegment.markAndChaseDone(nextAngle.start() as OpSpanBase,
                                                   nextAngle.end()   as OpSpanBase, undefined);
             }
@@ -1555,7 +1659,8 @@ export class OpSegment implements OpSegmentLike {
         const end   = nextEnd.value!;
         const stepBox = { value: start.step(end) };
         const isSimpleResult = this.isSimple(nextStart, stepBox);
-        if (isSimpleResult !== undefined) {
+        if (isSimpleResult !== undefined)
+        {
             const startSpan = start.starter(end);
             if (startSpan.done()) return undefined;
             this.markDone(startSpan);
@@ -1565,7 +1670,8 @@ export class OpSegment implements OpSegmentLike {
             return isSimpleResult;
         }
         const angle = this.spanToAngle(end, start);
-        if (angle === undefined || angle.unorderable()) {
+        if (angle === undefined || angle.unorderable())
+        {
             unsortable.value = true;
             this.markDone(start.starter(end));
             return undefined;
@@ -1575,11 +1681,13 @@ export class OpSegment implements OpSegmentLike {
         let foundDone = false;
         let nextSegment: OpSegment;
         let activeCount = 0;
-        do {
+        do
+        {
             if (nextAngle === undefined) return undefined;
             nextSegment = nextAngle.segment() as OpSegment;
             ++activeCount;
-            if (foundAngle === undefined || (foundDone && (activeCount & 1))) {
+            if (foundAngle === undefined || (foundDone && (activeCount & 1)))
+            {
                 foundAngle = nextAngle;
                 foundDone = nextSegment.doneByAngle(nextAngle);
                 if (!foundDone) break;
@@ -1600,18 +1708,23 @@ export class OpSegment implements OpSegmentLike {
     public sortAngles(): boolean
     {
         let span: OpSpanBase | undefined = this.fHead;
-        while (span !== undefined) {
+        while (span !== undefined)
+        {
             const fromAngle = span.fromAngle() as OpAngle | undefined;
             const toAngle = span.final() ? undefined : (span.upCast().toAngle() as OpAngle | undefined);
-            if (fromAngle === undefined && toAngle === undefined) {
+            if (fromAngle === undefined && toAngle === undefined)
+            {
                 if (span.final()) break;
                 span = span.upCast().next();
                 continue;
             }
             let baseAngle: OpAngle | undefined = fromAngle;
-            if (fromAngle !== undefined && toAngle !== undefined) {
+            if (fromAngle !== undefined && toAngle !== undefined)
+            {
                 if (!fromAngle.insert(toAngle)) return false;
-            } else if (fromAngle === undefined) {
+            }
+            else if (fromAngle === undefined)
+            {
                 baseAngle = toAngle;
             }
             // Walk the pt-T ring to gather every angle from coincident
@@ -1619,26 +1732,32 @@ export class OpSegment implements OpSegmentLike {
             let ptT = span.ptT();
             const stopPtT = ptT;
             let safetyNet = 1_000_000;
-            do {
+            do
+            {
                 if (!--safetyNet) return false;
                 const oSpan = ptT.span();
-                if (oSpan === span) {
+                if (oSpan === span)
+                {
                     ptT = ptT.next();
                     continue;
                 }
                 let oAngle = oSpan.fromAngle() as OpAngle | undefined;
-                if (oAngle !== undefined) {
+                if (oAngle !== undefined)
+                {
                     if (!oAngle.loopContains(baseAngle!)) baseAngle!.insert(oAngle);
                 }
-                if (!oSpan.final()) {
+                if (!oSpan.final())
+                {
                     oAngle = oSpan.upCast().toAngle() as OpAngle | undefined;
-                    if (oAngle !== undefined) {
+                    if (oAngle !== undefined)
+                    {
                         if (!oAngle.loopContains(baseAngle!)) baseAngle!.insert(oAngle);
                     }
                 }
                 ptT = ptT.next();
             } while (ptT !== stopPtT);
-            if (baseAngle!.loopCount() === 1) {
+            if (baseAngle!.loopCount() === 1)
+            {
                 span.setFromAngle(undefined);
                 if (toAngle !== undefined) span.upCast().setToAngle(undefined);
             }
@@ -1661,11 +1780,13 @@ export class OpSegment implements OpSegmentLike {
         let spanBase: OpSpanBase | undefined = this.fHead;
         let result = false;
         let safetyNet = 100_000;
-        while (spanBase !== undefined) {
+        while (spanBase !== undefined)
+        {
             const spanStopPtT = spanBase.ptT();
             let ptT: OpPtT = spanStopPtT;
             ptT = ptT.next();
-            while (ptT !== spanStopPtT) {
+            while (ptT !== spanStopPtT)
+            {
                 if (!--safetyNet) return false;
                 if (ptT.deleted()) { ptT = ptT.next(); continue; }
                 const opp = ptT.span().segment() as OpSegment;
@@ -1680,14 +1801,18 @@ export class OpSegment implements OpSegmentLike {
                 let priorOpp: OpSegment | undefined = undefined;
                 let priorPtT: OpPtT | undefined = undefined;
                 let priorTest: OpSpan | undefined = spanBase.prev();
-                while (priorOpp === undefined && priorTest !== undefined) {
+                while (priorOpp === undefined && priorTest !== undefined)
+                {
                     const priorStopPtT = priorTest.ptT();
                     priorPtT = priorStopPtT;
                     priorPtT = priorPtT.next();
-                    while (priorPtT !== priorStopPtT) {
-                        if (!priorPtT.deleted()) {
+                    while (priorPtT !== priorStopPtT)
+                    {
+                        if (!priorPtT.deleted())
+                        {
                             const segm = priorPtT.span().segment() as OpSegment;
-                            if (segm === opp) {
+                            if (segm === opp)
+                            {
                                 prior = priorTest;
                                 priorOpp = opp;
                                 break;
@@ -1697,7 +1822,8 @@ export class OpSegment implements OpSegmentLike {
                     }
                     priorTest = priorTest.prev();
                 }
-                if (priorOpp === undefined || priorPtT === undefined || priorPtT === ptT) {
+                if (priorOpp === undefined || priorPtT === undefined || priorPtT === ptT)
+                {
                     ptT = ptT.next();
                     continue;
                 }
@@ -1705,13 +1831,15 @@ export class OpSegment implements OpSegmentLike {
                 let oppEnd   = spanBase.ptT();
                 const swapped = priorPtT.fT > ptT.fT;
                 let aPrior = priorPtT, bPtT = ptT;
-                if (swapped) {
+                if (swapped)
+                {
                     aPrior = ptT;
                     bPtT   = priorPtT;
                     const tmp = oppStart; oppStart = oppEnd; oppEnd = tmp;
                 }
                 const coins = this.globalState().coincidence() as OpCoincidenceLike | undefined;
-                if (coins !== undefined) {
+                if (coins !== undefined)
+                {
                     const rootPriorPtT = aPrior.span().ptT();
                     const rootPtT      = bPtT.span().ptT();
                     const rootOppStart = oppStart.span().ptT();
@@ -1721,9 +1849,12 @@ export class OpSegment implements OpSegmentLike {
                         extend(a: OpPtT, b: OpPtT, c: OpPtT, d: OpPtT): boolean;
                         add(a: OpPtT, b: OpPtT, c: OpPtT, d: OpPtT): void;
                     };
-                    if (!c.contains(rootPriorPtT, rootPtT, rootOppStart, rootOppEnd)) {
-                        if (this.testForCoincidence(rootPriorPtT, rootPtT, prior!, spanBase, opp)) {
-                            if (!c.extend(rootPriorPtT, rootPtT, rootOppStart, rootOppEnd)) {
+                    if (!c.contains(rootPriorPtT, rootPtT, rootOppStart, rootOppEnd))
+                    {
+                        if (this.testForCoincidence(rootPriorPtT, rootPtT, prior!, spanBase, opp))
+                        {
+                            if (!c.extend(rootPriorPtT, rootPtT, rootOppStart, rootOppEnd))
+                            {
                                 c.add(rootPriorPtT, rootPtT, rootOppStart, rootOppEnd);
                             }
                             result = true;
@@ -1744,10 +1875,12 @@ export class OpSegment implements OpSegmentLike {
     public static ClearVisited(spanHead: OpSpanBase): void
     {
         let span: OpSpanBase | undefined = spanHead;
-        while (span !== undefined) {
+        while (span !== undefined)
+        {
             const ptT = span.ptT();
             let next: OpPtT = ptT;
-            do {
+            do
+            {
                 const seg = next.segment() as OpSegment;
                 seg.resetVisited();
                 next = next.next();
@@ -1779,19 +1912,23 @@ export class OpSegment implements OpSegmentLike {
             const rayP1 = new Point(midPt.fX + slope.y, midPt.fY - slope.x);
             const ix = new Intersections();
             const rayLine = new Line(rayP0, rayP1);
-            switch (opp.verb()) {
-                case OpVerb.kLine: {
+            switch (opp.verb())
+            {
+                case OpVerb.kLine:
+                {
                     const ln = new Line(opp.pts()[0]!, opp.pts()[1]!);
                     ix.intersectRayLineLine(ln, rayLine);
                     break;
                 }
-                case OpVerb.kQuad: {
+                case OpVerb.kQuad:
+                {
                     const q = new Quad();
                     q.fPts = [opp.pts()[0]!, opp.pts()[1]!, opp.pts()[2]!];
                     ix.intersectRayQuadLine(q, rayLine);
                     break;
                 }
-                case OpVerb.kCubic: {
+                case OpVerb.kCubic:
+                {
                     const c = new Cubic();
                     c.fPts = [opp.pts()[0]!, opp.pts()[1]!, opp.pts()[2]!, opp.pts()[3]!];
                     ix.intersectRayCubicLine(c, rayLine);
@@ -1799,8 +1936,10 @@ export class OpSegment implements OpSegmentLike {
                 }
                 default: return false;
             }
-            for (let i = 0; i < ix.used(); ++i) {
-                if (approximatelyEqualPt(midPt, ix.pt(i))) {
+            for (let i = 0; i < ix.used(); ++i)
+            {
+                if (approximatelyEqualPt(midPt, ix.pt(i)))
+                {
                     coincident = true;
                     break;
                 }
@@ -1816,14 +1955,17 @@ export class OpSegment implements OpSegmentLike {
     public moveMultiples(): boolean
     {
         let test: OpSpanBase | undefined = this.fHead;
-        while (test !== undefined) {
+        while (test !== undefined)
+        {
             const addCount = test.spanAddsCount();
-            if (addCount > 1) {
+            if (addCount > 1)
+            {
                 const startPtT = test.ptT();
                 let testPtT: OpPtT = startPtT;
                 let safetyHatch = 1_000_000;
                 let checkNext = false;
-                ringLoop: do {
+                ringLoop: do
+                {
                     if (!--safetyHatch) return false;
                     const oppSpan = testPtT.span();
                     if (oppSpan.spanAddsCount() !== addCount
@@ -1833,7 +1975,8 @@ export class OpSegment implements OpSegmentLike {
                         const oppSegment = oppSpan.segment() as OpSegment;
                         let oppFirst: OpSpanBase = oppSpan;
                         let oppPrev: OpSpanBase | undefined = oppSpan;
-                        while ((oppPrev = oppPrev.prev()) !== undefined) {
+                        while ((oppPrev = oppPrev.prev()) !== undefined)
+                        {
                             if (!roughly_equal(oppPrev.t(), oppSpan.t())) break;
                             if (oppPrev.spanAddsCount() === addCount) continue;
                             if (oppPrev.deleted()) continue;
@@ -1841,7 +1984,8 @@ export class OpSegment implements OpSegmentLike {
                         }
                         let oppLast: OpSpanBase = oppSpan;
                         let oppNext: OpSpanBase | undefined = oppSpan;
-                        while (true) {
+                        while (true)
+                        {
                             if (oppNext === undefined || oppNext.final()) break;
                             const upN = oppNext.upCastable();
                             if (upN === undefined) break;
@@ -1851,24 +1995,30 @@ export class OpSegment implements OpSegmentLike {
                             if (oppNext.deleted()) continue;
                             oppLast = oppNext;
                         }
-                        if (oppFirst !== oppLast) {
+                        if (oppFirst !== oppLast)
+                        {
                             let oppTest: OpSpanBase = oppFirst;
-                            outer: while (true) {
-                                if (oppTest !== oppSpan) {
+                            outer: while (true)
+                            {
+                                if (oppTest !== oppSpan)
+                                {
                                     // does oppTest's pt-T loop intersect this start ring?
                                     const oppStartPtT = oppTest.ptT();
                                     let oppPtT: OpPtT = oppStartPtT;
                                     oppPtT = oppPtT.next();
-                                    while (oppPtT !== oppStartPtT) {
+                                    while (oppPtT !== oppStartPtT)
+                                    {
                                         const oppPtTSegment = oppPtT.segment() as OpSegment;
                                         if (oppPtTSegment === this) break outer;
                                         let matchPtT: OpPtT = startPtT;
                                         let matched = false;
-                                        do {
+                                        do
+                                        {
                                             if (matchPtT.segment() === oppPtTSegment) { matched = true; break; }
                                             matchPtT = matchPtT.next();
                                         } while (matchPtT !== startPtT);
-                                        if (matched) {
+                                        if (matched)
+                                        {
                                             if (!oppTest.mergeMatches(oppSpan)) return false;
                                             oppTest.addOpp(oppSpan);
                                             void oppSegment;
@@ -1915,21 +2065,28 @@ export class OpSegment implements OpSegmentLike {
         let checkBest: OpPtT | undefined = undefined;
         let ref: OpPtT = refHead;
         let escapeHatch = 100_000;
-        outer: do {
-            if (!ref.deleted()) {
-                while (ref.ptAlreadySeen(refHead)) {
+        outer: do
+        {
+            if (!ref.deleted())
+            {
+                while (ref.ptAlreadySeen(refHead))
+                {
                     ref = ref.next();
                     if (ref === refHead) break outer;
                 }
                 let check: OpPtT = checkHead;
                 const refSeg = ref.segment() as OpSegment;
-                do {
-                    if (!check.deleted()) {
-                        while (check.ptAlreadySeen(checkHead)) {
+                do
+                {
+                    if (!check.deleted())
+                    {
+                        while (check.ptAlreadySeen(checkHead))
+                        {
                             check = check.next();
                             if (check === checkHead) { break; }
                         }
-                        if (check !== checkHead) {
+                        if (check !== checkHead)
+                        {
                             const dx = ref.fPt.fX - check.fPt.fX;
                             const dy = ref.fPt.fY - check.fPt.fY;
                             const distSq = dx * dx + dy * dy;
@@ -1963,23 +2120,29 @@ export class OpSegment implements OpSegmentLike {
     {
         let spanBase: OpSpanBase | undefined = this.fHead;
         let escapeHatch = 9999;
-        while (spanBase !== undefined && !spanBase.final()) {
+        while (spanBase !== undefined && !spanBase.final())
+        {
             let ptT: OpPtT = spanBase.ptT();
             const headPtT = ptT;
             ptT = ptT.next();
-            while (ptT !== headPtT) {
+            while (ptT !== headPtT)
+            {
                 if (!--escapeHatch) return false;
                 const tst = ptT.span();
                 if (ptT.segment() === this && !ptT.deleted() && tst !== spanBase
                     && tst.ptT() === ptT)
                 {
-                    if (tst.final()) {
-                        if (spanBase === this.fHead) {
+                    if (tst.final())
+                    {
+                        if (spanBase === this.fHead)
+                        {
                             this.clearAll();
                             return true;
                         }
                         spanBase.upCast().release(ptT);
-                    } else if (tst.prev() !== undefined) {
+                    }
+                    else if (tst.prev() !== undefined)
+                    {
                         tst.upCast().release(headPtT);
                     }
                     break;
@@ -1990,19 +2153,27 @@ export class OpSegment implements OpSegmentLike {
         }
         // Adjacent-span merge pass.
         spanBase = this.fHead;
-        while (spanBase !== undefined && !spanBase.final()) {
+        while (spanBase !== undefined && !spanBase.final())
+        {
             const test = spanBase.upCast().next();
             const found = { found: false };
             if (!this.spansNearby(spanBase, test, found)) return false;
-            if (found.found) {
-                if (test.final()) {
-                    if (spanBase.prev() !== undefined) {
+            if (found.found)
+            {
+                if (test.final())
+                {
+                    if (spanBase.prev() !== undefined)
+                    {
                         test.merge(spanBase.upCast());
-                    } else {
+                    }
+                    else
+                    {
                         this.clearAll();
                         return true;
                     }
-                } else {
+                }
+                else
+                {
                     spanBase.merge(test.upCast());
                 }
             }
@@ -2038,11 +2209,13 @@ export class OpSegment implements OpSegmentLike {
         };
         this.subDivide(start, end, out);
         path.deferredMove(start.ptT());
-        switch (this.fVerb) {
+        switch (this.fVerb)
+        {
             case OpVerb.kLine:
                 if (!path.deferredLine(end.ptT())) return false;
                 break;
-            case OpVerb.kQuad: {
+            case OpVerb.kQuad:
+            {
                 if (out.value.verb !== OpVerb.kQuad) return false;
                 // §19-deferred #2 — provenance for same-original-curve coalescing.
                 path.quadTo(out.value.fQuad.fPts[1]!, end.ptT(), {
@@ -2054,7 +2227,8 @@ export class OpSegment implements OpSegmentLike {
                 });
                 break;
             }
-            case OpVerb.kCubic: {
+            case OpVerb.kCubic:
+            {
                 if (out.value.verb !== OpVerb.kCubic) return false;
                 path.cubicTo(out.value.fCubic.fPts[1]!, out.value.fCubic.fPts[2]!, end.ptT(), {
                     seg: this,
@@ -2083,19 +2257,23 @@ export class OpSegment implements OpSegmentLike {
         const rayP1 = new Point(cPt.fX + slope.y, cPt.fY - slope.x);
         const ix = new Intersections();
         const rayLine = new Line(rayP0, rayP1);
-        switch (opp.verb()) {
-            case OpVerb.kLine: {
+        switch (opp.verb())
+        {
+            case OpVerb.kLine:
+            {
                 const ln = new Line(opp.pts()[0]!, opp.pts()[1]!);
                 ix.intersectRayLineLine(ln, rayLine);
                 break;
             }
-            case OpVerb.kQuad: {
+            case OpVerb.kQuad:
+            {
                 const q = new Quad();
                 q.fPts = [opp.pts()[0]!, opp.pts()[1]!, opp.pts()[2]!];
                 ix.intersectRayQuadLine(q, rayLine);
                 break;
             }
-            case OpVerb.kCubic: {
+            case OpVerb.kCubic:
+            {
                 const c = new Cubic();
                 c.fPts = [opp.pts()[0]!, opp.pts()[1]!, opp.pts()[2]!, opp.pts()[3]!];
                 ix.intersectRayCubicLine(c, rayLine);
@@ -2103,7 +2281,8 @@ export class OpSegment implements OpSegmentLike {
             }
             default: return false;
         }
-        for (let i = 0; i < ix.used(); ++i) {
+        for (let i = 0; i < ix.used(); ++i)
+        {
             const iPt = ix.pt(i);
             const dx = iPt.fX - cPt.fX, dy = iPt.fY - cPt.fY;
             if (Math.abs(dx) < 1e-4 && Math.abs(dy) < 1e-4) return true;
@@ -2124,10 +2303,12 @@ export class OpSegment implements OpSegmentLike {
         let test: OpSpanBase | undefined = this.fHead;
         const pt = this.ptAtT(t);
         let testPtT: OpPtT;
-        while (test !== undefined) {
+        while (test !== undefined)
+        {
             testPtT = test.ptT();
             if (testPtT.fT === t) break;
-            if (!this.matchPtT(testPtT, this, t, pt)) {
+            if (!this.matchPtT(testPtT, this, t, pt))
+            {
                 if (t < testPtT.fT) return undefined;
                 if (test.final()) break;
                 test = test.upCast().next();
@@ -2136,8 +2317,10 @@ export class OpSegment implements OpSegmentLike {
             if (opp === undefined) return testPtT;
             let loop: OpPtT = testPtT.next();
             let found = false;
-            while (loop !== testPtT) {
-                if (loop.segment() === this && loop.fT === t && loop.fPt.equals(pt)) {
+            while (loop !== testPtT)
+            {
+                if (loop.segment() === this && loop.fT === t && loop.fPt.equals(pt))
+                {
                     found = true;
                     break;
                 }
@@ -2163,7 +2346,8 @@ export class OpSegment implements OpSegmentLike {
         if (newPtT === undefined) return false;
         newPtT.fPt = this.ptAtT(newT);
         const oppPrev = test.ptT().oppPrev(newPtT);
-        if (oppPrev !== undefined) {
+        if (oppPrev !== undefined)
+        {
             test.mergeMatches(newPtT.span());
             test.ptT().addOpp(newPtT, oppPrev);
             test.checkForCollapsedCoincidence();

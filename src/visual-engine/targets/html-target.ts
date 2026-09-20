@@ -464,10 +464,13 @@ export class HtmlTarget extends PresentationTarget
         // (synthesized inputs from tests, stale ids after a Cancel).
         this.InputManager.SetCaptureBridge((target, pointerId) => {
             const el = this.host as HTMLElement;
-            try {
+            try
+            {
                 if (target !== undefined) el.setPointerCapture(pointerId);
                 else                       el.releasePointerCapture(pointerId);
-            } catch {
+            }
+            catch
+            {
                 // Pointer id may be invalid (release-after-up race, or a
                 // synthesized id from a test harness). Either way, the
                 // capture state is consistent with what we asked for.

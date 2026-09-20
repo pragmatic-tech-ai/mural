@@ -12,7 +12,8 @@ import { ContainerFigure } from '../container-figure.js';
 import { DiagramDocument } from '../diagram-document.js';
 import { diagramSpaceRect } from '../coordinate-space.js';
 
-function mountDoc(doc: DiagramDocument): Diagram {
+function mountDoc(doc: DiagramDocument): Diagram
+{
     const diagram = new Diagram();
     diagram.ItemsPanel = new ItemsPanelTemplate(() => new Canvas());
     diagram.DataContext = doc;

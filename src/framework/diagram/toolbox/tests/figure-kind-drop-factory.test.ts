@@ -12,7 +12,8 @@ import { FigureKindDropFactory } from '../figure-kind-drop-factory.js';
 
 // A stand-in for the diagram document the factory scans + mutates: it exposes
 // Nodes.ToArray() (for the id counter) and AddNode() (the drop sink).
-function fakeDoc() {
+function fakeDoc()
+{
     const nodes: Array<{ Id?: string }> = [];
     return {
         Nodes: { ToArray: () => nodes },
@@ -21,7 +22,8 @@ function fakeDoc() {
     };
 }
 
-function drop(factory: FigureKindDropFactory, doc: ReturnType<typeof fakeDoc>, kind: string): Figure {
+function drop(factory: FigureKindDropFactory, doc: ReturnType<typeof fakeDoc>, kind: string): Figure
+{
     return factory.CreateDropped({
         Item: undefined as never,
         Descriptor: new ToolboxVisualDescriptor(ShapeVisualResolverKey, kind),

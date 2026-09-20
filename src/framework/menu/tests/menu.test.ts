@@ -80,7 +80,8 @@ describe('MenuStrip / MenuItem / MenuSeparator', () => {
         // clears it on leave; a leaf item never arms one. The actual open fires
         // from the timer after the dwell — here we assert the arm/cancel gate
         // synchronously (no 1s wait).
-        interface Internals {
+        interface Internals
+        {
             _hoverOpenTimer?: unknown;
             OnPointerEnter(a: unknown): void;
             OnPointerLeave(a: unknown): void;

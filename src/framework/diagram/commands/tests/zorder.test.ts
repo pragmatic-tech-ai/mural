@@ -6,7 +6,8 @@ import { ZOrderMode, reorderZ, type ZAccess } from '../zorder.js';
 type Item = { id: string; z: number };
 const access: ZAccess<Item> = { get: (i) => i.z, set: (i, v) => { i.z = v; } };
 
-function orderIds(siblings: Item[]): string[] {
+function orderIds(siblings: Item[]): string[]
+{
     return [...siblings].sort((a, b) => (a.z - b.z) || 0).map(i => i.id);
 }
 

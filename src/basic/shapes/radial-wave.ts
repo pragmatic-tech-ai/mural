@@ -136,7 +136,8 @@ export class RadialWave extends Shape
 // Sunny — 8 smooth lobes at low amplitude.
 export class Sunny extends RadialWave
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(Sunny, RadialWave.LobesKey,     { default_value: 8    });
         MuralBase.OverrideMetadata(Sunny, RadialWave.AmplitudeKey, { default_value: 0.15 });
         MuralBase.OverrideMetadata(Sunny, RadialWave.SharpnessKey, { default_value: 0    });
@@ -146,7 +147,8 @@ export class Sunny extends RadialWave
 // VerySunny — 8 smooth lobes at high amplitude.
 export class VerySunny extends RadialWave
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(VerySunny, RadialWave.LobesKey,     { default_value: 8    });
         MuralBase.OverrideMetadata(VerySunny, RadialWave.AmplitudeKey, { default_value: 0.30 });
         MuralBase.OverrideMetadata(VerySunny, RadialWave.SharpnessKey, { default_value: 0    });
@@ -156,7 +158,8 @@ export class VerySunny extends RadialWave
 // Burst — 12 sharp lobes at medium amplitude.
 export class Burst extends RadialWave
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(Burst, RadialWave.LobesKey,     { default_value: 12   });
         MuralBase.OverrideMetadata(Burst, RadialWave.AmplitudeKey, { default_value: 0.20 });
         MuralBase.OverrideMetadata(Burst, RadialWave.SharpnessKey, { default_value: 0.6  });
@@ -166,7 +169,8 @@ export class Burst extends RadialWave
 // SoftBurst — 12 smooth lobes at medium amplitude.
 export class SoftBurst extends RadialWave
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(SoftBurst, RadialWave.LobesKey,     { default_value: 12   });
         MuralBase.OverrideMetadata(SoftBurst, RadialWave.AmplitudeKey, { default_value: 0.20 });
         MuralBase.OverrideMetadata(SoftBurst, RadialWave.SharpnessKey, { default_value: 0    });
@@ -176,7 +180,8 @@ export class SoftBurst extends RadialWave
 // Boom — 14 sharp lobes at high amplitude.
 export class Boom extends RadialWave
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(Boom, RadialWave.LobesKey,     { default_value: 14   });
         MuralBase.OverrideMetadata(Boom, RadialWave.AmplitudeKey, { default_value: 0.30 });
         MuralBase.OverrideMetadata(Boom, RadialWave.SharpnessKey, { default_value: 0.6  });
@@ -186,7 +191,8 @@ export class Boom extends RadialWave
 // SoftBoom — 14 smooth lobes at high amplitude.
 export class SoftBoom extends RadialWave
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(SoftBoom, RadialWave.LobesKey,     { default_value: 14   });
         MuralBase.OverrideMetadata(SoftBoom, RadialWave.AmplitudeKey, { default_value: 0.30 });
         MuralBase.OverrideMetadata(SoftBoom, RadialWave.SharpnessKey, { default_value: 0    });
@@ -196,7 +202,8 @@ export class SoftBoom extends RadialWave
 // Flower — 10 smooth lobes at medium amplitude.
 export class Flower extends RadialWave
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(Flower, RadialWave.LobesKey,     { default_value: 10   });
         MuralBase.OverrideMetadata(Flower, RadialWave.AmplitudeKey, { default_value: 0.20 });
         MuralBase.OverrideMetadata(Flower, RadialWave.SharpnessKey, { default_value: 0    });

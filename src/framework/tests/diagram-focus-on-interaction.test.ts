@@ -10,7 +10,8 @@ import { Border, Canvas, ItemsPanelTemplate } from '../../basic/index.js';
 import { Diagram } from '../diagram/diagram.js';
 import { attachCanvasDropBehavior, TOOLBOX_ITEM_FORMAT } from '../diagram/behaviors/canvas-drop-behavior.js';
 
-function setup(): { diagram: Diagram; surface: Border; focusCount: () => number } {
+function setup(): { diagram: Diagram; surface: Border; focusCount: () => number }
+{
     Application.current = null;
     new Application();
     const diagram = new Diagram();

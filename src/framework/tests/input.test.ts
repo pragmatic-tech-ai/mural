@@ -330,12 +330,15 @@ describe('args.Visual rewriting + Source preserved', () => {
         const leaf = new Probe('leaf');
         root.AddChild(leaf);
 
-        class WatchedRoot extends Panel {
+        class WatchedRoot extends Panel
+        {
             public observed: { source: Visual; current: Visual; strategy: string }[] = [];
-            protected override OnPointerDown(a: PointerEventArgs): void {
+            protected override OnPointerDown(a: PointerEventArgs): void
+            {
                 this.observed.push({ source: a.Source, current: a.Visual, strategy: a.Strategy });
             }
-            protected override OnPreviewPointerDown(a: PointerEventArgs): void {
+            protected override OnPreviewPointerDown(a: PointerEventArgs): void
+            {
                 this.observed.push({ source: a.Source, current: a.Visual, strategy: a.Strategy });
             }
         }
@@ -364,7 +367,8 @@ describe('raw Visual on the input route', () => {
     // child of a Canvas (`canvas.AddChild(geometryView)`). `Adopt`
     // exposes the protected visual-child wiring so a test can parent an
     // Element under a raw Visual (the ancestor case).
-    class RawVisual extends Visual {
+    class RawVisual extends Visual
+    {
         public Adopt(child: Visual): void { this.AttachVisual(child); }
     }
 

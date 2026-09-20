@@ -74,7 +74,8 @@ export class Chip extends ToggleButton
     public get Trailing(): Visual | undefined { return this.get_property_value(Chip.TrailingKey); }
     public set Trailing(v: Visual | undefined) { this.set_property_value(Chip.TrailingKey, v); }
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(
             Chip, Element.DefaultStyleKeyKey,
             { default_value: Chip });

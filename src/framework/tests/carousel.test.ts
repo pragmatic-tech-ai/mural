@@ -5,7 +5,8 @@ import { Size, Element } from '../../runtime/index.js';
 import { TranslateTransform, RectangleGeometry } from '../../visual-engine/index.js';
 import { Carousel } from '../carousel/carousel.js';
 
-function build(items: unknown[], active = 0): Carousel {
+function build(items: unknown[], active = 0): Carousel
+{
     const c = new Carousel();
     c.ItemsSource = items;
     if (active !== 0) c.ActiveIndex = active;
@@ -37,7 +38,8 @@ describe('Carousel', () => {
         const c = build([1, 2, 3, 4, 5]);
         const panel = c.ItemsPanelInstance!;
         assert.equal(panel.visualChildren.length, 5);
-        for (const cell of panel.visualChildren) {
+        for (const cell of panel.visualChildren)
+        {
             assert.equal((cell as Element).Width, 220);
             assert.equal((cell as Element).Height, 260);
         }

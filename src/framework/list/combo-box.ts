@@ -151,7 +151,8 @@ export class ComboBoxItem extends ClickableBorder
     public static readonly IsSelectedKey = MuralBase.RegisterProperty<boolean>(
         ComboBoxItem, 'IsSelected', false, MetaData.None);
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(ComboBoxItem, Element.DefaultStyleKeyKey, { default_value: ComboBoxItem });
     }
 
@@ -265,7 +266,8 @@ export class ComboBoxPopupHost extends Panel
 // Exported for the compiled-`.mu` popup template; not public API.
 export class ComboBoxItemList extends ItemsControl
 {
-    static {
+    static
+    {
     }
 
     // Set by ComboBox after the popup template has been applied — the
@@ -400,7 +402,8 @@ export class ComboBox extends Selector
     );
     public  static readonly HasSelectionKey   = ComboBox._HasSelectionPriv;
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(ComboBox, Element.DefaultStyleKeyKey, { default_value: ComboBox });
         // Registers the consolidated controls theme exactly once so
         // DefaultComboBoxSelection / DefaultComboBoxPopup resolve via

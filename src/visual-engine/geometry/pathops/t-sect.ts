@@ -77,7 +77,8 @@ const COINCIDENT_SPAN_COUNT = 9;
 
 // ── SkTCurve abstract interface ─────────────────────────────────────
 
-export abstract class TCurve {
+export abstract class TCurve
+{
     public abstract collapsed(): boolean;
     public abstract controlsInside(): boolean;
     public abstract dxdyAtT(t: number): Vector;
@@ -99,7 +100,8 @@ export abstract class TCurve {
 
 // ── SkTQuad — concrete wrapper around Quad ──────────────────────────
 
-export class TQuad extends TCurve {
+export class TQuad extends TCurve
+{
     public readonly fQuad: Quad;
 
     constructor(q?: Quad) { super(); this.fQuad = q ?? new Quad(); }
@@ -149,7 +151,8 @@ export class TQuad extends TCurve {
 
 // ── SkTCubic — concrete wrapper around Cubic ────────────────────────
 
-export class TCubic extends TCurve {
+export class TCubic extends TCurve
+{
     public readonly fCubic: Cubic;
 
     constructor(c?: Cubic) { super(); this.fCubic = c ?? new Cubic(); }
@@ -199,7 +202,8 @@ export class TCubic extends TCurve {
 
 // ── SkTCoincident — perpendicular probe + match flag ────────────────
 
-export class TCoincident {
+export class TCoincident
+{
     public fPerpPt: Point = new Point(NaN, NaN);
     public fPerpT: number = -1; // perpendicular intersection on opposite curve
     public fMatch: boolean = false;
@@ -255,14 +259,16 @@ export class TCoincident {
 
 // ── SkTSpanBounded — singly-linked list of bounded peer spans ───────
 
-export interface TSpanBounded {
+export interface TSpanBounded
+{
     fBounded: TSpan;
     fNext: TSpanBounded | undefined;
 }
 
 // ── SkTSpan — sub-range [startT, endT] on one curve ─────────────────
 
-export class TSpan {
+export class TSpan
+{
     public fPart: TCurve;
     public fCoinStart: TCoincident = new TCoincident();
     public fCoinEnd:   TCoincident = new TCoincident();
@@ -672,7 +678,8 @@ function otherPtsArray(curve: TCurve, baseIndex: number): Point[]
 
 // ── SkTSect — bisection engine for one curve, paired via BinarySearch
 
-export class TSect {
+export class TSect
+{
     public readonly fCurve: TCurve;
     public fHead: TSpan | undefined = undefined;
     public fCoincident: TSpan | undefined = undefined;
@@ -1908,8 +1915,10 @@ export class TSect {
 // BinarySearch. Installed on the Intersections class via TypeScript
 // module augmentation (same pattern as quad-line / cubic-line).
 
-declare module './intersections.js' {
-    interface Intersections {
+declare module './intersections.js'
+{
+    interface Intersections
+    {
         intersectQuadQuad(q1: Quad, q2: Quad): number;
         intersectCubicCubic(c1: Cubic, c2: Cubic): number;
         intersectCubicQuad(c: Cubic, q: Quad): number;

@@ -7,7 +7,8 @@ import { Diagram } from '../diagram.js';
 import { Figure } from '../figure.js';
 import { NodeViewModel } from '../node-view-model.js';
 
-function mount(): { diagram: Diagram; a: Figure; b: Figure } {
+function mount(): { diagram: Diagram; a: Figure; b: Figure }
+{
     Application.current = null; new Application();
     const a = Figure.fromKind('rectangle', 10, 20, { width: 100, height: 50 }); a.Id = 'a';
     const b = Figure.fromKind('rectangle', 200, 60, { width: 80, height: 40 }); b.Id = 'b';
@@ -26,7 +27,8 @@ function mount(): { diagram: Diagram; a: Figure; b: Figure } {
 // it in a Figure container that OWNS the geometry (the VM carries only content +
 // Id). Geometry is set on the container directly here (the document's store is
 // the production path). SelectedItems surfaces the VM, not the container.
-function mountVM(): { diagram: Diagram; vm: NodeViewModel; container: Figure } {
+function mountVM(): { diagram: Diagram; vm: NodeViewModel; container: Figure }
+{
     Application.current = null; new Application();
     const vm = new NodeViewModel();
     vm.Id = 'v';
@@ -44,7 +46,8 @@ function mountVM(): { diagram: Diagram; vm: NodeViewModel; container: Figure } {
     return { diagram, vm, container };
 }
 
-function select(diagram: Diagram, item: unknown, mods: ModifierKeys = ModifierKeys.None): void {
+function select(diagram: Diagram, item: unknown, mods: ModifierKeys = ModifierKeys.None): void
+{
     const container = diagram.Generator.ContainerFromItem(item);
     if (container === undefined) throw new Error('no container');
     diagram.HandleContainerClick(container, mods);

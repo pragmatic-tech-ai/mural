@@ -6,17 +6,20 @@ import { RotateTransform } from '../../visual-engine/index.js';
 import { Arc } from '../../basic/shapes/arc.js';
 import { LoadingIndicator, LoadingIndicatorVariant } from '../notifications/loading-indicator.js';
 
-function walk(v: unknown, name: string): { Name?: string; [k: string]: unknown } | undefined {
+function walk(v: unknown, name: string): { Name?: string; [k: string]: unknown } | undefined
+{
     const node = v as { Name?: string; visualChildren?: readonly unknown[] };
     if (node?.Name === name) return node as { Name?: string };
-    for (const c of node?.visualChildren ?? []) {
+    for (const c of node?.visualChildren ?? [])
+    {
         const r = walk(c, name);
         if (r) return r;
     }
     return undefined;
 }
 
-function partFill(li: LoadingIndicator): Arc {
+function partFill(li: LoadingIndicator): Arc
+{
     const arc = walk(li, 'PART_Fill');
     assert.ok(arc instanceof Arc, 'PART_Fill should be an Arc');
     return arc;

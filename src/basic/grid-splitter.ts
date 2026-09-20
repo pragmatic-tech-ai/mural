@@ -116,7 +116,8 @@ export class GridSplitter extends Thumb
     public static readonly PreviewBrushKey = MuralBase.RegisterProperty<Brush | undefined>(
         GridSplitter, 'PreviewBrush', undefined, MetaData.None);
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(GridSplitter, Element.DefaultStyleKeyKey, { default_value: GridSplitter });
     }
 

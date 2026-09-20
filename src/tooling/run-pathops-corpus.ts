@@ -38,7 +38,8 @@ function parseOpFile(p: string): OpEntry[]
     const out: OpEntry[] = [];
     const re = /\{ name: '([^']+)', op: '([^']+)', a: '([^']+)', b: '([^']+)'([^}]*)\}/g;
     let m: RegExpExecArray | null;
-    while ((m = re.exec(text)) !== null) {
+    while ((m = re.exec(text)) !== null)
+    {
         const tail = m[5]!;
         const fillA = tail.match(/fillA: '(\w+)'/);
         const fillB = tail.match(/fillB: '(\w+)'/);
@@ -57,7 +58,8 @@ function parseSimplifyFile(p: string): SimplifyEntry[]
     const out: SimplifyEntry[] = [];
     const re = /\{ name: '([^']+)', p: '([^']+)'([^}]*)\}/g;
     let m: RegExpExecArray | null;
-    while ((m = re.exec(text)) !== null) {
+    while ((m = re.exec(text)) !== null)
+    {
         const tail = m[3]!;
         const fill = tail.match(/fill: '(\w+)'/);
         out.push({ name: m[1]!, p: m[2]!, ...(fill ? { fill: fill[1]! } : {}) });
@@ -69,14 +71,18 @@ function classify<T>(entries: T[], fn: (e: T) => string): { name: string; bucket
 {
     const out: { name: string; bucket: string; elapsed: number }[] = [];
     let i = 0;
-    for (const e of entries) {
+    for (const e of entries)
+    {
         const name = (e as unknown as { name: string }).name;
         process.stdout.write(`  [${i}] ${name}\n`);
         const t0 = Date.now();
         let bucket: string;
-        try {
+        try
+        {
             bucket = fn(e);
-        } catch (err) {
+        }
+        catch (err)
+        {
             bucket = `THROW(${(err as Error).message.slice(0, 80)})`;
         }
         const elapsed = Date.now() - t0;
@@ -90,7 +96,8 @@ function summarize(label: string, results: { name: string; bucket: string; elaps
 {
     const counts = new Map<string, number>();
     const examples = new Map<string, string[]>();
-    for (const r of results) {
+    for (const r of results)
+    {
         const key = r.bucket.startsWith('THROW(') ? 'THROW' : r.bucket;
         counts.set(key, (counts.get(key) ?? 0) + 1);
         if (!examples.has(key)) examples.set(key, []);
@@ -99,12 +106,14 @@ function summarize(label: string, results: { name: string; bucket: string; elaps
     }
     console.log(`\n=== ${label} (${results.length} total) ===`);
     const keys = Array.from(counts.keys()).sort((a, b) => (counts.get(b)! - counts.get(a)!));
-    for (const k of keys) {
+    for (const k of keys)
+    {
         const ex = examples.get(k)!;
         console.log(`  ${k.padEnd(28)} ${counts.get(k)!.toString().padStart(4)}  e.g. ${ex.slice(0, 5).join(', ')}`);
     }
     const slow = results.filter(r => r.elapsed > 1000).sort((a, b) => b.elapsed - a.elapsed);
-    if (slow.length > 0) {
+    if (slow.length > 0)
+    {
         console.log(`  slow entries (> 1s): ${slow.length}`);
         for (const s of slow.slice(0, 10)) console.log(`    ${s.elapsed.toString().padStart(6)}ms  ${s.name}  ${s.bucket}`);
     }

@@ -21,7 +21,8 @@ import { resolveKey } from '../model-internals.js';
 // Thickness round out the supported interpolators.
 class TransitionTest extends Element
 {
-    static {
+    static
+    {
         MuralBase.RegisterProperty(TransitionTest, 'Number',    0,                MetaData.None);
         MuralBase.RegisterProperty(TransitionTest, 'Color',     Color.Black,      MetaData.None);
         MuralBase.RegisterProperty(TransitionTest, 'Thickness', new Thickness(0), MetaData.None);

@@ -93,7 +93,8 @@ import { attachZoomPan } from './behaviors/zoom-pan-behavior.js';
 // delivered via the tunnel OnPreviewPointerWheel override (so it pre-empts the
 // ScrollViewer's bubble-phase scroll). Plain/Shift wheel and scrollbars are the
 // ScrollViewer's own.
-interface CameraGestureHandlers {
+interface CameraGestureHandlers
+{
     OnWheel(args: WheelEventArgs): void;
 }
 import { TextPlacement } from './shape-text.js';
@@ -170,7 +171,8 @@ const EMPTY_CAP_OPTIONS: readonly CapOption[] = Object.freeze([]) as readonly Ca
 
 export class Diagram extends Selector implements RigidConnectorDragHost
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(Diagram, Element.DefaultStyleKeyKey, { default_value: Diagram });
     }
 
@@ -633,7 +635,8 @@ export class Diagram extends Selector implements RigidConnectorDragHost
     public SetCamera(c: Camera): void { this.Zoom = clampZoom(c.zoom); this.ScrollX = c.offsetX; this.ScrollY = c.offsetY; }
 
     // The enclosing ScrollViewer (PART_Scroll); pan lives on its scroll offset.
-    public get ScrollHost(): ScrollViewer | undefined {
+    public get ScrollHost(): ScrollViewer | undefined
+    {
         return this.GetTemplateChild('PART_Scroll') as unknown as ScrollViewer | undefined;
     }
     public get ScrollX(): number { return this.ScrollHost?.HorizontalOffset ?? 0; }
@@ -646,7 +649,8 @@ export class Diagram extends Selector implements RigidConnectorDragHost
     // content at -effectiveOffset), so dividing by Zoom (the LayoutTransform
     // scale) yields the content point. Single source of truth for the drop,
     // connector-hover, and figure-drag coordinate conversions.
-    public HostToContent(hostX: number, hostY: number): Point {
+    public HostToContent(hostX: number, hostY: number): Point
+    {
         let ox = 0, oy = 0;
         let cur: Visual | undefined = this.ItemsPanelInstance;
         while (cur !== undefined) { ox += cur.ArrangedRect.X; oy += cur.ArrangedRect.Y; cur = cur.GetVisualParent(); }
@@ -661,7 +665,8 @@ export class Diagram extends Selector implements RigidConnectorDragHost
     // the scroll host's own screen origin through HostToContent recovers the true
     // visible edge on both axes. Rulers + the guide create-band use this so they
     // never trust a stale scroll offset.
-    public VisibleContentOrigin(): Point {
+    public VisibleContentOrigin(): Point
+    {
         const sv = this.ScrollHost;
         const z = this.Zoom || 1;
         if (sv === undefined || this.ItemsPanelInstance === undefined)
@@ -691,11 +696,13 @@ export class Diagram extends Selector implements RigidConnectorDragHost
 
     // Frame all content; Fit-to-Selection frames the selection (falling back to
     // all content when nothing is selected).
-    public Fit(): void {
+    public Fit(): void
+    {
         const b = this.contentBounds();
         if (b !== undefined) this._applyFit(fitBounds(b, this._viewportSize(), Diagram.FIT_PADDING));
     }
-    public FitToSelection(): void {
+    public FitToSelection(): void
+    {
         const b = this.selectionBounds() ?? this.contentBounds();
         if (b !== undefined) this._applyFit(fitBounds(b, this._viewportSize(), Diagram.FIT_PADDING));
     }
@@ -704,7 +711,8 @@ export class Diagram extends Selector implements RigidConnectorDragHost
     private _applyFit(c: Camera): void { this.Zoom = c.zoom; this.ScrollX = c.offsetX; this.ScrollY = c.offsetY; }
     private _centerPivot(): Point { const v = this._viewportSize(); return new Point(v.Width / 2, v.Height / 2); }
 
-    private _viewportSize(): Size {
+    private _viewportSize(): Size
+    {
         if (this._testViewportSize !== undefined) return this._testViewportSize;
         const sv = this.GetTemplateChild('PART_Scroll') as unknown as { ViewportWidth?: number; ViewportHeight?: number } | undefined;
         return new Size(sv?.ViewportWidth ?? this.RenderSize.Width, sv?.ViewportHeight ?? this.RenderSize.Height);
@@ -712,18 +720,21 @@ export class Diagram extends Selector implements RigidConnectorDragHost
 
     // The selection's union bbox (content space) from the tracked Selection* DPs;
     // undefined when nothing is selected.
-    private selectionBounds(): Rect | undefined {
+    private selectionBounds(): Rect | undefined
+    {
         if (this.SelectionCount <= 0) return undefined;
         return new Rect(this.SelectionLeft, this.SelectionTop, this.SelectionWidth, this.SelectionHeight);
     }
 
     // Union of item-container ArrangedRects (content space); undefined when empty.
-    private contentBounds(): Rect | undefined {
+    private contentBounds(): Rect | undefined
+    {
         if (this._testContentBounds !== undefined) return this._testContentBounds;
         const panel = this.ItemsPanelInstance;
         if (panel === undefined) return undefined;
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        for (const child of panel.visualChildren) {
+        for (const child of panel.visualChildren)
+        {
             const r = child.ArrangedRect;
             if (r.Width === 0 && r.Height === 0) continue;
             minX = Math.min(minX, r.X); minY = Math.min(minY, r.Y);
@@ -1046,7 +1057,8 @@ export class Diagram extends Selector implements RigidConnectorDragHost
     private _bracketed(label: string, fn: () => void): void
     {
         this._beginEdit(label);
-        try { fn(); } finally { this._endEdit(); }
+        try { fn(); }
+        finally { this._endEdit(); }
     }
 
     // Internal fire helpers — invoked by DiagramCommands when the

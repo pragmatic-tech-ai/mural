@@ -98,7 +98,8 @@ export class ShapeFormatControl extends TemplatedControl
     public get TargetCapScale(): number              { return this.get_property_value(ShapeFormatControl.TargetCapScaleKey); }
     public set TargetCapScale(v: number)             { this.set_property_value(ShapeFormatControl.TargetCapScaleKey, v); }
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(ShapeFormatControl, Element.DefaultStyleKeyKey, { default_value: ShapeFormatControl });
     }
 
@@ -151,11 +152,13 @@ export class ShapeFormatControl extends TemplatedControl
             // Fill. Done under _syncing so the editor's own
             // OnPropertyChanged('Fill') round-trip is suppressed.
             this._syncing = true;
-            try { fe.Fill = this.Fill; } finally { this._syncing = false; }
+            try { fe.Fill = this.Fill; }
+            finally { this._syncing = false; }
             const handler = (): void => {
                 if (this._syncing) return;
                 this._syncing = true;
-                try { this.Fill = fe.Fill; } finally { this._syncing = false; }
+                try { this.Fill = fe.Fill; }
+                finally { this._syncing = false; }
             };
             const key = resolveKey(fe, undefined, 'Fill');
             this._partListeners.push(fe.PropertyChanged(key).subscribe(handler));
@@ -165,11 +168,13 @@ export class ShapeFormatControl extends TemplatedControl
         {
             const pe = this._penEditor;
             this._syncing = true;
-            try { pe.Pen = this.Stroke; } finally { this._syncing = false; }
+            try { pe.Pen = this.Stroke; }
+            finally { this._syncing = false; }
             const handler = (): void => {
                 if (this._syncing) return;
                 this._syncing = true;
-                try { this.Stroke = pe.Pen; } finally { this._syncing = false; }
+                try { this.Stroke = pe.Pen; }
+                finally { this._syncing = false; }
             };
             const key = resolveKey(pe, undefined, 'Pen');
             this._partListeners.push(pe.PropertyChanged(key).subscribe(handler));
@@ -207,7 +212,8 @@ export class ShapeFormatControl extends TemplatedControl
         // value into the matching editor under _syncing so the
         // editor's own property-change listener bails without echoing.
         this._syncing = true;
-        try {
+        try
+        {
             switch (descriptor.Name)
             {
                 case 'Fill':
@@ -229,7 +235,8 @@ export class ShapeFormatControl extends TemplatedControl
                     if (this._targetCapScale !== undefined) this._targetCapScale.Value = newValue as number;
                     break;
             }
-        } finally { this._syncing = false; }
+        }
+        finally { this._syncing = false; }
     }
 
     // Toggle PART_Editors / PART_EmptyMessage via the Visibility DP.
@@ -300,11 +307,13 @@ export class ShapeFormatControl extends TemplatedControl
     {
         if (edit === undefined) return;
         this._syncing = true;
-        try { edit.Value = get(); } finally { this._syncing = false; }
+        try { edit.Value = get(); }
+        finally { this._syncing = false; }
         const handler = (): void => {
             if (this._syncing) return;
             this._syncing = true;
-            try { set(edit.Value); } finally { this._syncing = false; }
+            try { set(edit.Value); }
+            finally { this._syncing = false; }
         };
         const key = resolveKey(edit, undefined, 'Value');
         this._partListeners.push(edit.PropertyChanged(key).subscribe(handler));
@@ -350,7 +359,8 @@ export class ShapeFormatControl extends TemplatedControl
             if (this._syncing) return;
             const sel = combo.SelectedItem as CapOption | undefined;
             this._syncing = true;
-            try { set(sel !== undefined ? sel.Template : undefined); } finally { this._syncing = false; }
+            try { set(sel !== undefined ? sel.Template : undefined); }
+            finally { this._syncing = false; }
         };
         const key = resolveKey(combo, undefined, 'SelectedItem');
         this._partListeners.push(combo.PropertyChanged(key).subscribe(handler));
@@ -366,6 +376,7 @@ export class ShapeFormatControl extends TemplatedControl
         const opts = (combo.Items ?? []) as CapOption[];
         const found = opts.find(o => o.Template === tpl);
         this._syncing = true;
-        try { combo.SelectedItem = found; } finally { this._syncing = false; }
+        try { combo.SelectedItem = found; }
+        finally { this._syncing = false; }
     }
 }

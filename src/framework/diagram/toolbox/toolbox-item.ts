@@ -40,7 +40,8 @@ export class ToolboxItem extends MuralBase
     public get Id():         string { return this.get_property_value(ToolboxItem.IdKey); }
     public get Label():      string { return this.get_property_value(ToolboxItem.LabelKey); }
     public get Descriptor(): ToolboxVisualDescriptor | undefined { return this.get_property_value(ToolboxItem.DescriptorKey); }
-    public get BeginDragData(): (() => { data: DataObject; effects: DragDropEffects }) | undefined {
+    public get BeginDragData(): (() => { data: DataObject; effects: DragDropEffects }) | undefined
+    {
         return this.get_property_value(ToolboxItem.BeginDragDataKey);
     }
 }

@@ -81,21 +81,24 @@ export function glyphToFigures(
     {
         switch (cmd.type)
         {
-            case 'M': {
+            case 'M':
+            {
                 flush(false);
                 const p = new Point(px(cmd.x!), py(cmd.y!));
                 start = p;
                 pen   = p;
                 break;
             }
-            case 'L': {
+            case 'L':
+            {
                 if (start === undefined) break;
                 const p = new Point(px(cmd.x!), py(cmd.y!));
                 segs.push(new LineSegment(p));
                 pen = p;
                 break;
             }
-            case 'Q': {
+            case 'Q':
+            {
                 if (start === undefined) break;
                 const c1 = new Point(px(cmd.x1!), py(cmd.y1!));
                 const p  = new Point(px(cmd.x!),  py(cmd.y!));
@@ -103,7 +106,8 @@ export function glyphToFigures(
                 pen = p;
                 break;
             }
-            case 'C': {
+            case 'C':
+            {
                 if (start === undefined) break;
                 const c1 = new Point(px(cmd.x1!), py(cmd.y1!));
                 const c2 = new Point(px(cmd.x2!), py(cmd.y2!));
@@ -112,7 +116,8 @@ export function glyphToFigures(
                 pen = p;
                 break;
             }
-            case 'Z': {
+            case 'Z':
+            {
                 flush(true);
                 break;
             }

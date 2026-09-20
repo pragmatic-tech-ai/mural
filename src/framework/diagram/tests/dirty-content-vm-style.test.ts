@@ -11,7 +11,8 @@ import { Application, MetaData, MuralBase, type PropertyKey } from '../../../run
 import { NodeViewModel } from '../node-view-model.js';
 import { DiagramDocument, type DiagramStorage } from '../diagram-document.js';
 
-class MemoryStorage implements DiagramStorage {
+class MemoryStorage implements DiagramStorage
+{
     private readonly _map = new Map<string, string>();
     public GetItem(key: string): string | null { return this._map.get(key) ?? null; }
     public SetItem(key: string, value: string): void { this._map.set(key, value); }
@@ -19,14 +20,16 @@ class MemoryStorage implements DiagramStorage {
 
 // A content VM whose persisted style lives in its own DP, declared for the
 // document's dirty-tracking via DirtyStyleKeys.
-class StyleVM extends NodeViewModel {
+class StyleVM extends NodeViewModel
+{
     public static readonly TintKey = MuralBase.RegisterProperty<string | undefined>(StyleVM, 'Tint', undefined, MetaData.None);
     public get Tint(): string | undefined { return this.get_property_value(StyleVM.TintKey); }
     public set Tint(v: string | undefined) { this.set_property_value(StyleVM.TintKey, v); }
     public DirtyStyleKeys(): PropertyKey<unknown>[] { return [StyleVM.TintKey as PropertyKey<unknown>]; }
 }
 
-function newDoc(): DiagramDocument {
+function newDoc(): DiagramDocument
+{
     Application.current = null;
     new Application();
     return new DiagramDocument(new MemoryStorage());

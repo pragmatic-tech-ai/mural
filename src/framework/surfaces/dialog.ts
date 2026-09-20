@@ -45,7 +45,8 @@ export class Dialog extends ContentControl
         this.applyDefaultStyle();
     }
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(
             Dialog, Element.DefaultStyleKeyKey,
             { default_value: Dialog });

@@ -44,7 +44,8 @@ describe('TopAppBar — template parts', () => {
 
     test('Each Variant template carries the same three named parts', () => {
         for (const v of [TopAppBarVariant.Small, TopAppBarVariant.CenterAligned,
-                         TopAppBarVariant.Medium, TopAppBarVariant.Large]) {
+                         TopAppBarVariant.Medium, TopAppBarVariant.Large])
+                         {
             const bar = new TopAppBar();
             bar.Variant = v;
             const root = bar.visualChildren[0];
@@ -247,7 +248,8 @@ describe('TopAppBar — scroll-collapse', () => {
     // PART_Border's Height — every variant's Border carries a distinct
     // height (Small/CenterAligned = 64, Medium = 112, Large = 152),
     // so it's a stable proxy for "which template is live".
-    function appliedHeight(bar: TopAppBar): number {
+    function appliedHeight(bar: TopAppBar): number
+    {
         const border = bar.visualChildren[0].FindName('PART_Border') as Border;
         return border.Height;
     }

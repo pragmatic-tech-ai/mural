@@ -17,7 +17,8 @@ import { arcToCubics } from '../arc-to-cubic.js';
 
 const TWO_PI = 2 * Math.PI;
 
-function approx(a: number, b: number, eps = 1e-9): boolean {
+function approx(a: number, b: number, eps = 1e-9): boolean
+{
     return Math.abs(a - b) <= eps;
 }
 
@@ -28,7 +29,8 @@ function evalCubic(p0x: number, p0y: number,
                    p1x: number, p1y: number,
                    p2x: number, p2y: number,
                    p3x: number, p3y: number,
-                   t: number): [number, number] {
+                   t: number): [number, number]
+                   {
     const mt = 1 - t;
     const b0 = mt * mt * mt;
     const b1 = 3 * mt * mt * t;
@@ -131,7 +133,8 @@ describe('arcToCubics — max-error sweep', () => {
         let maxErr = 0;
         // Sample the cubic at t = 0, 1/15, …, 1. For each sample,
         // distance to nearest point on the true circle = ||(x,y)|| - R.
-        for (let i = 0; i <= 15; ++i) {
+        for (let i = 0; i <= 15; ++i)
+        {
             const t = i / 15;
             const [x, y] = evalCubic(
                 c.fPts[0]!.fX, c.fPts[0]!.fY,
@@ -154,8 +157,10 @@ describe('arcToCubics — max-error sweep', () => {
         assert.equal(out.length, 2);
         const R = 50;
         let maxErr = 0;
-        for (const c of out) {
-            for (let i = 0; i <= 15; ++i) {
+        for (const c of out)
+        {
+            for (let i = 0; i <= 15; ++i)
+            {
                 const t = i / 15;
                 const [x, y] = evalCubic(
                     c.fPts[0]!.fX, c.fPts[0]!.fY,

@@ -312,7 +312,8 @@ describe('MarqueeSelectionBehavior — click-on-empty-space with VirtualizingWra
     // Builds a ListBox laid out like the word-toolbox demo: VirtualizingWrapPanel
     // ItemsPanel with HorizontalSpacing/VerticalSpacing, 9 data items in a 3×3
     // grid, SelectionMode=Extended, AllowMarqueeSelection=true.
-    function buildWrapFixture(): { lb: ListBox; panel: VirtualizingWrapPanel; target: HeadlessTarget } {
+    function buildWrapFixture(): { lb: ListBox; panel: VirtualizingWrapPanel; target: HeadlessTarget }
+    {
         const lb = new ListBox();
         lb.SelectionMode = SelectionMode.Extended;
         const panel = new VirtualizingWrapPanel();

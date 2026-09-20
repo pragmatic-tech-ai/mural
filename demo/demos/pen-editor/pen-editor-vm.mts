@@ -27,7 +27,8 @@ export class PenEditorDemoVM extends MuralBase
     static JoinReadoutKey      = MuralBase.RegisterProperty<string>(PenEditorDemoVM, 'JoinReadout',      '',        MetaData.None);
     static MiterReadoutKey     = MuralBase.RegisterProperty<string>(PenEditorDemoVM, 'MiterReadout',     '',        MetaData.None);
 
-    constructor() {
+    constructor()
+    {
         super();
         const pen = new Pen(new SolidColorBrush(Color.FromHex('#f59e0b')), 4);
         this.set_property_value(PenEditorDemoVM.PenKey, pen);
@@ -47,14 +48,17 @@ export class PenEditorDemoVM extends MuralBase
     // Subscribe to every property on the bound Pen so the status
     // strings track live edits. Plain field for the unsubscribe thunks
     // — view-invisible state, fine to live off the DP surface.
-    _installPenWatchers(pen: Pen): void {
+    _installPenWatchers(pen: Pen): void
+    {
         const refresh = (): void => this._refreshReadouts();
-        for (const key of [Pen.BrushKey, Pen.ThicknessKey, Pen.DashStyleKey, Pen.LineCapKey, Pen.LineJoinKey, Pen.MiterLimitKey]) {
+        for (const key of [Pen.BrushKey, Pen.ThicknessKey, Pen.DashStyleKey, Pen.LineCapKey, Pen.LineJoinKey, Pen.MiterLimitKey])
+        {
             pen.PropertyChanged(key).subscribe(refresh);
         }
     }
 
-    _refreshReadouts(): void {
+    _refreshReadouts(): void
+    {
         const pen = this.Pen;
         if (pen === undefined) return;
         this.set_property_value(PenEditorDemoVM.BrushSummaryKey,     describeBrush(pen.Brush));
@@ -66,7 +70,8 @@ export class PenEditorDemoVM extends MuralBase
     }
 }
 
-function formatNum(value: number): string {
+function formatNum(value: number): string
+{
     if (Math.abs(value - Math.round(value)) < 1e-6) return String(Math.round(value));
     return value.toFixed(1);
 }
@@ -75,13 +80,15 @@ function formatNum(value: number): string {
 // duck-types into. Base Brush exposes only Opacity/Transform, so we cast to
 // this shape; fields are optional since which exist depends on the runtime
 // brush class.
-interface BrushSummaryShape {
+interface BrushSummaryShape
+{
     Color?:         { ToHex?(): string };
     GradientStops?: readonly unknown[];
     Kind?:          unknown;
 }
 
-function describeBrush(brush: Brush | undefined): string {
+function describeBrush(brush: Brush | undefined): string
+{
     if (brush === undefined) return 'Brush: (none)';
     const name = brush.constructor?.name ?? 'Brush';
     // Duck-typed subtype reads — base Brush lacks these; cast to the shape.
@@ -93,7 +100,8 @@ function describeBrush(brush: Brush | undefined): string {
     return `Brush: ${name}`;
 }
 
-function describeDash(dash: DashStyle | undefined): string {
+function describeDash(dash: DashStyle | undefined): string
+{
     if (dash === undefined || dash.Dashes === undefined) return 'Solid';
     const d = dash.Dashes;
     if (d.length === 0) return 'Solid';

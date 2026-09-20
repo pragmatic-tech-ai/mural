@@ -2,7 +2,8 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { Panel, Element, Size, type DrawingContext } from '../../runtime/index.js';
 
-class Leaf extends Element {
+class Leaf extends Element
+{
     protected override MeasureOverride(_a: Size): Size { return new Size(10, 10); }
     protected override RenderOverride(_dc: DrawingContext): void { }
 }

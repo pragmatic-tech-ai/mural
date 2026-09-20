@@ -44,7 +44,8 @@ export class IconButtonVM extends MuralBase
     get ClickOutlinedCommand(): RelayCommand | null { return this.get_property_value(IconButtonVM.ClickOutlinedCommandKey); }
     get ClickStandardCommand(): RelayCommand | null { return this.get_property_value(IconButtonVM.ClickStandardCommandKey); }
 
-    constructor() {
+    constructor()
+    {
         super();
         this.set_property_value(IconButtonVM.ClickFilledCommandKey,   new RelayCommand(() => { this.FilledClicks   += 1; }));
         this.set_property_value(IconButtonVM.ClickTonalCommandKey,    new RelayCommand(() => { this.TonalClicks    += 1; }));

@@ -40,43 +40,50 @@ import {
 // A chopped quadratic — five points arranged so [0..2] is the first
 // half and [2..4] is the second half (the shared middle point sits at
 // pts[2]). Mirrors Skia's QuadPair struct.
-export class QuadPair {
+export class QuadPair
+{
     public pts: [Point, Point, Point, Point, Point];
 
-    constructor() {
+    constructor()
+    {
         this.pts = [
             new Point(), new Point(), new Point(),
             new Point(), new Point(),
         ];
     }
 
-    public first(): Quad {
+    public first(): Quad
+    {
         const q = new Quad();
         q.fPts = [this.pts[0], this.pts[1], this.pts[2]];
         return q;
     }
 
-    public second(): Quad {
+    public second(): Quad
+    {
         const q = new Quad();
         q.fPts = [this.pts[2], this.pts[3], this.pts[4]];
         return q;
     }
 }
 
-export class Quad {
+export class Quad
+{
     public static readonly kPointCount = 3;
     public static readonly kPointLast = 2;
     public static readonly kMaxIntersections = 4;
 
     public fPts: [Point, Point, Point];
 
-    constructor(p0?: Point, p1?: Point, p2?: Point) {
+    constructor(p0?: Point, p1?: Point, p2?: Point)
+    {
         this.fPts = [p0 ?? new Point(), p1 ?? new Point(), p2 ?? new Point()];
     }
 
     // True when every control collapses to (approximately) one point.
     // Used by the boolean engine to discard degenerate input.
-    public collapsed(): boolean {
+    public collapsed(): boolean
+    {
         return this.fPts[0].approximatelyEqual(this.fPts[1])
             && this.fPts[0].approximatelyEqual(this.fPts[2]);
     }
@@ -84,7 +91,8 @@ export class Quad {
     // True when the control point projects between (rather than past)
     // the endpoints along the chord direction — i.e. the curve is a
     // normal arched quadratic, not an "S-shape" or crossing form.
-    public controlsInside(): boolean {
+    public controlsInside(): boolean
+    {
         const v01 = this.fPts[0].sub(this.fPts[1]);
         const v02 = this.fPts[0].sub(this.fPts[2]);
         const v12 = this.fPts[1].sub(this.fPts[2]);
@@ -92,7 +100,8 @@ export class Quad {
     }
 
     // Reverse traversal direction (swap endpoints, control unchanged).
-    public flip(): Quad {
+    public flip(): Quad
+    {
         return new Quad(this.fPts[2], this.fPts[1], this.fPts[0]);
     }
 
@@ -101,9 +110,11 @@ export class Quad {
     // when oddMan is in the middle, otherwise natural order). Used by
     // hull-intersection rejection in the intersection routines.
     // Mirrors the bit-twiddling table in SkPathOpsQuad.cpp:99-114.
-    public otherPts(oddMan: number): [Point, Point] {
+    public otherPts(oddMan: number): [Point, Point]
+    {
         const result: Point[] = [];
-        for (let opp = 1; opp < Quad.kPointCount; ++opp) {
+        for (let opp = 1; opp < Quad.kPointCount; ++opp)
+        {
             let end = (oddMan ^ opp) - oddMan;
             end &= ~(end >> 2); // negative → 0
             result.push(this.fPts[end as 0 | 1 | 2]);
@@ -121,15 +132,18 @@ export class Quad {
     // Returns the number of real roots written into s[]. The same root
     // may be written twice in the s[0..1] buffer; callers should pin
     // duplicates via AddValidTs / AlmostDequalUlps.
-    public static RootsReal(A: number, B: number, C: number, s: number[]): number {
+    public static RootsReal(A: number, B: number, C: number, s: number[]): number
+    {
         if (A === 0) return Quad.handle_zero(B, C, s);
         const p = B / (2 * A);
         const q = C / A;
-        if (approximately_zero(A) && (approximately_zero_inverse(p) || approximately_zero_inverse(q))) {
+        if (approximately_zero(A) && (approximately_zero_inverse(p) || approximately_zero_inverse(q)))
+        {
             return Quad.handle_zero(B, C, s);
         }
         const p2 = p * p;
-        if (!AlmostDequalUlps(p2, q) && p2 < q) {
+        if (!AlmostDequalUlps(p2, q) && p2 < q)
+        {
             // No real roots — discriminant negative.
             return 0;
         }
@@ -141,8 +155,10 @@ export class Quad {
     }
 
     // Linear-degenerate fallback when A=0: equation becomes Bx + C = 0.
-    private static handle_zero(B: number, C: number, s: number[]): number {
-        if (approximately_zero(B)) {
+    private static handle_zero(B: number, C: number, s: number[]): number
+    {
+        if (approximately_zero(B))
+        {
             s[0] = 0;
             return C === 0 ? 1 : 0;
         }
@@ -152,18 +168,25 @@ export class Quad {
 
     // Filter raw roots into the [0, 1] T-range with deduplication.
     // Snaps roots within FLT_EPSILON of an endpoint to exactly 0 or 1.
-    public static AddValidTs(s: number[], realRoots: number, t: number[]): number {
+    public static AddValidTs(s: number[], realRoots: number, t: number[]): number
+    {
         let foundRoots = 0;
         outer:
-        for (let index = 0; index < realRoots; ++index) {
+        for (let index = 0; index < realRoots; ++index)
+        {
             let tValue = s[index]!;
-            if (approximately_zero_or_more(tValue) && approximately_one_or_less(tValue)) {
-                if (approximately_less_than_zero(tValue)) {
+            if (approximately_zero_or_more(tValue) && approximately_one_or_less(tValue))
+            {
+                if (approximately_less_than_zero(tValue))
+                {
                     tValue = 0;
-                } else if (approximately_greater_than_one(tValue)) {
+                }
+                else if (approximately_greater_than_one(tValue))
+                {
                     tValue = 1;
                 }
-                for (let idx2 = 0; idx2 < foundRoots; ++idx2) {
+                for (let idx2 = 0; idx2 < foundRoots; ++idx2)
+                {
                     if (approximately_equal(t[idx2]!, tValue)) continue outer;
                 }
                 t[foundRoots++] = tValue;
@@ -173,7 +196,8 @@ export class Quad {
     }
 
     // Combined: solve Ax² + Bx + C = 0 and return only roots in [0, 1].
-    public static RootsValidT(A: number, B: number, C: number, t: number[]): number {
+    public static RootsValidT(A: number, B: number, C: number, t: number[]): number
+    {
         const s: number[] = [0, 0];
         const realRoots = Quad.RootsReal(A, B, C, s);
         return Quad.AddValidTs(s, realRoots, t);
@@ -183,7 +207,8 @@ export class Quad {
 
     // ptAtT: evaluate the quadratic at parameter t using the Bernstein
     // basis. Short-circuits the endpoints for exact preservation.
-    public ptAtT(t: number): Point {
+    public ptAtT(t: number): Point
+    {
         if (t === 0) return this.fPts[0];
         if (t === 1) return this.fPts[2];
         const one_t = 1 - t;
@@ -202,7 +227,8 @@ export class Quad {
     // (the factor of 2 is dropped in Skia's port since derivative
     // direction matters more than magnitude in the typical caller —
     // matches the C++ source line-for-line).
-    public dxdyAtT(t: number): Vector {
+    public dxdyAtT(t: number): Vector
+    {
         const a = t - 1;
         const b = 1 - 2 * t;
         const c = t;
@@ -210,10 +236,12 @@ export class Quad {
             a * this.fPts[0].fX + b * this.fPts[1].fX + c * this.fPts[2].fX,
             a * this.fPts[0].fY + b * this.fPts[1].fY + c * this.fPts[2].fY,
         );
-        if (result.fX === 0 && result.fY === 0) {
+        if (result.fX === 0 && result.fY === 0)
+        {
             // Degenerate: derivative collapses to (0,0). At the
             // endpoints, fall back to the chord direction.
-            if (zero_or_one(t)) {
+            if (zero_or_one(t))
+            {
                 return this.fPts[2].sub(this.fPts[0]);
             }
             // Skia logs "!q" in debug; we silently leave (0,0) here —
@@ -225,11 +253,13 @@ export class Quad {
     // True iff x-coordinates are non-strictly monotonic along the
     // control polygon (so the curve cannot have an x-extremum strictly
     // inside the parameter range).
-    public monotonicInX(): boolean {
+    public monotonicInX(): boolean
+    {
         return between(this.fPts[0].fX, this.fPts[1].fX, this.fPts[2].fX);
     }
 
-    public monotonicInY(): boolean {
+    public monotonicInY(): boolean
+    {
         return between(this.fPts[0].fY, this.fPts[1].fY, this.fPts[2].fY);
     }
 
@@ -239,7 +269,8 @@ export class Quad {
     // [t1, t2]. Computes endpoints by evaluating at t1/t2, then derives
     // the control point from a midpoint sample using the algebra
     // documented in SkPathOpsQuad.cpp:261-282.
-    public subDivide(t1: number, t2: number): Quad {
+    public subDivide(t1: number, t2: number): Quad
+    {
         if (t1 === 0 && t2 === 1) return this;
         const dst = new Quad();
         const ax = dst.fPts[0].fX = interp_quad_coords_scalar(this, /*axis*/ 0, t1);
@@ -255,7 +286,8 @@ export class Quad {
 
     // chopAt(t): split the curve into two halves at parameter t.
     // The two halves share the curve point at t (pts[2] in the pair).
-    public chopAt(t: number): QuadPair {
+    public chopAt(t: number): QuadPair
+    {
         const dst = new QuadPair();
         interp_quad_chop(this, /*axis*/ 0, dst.pts, t);
         interp_quad_chop(this, /*axis*/ 1, dst.pts, t);
@@ -265,7 +297,8 @@ export class Quad {
     // align: when an endpoint shares an exact x or y with the control
     // point, snap dstPt to that exact value. Used during subdivision
     // to preserve axis-aligned chord directions.
-    public align(endIndex: number, dstPt: Point): void {
+    public align(endIndex: number, dstPt: Point): void
+    {
         const end = this.fPts[endIndex as 0 | 1 | 2];
         if (end.fX === this.fPts[1].fX) dstPt.fX = end.fX;
         if (end.fY === this.fPts[1].fY) dstPt.fY = end.fY;
@@ -278,7 +311,8 @@ export class Quad {
     // our TS port the caller passes the three coordinate values
     // directly. Returns 1 if there's a valid extremum in (0, 1),
     // writing it to tValue[0]; 0 otherwise.
-    public static FindExtrema(a: number, b: number, c: number, tValue: number[]): number {
+    public static FindExtrema(a: number, b: number, c: number, tValue: number[]): number
+    {
         return valid_unit_divide(a - b, a - b - b + c, tValue);
     }
 
@@ -291,7 +325,8 @@ export class Quad {
     //       = (A - 2B + C)·t² + (2B - 2C)·t + C
     //
     //   a = A - 2B + C       b = 2B - 2C       c = C
-    public static SetABC(p0: number, p1: number, p2: number): { a: number, b: number, c: number } {
+    public static SetABC(p0: number, p1: number, p2: number): { a: number, b: number, c: number }
+    {
         let a = p0;
         let b = 2 * p1;
         const c = p2;
@@ -304,20 +339,25 @@ export class Quad {
     // boundingRect(): axis-aligned bounding box. Reproduces Skia's
     // Rect::setBounds(Quad) — start with the endpoints, then
     // expand to include each axis-extremum point.
-    public boundingRect(): Rect {
+    public boundingRect(): Rect
+    {
         const rect = new Rect();
         rect.set(this.fPts[0]);
         rect.add(this.fPts[2]);
         const tValues: number[] = [];
-        if (!this.monotonicInX()) {
+        if (!this.monotonicInX())
+        {
             const tx: [number] = [0];
-            if (Quad.FindExtrema(this.fPts[0].fX, this.fPts[1].fX, this.fPts[2].fX, tx)) {
+            if (Quad.FindExtrema(this.fPts[0].fX, this.fPts[1].fX, this.fPts[2].fX, tx))
+            {
                 tValues.push(tx[0]);
             }
         }
-        if (!this.monotonicInY()) {
+        if (!this.monotonicInY())
+        {
             const ty: [number] = [0];
-            if (Quad.FindExtrema(this.fPts[0].fY, this.fPts[1].fY, this.fPts[2].fY, ty)) {
+            if (Quad.FindExtrema(this.fPts[0].fY, this.fPts[1].fY, this.fPts[2].fY, ty))
+            {
                 tValues.push(ty[0]);
             }
         }
@@ -337,9 +377,11 @@ export class Quad {
     // true when the hull degenerates to a line (the rotation found no
     // odd man on either side, meaning all control points are
     // collinear). Mirrors SkPathOpsQuad.cpp:53.
-    public hullIntersects(q2: Quad, isLinear: { value: boolean }): boolean {
+    public hullIntersects(q2: Quad, isLinear: { value: boolean }): boolean
+    {
         let linear = true;
-        for (let oddMan = 0; oddMan < Quad.kPointCount; ++oddMan) {
+        for (let oddMan = 0; oddMan < Quad.kPointCount; ++oddMan)
+        {
             const endPt = this.otherPts(oddMan);
             const origX = endPt[0]!.fX;
             const origY = endPt[0]!.fY;
@@ -350,10 +392,12 @@ export class Quad {
             if (approximately_zero_pathops(sign)) continue;
             linear = false;
             let foundOutlier = false;
-            for (let n = 0; n < Quad.kPointCount; ++n) {
+            for (let n = 0; n < Quad.kPointCount; ++n)
+            {
                 const test = (q2.fPts[n as 0|1|2].fY - origY) * adj
                            - (q2.fPts[n as 0|1|2].fX - origX) * opp;
-                if (test * sign > 0 && !precisely_zero_pathops(test)) {
+                if (test * sign > 0 && !precisely_zero_pathops(test))
+                {
                     foundOutlier = true;
                     break;
                 }
@@ -423,7 +467,8 @@ function precisely_zero_pathops(x: number): boolean
 // `axis` selects fX (0) or fY (1). Mirrors interp_quad_coords in
 // SkPathOpsQuad.cpp:240, parameterised by axis so we can call it for x
 // or y without juggling pointers like the C++ does.
-function interp_quad_coords_scalar(q: Quad, axis: 0 | 1, t: number): number {
+function interp_quad_coords_scalar(q: Quad, axis: 0 | 1, t: number): number
+{
     const k = axis === 0 ? 'fX' : 'fY';
     if (t === 0) return q.fPts[0][k];
     if (t === 1) return q.fPts[2][k];
@@ -439,7 +484,8 @@ function interp_quad_chop(
     q: Quad, axis: 0 | 1,
     dstPts: [Point, Point, Point, Point, Point],
     t: number,
-): void {
+): void
+{
     const k = axis === 0 ? 'fX' : 'fY';
     const src0 = q.fPts[0][k];
     const src2 = q.fPts[1][k];
@@ -456,7 +502,8 @@ function interp_quad_chop(
 // valid_unit_divide: numer/denom only if the result is strictly in
 // (0, 1). Returns 1 if so, 0 otherwise. Used by FindExtrema. Mirrors
 // SkPathOpsQuad.cpp:362.
-function valid_unit_divide(numer: number, denom: number, ratio: number[]): number {
+function valid_unit_divide(numer: number, denom: number, ratio: number[]): number
+{
     if (numer < 0) { numer = -numer; denom = -denom; }
     if (denom === 0 || numer === 0 || numer >= denom) return 0;
     const r = numer / denom;

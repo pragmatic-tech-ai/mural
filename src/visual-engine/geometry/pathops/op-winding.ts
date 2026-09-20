@@ -55,7 +55,8 @@ import { HorizontalInterceptCubic, VerticalInterceptCubic } from './cubic-line-i
 import { HorizontalInterceptQuad,  VerticalInterceptQuad  } from './quad-line-intersection.js';
 
 // SkPathOpsWinding.cpp:48 — four cardinal scan-line directions.
-export enum OpRayDir {
+export enum OpRayDir
+{
     kLeft   = 0,
     kTop    = 1,
     kRight  = 2,
@@ -95,7 +96,8 @@ function pt_dydx(v: { fX?: number; fY?: number; x?: number; y?: number }, dir: O
 
 function rect_side(r: Rect, dir: OpRayDir): number
 {
-    switch (dir) {
+    switch (dir)
+    {
         case OpRayDir.kLeft:   return r.fLeft;
         case OpRayDir.kTop:    return r.fTop;
         case OpRayDir.kRight:  return r.fRight;
@@ -122,7 +124,8 @@ function ccw_dxdy(v: { x: number; y: number }, dir: OpRayDir): boolean
 }
 
 // SkPathOpsWinding.cpp:103.
-export class OpRayHit {
+export class OpRayHit
+{
     public fNext: OpRayHit | undefined = undefined;
     public fSpan: OpSpan   | undefined = undefined;
     public fPt:   Point   = new Point();
@@ -151,8 +154,10 @@ function curveIntercept(verb: OpVerb, pts: readonly Point[], _weight: number,
                          axisIntercept: number, dirIsHoriz: boolean,
                          roots: number[]): number
 {
-    switch (verb) {
-        case OpVerb.kLine: {
+    switch (verb)
+    {
+        case OpVerb.kLine:
+        {
             // Line: solve y = a + bt for t at given y (or x for vertical).
             const p0 = pts[0]!, p1 = pts[1]!;
             const base = dirIsHoriz ? p0.fY : p0.fX;
@@ -163,14 +168,16 @@ function curveIntercept(verb: OpVerb, pts: readonly Point[], _weight: number,
             roots[0] = t < 0 ? 0 : t > 1 ? 1 : t;
             return 1;
         }
-        case OpVerb.kQuad: {
+        case OpVerb.kQuad:
+        {
             const q = new Quad();
             q.fPts = [pts[0]!, pts[1]!, pts[2]!];
             return dirIsHoriz
                 ? HorizontalInterceptQuad(q, axisIntercept, roots)
                 : VerticalInterceptQuad(q, axisIntercept, roots);
         }
-        case OpVerb.kCubic: {
+        case OpVerb.kCubic:
+        {
             const c = new Cubic();
             c.fPts = [pts[0]!, pts[1]!, pts[2]!, pts[3]!];
             return dirIsHoriz
@@ -186,8 +193,10 @@ function curveIntercept(verb: OpVerb, pts: readonly Point[], _weight: number,
 // OpSegment's prototype so OpContour can reach it via the OpSegment
 // methods we already export.
 
-declare module './op-segment.js' {
-    interface OpSegment {
+declare module './op-segment.js'
+{
+    interface OpSegment
+    {
         rayCheck(base: OpRayHit, dir: OpRayDir, hitsRef: { value: OpRayHit | undefined }): void;
     }
 }
@@ -216,22 +225,31 @@ OpSegment.prototype.rayCheck = function(this: OpSegment,
     const dirIsHoriz = xy_index(dir) === 0;
     const roots = curveIntercept(this.fVerb, this.fPts, this.fWeight, baseYX,
                                   dirIsHoriz, tVals);
-    for (let index = 0; index < roots; ++index) {
+    for (let index = 0; index < roots; ++index)
+    {
         const t = tVals[index]!;
         if ((base.fSpan!.segment() as OpSegment) === this
             && approximately_equal(base.fT, t)) continue;
         let slope: { x: number; y: number } = { x: 0, y: 0 };
         let pt: Point;
         let valid = false;
-        if (approximately_zero(t)) {
+        if (approximately_zero(t))
+        {
             pt = this.fPts[0]!;
-        } else if (approximately_equal(t, 1)) {
+        }
+        else if (approximately_equal(t, 1))
+        {
             pt = this.fPts[verbToPoints(this.fVerb)]!;
-        } else {
+        }
+        else
+        {
             pt = this.ptAtT(t);
-            if (pt.equals(base.fPt)) {
+            if (pt.equals(base.fPt))
+            {
                 if ((base.fSpan!.segment() as OpSegment) === this) continue;
-            } else {
+            }
+            else
+            {
                 const ptXY = pt_xy(pt, dir);
                 if (!approximately_equal(baseXY, ptXY) && (baseXY < ptXY) === checkLessThan) continue;
                 slope = this.dSlopeAtT(t);
@@ -242,15 +260,19 @@ OpSegment.prototype.rayCheck = function(this: OpSegment,
                 {
                     continue;
                 }
-                if (Math.abs(pt_dydx(slope, dir) * 10000) > Math.abs(pt_dxdy(slope, dir))) {
+                if (Math.abs(pt_dydx(slope, dir) * 10000) > Math.abs(pt_dxdy(slope, dir)))
+                {
                     valid = true;
                 }
             }
         }
         const span = this.windingSpanAtT(t);
-        if (span === undefined) {
+        if (span === undefined)
+        {
             valid = false;
-        } else if (span.windValue() === 0 && span.oppValue() === 0) {
+        }
+        else if (span.windValue() === 0 && span.oppValue() === 0)
+        {
             continue;
         }
         const hit = new OpRayHit();
@@ -266,8 +288,10 @@ OpSegment.prototype.rayCheck = function(this: OpSegment,
 
 // OpSegment.windingSpanAtT — walk the chain, return the OpSpan whose
 // [t, next.t) interval contains tHit.
-declare module './op-segment.js' {
-    interface OpSegment {
+declare module './op-segment.js'
+{
+    interface OpSegment
+    {
         _windingSpanAtTImpl(tHit: number): OpSpan | undefined;
     }
 }
@@ -276,7 +300,8 @@ OpSegment.prototype._windingSpanAtTImpl = function(this: OpSegment, tHit: number
 {
     let span: OpSpan = this.fHead;
     let next: OpSpanBase;
-    for (;;) {
+    for (;;)
+    {
         next = span.next();
         if (approximately_equal(tHit, next.t())) return undefined;
         if (tHit < next.t()) return span;
@@ -287,8 +312,10 @@ OpSegment.prototype._windingSpanAtTImpl = function(this: OpSegment, tHit: number
 };
 
 // OpSegment.findSortableTop — first span whose winding can propagate.
-declare module './op-segment.js' {
-    interface OpSegment {
+declare module './op-segment.js'
+{
+    interface OpSegment
+    {
         _findSortableTopImpl(contourHead: OpContourHead): OpSpan | undefined;
     }
 }
@@ -297,9 +324,11 @@ OpSegment.prototype._findSortableTopImpl = function(this: OpSegment, contourHead
 {
     let span: OpSpan = this.fHead;
     let next: OpSpanBase;
-    for (;;) {
+    for (;;)
+    {
         next = span.next();
-        if (!span.done()) {
+        if (!span.done())
+        {
             if (span.windSum() !== SK_MIN_S32) return span;
             if (span.sortableTop(contourHead)) return span;
         }
@@ -311,8 +340,10 @@ OpSegment.prototype._findSortableTopImpl = function(this: OpSegment, contourHead
 
 // ── OpContour.rayCheck + findSortableTop ─────────────────────────
 
-declare module './op-contour.js' {
-    interface OpContour {
+declare module './op-contour.js'
+{
+    interface OpContour
+    {
         rayCheck(base: OpRayHit, dir: OpRayDir, hitsRef: { value: OpRayHit | undefined }): void;
         findSortableTop(contourHead: OpContourHead): OpSpan | undefined;
     }
@@ -327,7 +358,8 @@ OpContour.prototype.rayCheck = function(this: OpContour,
     const checkLessThan = less_than(dir);
     if (!approximately_equal(baseXY, boundsXY) && (baseXY < boundsXY) === checkLessThan) return;
     let segment: OpSegment | undefined = this.fHead;
-    while (segment !== undefined) {
+    while (segment !== undefined)
+    {
         segment.rayCheck(base, dir, hitsRef);
         segment = segment.next();
     }
@@ -337,10 +369,13 @@ OpContour.prototype.findSortableTop = function(this: OpContour,
                                                 contourHead: OpContourHead): OpSpan | undefined
 {
     let allDone = true;
-    if (this.fCount) {
+    if (this.fCount)
+    {
         let testSegment: OpSegment | undefined = this.fHead;
-        while (testSegment !== undefined) {
-            if (!testSegment.done()) {
+        while (testSegment !== undefined)
+        {
+            if (!testSegment.done())
+            {
                 allDone = false;
                 const result = testSegment.findSortableTop(contourHead);
                 if (result !== undefined) return result;
@@ -354,8 +389,10 @@ OpContour.prototype.findSortableTop = function(this: OpContour,
 
 // ── OpSpan.sortableTop + computeWindSum ──────────────────────────
 
-declare module './op-span.js' {
-    interface OpSpan {
+declare module './op-span.js'
+{
+    interface OpSpan
+    {
         sortableTop(contourHead: OpContourHead): boolean;
         computeWindSum(): number;
     }
@@ -370,11 +407,13 @@ function getTGuess(tTry: number, dirOffsetOut: { value: number }): number
     const tBase = tTry >> 1;
     let tBits = 0;
     let tTryShifted = tTry;
-    while ((tTryShifted >>= 1) !== 0) {
+    while ((tTryShifted >>= 1) !== 0)
+    {
         t /= 2;
         ++tBits;
     }
-    if (tBits) {
+    if (tBits)
+    {
         const tIndex = (tBase - 1) & ((1 << tBits) - 1);
         t += t * 2 * tIndex;
     }
@@ -398,8 +437,10 @@ OpSpan.prototype.sortableTop = function(this: OpSpan, contourHead: OpContourHead
     }
     // Walk every contour.
     let contour: OpContour | undefined = contourHead;
-    while (contour !== undefined) {
-        if (contour.count() !== 0) {
+    while (contour !== undefined)
+    {
+        if (contour.count() !== 0)
+        {
             contour.rayCheck(hitBase, dir, hitsRef);
         }
         contour = contour.next();
@@ -407,7 +448,8 @@ OpSpan.prototype.sortableTop = function(this: OpSpan, contourHead: OpContourHead
     // Sort hits along the scan-line axis (depending on dir).
     const sorted: OpRayHit[] = [];
     let walk = hitsRef.value;
-    while (walk !== undefined) {
+    while (walk !== undefined)
+    {
         sorted.push(walk);
         walk = walk.fNext;
     }
@@ -423,7 +465,8 @@ OpSpan.prototype.sortableTop = function(this: OpSpan, contourHead: OpContourHead
     let wind = 0;
     let oppWind = 0;
     const count = sorted.length;
-    for (let index = 0; index < count; ++index) {
+    for (let index = 0; index < count; ++index)
+    {
         const hit = sorted[index]!;
         if (!hit.fValid) return false;
         const ccw = ccw_dxdy(hit.fSlope, dir);
@@ -432,7 +475,8 @@ OpSpan.prototype.sortableTop = function(this: OpSpan, contourHead: OpContourHead
         const hitSegment = span.segment() as OpSegment;
         if (span.windValue() === 0 && span.oppValue() === 0) continue;
         if (last !== undefined && last.equals(hit.fPt)) return false;
-        if (index < count - 1) {
+        if (index < count - 1)
+        {
             if (sorted[index + 1]!.fPt.equals(hit.fPt)) return false;
         }
         const operand = hitSegment.operand();
@@ -446,19 +490,25 @@ OpSpan.prototype.sortableTop = function(this: OpSpan, contourHead: OpContourHead
         let sumSet = false;
         const spanSum = span.windSum();
         const windSum = OpSegment.UseInnerWinding(lastWind, wind) ? wind : lastWind;
-        if (spanSum === SK_MIN_S32) {
+        if (spanSum === SK_MIN_S32)
+        {
             span.setWindSum(windSum);
             sumSet = true;
         }
         const oSpanSum = span.oppSum();
         const oppSum = OpSegment.UseInnerWinding(lastOpp, oppWind) ? oppWind : lastOpp;
-        if (oSpanSum === SK_MIN_S32) {
+        if (oSpanSum === SK_MIN_S32)
+        {
             span.setOppSum(oppSum);
         }
-        if (sumSet) {
-            if (this.globalState().phase() === OpPhase.kFixWinding) {
+        if (sumSet)
+        {
+            if (this.globalState().phase() === OpPhase.kFixWinding)
+            {
                 (hitSegment.contour() as unknown as { setCcw(c: number): void }).setCcw(ccw ? 1 : 0);
-            } else {
+            }
+            else
+            {
                 void hitSegment.markAndChaseWindingBinary(span, span.next(), windSum, oppSum, undefined);
                 void hitSegment.markAndChaseWindingBinary(span.next(), span, windSum, oppSum, undefined);
             }
@@ -476,7 +526,8 @@ OpSpan.prototype.computeWindSum = function(this: OpSpan): number
     const contourHead = globals.contourHead() as OpContourHead | undefined;
     if (contourHead === undefined) return this.windSum();
     let windTry = 0;
-    while (!this.sortableTop(contourHead) && ++windTry < kMaxWindingTries) {
+    while (!this.sortableTop(contourHead) && ++windTry < kMaxWindingTries)
+    {
         // retry
     }
     return this.windSum();
@@ -485,10 +536,13 @@ OpSpan.prototype.computeWindSum = function(this: OpSpan): number
 // SkPathOpsWinding.cpp:429 — driver entry.
 export function FindSortableTop(contourHead: OpContourHead): OpSpan | undefined
 {
-    for (let index = 0; index < kMaxWindingTries; ++index) {
+    for (let index = 0; index < kMaxWindingTries; ++index)
+    {
         let contour: OpContour | undefined = contourHead;
-        while (contour !== undefined) {
-            if (!contour.done()) {
+        while (contour !== undefined)
+        {
+            if (!contour.done())
+            {
                 const result = contour.findSortableTop(contourHead);
                 if (result !== undefined) return result;
             }

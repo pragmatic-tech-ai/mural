@@ -21,9 +21,11 @@ import { initTestApp } from '../../../basic/tests/test-app.js';
 const LONG = 'This is a fairly long tooltip string that should wrap onto several lines '
     + 'when the surface caps its width, instead of running off in one line past the edge.';
 
-function firstTextBlock(root: Visual): TextBlock | undefined {
+function firstTextBlock(root: Visual): TextBlock | undefined
+{
     if (root instanceof TextBlock && (root.Text ?? '').length > 20) return root;
-    for (const k of (root as unknown as { visualChildren: Iterable<Visual> }).visualChildren) {
+    for (const k of (root as unknown as { visualChildren: Iterable<Visual> }).visualChildren)
+    {
         const f = firstTextBlock(k);
         if (f !== undefined) return f;
     }

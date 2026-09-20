@@ -34,7 +34,8 @@ describe('persistent-guides behavior', () => {
 // Drive the tunnel (preview) pointer virtuals + OnKeyDown directly with real
 // Figure items, like the alignment-guides drag-integration test.
 describe('persistent-guides behavior — live interactions', () => {
-    function setup(): { diagram: Diagram; a: Figure } {
+    function setup(): { diagram: Diagram; a: Figure }
+    {
         initTestApp();
         const a = new Figure(); a.Id = 'na'; a.Left = 197; a.Top = 100; a.Width = 80; a.Height = 60;
         const b = new Figure(); b.Id = 'nb'; b.Left = 400; b.Top = 300; b.Width = 80; b.Height = 60;
@@ -53,19 +54,23 @@ describe('persistent-guides behavior — live interactions', () => {
 
     // HostToContent is ~identity here (no ruler offset, zoom 1), so host coords
     // double as content coords for driving gestures.
-    function down(diagram: Diagram, hx: number, hy: number, source: unknown): void {
+    function down(diagram: Diagram, hx: number, hy: number, source: unknown): void
+    {
         (diagram as unknown as { OnPreviewPointerDown(a: unknown): void })
             .OnPreviewPointerDown({ Kind: 'PointerDown', Source: source, Visual: source, Handled: false, HostX: hx, HostY: hy });
     }
-    function move(diagram: Diagram, hx: number, hy: number, source: unknown): void {
+    function move(diagram: Diagram, hx: number, hy: number, source: unknown): void
+    {
         (diagram as unknown as { OnPreviewPointerMove(a: unknown): void })
             .OnPreviewPointerMove({ Kind: 'PointerMove', Source: source, Visual: source, Handled: false, HostX: hx, HostY: hy });
     }
-    function up(diagram: Diagram, hx: number, hy: number, source: unknown): void {
+    function up(diagram: Diagram, hx: number, hy: number, source: unknown): void
+    {
         (diagram as unknown as { OnPreviewPointerUp(a: unknown): void })
             .OnPreviewPointerUp({ Kind: 'PointerUp', Source: source, Visual: source, Handled: false, HostX: hx, HostY: hy });
     }
-    function key(diagram: Diagram, k: Key): boolean {
+    function key(diagram: Diagram, k: Key): boolean
+    {
         const args = { Key: k, Modifiers: 0, Handled: false };
         (diagram as unknown as { OnKeyDown(a: unknown): void }).OnKeyDown(args);
         return args.Handled;

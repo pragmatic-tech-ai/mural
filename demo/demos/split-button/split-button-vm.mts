@@ -40,7 +40,8 @@ export class SplitButtonVM extends MuralBase
     get ScheduleSendCommand(): RelayCommand | null { return this.get_property_value(SplitButtonVM.ScheduleSendCommandKey); }
     get SaveDraftCommand():    RelayCommand | null { return this.get_property_value(SplitButtonVM.SaveDraftCommandKey); }
 
-    constructor() {
+    constructor()
+    {
         super();
         this.set_property_value(SplitButtonVM.SendCommandKey,
             new RelayCommand(() => { this.SendCount += 1; }));

@@ -82,8 +82,10 @@ describe('DomHost — foreignObject hosting', () => {
     test('a subclass overrides CreateHostElement to host its own content', () => {
         // A subclass builds on the base slot-filling div and mounts its own
         // element into it — the pattern real embeds (a Monaco editor) use.
-        class TaggedHost extends DomHost {
-            protected override CreateHostElement(document: Document): HTMLElement {
+        class TaggedHost extends DomHost
+        {
+            protected override CreateHostElement(document: Document): HTMLElement
+            {
                 const el = super.CreateHostElement(document);
                 const child = document.createElement('span');
                 child.className = 'embedded-content';

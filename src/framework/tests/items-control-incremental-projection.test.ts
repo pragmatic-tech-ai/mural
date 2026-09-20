@@ -49,7 +49,8 @@ class FakeTarget implements MountableTarget
     public GetFocusedVisual(): Visual | undefined { return undefined; }
 }
 
-function setup() {
+function setup()
+{
     Application.current = null;
     new Application();
     const items   = new ObservableCollection<TestNodeVM>();
@@ -71,7 +72,8 @@ function setup() {
     return { diagram, surface, items };
 }
 
-function cont(diagram: Diagram, item: unknown): Figure {
+function cont(diagram: Diagram, item: unknown): Figure
+{
     const gen = (diagram as unknown as { _generator: { ContainerFromItem(item: unknown): Visual | undefined } })._generator;
     const c = gen.ContainerFromItem(item);
     assert.ok(c instanceof Figure, 'container should be Figure');

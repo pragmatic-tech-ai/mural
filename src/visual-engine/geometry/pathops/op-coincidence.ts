@@ -57,7 +57,8 @@ import { OpVerb, verbToPoints, type OpCoincidenceLike } from './op-fwd.js';
 
 // ── CoincidentSpans ──────────────────────────────────────────────
 
-export class CoincidentSpans {
+export class CoincidentSpans
+{
     public fNext: CoincidentSpans | undefined = undefined;
     public fCoinPtTStart: OpPtT | undefined = undefined;
     public fCoinPtTEnd:   OpPtT | undefined = undefined;
@@ -102,7 +103,8 @@ export class CoincidentSpans {
     {
         let lo = s, hi = e;
         if (lo.fT > hi.fT) { const t = lo; lo = hi; hi = t; }
-        if (lo.segment() === this.fCoinPtTStart!.segment()) {
+        if (lo.segment() === this.fCoinPtTStart!.segment())
+        {
             return this.fCoinPtTStart!.fT <= lo.fT && hi.fT <= this.fCoinPtTEnd!.fT;
         }
         // assume opp side
@@ -189,10 +191,12 @@ export class CoincidentSpans {
         const flipped = this.flipped();
         const oppSeg = this.oppPtTStart().segment() as OpSegment;
         let oppLastT = this.fOppPtTStart!.fT;
-        for (;;) {
+        for (;;)
+        {
             const opp = next.containsSegment(oppSeg);
             if (opp === undefined) return false;
-            if ((oppLastT > opp.fT) !== flipped) {
+            if ((oppLastT > opp.fT) !== flipped)
+            {
                 out.result = false;
                 return true;
             }
@@ -236,7 +240,8 @@ export class CoincidentSpans {
         const segment = this.coinPtTStart().segment() as OpSegment;
         const oppSegment = this.oppPtTStart().segment() as OpSegment;
         // grow start
-        for (;;) {
+        for (;;)
+        {
             const start = this.coinPtTStart().span().upCastable();
             if (start === undefined) break;
             const prev = start.prev();
@@ -249,7 +254,8 @@ export class CoincidentSpans {
             expanded = true;
         }
         // grow end
-        for (;;) {
+        for (;;)
+        {
             const end = this.coinPtTEnd().span();
             const next = end.final() ? undefined : end.upCast().next();
             if (next !== undefined && next.deleted()) break;
@@ -267,7 +273,8 @@ export class CoincidentSpans {
 
 // ── OpCoincidence ───────────────────────────────────────────────
 
-export class OpCoincidence implements OpCoincidenceLike {
+export class OpCoincidence implements OpCoincidenceLike
+{
     public readonly __opCoincidenceLikeBrand = true as const;
 
     public fHead: CoincidentSpans | undefined = undefined;
@@ -297,7 +304,8 @@ export class OpCoincidence implements OpCoincidenceLike {
         const count = (verbToPoints(coin.verb()) + 1) * 2;
         const cPts = coin.pts();
         const oPts = opp.pts();
-        for (let idx = 0; idx < count; ++idx) {
+        for (let idx = 0; idx < count; ++idx)
+        {
             const cIdx = idx >> 1;
             const cIsY = idx & 1;
             const cVal = cIsY ? cPts[cIdx]!.fY : cPts[cIdx]!.fX;
@@ -318,10 +326,14 @@ export class OpCoincidence implements OpCoincidenceLike {
     public add(coinPtTStart: OpPtT, coinPtTEnd: OpPtT,
                oppPtTStart:  OpPtT, oppPtTEnd:  OpPtT): void
     {
-        if (!OpCoincidence.OrderedPtT(coinPtTStart, oppPtTStart)) {
-            if (oppPtTStart.fT < oppPtTEnd.fT) {
+        if (!OpCoincidence.OrderedPtT(coinPtTStart, oppPtTStart))
+        {
+            if (oppPtTStart.fT < oppPtTEnd.fT)
+            {
                 this.add(oppPtTStart, oppPtTEnd, coinPtTStart, coinPtTEnd);
-            } else {
+            }
+            else
+            {
                 this.add(oppPtTEnd, oppPtTStart, coinPtTEnd, coinPtTStart);
             }
             return;
@@ -351,17 +363,20 @@ export class OpCoincidence implements OpCoincidenceLike {
         let coinSeg = coinPtTStart.segment() as OpSegment;
         let oppSeg  = oppPtTStart.segment() as OpSegment;
         let cS = coinPtTStart, cE = coinPtTEnd, oS = oppPtTStart, oE = oppPtTEnd;
-        if (!OpCoincidence.Ordered(coinSeg, oppSeg)) {
+        if (!OpCoincidence.Ordered(coinSeg, oppSeg))
+        {
             const tmpSeg = coinSeg; coinSeg = oppSeg; oppSeg = tmpSeg;
             const tmpS = cS; cS = oS; oS = tmpS;
             const tmpE = cE; cE = oE; oE = tmpE;
-            if (cS.fT > cE.fT) {
+            if (cS.fT > cE.fT)
+            {
                 const a = cS; cS = cE; cE = a;
                 const b = oS; oS = oE; oE = b;
             }
         }
         const oppMinT = Math.min(oS.fT, oE.fT);
-        do {
+        do
+        {
             if (coinSeg !== test.coinPtTStart().segment()) continue;
             if (oppSeg  !== test.oppPtTStart().segment()) continue;
             const oTestMinT = Math.min(test.oppPtTStart().fT, test.oppPtTEnd().fT);
@@ -369,7 +384,8 @@ export class OpCoincidence implements OpCoincidenceLike {
             const coinTouches = (test.coinPtTStart().fT <= cE.fT
                               && cS.fT <= test.coinPtTEnd().fT);
             const oppTouches = (oTestMinT <= oTestMaxT && oppMinT <= oTestMaxT);
-            if (coinTouches || oppTouches) {
+            if (coinTouches || oppTouches)
+            {
                 test.extend(cS, cE, oS, oE);
                 return true;
             }
@@ -388,38 +404,55 @@ export class OpCoincidence implements OpCoincidenceLike {
     private _fixUpList(headSentinel: CoincidentSpans, deleted: OpPtT, kept: OpPtT): void
     {
         let coin: CoincidentSpans | undefined = headSentinel;
-        while (coin !== undefined) {
+        while (coin !== undefined)
+        {
             const next = coin.next();
             let removed = false;
-            if (coin.coinPtTStart() === deleted) {
-                if (coin.coinPtTEnd().span() === kept.span()) {
+            if (coin.coinPtTStart() === deleted)
+            {
+                if (coin.coinPtTEnd().span() === kept.span())
+                {
                     this._release(headSentinel, coin);
                     removed = true;
-                } else {
+                }
+                else
+                {
                     coin.setCoinPtTStart(kept);
                 }
             }
-            if (!removed && coin.coinPtTEnd() === deleted) {
-                if (coin.coinPtTStart().span() === kept.span()) {
+            if (!removed && coin.coinPtTEnd() === deleted)
+            {
+                if (coin.coinPtTStart().span() === kept.span())
+                {
                     this._release(headSentinel, coin);
                     removed = true;
-                } else {
+                }
+                else
+                {
                     coin.setCoinPtTEnd(kept);
                 }
             }
-            if (!removed && coin.oppPtTStart() === deleted) {
-                if (coin.oppPtTEnd().span() === kept.span()) {
+            if (!removed && coin.oppPtTStart() === deleted)
+            {
+                if (coin.oppPtTEnd().span() === kept.span())
+                {
                     this._release(headSentinel, coin);
                     removed = true;
-                } else {
+                }
+                else
+                {
                     coin.setOppPtTStart(kept);
                 }
             }
-            if (!removed && coin.oppPtTEnd() === deleted) {
-                if (coin.oppPtTStart().span() === kept.span()) {
+            if (!removed && coin.oppPtTEnd() === deleted)
+            {
+                if (coin.oppPtTStart().span() === kept.span())
+                {
                     this._release(headSentinel, coin);
                     removed = true;
-                } else {
+                }
+                else
+                {
                     coin.setOppPtTEnd(kept);
                 }
             }
@@ -434,14 +467,21 @@ export class OpCoincidence implements OpCoincidenceLike {
         const headIsThisFHead = coin === this.fHead;
         let walker: CoincidentSpans | undefined = coin;
         let prev: CoincidentSpans | undefined = undefined;
-        while (walker !== undefined) {
+        while (walker !== undefined)
+        {
             const next = walker.next();
-            if (walker === remove) {
-                if (prev !== undefined) {
+            if (walker === remove)
+            {
+                if (prev !== undefined)
+                {
                     prev.setNext(next);
-                } else if (headIsThisFHead) {
+                }
+                else if (headIsThisFHead)
+                {
                     this.fHead = next;
-                } else {
+                }
+                else
+                {
                     this.fTop = next;
                 }
                 return true;
@@ -456,7 +496,8 @@ export class OpCoincidence implements OpCoincidenceLike {
     {
         let coin = this.fHead;
         if (coin === undefined) return;
-        do {
+        do
+        {
             if (coin.coinPtTStart().segment() === segDeleted
                 || coin.coinPtTEnd().segment() === segDeleted
                 || coin.oppPtTStart().segment() === segDeleted
@@ -477,13 +518,17 @@ export class OpCoincidence implements OpCoincidenceLike {
     {
         let coin: CoincidentSpans | undefined = head;
         let prev: CoincidentSpans | undefined = undefined;
-        while (coin !== undefined) {
+        while (coin !== undefined)
+        {
             const next = coin.next();
-            if (coin.coinPtTStart().deleted()) {
+            if (coin.coinPtTStart().deleted())
+            {
                 if (prev !== undefined) prev.setNext(next);
                 else if (isFHead) this.fHead = next;
                 else this.fTop = next;
-            } else {
+            }
+            else
+            {
                 prev = coin;
             }
             coin = next;
@@ -494,9 +539,12 @@ export class OpCoincidence implements OpCoincidenceLike {
     {
         // Walk fHead to its tail, splice fTop in.
         let tail = this.fHead;
-        if (tail === undefined) {
+        if (tail === undefined)
+        {
             this.fHead = this.fTop;
-        } else {
+        }
+        else
+        {
             while (tail.next() !== undefined) tail = tail.next()!;
             tail.setNext(this.fTop);
         }
@@ -504,14 +552,18 @@ export class OpCoincidence implements OpCoincidenceLike {
         // Strip records whose segments have collapsed.
         let prev: CoincidentSpans | undefined = undefined;
         let walker = this.fHead;
-        while (walker !== undefined) {
+        while (walker !== undefined)
+        {
             const next = walker.next();
             const cs = walker.coinPtTStart().segment() as OpSegment;
             const os = walker.oppPtTStart().segment() as OpSegment;
-            if (cs.done() || os.done()) {
+            if (cs.done() || os.done())
+            {
                 if (prev !== undefined) prev.setNext(next);
                 else this.fHead = next;
-            } else {
+            }
+            else
+            {
                 prev = walker;
             }
             walker = next;
@@ -529,7 +581,8 @@ export class OpCoincidence implements OpCoincidenceLike {
     private _containsList(head: CoincidentSpans, seg: OpSegment, opp: OpSegment, oppT: number): boolean
     {
         let coin: CoincidentSpans | undefined = head;
-        do {
+        do
+        {
             if (coin.coinPtTStart().segment() === seg
                 && coin.oppPtTStart().segment() === opp
                 && between(coin.oppPtTStart().fT, oppT, coin.oppPtTEnd().fT)) return true;
@@ -548,18 +601,21 @@ export class OpCoincidence implements OpCoincidenceLike {
         let coinSeg = coinPtTStart.segment() as OpSegment;
         let oppSeg  = oppPtTStart.segment() as OpSegment;
         let cS = coinPtTStart, cE = coinPtTEnd, oS = oppPtTStart, oE = oppPtTEnd;
-        if (!OpCoincidence.Ordered(coinSeg, oppSeg)) {
+        if (!OpCoincidence.Ordered(coinSeg, oppSeg))
+        {
             const tmpSeg = coinSeg; coinSeg = oppSeg; oppSeg = tmpSeg;
             const tmpS = cS; cS = oS; oS = tmpS;
             const tmpE = cE; cE = oE; oE = tmpE;
-            if (cS.fT > cE.fT) {
+            if (cS.fT > cE.fT)
+            {
                 const a = cS; cS = cE; cE = a;
                 const b = oS; oS = oE; oE = b;
             }
         }
         const oppMinT = Math.min(oS.fT, oE.fT);
         const oppMaxT = Math.max(oS.fT, oE.fT);
-        do {
+        do
+        {
             if (coinSeg !== test.coinPtTStart().segment()) continue;
             if (cS.fT < test.coinPtTStart().fT) continue;
             if (cE.fT > test.coinPtTEnd().fT) continue;
@@ -581,13 +637,17 @@ export class OpCoincidence implements OpCoincidenceLike {
     private _markCollapsedList(head: CoincidentSpans, test: OpPtT): void
     {
         let coin: CoincidentSpans | undefined = head;
-        while (coin !== undefined) {
+        while (coin !== undefined)
+        {
             const next = coin.next();
-            if (coin.collapsed(test)) {
-                if (zero_or_one(coin.coinPtTStart().fT) && zero_or_one(coin.coinPtTEnd().fT)) {
+            if (coin.collapsed(test))
+            {
+                if (zero_or_one(coin.coinPtTStart().fT) && zero_or_one(coin.coinPtTEnd().fT))
+                {
                     (coin.coinPtTStart().segment() as OpSegment).markAllDone();
                 }
-                if (zero_or_one(coin.oppPtTStart().fT) && zero_or_one(coin.oppPtTEnd().fT)) {
+                if (zero_or_one(coin.oppPtTStart().fT) && zero_or_one(coin.oppPtTEnd().fT))
+                {
                     (coin.oppPtTStart().segment() as OpSegment).markAllDone();
                 }
                 this._release(head, coin);
@@ -621,10 +681,13 @@ export class OpCoincidence implements OpCoincidenceLike {
         let coin = this.fHead;
         if (coin === undefined) return false;
         let expanded = false;
-        do {
-            if (coin.expand()) {
+        do
+        {
+            if (coin.expand())
+            {
                 let test = this.fHead;
-                while (test !== undefined) {
+                while (test !== undefined)
+                {
                     if (coin !== test
                         && coin.coinPtTStart() === test.coinPtTStart()
                         && coin.oppPtTStart()  === test.oppPtTStart())
@@ -646,31 +709,39 @@ export class OpCoincidence implements OpCoincidenceLike {
         overlaps.fHead = undefined;
         overlaps.fTop = undefined;
         let outer = this.fHead;
-        while (outer !== undefined) {
+        while (outer !== undefined)
+        {
             const outerCoin = outer.coinPtTStart().segment() as OpSegment;
             const outerOpp  = outer.oppPtTStart().segment() as OpSegment;
             let inner = outer.next();
-            while (inner !== undefined) {
+            while (inner !== undefined)
+            {
                 const innerCoin = inner.coinPtTStart().segment() as OpSegment;
                 if (outerCoin === innerCoin) { inner = inner.next(); continue; }
                 const innerOpp = inner.oppPtTStart().segment() as OpSegment;
                 let overlapS: OpPtT | undefined;
                 let overlapE: OpPtT | undefined;
                 let hasOverlap = false;
-                if (outerOpp === innerCoin) {
+                if (outerOpp === innerCoin)
+                {
                     const r = OpPtT.Overlaps(outer.oppPtTStart(), outer.oppPtTEnd(),
                                               inner.coinPtTStart(), inner.coinPtTEnd());
                     if (r.overlaps) { overlapS = r.sOut!; overlapE = r.eOut!; hasOverlap = true; }
-                } else if (outerCoin === innerOpp) {
+                }
+                else if (outerCoin === innerOpp)
+                {
                     const r = OpPtT.Overlaps(outer.coinPtTStart(), outer.coinPtTEnd(),
                                               inner.oppPtTStart(), inner.oppPtTEnd());
                     if (r.overlaps) { overlapS = r.sOut!; overlapE = r.eOut!; hasOverlap = true; }
-                } else if (outerOpp === innerOpp) {
+                }
+                else if (outerOpp === innerOpp)
+                {
                     const r = OpPtT.Overlaps(outer.oppPtTStart(), outer.oppPtTEnd(),
                                               inner.oppPtTStart(), inner.oppPtTEnd());
                     if (r.overlaps) { overlapS = r.sOut!; overlapE = r.eOut!; hasOverlap = true; }
                 }
-                if (hasOverlap) {
+                if (hasOverlap)
+                {
                     if (!overlaps.addOverlap(outerCoin, outerOpp, innerCoin, innerOpp,
                                               overlapS!, overlapE!))
                     {
@@ -692,7 +763,8 @@ export class OpCoincidence implements OpCoincidenceLike {
         let s1 = overS.find(seg1);
         let e1 = overE.find(seg1);
         if (s1 === undefined || e1 === undefined) return false;
-        if (s1.starter(e1).span().upCast().windValue() === 0) {
+        if (s1.starter(e1).span().upCast().windValue() === 0)
+        {
             s1 = overS.find(seg1o);
             e1 = overE.find(seg1o);
             if (s1 === undefined || e1 === undefined) return false;
@@ -701,14 +773,16 @@ export class OpCoincidence implements OpCoincidenceLike {
         let s2 = overS.find(seg2);
         let e2 = overE.find(seg2);
         if (s2 === undefined || e2 === undefined) return false;
-        if (s2.starter(e2).span().upCast().windValue() === 0) {
+        if (s2.starter(e2).span().upCast().windValue() === 0)
+        {
             s2 = overS.find(seg2o);
             e2 = overE.find(seg2o);
             if (s2 === undefined || e2 === undefined) return false;
             if (s2.starter(e2).span().upCast().windValue() === 0) return true;
         }
         if (s1.segment() === s2.segment()) return true;
-        if (s1.fT > e1.fT) {
+        if (s1.fT > e1.fT)
+        {
             const tmp1 = s1; s1 = e1; e1 = tmp1;
             const tmp2 = s2; s2 = e2; e2 = tmp2;
         }
@@ -722,8 +796,10 @@ export class OpCoincidence implements OpCoincidenceLike {
                         coinTs: number, coinTe: number, oppTs: number, oppTe: number,
                         overlaps: CoincidentSpans[]): boolean
     {
-        if (!OpCoincidence.Ordered(coinSeg, oppSeg)) {
-            if (oppTs < oppTe) {
+        if (!OpCoincidence.Ordered(coinSeg, oppSeg))
+        {
+            if (oppTs < oppTe)
+            {
                 return this.checkOverlap(check, oppSeg, coinSeg, oppTs, oppTe, coinTs, coinTe, overlaps);
             }
             return this.checkOverlap(check, oppSeg, coinSeg, oppTe, oppTs, coinTe, coinTs, overlaps);
@@ -732,7 +808,8 @@ export class OpCoincidence implements OpCoincidenceLike {
         let oTs = oppTs, oTe = oppTe;
         if (swapOpp) { const t = oTs; oTs = oTe; oTe = t; }
         let walker = check;
-        while (walker !== undefined) {
+        while (walker !== undefined)
+        {
             if (walker.coinPtTStart().segment() === coinSeg
                 && walker.oppPtTStart().segment() === oppSeg)
             {
@@ -741,12 +818,14 @@ export class OpCoincidence implements OpCoincidenceLike {
                 const coinOutside = coinTe < checkTs || coinTs > checkTe;
                 let oCheckTs = walker.oppPtTStart().fT;
                 let oCheckTe = walker.oppPtTEnd().fT;
-                if (swapOpp) {
+                if (swapOpp)
+                {
                     if (oCheckTs <= oCheckTe) return false;
                     const t = oCheckTs; oCheckTs = oCheckTe; oCheckTe = t;
                 }
                 const oppOutside = oTe < oCheckTs || oTs > oCheckTe;
-                if (!(coinOutside && oppOutside)) {
+                if (!(coinOutside && oppOutside))
+                {
                     const coinInside = coinTe <= checkTe && coinTs >= checkTs;
                     const oppInside  = oTe <= oCheckTe && oTs >= oCheckTs;
                     if (coinInside && oppInside) return false;
@@ -766,7 +845,8 @@ export class OpCoincidence implements OpCoincidenceLike {
     {
         const overlaps: CoincidentSpans[] = [];
         if (this.fTop === undefined) return false;
-        if (!this.checkOverlap(this.fTop, coinSeg, oppSeg, coinTs, coinTe, oppTs, oppTe, overlaps)) {
+        if (!this.checkOverlap(this.fTop, coinSeg, oppSeg, coinTs, coinTe, oppTs, oppTe, overlaps))
+        {
             return true;
         }
         if (this.fHead !== undefined
@@ -775,12 +855,15 @@ export class OpCoincidence implements OpCoincidenceLike {
             return true;
         }
         const overlap = overlaps.length ? overlaps[0]! : undefined;
-        for (let i = 1; i < overlaps.length; ++i) {
+        for (let i = 1; i < overlaps.length; ++i)
+        {
             const test = overlaps[i]!;
-            if (overlap!.coinPtTStart().fT > test.coinPtTStart().fT) {
+            if (overlap!.coinPtTStart().fT > test.coinPtTStart().fT)
+            {
                 overlap!.setCoinPtTStart(test.coinPtTStart());
             }
-            if (overlap!.coinPtTEnd().fT < test.coinPtTEnd().fT) {
+            if (overlap!.coinPtTEnd().fT < test.coinPtTEnd().fT)
+            {
                 overlap!.setCoinPtTEnd(test.coinPtTEnd());
             }
             const flipped = overlap!.flipped();
@@ -794,7 +877,8 @@ export class OpCoincidence implements OpCoincidenceLike {
             {
                 overlap!.setOppPtTEnd(test.oppPtTEnd());
             }
-            if (this.fHead === undefined || !this._release(this.fHead, test)) {
+            if (this.fHead === undefined || !this._release(this.fHead, test))
+            {
                 if (!this._release(this.fTop!, test)) return false;
             }
         }
@@ -823,7 +907,8 @@ export class OpCoincidence implements OpCoincidenceLike {
             || oeExisting.containsPtT(osExisting !== undefined ? osExisting : os!))) return false;
         let csW: OpPtT | undefined = cs;
         let osW: OpPtT | undefined = os;
-        if (cs === undefined || os === undefined) {
+        if (cs === undefined || os === undefined)
+        {
             csW = cs !== undefined ? cs : coinSeg.addT(coinTs);
             if (csW === ce) return true;
             osW = os !== undefined ? os : oppSeg.addT(oppTs);
@@ -836,7 +921,8 @@ export class OpCoincidence implements OpCoincidenceLike {
         }
         let ceW: OpPtT | undefined = ce;
         let oeW: OpPtT | undefined = oe;
-        if (ce === undefined || oe === undefined) {
+        if (ce === undefined || oe === undefined)
+        {
             ceW = ce !== undefined ? ce : coinSeg.addT(coinTe);
             oeW = oe !== undefined ? oe : oppSeg.addT(oppTe);
             if (ceW === undefined || oeW === undefined) return false;
@@ -845,15 +931,21 @@ export class OpCoincidence implements OpCoincidenceLike {
         if (csW === undefined || osW === undefined || ceW === undefined || oeW === undefined) return false;
         if (csW.deleted() || osW.deleted() || ceW.deleted() || oeW.deleted()) return false;
         if (csW.containsPtT(ceW) || osW.containsPtT(oeW)) return false;
-        if (overlap !== undefined) {
-            if (overlap.coinPtTStart().segment() === coinSeg) {
+        if (overlap !== undefined)
+        {
+            if (overlap.coinPtTStart().segment() === coinSeg)
+            {
                 overlap.extend(csW, ceW, osW, oeW);
-            } else {
+            }
+            else
+            {
                 let a = csW, b = ceW, c = osW, d = oeW;
                 if (c.fT > d.fT) { const t1 = a; a = b; b = t1; const t2 = c; c = d; d = t2; }
                 overlap.extend(c, d, a, b);
             }
-        } else {
+        }
+        else
+        {
             this.add(csW, ceW, osW, oeW);
         }
         addedOut.value = true;
@@ -868,14 +960,18 @@ export class OpCoincidence implements OpCoincidenceLike {
         let foundEnd:   OpPtT | undefined = undefined;
         let coinStart:  OpPtT | undefined = undefined;
         let coinEnd:    OpPtT | undefined = undefined;
-        while (work !== undefined) {
+        while (work !== undefined)
+        {
             const contained = work.containsSegment(coinSeg);
-            if (contained !== undefined) {
-                if (work.t() <= t) {
+            if (contained !== undefined)
+            {
+                if (work.t() <= t)
+                {
                     coinStart = contained;
                     foundStart = work.ptT();
                 }
-                if (work.t() >= t) {
+                if (work.t() >= t)
+                {
                     coinEnd = contained;
                     foundEnd = work.ptT();
                     break;
@@ -907,7 +1003,8 @@ export class OpCoincidence implements OpCoincidenceLike {
         let oppTe = OpCoincidence.TRange(over2s, tEnd,   oppSeg);
         const r2 = oppSeg.collapsed(oppTs, oppTe);
         if (r2 !== OpCollapsed.kNo) return r2 === OpCollapsed.kYes;
-        if (coinTs > coinTe) {
+        if (coinTs > coinTe)
+        {
             const t = coinTs; coinTs = coinTe; coinTe = t;
             const u = oppTs; oppTs = oppTe; oppTe = u;
         }
@@ -923,7 +1020,8 @@ export class OpCoincidence implements OpCoincidenceLike {
         if (outer === undefined) return true;
         this.fTop = outer;
         this.fHead = undefined;
-        do {
+        do
+        {
             const ocs = outer.coinPtTStart();
             if (ocs.deleted()) return false;
             const outerCoin = ocs.segment() as OpSegment;
@@ -932,7 +1030,8 @@ export class OpCoincidence implements OpCoincidenceLike {
             if (oos.deleted()) return true;
             const outerOpp = oos.segment() as OpSegment;
             let inner = outer.next();
-            while (inner !== undefined) {
+            while (inner !== undefined)
+            {
                 const overOut = { overS: 0, overE: 0 };
                 const ics = inner.coinPtTStart();
                 if (ics.deleted()) return false;
@@ -941,42 +1040,53 @@ export class OpCoincidence implements OpCoincidenceLike {
                 const ios = inner.oppPtTStart();
                 if (ios.deleted()) return false;
                 const innerOpp = ios.segment() as OpSegment;
-                if (outerCoin === innerCoin) {
+                if (outerCoin === innerCoin)
+                {
                     const oce = outer.coinPtTEnd();
                     if (oce.deleted()) return true;
                     const ice = inner.coinPtTEnd();
                     if (ice.deleted()) return false;
-                    if (outerOpp !== innerOpp && this.overlap(ocs, oce, ics, ice, overOut)) {
+                    if (outerOpp !== innerOpp && this.overlap(ocs, oce, ics, ice, overOut))
+                    {
                         if (!this.addIfMissing(ocs.starter(oce), ics.starter(ice),
                                                 overOut.overS, overOut.overE,
                                                 outerOpp, innerOpp, addedOut)) return false;
                     }
-                } else if (outerCoin === innerOpp) {
+                }
+                else if (outerCoin === innerOpp)
+                {
                     const oce = outer.coinPtTEnd();
                     if (oce.deleted()) return false;
                     const ioe = inner.oppPtTEnd();
                     if (ioe.deleted()) return false;
-                    if (outerOpp !== innerCoin && this.overlap(ocs, oce, ios, ioe, overOut)) {
+                    if (outerOpp !== innerCoin && this.overlap(ocs, oce, ios, ioe, overOut))
+                    {
                         if (!this.addIfMissing(ocs.starter(oce), ios.starter(ioe),
                                                 overOut.overS, overOut.overE,
                                                 outerOpp, innerCoin, addedOut)) return false;
                     }
-                } else if (outerOpp === innerCoin) {
+                }
+                else if (outerOpp === innerCoin)
+                {
                     const ooe = outer.oppPtTEnd();
                     if (ooe.deleted()) return false;
                     const ice = inner.coinPtTEnd();
                     if (ice.deleted()) return false;
-                    if (this.overlap(oos, ooe, ics, ice, overOut)) {
+                    if (this.overlap(oos, ooe, ics, ice, overOut))
+                    {
                         if (!this.addIfMissing(oos.starter(ooe), ics.starter(ice),
                                                 overOut.overS, overOut.overE,
                                                 outerCoin, innerOpp, addedOut)) return false;
                     }
-                } else if (outerOpp === innerOpp) {
+                }
+                else if (outerOpp === innerOpp)
+                {
                     const ooe = outer.oppPtTEnd();
                     if (ooe.deleted()) return false;
                     const ioe = inner.oppPtTEnd();
                     if (ioe.deleted()) return true;
-                    if (this.overlap(oos, ooe, ios, ioe, overOut)) {
+                    if (this.overlap(oos, ooe, ios, ioe, overOut))
+                    {
                         if (!this.addIfMissing(oos.starter(ooe), ios.starter(ioe),
                                                 overOut.overS, overOut.overE,
                                                 outerCoin, innerCoin, addedOut)) return false;
@@ -998,14 +1108,17 @@ export class OpCoincidence implements OpCoincidenceLike {
         const baseSeg = base.segment() as OpSegment;
         let escapeHatch = 100_000;
         testPtT = testPtT.next();
-        while (testPtT !== testPtT0) {
+        while (testPtT !== testPtT0)
+        {
             if (--escapeHatch <= 0) return false;
             const testSeg = testPtT.segment() as OpSegment;
-            if (testPtT.deleted() || testSeg === baseSeg || testPtT.span().ptT() !== testPtT) {
+            if (testPtT.deleted() || testSeg === baseSeg || testPtT.span().ptT() !== testPtT)
+            {
                 testPtT = testPtT.next();
                 continue;
             }
-            if (this.contains(baseSeg, testSeg, testPtT.fT)) {
+            if (this.contains(baseSeg, testSeg, testPtT.fT))
+            {
                 testPtT = testPtT.next();
                 continue;
             }
@@ -1015,19 +1128,23 @@ export class OpCoincidence implements OpCoincidenceLike {
             const ix = new Intersections();
             const rayLine = new Line(new Point(pt.fX, pt.fY),
                                       new Point(pt.fX + slope.y, pt.fY - slope.x));
-            switch (testSeg.verb()) {
-                case OpVerb.kLine: {
+            switch (testSeg.verb())
+            {
+                case OpVerb.kLine:
+                {
                     const ln = new Line(testSeg.pts()[0]!, testSeg.pts()[1]!);
                     ix.intersectRayLineLine(ln, rayLine);
                     break;
                 }
-                case OpVerb.kQuad: {
+                case OpVerb.kQuad:
+                {
                     const q = new Quad();
                     q.fPts = [testSeg.pts()[0]!, testSeg.pts()[1]!, testSeg.pts()[2]!];
                     ix.intersectRayQuadLine(q, rayLine);
                     break;
                 }
-                case OpVerb.kCubic: {
+                case OpVerb.kCubic:
+                {
                     const c = new Cubic();
                     c.fPts = [testSeg.pts()[0]!, testSeg.pts()[1]!,
                               testSeg.pts()[2]!, testSeg.pts()[3]!];
@@ -1036,7 +1153,8 @@ export class OpCoincidence implements OpCoincidenceLike {
                 }
                 default: testPtT = testPtT.next(); continue;
             }
-            for (let i = 0; i < ix.used(); ++i) {
+            for (let i = 0; i < ix.used(); ++i)
+            {
                 const t = ix.fT[0]![i]!;
                 if (!between(0, t, 1)) continue;
                 const oppPt = ix.pt(i);
@@ -1049,19 +1167,23 @@ export class OpCoincidence implements OpCoincidenceLike {
                 let coinSeg = base.segment() as OpSegment;
                 let oppSeg  = oppStart.segment() as OpSegment;
                 let coinTs: number, coinTe: number, oppTs: number, oppTe: number;
-                if (OpCoincidence.Ordered(coinSeg, oppSeg)) {
+                if (OpCoincidence.Ordered(coinSeg, oppSeg))
+                {
                     coinTs = base.t();
                     coinTe = testSpan.t();
                     oppTs  = oppStart.fT;
                     oppTe  = testPtT.fT;
-                } else {
+                }
+                else
+                {
                     const tmp = coinSeg; coinSeg = oppSeg; oppSeg = tmp;
                     coinTs = oppStart.fT;
                     coinTe = testPtT.fT;
                     oppTs  = base.t();
                     oppTe  = testSpan.t();
                 }
-                if (coinTs > coinTe) {
+                if (coinTs > coinTe)
+                {
                     const t1 = coinTs; coinTs = coinTe; coinTe = t1;
                     const t2 = oppTs; oppTs = oppTe; oppTe = t2;
                 }
@@ -1079,10 +1201,12 @@ export class OpCoincidence implements OpCoincidenceLike {
         if (base === undefined) return false;
         const prev = base.prev();
         if (prev === undefined) return false;
-        if (!prev.isCanceled()) {
+        if (!prev.isCanceled())
+        {
             if (!this.addEndMovedSpansBaseTest(base, prev)) return false;
         }
-        if (!base.isCanceled()) {
+        if (!base.isCanceled())
+        {
             const next = base.next();
             if (!this.addEndMovedSpansBaseTest(base, next)) return false;
         }
@@ -1096,27 +1220,38 @@ export class OpCoincidence implements OpCoincidenceLike {
         this.fTop = span0;
         this.fHead = undefined;
         let span: CoincidentSpans | undefined = span0;
-        do {
-            if (!span.coinPtTStart().fPt.equals(span.oppPtTStart().fPt)) {
+        do
+        {
+            if (!span.coinPtTStart().fPt.equals(span.oppPtTStart().fPt))
+            {
                 if (span.coinPtTStart().fT === 1) return false;
                 const onEnd = span.coinPtTStart().fT === 0;
                 const oOnEnd = zero_or_one(span.oppPtTStart().fT);
-                if (onEnd) {
-                    if (!oOnEnd) {
+                if (onEnd)
+                {
+                    if (!oOnEnd)
+                    {
                         if (!this.addEndMovedSpansFromPtT(span.oppPtTStart())) return false;
                     }
-                } else if (oOnEnd) {
+                }
+                else if (oOnEnd)
+                {
                     if (!this.addEndMovedSpansFromPtT(span.coinPtTStart())) return false;
                 }
             }
-            if (!span.coinPtTEnd().fPt.equals(span.oppPtTEnd().fPt)) {
+            if (!span.coinPtTEnd().fPt.equals(span.oppPtTEnd().fPt))
+            {
                 const onEnd = span.coinPtTEnd().fT === 1;
                 const oOnEnd = zero_or_one(span.oppPtTEnd().fT);
-                if (onEnd) {
-                    if (!oOnEnd) {
+                if (onEnd)
+                {
+                    if (!oOnEnd)
+                    {
                         if (!this.addEndMovedSpansFromPtT(span.oppPtTEnd())) return false;
                     }
-                } else if (oOnEnd) {
+                }
+                else if (oOnEnd)
+                {
                     if (!this.addEndMovedSpansFromPtT(span.coinPtTEnd())) return false;
                 }
             }
@@ -1132,7 +1267,8 @@ export class OpCoincidence implements OpCoincidenceLike {
     {
         let coin = this.fHead;
         if (coin === undefined) return true;
-        do {
+        do
+        {
             const startPtT  = coin.coinPtTStart();
             const oStartPtT = coin.oppPtTStart();
             let priorT  = startPtT.fT;
@@ -1153,21 +1289,29 @@ export class OpCoincidence implements OpCoincidenceLike {
             if (oTest === undefined) return false;
             const seg = startSpan.segment() as OpSegment;
             const oSeg = oStartSpan.segment() as OpSegment;
-            while (test !== end || oTest !== oEnd) {
+            while (test !== end || oTest !== oEnd)
+            {
                 const containedOpp = test.ptT().containsSegment(oSeg);
                 const containedThis = oTest.ptT().containsSegment(seg);
-                if (containedOpp === undefined || containedThis === undefined) {
+                if (containedOpp === undefined || containedThis === undefined)
+                {
                     let nextT: number, oNextT: number;
-                    if (containedOpp !== undefined) {
+                    if (containedOpp !== undefined)
+                    {
                         nextT  = test.t();
                         oNextT = containedOpp.fT;
-                    } else if (containedThis !== undefined) {
+                    }
+                    else if (containedThis !== undefined)
+                    {
                         nextT  = containedThis.fT;
                         oNextT = oTest.t();
-                    } else {
+                    }
+                    else
+                    {
                         let walk: OpSpanBase = test;
                         let walkOpp: OpPtT | undefined = undefined;
-                        do {
+                        do
+                        {
                             const wu = walk.upCastable();
                             if (wu === undefined) return false;
                             walk = wu.next();
@@ -1191,24 +1335,30 @@ export class OpCoincidence implements OpCoincidenceLike {
                         ? oSeg.addExpanded(oPriorT + oStartRange * startPart, test, startOver)
                         : seg.addExpanded(priorT + startRange * oStartPart, oTest, startOver);
                     if (!success) return false;
-                    if (startOver.value) {
+                    if (startOver.value)
+                    {
                         test = startSpan;
                         oTest = oStartSpan;
                     }
                     end  = coin.coinPtTEnd().span();
                     oEnd = coin.oppPtTEnd().span();
                 }
-                if (test !== end) {
+                if (test !== end)
+                {
                     const u = test.upCastable();
                     if (u === undefined) return false;
                     priorT = test.t();
                     test = u.next();
                 }
-                if (oTest !== oEnd) {
+                if (oTest !== oEnd)
+                {
                     oPriorT = oTest.t();
-                    if (coin.flipped()) {
+                    if (coin.flipped())
+                    {
                         oTest = oTest.prev();
-                    } else {
+                    }
+                    else
+                    {
                         const u = oTest.upCastable();
                         if (u === undefined) return false;
                         oTest = u.next();
@@ -1225,7 +1375,8 @@ export class OpCoincidence implements OpCoincidenceLike {
     {
         let coin = this.fHead;
         if (coin === undefined) return true;
-        do {
+        do
+        {
             const startBase = coin.coinPtTStart().span();
             const sUp = startBase.upCastable();
             if (sUp === undefined) return false;
@@ -1247,13 +1398,15 @@ export class OpCoincidence implements OpCoincidenceLike {
             if (!coin.ordered(orderedOut)) return false;
             const ordered = orderedOut.result;
             let next: OpSpanBase = start;
-            while ((next = next.upCast().next()) !== end) {
+            while ((next = next.upCast().next()) !== end)
+            {
                 const u = next.upCastable();
                 if (u === undefined) return false;
                 if (!u.insertCoincidenceBySegment(oSegment, flipped, ordered)) return false;
             }
             let oNext: OpSpanBase = oStart;
-            while ((oNext = oNext.upCast().next()) !== oEnd) {
+            while ((oNext = oNext.upCast().next()) !== oEnd)
+            {
                 const u = oNext.upCastable();
                 if (u === undefined) return false;
                 if (!u.insertCoincidenceBySegment(segment, flipped, ordered)) return false;
@@ -1270,7 +1423,8 @@ export class OpCoincidence implements OpCoincidenceLike {
     {
         let coin = this.fHead;
         if (coin === undefined) return true;
-        do {
+        do
+        {
             const startSpan = coin.coinPtTStart().span();
             const startUp = startSpan.upCastable();
             if (startUp === undefined) return false;
@@ -1288,9 +1442,11 @@ export class OpCoincidence implements OpCoincidenceLike {
             const segment = start.segment() as OpSegment;
             const oSegment = oStart.segment() as OpSegment;
             const operandSwap = segment.operand() !== oSegment.operand();
-            if (flipped) {
+            if (flipped)
+            {
                 if (oEnd.deleted()) continue;
-                for (;;) {
+                for (;;)
+                {
                     const oNext = oStart.next();
                     if (oNext === oEnd) break;
                     const u = oNext.upCastable();
@@ -1298,7 +1454,8 @@ export class OpCoincidence implements OpCoincidenceLike {
                     oStart = u;
                 }
             }
-            for (;;) {
+            for (;;)
+            {
                 let windValue = start.windValue();
                 let oppValue  = start.oppValue();
                 let oWindValue = oStart.windValue();
@@ -1310,24 +1467,33 @@ export class OpCoincidence implements OpCoincidenceLike {
                     && (windValue > windDiff
                         || (windValue === windDiff && oWindValue <= oWindDiff));
                 if (addToStart ? start.done() : oStart.done()) addToStart = !addToStart;
-                if (addToStart) {
+                if (addToStart)
+                {
                     if (operandSwap) { const t = oWindValue; oWindValue = oOppValue; oOppValue = t; }
-                    if (flipped) {
+                    if (flipped)
+                    {
                         windValue -= oWindValue;
                         oppValue  -= oOppValue;
-                    } else {
+                    }
+                    else
+                    {
                         windValue += oWindValue;
                         oppValue  += oOppValue;
                     }
                     if (segment.isXor()) windValue &= 1;
                     if (segment.oppXor()) oppValue &= 1;
                     oWindValue = oOppValue = 0;
-                } else {
+                }
+                else
+                {
                     if (operandSwap) { const t = windValue; windValue = oppValue; oppValue = t; }
-                    if (flipped) {
+                    if (flipped)
+                    {
                         oWindValue -= windValue;
                         oOppValue  -= oppValue;
-                    } else {
+                    }
+                    else
+                    {
                         oWindValue += windValue;
                         oOppValue  += oppValue;
                     }

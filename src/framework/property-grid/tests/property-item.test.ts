@@ -8,7 +8,8 @@ import { PropertyItem, PropertyCategory } from '../property-item.js';
 // Helpers
 // ---------------------------------------------------------------------------
 
-function makeRwBag(name: string, initial: unknown): MapPropertyBag {
+function makeRwBag(name: string, initial: unknown): MapPropertyBag
+{
     let stored = initial;
     const accessors = new Map<string, PropertyAccessor>([
         [
@@ -26,7 +27,8 @@ function makeRwBag(name: string, initial: unknown): MapPropertyBag {
     return new MapPropertyBag(accessors);
 }
 
-function makeRoBag(name: string, initial: unknown): MapPropertyBag {
+function makeRoBag(name: string, initial: unknown): MapPropertyBag
+{
     const stored = initial;
     const accessors = new Map<string, PropertyAccessor>([
         [name, { id: () => name, displayName: () => name, get: () => stored }],

@@ -16,7 +16,8 @@ import { Point } from './point.js';
 import { OpPath, type CurveProvenance } from './op-path.js';
 import type { OpPtT } from './op-span.js';
 
-export class OpPathWriter {
+export class OpPathWriter
+{
     public fCurrent: OpPath = new OpPath();
     public fPartials: OpPath[] = [];
     public fEndPtTs: OpPtT[] = [];
@@ -49,12 +50,14 @@ export class OpPathWriter {
 
     public deferredMove(pt: OpPtT): void
     {
-        if (this.fDefer[1] === undefined) {
+        if (this.fDefer[1] === undefined)
+        {
             this.fFirstPtT = pt;
             this.fDefer[0] = pt;
             return;
         }
-        if (!this.matchedLast(pt)) {
+        if (!this.matchedLast(pt))
+        {
             this.finishContour();
             this.fFirstPtT = pt;
             this.fDefer[0] = pt;
@@ -67,7 +70,8 @@ export class OpPathWriter {
         if (this.fDefer[0] === pt) return true;
         if (pt.containsPtT(this.fDefer[0]!)) return true;
         if (this.matchedLast(pt)) return false;
-        if (this.fDefer[1] !== undefined && this.changedSlopes(pt)) {
+        if (this.fDefer[1] !== undefined && this.changedSlopes(pt))
+        {
             this.lineTo();
             this.fDefer[0] = this.fDefer[1];
         }
@@ -89,14 +93,18 @@ export class OpPathWriter {
 
     public finishContour(): void
     {
-        if (!this.matchedLast(this.fDefer[0])) {
+        if (!this.matchedLast(this.fDefer[0]))
+        {
             if (this.fDefer[1] === undefined) return;
             this.lineTo();
         }
         if (this.fCurrent.isEmpty()) return;
-        if (this.isClosed()) {
+        if (this.isClosed())
+        {
             this.close();
-        } else {
+        }
+        else
+        {
             if (this.fDefer[1] === undefined) return;
             this.fEndPtTs.push(this.fFirstPtT!);
             this.fEndPtTs.push(this.fDefer[1]);
@@ -138,9 +146,12 @@ export class OpPathWriter {
 
     private update(pt: OpPtT): Point
     {
-        if (this.fDefer[1] === undefined) {
+        if (this.fDefer[1] === undefined)
+        {
             this.moveTo();
-        } else if (!this.matchedLast(this.fDefer[0])) {
+        }
+        else if (!this.matchedLast(this.fDefer[0]))
+        {
             this.lineTo();
         }
         let result = pt.fPt;
@@ -192,8 +203,10 @@ export class OpPathWriter {
         // Build distance table for every (i, j) pair.
         type Entry = { i: number; j: number; d: number };
         const entries: Entry[] = [];
-        for (let i = 0; i < endCount - 1; ++i) {
-            for (let j = i + 1; j < endCount; ++j) {
+        for (let i = 0; i < endCount - 1; ++i)
+        {
+            for (let j = i + 1; j < endCount; ++j)
+            {
                 const a = runs[i]!.fPt, b = runs[j]!.fPt;
                 const dx = b.fX - a.fX, dy = b.fY - a.fY;
                 entries.push({ i, j, d: dx * dx + dy * dy });
@@ -201,7 +214,8 @@ export class OpPathWriter {
         }
         entries.sort((a, b) => a.d - b.d);
         let remaining = linkCount;
-        for (const e of entries) {
+        for (const e of entries)
+        {
             if (remaining === 0) break;
             const row = e.i;
             const col = e.j;
@@ -220,47 +234,60 @@ export class OpPathWriter {
         }
         // Walk the link table emitting joined contours.
         let rIndex = 0;
-        outer: while (rIndex < linkCount) {
+        outer: while (rIndex < linkCount)
+        {
             let forward = true;
             let first = true;
             let sIndex = sLink[rIndex]!;
-            if (sIndex === SK_MAX_S32) {
+            if (sIndex === SK_MAX_S32)
+            {
                 ++rIndex;
                 if (rIndex >= linkCount) break;
                 continue;
             }
             sLink[rIndex] = SK_MAX_S32;
             let eIndex: number;
-            if (sIndex < 0) {
+            if (sIndex < 0)
+            {
                 eIndex = sLink[~sIndex]!;
                 sLink[~sIndex] = SK_MAX_S32;
-            } else {
+            }
+            else
+            {
                 eIndex = eLink[sIndex]!;
                 eLink[sIndex] = SK_MAX_S32;
             }
             if (eIndex === SK_MAX_S32) break;
             let safety = linkCount * 4;
-            while (--safety > 0) {
+            while (--safety > 0)
+            {
                 const contour = this.fPartials[rIndex]!;
-                if (forward) {
+                if (forward)
+                {
                     this.fPath.addPath(contour);
-                } else {
+                }
+                else
+                {
                     this.fPath.reverseAddPath(contour);
                 }
                 first = false;
                 void first;
                 const closeCheck = (rIndex !== eIndex) !== forward ? eIndex : ~eIndex;
-                if (sIndex === closeCheck) {
+                if (sIndex === closeCheck)
+                {
                     this.fPath.close();
                     break;
                 }
-                if (forward) {
+                if (forward)
+                {
                     eIndex = eLink[rIndex]!;
                     if (eIndex === SK_MAX_S32) break;
                     eLink[rIndex] = SK_MAX_S32;
                     if (eIndex >= 0) sLink[eIndex] = SK_MAX_S32;
                     else eLink[~eIndex] = SK_MAX_S32;
-                } else {
+                }
+                else
+                {
                     eIndex = sLink[rIndex]!;
                     if (eIndex === SK_MAX_S32) break;
                     sLink[rIndex] = SK_MAX_S32;
@@ -268,14 +295,17 @@ export class OpPathWriter {
                     else sLink[~eIndex] = SK_MAX_S32;
                 }
                 rIndex = eIndex;
-                if (rIndex < 0) {
+                if (rIndex < 0)
+                {
                     forward = !forward;
                     rIndex = ~rIndex;
                 }
             }
             // Find next unstarted partial.
-            for (rIndex = 0; rIndex < linkCount; ++rIndex) {
-                if (sLink[rIndex] !== SK_MAX_S32) {
+            for (rIndex = 0; rIndex < linkCount; ++rIndex)
+            {
+                if (sLink[rIndex] !== SK_MAX_S32)
+                {
                     continue outer;
                 }
             }

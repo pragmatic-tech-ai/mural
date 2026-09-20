@@ -129,7 +129,8 @@ describe('ScrollBar — thumb geometry', () => {
 describe('ScrollBar — pointer interaction', () => {
     beforeEach(() => { initTestApp(); });
 
-    function setupVertical(): { sb: ScrollBar; im: InputManager } {
+    function setupVertical(): { sb: ScrollBar; im: InputManager }
+    {
         const sb = new ScrollBar();
         sb.Minimum = 0;
         sb.Maximum = 100;
@@ -197,7 +198,8 @@ describe('InputManager — pointer capture', () => {
     test('Move events route to the captured visual even when hit-test misses', () => {
         const im = new InputManager();
         // Two unrelated visuals; one captures, the other becomes the hit.
-        class StubVisual extends Element {
+        class StubVisual extends Element
+        {
             public moves = 0;
             protected override OnPointerMove(): void { this.moves++; }
         }
@@ -224,9 +226,11 @@ describe('InputManager — pointer capture', () => {
 
     test('PointerEventArgs.CapturePointer captures via the arg sink', () => {
         const im = new InputManager();
-        class CaptorVisual extends Element {
+        class CaptorVisual extends Element
+        {
             public received = 0;
-            protected override OnPointerDown(args: import('../../runtime/index.js').PointerEventArgs): void {
+            protected override OnPointerDown(args: import('../../runtime/index.js').PointerEventArgs): void
+            {
                 this.received++;
                 args.CapturePointer();   // capture self
             }

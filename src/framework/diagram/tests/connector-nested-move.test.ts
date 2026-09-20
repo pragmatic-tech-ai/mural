@@ -15,7 +15,8 @@ import '../routing/straight-router.js';
 
 function app(): void { Application.current = null; new Application(); }
 function startPt(c: Connector): Point { return (c.Geometry as PathGeometry).Figures[0]!.StartPoint; }
-function endPt(c: Connector): Point {
+function endPt(c: Connector): Point
+{
     const seg = (c.Geometry as PathGeometry).Figures[0]!.Segments[0]! as unknown as { Point: Point };
     return seg.Point;
 }

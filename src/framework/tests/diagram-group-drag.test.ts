@@ -29,7 +29,8 @@ class NodeVM extends MuralBase
     public static readonly IdKey   = MuralBase.RegisterProperty<string>(NodeVM, 'Id',   '', MetaData.None);
     public static readonly LeftKey = MuralBase.RegisterProperty<number>(NodeVM, 'Left', 0,  MetaData.None);
     public static readonly TopKey  = MuralBase.RegisterProperty<number>(NodeVM, 'Top',  0,  MetaData.None);
-    constructor(id: string, left: number, top: number) {
+    constructor(id: string, left: number, top: number)
+    {
         super();
         this.set_property_value(NodeVM.IdKey,   id);
         this.set_property_value(NodeVM.LeftKey, left);
@@ -42,13 +43,15 @@ class NodeVM extends MuralBase
     public set Top(v: number) { this.set_property_value(NodeVM.TopKey, v); }
 }
 
-class FakeTarget implements MountableTarget {
+class FakeTarget implements MountableTarget
+{
     public Content: Visual | undefined;
     public SetFocus(_v: Visual | undefined): void { /* noop */ }
     public GetFocusedVisual(): Visual | undefined { return undefined; }
 }
 
-function pointerInit(overrides: Partial<PointerEventInit> = {}): PointerEventInit {
+function pointerInit(overrides: Partial<PointerEventInit> = {}): PointerEventInit
+{
     return {
         HostX:       0,
         HostY:       0,
@@ -62,7 +65,8 @@ function pointerInit(overrides: Partial<PointerEventInit> = {}): PointerEventIni
     };
 }
 
-function setup() {
+function setup()
+{
     Application.current = null;
     new Application();
     const items   = new ObservableCollection<NodeVM>();
@@ -84,7 +88,8 @@ function setup() {
     return { diagram, surface, items };
 }
 
-function cont(diagram: Diagram, item: unknown): Figure {
+function cont(diagram: Diagram, item: unknown): Figure
+{
     const gen = (diagram as unknown as { _generator: { ContainerFromItem(item: unknown): Visual | undefined } })._generator;
     const c = gen.ContainerFromItem(item);
     assert.ok(c instanceof Figure, 'container should be Figure');

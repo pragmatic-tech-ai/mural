@@ -181,7 +181,8 @@ export class ScrollViewer extends ContentControl
         ScrollViewer, 'IsScrolled', false, MetaData.None);
     public static readonly IsScrolledKey = ScrollViewer._IsScrolledPriv;
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(ScrollViewer, Element.DefaultStyleKeyKey, { default_value: ScrollViewer });
     }
 

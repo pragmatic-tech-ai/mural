@@ -7,7 +7,8 @@ import { attachZoomPan } from '../behaviors/zoom-pan-behavior.js';
 
 // Minimal wheel arg matching the fields the handler reads. Handled starts false
 // so the test can observe whether the handler consumed the event.
-function wheel(hostX: number, hostY: number, deltaY: number, ctrl: boolean): WheelEventArgs {
+function wheel(hostX: number, hostY: number, deltaY: number, ctrl: boolean): WheelEventArgs
+{
     return {
         HostX: hostX, HostY: hostY, DeltaX: 0, DeltaY: deltaY, DeltaMode: WheelDeltaMode.Pixel,
         Modifiers: ctrl ? ModifierKeys.Control : ModifierKeys.None, Handled: false,

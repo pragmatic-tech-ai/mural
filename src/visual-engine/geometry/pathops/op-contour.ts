@@ -32,7 +32,8 @@ import {
     type OpContourLike,
 } from './op-fwd.js';
 
-export class OpContour implements OpContourLike {
+export class OpContour implements OpContourLike
+{
     public fState:    OpGlobalState | undefined = undefined;
     public fHead:     OpSegment;
     public fTail:     OpSegment | undefined = undefined;
@@ -123,13 +124,17 @@ export class OpContour implements OpContourLike {
     public appendSegment(): OpSegment
     {
         let result: OpSegment;
-        if (this.fCount++ === 0) {
+        if (this.fCount++ === 0)
+        {
             result = this.fHead;
-        } else {
+        }
+        else
+        {
             result = new OpSegment();
         }
         result.setPrev(this.fTail);
-        if (this.fTail !== undefined) {
+        if (this.fTail !== undefined)
+        {
             this.fTail.setNext(result);
         }
         this.fTail = result;
@@ -164,7 +169,8 @@ export class OpContour implements OpContourLike {
         this.fBounds.fRight  = first.fRight;
         this.fBounds.fBottom = first.fBottom;
         segment = segment.next();
-        while (segment !== undefined) {
+        while (segment !== undefined)
+        {
             const b = segment.bounds();
             if (b.fLeft   < this.fBounds.fLeft)   this.fBounds.fLeft   = b.fLeft;
             if (b.fTop    < this.fBounds.fTop)    this.fBounds.fTop    = b.fTop;
@@ -181,7 +187,8 @@ export class OpContour implements OpContourLike {
     {
         if (this.fCount === 0) throw new Error('OpContour.calcAngles: empty');
         let segment: OpSegment | undefined = this.fHead;
-        do {
+        do
+        {
             segment.calcAngles();
             segment = segment.next();
         } while (segment !== undefined);
@@ -192,7 +199,8 @@ export class OpContour implements OpContourLike {
     {
         let segment: OpSegment | undefined = this.fHead;
         let next:    OpSegment | undefined;
-        do {
+        do
+        {
             next = segment!.next();
             segment!.joinEnds(next !== undefined ? next : this.fHead);
             segment = next;
@@ -203,7 +211,8 @@ export class OpContour implements OpContourLike {
     public markAllDone(): void
     {
         let segment: OpSegment | undefined = this.fHead;
-        do {
+        do
+        {
             segment.markAllDone();
             segment = segment.next();
         } while (segment !== undefined);
@@ -212,8 +221,10 @@ export class OpContour implements OpContourLike {
     public resetReverse(): void
     {
         let next: OpContour | undefined = this;
-        do {
-            if (next.count() === 0) {
+        do
+        {
+            if (next.count() === 0)
+            {
                 next = next.next();
                 continue;
             }
@@ -231,7 +242,8 @@ export class OpContour implements OpContourLike {
         if (this.fCount === 0) throw new Error('OpContour.missingCoincidence: empty');
         let segment: OpSegment | undefined = this.fHead;
         let result = false;
-        do {
+        do
+        {
             if (segment.missingCoincidence()) result = true;
             segment = segment.next();
         } while (segment !== undefined);
@@ -242,7 +254,8 @@ export class OpContour implements OpContourLike {
     {
         if (this.fCount === 0) throw new Error('OpContour.moveMultiples: empty');
         let segment: OpSegment | undefined = this.fHead;
-        do {
+        do
+        {
             if (!segment.moveMultiples()) return false;
             segment = segment.next();
         } while (segment !== undefined);
@@ -253,7 +266,8 @@ export class OpContour implements OpContourLike {
     {
         if (this.fCount === 0) throw new Error('OpContour.moveNearby: empty');
         let segment: OpSegment | undefined = this.fHead;
-        do {
+        do
+        {
             if (!segment.moveNearby()) return false;
             segment = segment.next();
         } while (segment !== undefined);
@@ -264,7 +278,8 @@ export class OpContour implements OpContourLike {
     {
         if (this.fCount === 0) throw new Error('OpContour.sortAngles: empty');
         let segment: OpSegment | undefined = this.fHead;
-        while (segment !== undefined) {
+        while (segment !== undefined)
+        {
             if (!segment.sortAngles()) return false;
             segment = segment.next();
         }
@@ -287,8 +302,10 @@ export class OpContour implements OpContourLike {
     public undoneSpan(): import('./op-span.js').OpSpan | undefined
     {
         let segment: OpSegment | undefined = this.fHead;
-        while (segment !== undefined) {
-            if (!segment.done()) {
+        while (segment !== undefined)
+        {
+            if (!segment.done())
+            {
                 const r = segment.undoneSpan();
                 if (r !== undefined) return r;
             }
@@ -304,7 +321,8 @@ export class OpContour implements OpContourLike {
 // SkOpContour.h:400 — the contour list root. The driver allocates one
 // OpContourHead per path argument and appends OpContours into it via
 // appendContour().
-export class OpContourHead extends OpContour implements OpContourHeadLike {
+export class OpContourHead extends OpContour implements OpContourHeadLike
+{
     // SkOpContour.h:402.
     public appendContour(): OpContour
     {
@@ -312,7 +330,8 @@ export class OpContourHead extends OpContour implements OpContourHeadLike {
         contour.setNext(undefined);
         let prev: OpContour = this;
         let next: OpContour | undefined;
-        while ((next = prev.next()) !== undefined) {
+        while ((next = prev.next()) !== undefined)
+        {
             prev = next;
         }
         prev.setNext(contour);
@@ -325,8 +344,10 @@ export class OpContourHead extends OpContour implements OpContourHeadLike {
     public joinAllSegments(): void
     {
         let next: OpContour | undefined = this;
-        do {
-            if (next.count() === 0) {
+        do
+        {
+            if (next.count() === 0)
+            {
                 next = next.next();
                 continue;
             }
@@ -338,7 +359,8 @@ export class OpContourHead extends OpContour implements OpContourHeadLike {
     // SkOpContour.h:424.
     public remove(contour: OpContour): void
     {
-        if (contour === this) {
+        if (contour === this)
+        {
             if (this.count() !== 0)
                 throw new Error('OpContourHead.remove: self-remove with content');
             return;
@@ -347,7 +369,8 @@ export class OpContourHead extends OpContour implements OpContourHeadLike {
             throw new Error('OpContourHead.remove: contour must be the tail');
         let prev: OpContour = this;
         let next: OpContour | undefined;
-        while ((next = prev.next()) !== contour) {
+        while ((next = prev.next()) !== contour)
+        {
             if (next === undefined)
                 throw new Error('OpContourHead.remove: contour not in list');
             prev = next;
@@ -363,7 +386,8 @@ export class OpContourHead extends OpContour implements OpContourHeadLike {
 // stub" pre-pass). Quad / cubic adds flush the pending line first.
 // Useful for path-ops drivers that pull from a raw verb stream.
 
-export class OpContourBuilder {
+export class OpContourBuilder
+{
     public fContour: OpContour;
     public fLastLine: [Point, Point] = [new Point(), new Point()];
     public fLastIsLine: boolean = false;
@@ -382,7 +406,8 @@ export class OpContourBuilder {
 
     public addLine(pts: readonly Point[]): void
     {
-        if (this.fLastIsLine) {
+        if (this.fLastIsLine)
+        {
             // Identical reverse — cancel both.
             if (this.fLastLine[0].equals(pts[1]!)
                 && this.fLastLine[1].equals(pts[0]!))
@@ -411,7 +436,8 @@ export class OpContourBuilder {
 
     public addCurve(verb: OpVerb, pts: readonly Point[]): void
     {
-        switch (verb) {
+        switch (verb)
+        {
             case OpVerb.kLine:  this.addLine(pts);  return;
             case OpVerb.kQuad:  this.addQuad(pts);  return;
             case OpVerb.kCubic: this.addCubic(pts); return;

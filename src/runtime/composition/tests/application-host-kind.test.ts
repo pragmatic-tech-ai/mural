@@ -6,7 +6,8 @@ import { ShellModule, Capability } from '../../../framework/shell/module.js';
 const Desktop = new HostKind('desktop');
 const Web     = new HostKind('web');
 
-function serviceModule(id: string, targets: HostKind[]): { mod: ShellModule; key: ServiceKey<{ id: string }> } {
+function serviceModule(id: string, targets: HostKind[]): { mod: ShellModule; key: ServiceKey<{ id: string }> }
+{
     const mod = new ShellModule();
     mod.Name = id;
     for (const t of targets) mod.AddTarget(t);

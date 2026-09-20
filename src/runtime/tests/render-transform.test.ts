@@ -211,7 +211,8 @@ describe('§ 18.1 — SvgRenderer outer <g> transform composition', () => {
 
     beforeEach(() => { Application.current = null; });
 
-    function paint(content: Border): { surface: SVGSVGElement } {
+    function paint(content: Border): { surface: SVGSVGElement }
+    {
         const { document, surface } = makeDom();
         const renderer = new SvgRenderer(surface, { document });
         content.Measure(new Size(400, 400));

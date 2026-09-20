@@ -198,7 +198,8 @@ export enum TextAutoFit
 
 export class ShapeText extends Control implements ITextStyleTarget
 {
-    static {
+    static
+    {
         // Without this, applyDefaultStyle() silently no-ops and the control
         // renders no template (see memory: diagram-control-default-style-key).
         MuralBase.OverrideMetadata(ShapeText, Element.DefaultStyleKeyKey, { default_value: ShapeText });

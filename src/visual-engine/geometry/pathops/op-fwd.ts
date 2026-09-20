@@ -20,7 +20,8 @@ import type { OpGlobalState } from './op-global-state.js';
 // SkPath::Verb — single-letter discriminator for which curve flavour a
 // segment carries. Skia includes kMove / kClose / kDone for path
 // traversal; we keep them at parity so verb-indexed tables align.
-export enum OpVerb {
+export enum OpVerb
+{
     kMove  = 0,
     kLine  = 1,
     kQuad  = 2,
@@ -34,7 +35,8 @@ export enum OpVerb {
 // kQuad→2, kCubic→3). Matches SkPathOpsVerbToPoints in SkPathOpsTypes.h.
 export function verbToPoints(verb: OpVerb): number
 {
-    switch (verb) {
+    switch (verb)
+    {
         case OpVerb.kLine:  return 1;
         case OpVerb.kQuad:  return 2;
         case OpVerb.kConic: return 2;
@@ -57,7 +59,8 @@ export type OpCurveCarrier =
 // surface (sort, insert, sector math) lives on the concrete class;
 // spans only need to round-trip pointers without dereferencing the
 // guts.
-export interface OpAngleLike {
+export interface OpAngleLike
+{
     start(): OpSpanBaseLike;
     end():   OpSpanBaseLike;
 }
@@ -65,7 +68,8 @@ export interface OpAngleLike {
 // Forward shape for SkOpSegment. Phase 6 chunks fill this in
 // progressively; foundation-layer span code needs only the listed
 // surface.
-export interface OpSegmentLike {
+export interface OpSegmentLike
+{
     contour(): OpContourLike | undefined;
     globalState(): OpGlobalState;
     head(): OpSpanBaseLike;
@@ -81,20 +85,23 @@ export interface OpSegmentLike {
 // Forward shape for SkOpContour. Only the contour→state link is
 // needed at foundation-layer; the rest of the contour API lands with
 // its own session.
-export interface OpContourLike {
+export interface OpContourLike
+{
     globalState(): OpGlobalState;
 }
 
 // Forward shape for SkOpContourHead. Skia derives the head from the
 // contour for back-reference convenience; we keep the same surface.
-export interface OpContourHeadLike extends OpContourLike {
+export interface OpContourHeadLike extends OpContourLike
+{
     next(): OpContourLike | undefined;
 }
 
 // Forward shape for SkOpCoincidence — referenced only by global state
 // during Phase 6 foundation. The concrete class arrives in its own
 // session.
-export interface OpCoincidenceLike {
+export interface OpCoincidenceLike
+{
     // Marker — nothing usable from foundation layer yet. Concrete
     // class will satisfy with its real surface.
     readonly __opCoincidenceLikeBrand: true;
@@ -104,7 +111,8 @@ export interface OpCoincidenceLike {
 // in op-span.ts can be referenced directly as types because the file
 // owns both. Other consumers (e.g. op-angle.ts) reference them
 // through these aliases to keep import direction clear.
-export interface OpPtTLike {
+export interface OpPtTLike
+{
     fT: number;
     fPt: Point;
     span(): OpSpanBaseLike;
@@ -112,7 +120,8 @@ export interface OpPtTLike {
     segment(): OpSegmentLike;
 }
 
-export interface OpSpanBaseLike {
+export interface OpSpanBaseLike
+{
     segment(): OpSegmentLike;
     ptT(): OpPtTLike;
     t(): number;

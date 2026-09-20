@@ -33,7 +33,8 @@ function freshClock(): ManualClock
 // what we're actually exercising.
 class TriggerTest extends Element
 {
-    static {
+    static
+    {
         MuralBase.RegisterProperty(TriggerTest, 'Active', false, MetaData.None);
         MuralBase.RegisterProperty(TriggerTest, 'Width',  0,     MetaData.Arrange);
     }

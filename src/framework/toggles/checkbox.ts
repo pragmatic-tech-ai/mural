@@ -15,7 +15,8 @@ import { ToggleButton } from '../buttons/toggle-button.js';
 // reasonable, both can land later without API churn here.
 export class Checkbox extends ToggleButton
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(
             Checkbox, Element.DefaultStyleKeyKey,
             { default_value: Checkbox });

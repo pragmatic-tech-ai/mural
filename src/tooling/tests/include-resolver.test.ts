@@ -17,7 +17,8 @@ const PNG_1x1 = Buffer.from(
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
     'base64');
 
-function fixtureDir(): string {
+function fixtureDir(): string
+{
     const dir = mkdtempSync(join(tmpdir(), 'mural-include-'));
     writeFileSync(join(dir, 'home.svg'),
         `<svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20"/></svg>`);

@@ -8,7 +8,8 @@ import { Key, KeyEventArgs } from '../../../visual-engine/index.js';
 import { Diagram } from '../diagram.js';
 import { Figure } from '../figure.js';
 
-function mount(items: ObservableCollection<Figure>): Diagram {
+function mount(items: ObservableCollection<Figure>): Diagram
+{
     const diagram = new Diagram();
     diagram.SelectionMode = SelectionMode.Extended;
     diagram.ItemsPanel = new ItemsPanelTemplate(() => new Canvas());
@@ -20,7 +21,8 @@ function mount(items: ObservableCollection<Figure>): Diagram {
     return diagram;
 }
 
-function dispatch(diagram: Diagram, key: Key, mods: ModifierKeys): void {
+function dispatch(diagram: Diagram, key: Key, mods: ModifierKeys): void
+{
     const args = new KeyEventArgs('KeyDown', diagram, {
         Key: key, KeyText: key, Code: key, Modifiers: mods, IsRepeat: false,
     });

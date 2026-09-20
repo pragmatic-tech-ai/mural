@@ -462,7 +462,8 @@ export class ToolTipService
         const host   = ToolTipService._host;
         if (anchor !== undefined && host !== undefined)
         {
-            try { anchor.DetachOverlayChild(host); } catch (_e) { /* anchor torn down */ }
+            try { anchor.DetachOverlayChild(host); }
+            catch (_e) { /* anchor torn down */ }
         }
         if (ToolTipService._tooltip !== undefined)
         {

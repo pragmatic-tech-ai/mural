@@ -33,13 +33,15 @@ const PEOPLE: readonly Person[] = [
 // renders displayString(item), so passing a plain object means we
 // need an ItemTemplate (or a Label/Name/Text field). Easiest: project
 // the data through a label-bearing record.
-function labelled(p: Person): LabelledPerson {
+function labelled(p: Person): LabelledPerson
+{
     return { Label: `${p.name} — ${p.role}`, name: p.name, role: p.role };
 }
 
 export class ListBoxVM extends MuralBase
 {
-    OnViewMounted(view: Visual): void {
+    OnViewMounted(view: Visual): void
+    {
         const bound      = view.FindName('bound');
         const btnSort    = view.FindName('btnSort');
         const btnFilter  = view.FindName('btnFilter');

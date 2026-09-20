@@ -58,7 +58,8 @@ class TestSelector extends Selector
 function makeSelector(count: number, mode: SelectionMode = SelectionMode.Extended): {
     selector: TestSelector;
     children: Visual[];
-} {
+}
+{
     const s = new TestSelector();
     s.SelectionMode = mode;
     const children: Visual[] = [];

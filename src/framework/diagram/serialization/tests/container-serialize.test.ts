@@ -14,13 +14,15 @@ import { ContainerFigure } from '../../container-figure.js';
 import { DiagramDocument, type DiagramStorage } from '../../diagram-document.js';
 import '../node-serializers-default.js';   // side-effect: registers shape/text/callout/container
 
-class MemoryStorage implements DiagramStorage {
+class MemoryStorage implements DiagramStorage
+{
     private readonly _map = new Map<string, string>();
     public GetItem(key: string): string | null { return this._map.get(key) ?? null; }
     public SetItem(key: string, value: string): void { this._map.set(key, value); }
 }
 
-function mountView(doc: DiagramDocument): Diagram {
+function mountView(doc: DiagramDocument): Diagram
+{
     const diagram = new Diagram();
     diagram.ItemsPanel = new ItemsPanelTemplate(() => new Canvas());
     diagram.DataContext = doc;

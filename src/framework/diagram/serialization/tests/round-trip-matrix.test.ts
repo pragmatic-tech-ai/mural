@@ -20,20 +20,23 @@ import { TextNode } from '../../text-node.js';
 import { Callout } from '../../callout.js';
 import '../node-serializers-default.js';   // side-effect: register serializers
 
-class MemoryStorage implements DiagramStorage {
+class MemoryStorage implements DiagramStorage
+{
     private readonly _map = new Map<string, string>();
     public GetItem(key: string): string | null { return this._map.get(key) ?? null; }
     public SetItem(key: string, value: string): void { this._map.set(key, value); }
 }
 
-function newDoc(storage: DiagramStorage): DiagramDocument {
+function newDoc(storage: DiagramStorage): DiagramDocument
+{
     Application.current = null; new Application();
     return new DiagramDocument(storage);
 }
 
 // Save the authored document, load a fresh one, and return its nodes keyed
 // by Id so each case can assert its own node's restored style.
-function roundTrip(author: (doc: DiagramDocument) => void): Map<string, unknown> {
+function roundTrip(author: (doc: DiagramDocument) => void): Map<string, unknown>
+{
     const storage = new MemoryStorage();
     const doc = newDoc(storage);
     author(doc);
@@ -47,7 +50,8 @@ function roundTrip(author: (doc: DiagramDocument) => void): Map<string, unknown>
 }
 
 // A geometric shape with an Id + a size (so its visuals record is valid).
-function shape(id: string, kind: string): Figure {
+function shape(id: string, kind: string): Figure
+{
     const f = Figure.fromKind(kind, 20, 30, { width: 90, height: 60 });
     f.Id = id; return f;
 }

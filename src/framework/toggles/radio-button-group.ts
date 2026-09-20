@@ -29,7 +29,8 @@ import { Selector, SelectionMode } from '../list/selector.js';
 // RadioButtonItem instances directly.
 export class RadioButtonGroup extends Selector
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(RadioButtonGroup, Element.DefaultStyleKeyKey,
             { default_value: RadioButtonGroup });
         // A radio group is single-select by definition — pin it so a
@@ -103,7 +104,8 @@ export class RadioButtonItem extends ContentControl
     public static readonly IsSelectedKey = MuralBase.RegisterProperty<boolean>(
         RadioButtonItem, 'IsSelected', false, MetaData.Render);
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(RadioButtonItem, Element.DefaultStyleKeyKey,
             { default_value: RadioButtonItem });
     }

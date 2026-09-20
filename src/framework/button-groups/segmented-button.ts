@@ -28,7 +28,8 @@ import { Selector, SelectionMode } from '../list/selector.js';
 // wants a richer chrome ships SegmentedItem instances directly.
 export class SegmentedButton extends Selector
 {
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(SegmentedButton, Element.DefaultStyleKeyKey,
             { default_value: SegmentedButton });
         // SelectionMode = Single matches M3's "single-select segmented
@@ -157,7 +158,8 @@ export class SegmentedItem extends ContentControl
         SegmentedItem, 'Position', SegmentedPosition.Single, MetaData.Render);
     public static readonly PositionKey = SegmentedItem._PositionPriv;
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(SegmentedItem, Element.DefaultStyleKeyKey,
             { default_value: SegmentedItem });
     }

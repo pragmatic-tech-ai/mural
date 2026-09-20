@@ -119,7 +119,8 @@ export class ScrollBar extends TemplatedControl
     );
     public  static readonly IsFadedKey      = ScrollBar._IsFadedPriv;
 
-    static {
+    static
+    {
         MuralBase.OverrideMetadata(ScrollBar, Element.DefaultStyleKeyKey, { default_value: ScrollBar });
     }
 
