@@ -103,6 +103,20 @@ describe('ListBox — Items convenience path', () => {
         assert.equal(lb.ItemContainers[2]!.Tag, 'Cherries');
     });
 
+    test('DisplayMemberPath renders item[path], not a stringified object', () => {
+        // Objects with no Label/Name/Text used to fall to String(item) →
+        // "[object Object]"; DisplayMemberPath must select the named field.
+        const lb = new ListBox();
+        lb.DisplayMemberPath = 'id';
+        lb.Items = [{ id: 'front_door' }, { id: 'cosmos_db' }];
+        assert.equal(lb.ItemContainers.length, 2);
+        const c0 = lb.ItemContainers[0]!.Content as InstanceType<typeof TextBlock>;
+        assert.ok(c0 instanceof TextBlock);
+        assert.equal(c0.Text, 'front_door');
+        const c1 = lb.ItemContainers[1]!.Content as InstanceType<typeof TextBlock>;
+        assert.equal(c1.Text, 'cosmos_db');
+    });
+
     test('resetting Items replaces every container, declarative or not (WPF parity)', () => {
         // Behaviour change since the ItemsControl refactor: there is
         // now ONE items collection, not two. Setting Items = arr

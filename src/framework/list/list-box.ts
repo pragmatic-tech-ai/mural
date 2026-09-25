@@ -197,6 +197,20 @@ export class ListBox extends Selector
         {
             return item;
         }
+
+        // DisplayMemberPath: the WPF shortcut for a one-field template. ListBoxItem
+        // is a ContentControl with no ContentTemplate seam (see above), so apply the
+        // base ItemsControl auto-template here — same helper the default
+        // ContentPresenter container uses — instead of falling straight to
+        // displayString, which only knows Label/Name/Text and stringifies anything
+        // else to "[object Object]".
+        const dm = this.buildDisplayMemberTemplate();
+        if (dm !== undefined)
+        {
+            const v = dm.Apply(item);
+            v.DataContext = item;
+            return v;
+        }
         return new TextBlock(displayString(item));
     }
 
