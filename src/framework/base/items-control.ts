@@ -552,7 +552,7 @@ export class ItemsControl extends Control
     // time. WPF caches one auto-template per ItemsControl; we
     // intentionally don't bother (rebuilds are cheap and templates
     // aren't shared across instances).
-    private buildDisplayMemberTemplate(): DataTemplate | undefined
+    protected buildDisplayMemberTemplate(): DataTemplate | undefined
     {
         const path = this.DisplayMemberPath;
         if (path === undefined || path === '') return undefined;
