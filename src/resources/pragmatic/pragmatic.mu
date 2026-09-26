@@ -17,9 +17,10 @@ theme Pragmatic
     import PragmaticDark from "./dark.mu.js"
     import MuralBasic from "../basic.resources.mu.js"
     import MuralFramework from "../framework.resources.mu.js"
+    import PragmaticTypography from "./typography.mu.js"
     schemes: [PragmaticLight, PragmaticDark]
     defaultScheme: PragmaticLight
-    dictionaries: [MuralBasic, MuralFramework]
+    dictionaries: [MuralBasic, MuralFramework, PragmaticTypography]
 
     tokens
     {

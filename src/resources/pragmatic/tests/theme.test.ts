@@ -37,8 +37,12 @@ describe('Pragmatic theme', () =>
         const app = new Application();
         Application.current = app;
         // A prior test's _resetForTesting() clears the registry that the
-        // compiled pragmatic.mu.js populated at import — re-register here.
-        ThemeManager.RegisterTheme(Pragmatic.instance);
+        // compiled pragmatic.mu.js populated at import — re-register here,
+        // idempotently (import may already have registered it).
+        if (!ThemeManager.RegisteredThemes.some(t => t.name === 'Pragmatic'))
+        {
+            ThemeManager.RegisterTheme(Pragmatic.instance);
+        }
         Pragmatic.Activate(PragmaticDark);
         assert.equal(ThemeManager.ActiveScheme?.name, 'PragmaticDark');
         reset();
