@@ -38,15 +38,17 @@ export class PragmaticShadowEffect extends Effect
         this.Dark  = dark;
     }
 
+    // The resolved layers for a level + theme, as { y, blur, alpha } — the
+    // shape the conformance test compares against the design-system snapshot.
+    public static LayersFor(level: ShadowLevel, dark: boolean): ReadonlyArray<{ y: number; blur: number; alpha: number }>
+    {
+        return PragmaticShadowEffect.Layers[level].map(l => ({ y: l.Y, blur: l.Blur, alpha: dark ? l.DarkAlpha : l.LightAlpha }));
+    }
+
     public override toCssFilter(): string
     {
-        const layers = PragmaticShadowEffect.Layers[this.Level];
-        return layers
-            .map(l =>
-            {
-                const a = (this.Dark ? l.DarkAlpha : l.LightAlpha).toFixed(3);
-                return `drop-shadow(0.0px ${l.Y.toFixed(1)}px ${l.Blur.toFixed(1)}px rgba(0, 0, 0, ${a}))`;
-            })
+        return PragmaticShadowEffect.LayersFor(this.Level, this.Dark)
+            .map(l => `drop-shadow(0.0px ${l.y.toFixed(1)}px ${l.blur.toFixed(1)}px rgba(0, 0, 0, ${l.alpha.toFixed(3)}))`)
             .join(' ');
     }
 }

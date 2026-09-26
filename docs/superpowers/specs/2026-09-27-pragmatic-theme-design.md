@@ -134,12 +134,20 @@ accents by plum/cyan.
 2. **Projection.** `light.mu`/`dark.mu` schemes carry values matching the
    snapshot; `pragmatic.mu` declares the catalog.
 3. **Conformance test** (`src/resources/pragmatic/tests/conformance.test.ts`):
-   reads the committed `tokens.json` snapshot and asserts, for every design-system
-   token, that (a) a corresponding catalog token exists, and (b) the Light and
-   Dark scheme values equal the resolved design-system values (aliases resolved,
-   light/dark selected). A design-system token with no Mural projection, or a
-   value drift, fails the build. This enforces "the design system is the source
-   of truth" mechanically without a full code generator.
+   reads the committed `tokens.json` snapshot and asserts that (a) a corresponding
+   catalog token exists, and (b) the Light and Dark scheme values equal the
+   resolved design-system values (aliases resolved, light/dark selected). It
+   currently guards **colour tokens** (all 49 semantic colours, both themes),
+   the **scalar families** (spacing, radius, sizing, density, duration, opacity,
+   focus), and the **shadow** layers. A token with no Mural projection, or a
+   value drift in any of these, fails the build. This enforces "the design system
+   is the source of truth" mechanically without a full code generator.
+   **Deferred (follow-up):** type-scale conformance (fontSize/weight/lineHeight/
+   tracking). The snapshot's type-style names are not a clean function of the
+   Pascal tokens (`h1` vs `display-1`), and lineHeight/tracking need ratio/em
+   conversion, so a reliable guard needs an explicit role→style name map plus a
+   conversion table. The current type transcription was hand-verified correct;
+   until the guard lands, type-value drift is unguarded.
 4. **Future option (out of scope):** replace hand-authored schemes with a
    generator that emits `light.mu`/`dark.mu` from the snapshot. The conformance
    test is the seam that makes that safe to add later.
