@@ -8,3 +8,4 @@ export { Pragmatic }           from '../../../build/resources/pragmatic/pragmati
 export { PragmaticLight }      from '../../../build/resources/pragmatic/light.mu.js';
 export { PragmaticDark }       from '../../../build/resources/pragmatic/dark.mu.js';
 export { PragmaticTypography } from '../../../build/resources/pragmatic/typography.mu.js';
+export { PragmaticControls }   from '../../../build/resources/pragmatic/controls.resources.mu.js';

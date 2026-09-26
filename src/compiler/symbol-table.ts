@@ -547,7 +547,7 @@ export const ENUM_MEMBERS: ReadonlyMap<string, ReadonlySet<string>> = new Map<st
     ['MeasurementFidelity',   new Set(['Fast', 'Exact'])],
     ['ListMarkerStyle',       new Set(['None', 'Disc', 'Circle', 'Square', 'Decimal', 'LowerLatin', 'UpperLatin', 'LowerRoman', 'UpperRoman'])],
     ['ClickMode',             new Set(['Release', 'Press', 'Hover'])],
-    ['ButtonVariant',         new Set(['Filled', 'Elevated', 'Tonal', 'Outlined', 'Text', 'Standard'])],
+    ['ButtonVariant',         new Set(['Filled', 'Elevated', 'Tonal', 'Outlined', 'Text', 'Standard', 'Primary', 'Secondary', 'Ghost', 'Danger'])],
     ['ColorPickerVariant',    new Set(['HSV', 'RGB'])],
     ['BrushPickerVariant',    new Set(['Solid', 'Linear', 'Radial', 'Pattern'])],
     ['FillEditorVariant',     new Set(['None', 'Solid', 'Linear', 'Radial', 'Pattern', 'Picture'])],

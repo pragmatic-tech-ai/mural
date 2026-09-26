@@ -52,6 +52,15 @@ export enum ButtonVariant
     // trigger chain falls through to Filled because no Button template
     // exists for it.
     Standard = 'Standard',
+    // Pragmatic-theme variants (Wave 1). Additive — the Pragmatic Button
+    // style maps both these new names and the M3 legacy names onto its
+    // four templates (Primary/Secondary/Ghost/Danger). Material's Button
+    // style ignores them (no matching trigger → falls through to Filled),
+    // so adding them is safe for both themes.
+    Primary   = 'Primary',
+    Secondary = 'Secondary',
+    Ghost     = 'Ghost',
+    Danger    = 'Danger',
 }
 
 // Click handler signature. The originating PointerEventArgs rides
