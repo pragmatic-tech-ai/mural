@@ -1374,7 +1374,7 @@ export class Compiler
 
             const optsParts: string[] = [];
             const weight = this.fontEnumMember('FontWeight', e.weight,
-                ['Normal', 'Medium', 'Bold'], e.span);
+                ['Normal', 'Medium', 'SemiBold', 'Bold'], e.span);
             const style  = this.fontEnumMember('FontStyle', e.style,
                 ['Normal', 'Italic'], e.span);
             if (weight !== undefined) optsParts.push(`weight: ${weight}`);

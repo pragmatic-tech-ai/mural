@@ -11,6 +11,20 @@
 
 resources PragmaticTypography
 {
+    // ── Offline font faces ──────────────────────────────────
+    // Registered with the FontManager so Inter Tight / JetBrains Mono /
+    // Source Serif 4 load from the bundle, not Google Fonts (the app CSP
+    // blocks remote font origins). OFL builds; see fonts/OFL-*.txt.
+    fonts
+    {
+        InterTight from "./fonts/InterTight-Regular.woff2"
+        InterTight from "./fonts/InterTight-Medium.woff2" [Weight = Medium]
+        InterTight from "./fonts/InterTight-SemiBold.woff2" [Weight = SemiBold]
+        JetBrainsMono from "./fonts/JetBrainsMono-Regular.woff2"
+        JetBrainsMono from "./fonts/JetBrainsMono-Medium.woff2" [Weight = Medium]
+        SourceSerif4 from "./fonts/SourceSerif4-Regular.woff2"
+    }
+
     // ── Display ─────────────────────────────────────────────
     Style x:key="Display1" [TargetType = TextBlock]
     {
