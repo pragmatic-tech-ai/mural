@@ -40,6 +40,9 @@ export const Easings = {
     Emphasized:           cubicBezier(0.2,  0,    0,    1   ),
     EmphasizedAccelerate: cubicBezier(0.3,  0,    0.8,  0.15),
     EmphasizedDecelerate: cubicBezier(0.05, 0.7,  0.1,  1   ),
+    // Symmetrical in-out curve for looping/reversible motion
+    // (Pragmatic design system's easing-inout).
+    Inout:                cubicBezier(0.4,  0,    0.2,  1   ),
 } as const;
 
 // Build a CSS-style cubic-bezier easing from two interior control points.

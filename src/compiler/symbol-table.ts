@@ -497,6 +497,7 @@ const ENTRIES: ReadonlyArray<readonly [string, string]> = [
     ['SweepDirection',      '@pragmatic-tech-ai/mural/visual-engine'],
     ['DropShadowEffect',         '@pragmatic-tech-ai/mural/visual-engine'],
     ['MaterialElevationEffect',  '@pragmatic-tech-ai/mural/visual-engine'],
+    ['PragmaticShadowEffect',    '@pragmatic-tech-ai/mural/visual-engine'],
 
     // ── runtime/animation (motion easing curve palette) ────────────────
     ['Easings',             '@pragmatic-tech-ai/mural/runtime'],
@@ -524,7 +525,7 @@ export const ENUM_MEMBERS: ReadonlyMap<string, ReadonlySet<string>> = new Map<st
     ['VerticalAlignment',     new Set(['Top', 'Center', 'Bottom', 'Stretch'])],
     ['Visibility',            new Set(['Visible', 'Hidden', 'Collapsed'])],
     ['PlacementMode',         new Set(['Bottom', 'Top', 'Left', 'Right', 'Center', 'Mouse'])],
-    ['FontWeight',            new Set(['Normal', 'Medium', 'Bold'])],
+    ['FontWeight',            new Set(['Normal', 'Medium', 'SemiBold', 'Bold'])],
     ['FontStyle',             new Set(['Normal', 'Italic'])],
     ['TextDecorations',       new Set(['None', 'Underline', 'Strikethrough', 'Overline'])],
     ['Stretch',               new Set(['None', 'Fill', 'Uniform', 'UniformToFill'])],
@@ -638,13 +639,14 @@ export const STATIC_MEMBERS: ReadonlyMap<string, ReadonlySet<string>> = new Map<
         // M3 motion easing tokens (https://m3.material.io/styles/motion/easing-and-duration/tokens-specs)
         'Standard', 'StandardAccelerate', 'StandardDecelerate',
         'Emphasized', 'EmphasizedAccelerate', 'EmphasizedDecelerate',
+        'Inout',
     ])],
     // FontWeight is also in ENUM_MEMBERS so `FontWeight = Normal` works
     // when the LHS property's enum type is FontWeight. STATIC_MEMBERS
     // covers the standalone case — `@SomeToken = FontWeight.Normal` in
     // scheme value position, where there's no LHS property to drive
     // the enum-member resolution.
-    ['FontWeight', new Set(['Normal', 'Medium', 'Bold'])],
+    ['FontWeight', new Set(['Normal', 'Medium', 'SemiBold', 'Bold'])],
     // Exposed for the dotted form `TextAlignment.Justify` / `TextPlacement.Center`
     // as `Is(...)` converter-factory arguments in the diagram alignment
     // toolbars (also in ENUM_MEMBERS for TextAlignment so `TextAlignment=Left`

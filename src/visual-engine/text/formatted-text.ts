@@ -8,9 +8,10 @@ import type { Brush } from '../drawing/brush.js';
 // verbatim as the `font-weight` attribute.
 export enum FontWeight
 {
-    Normal = 'normal',
-    Medium = '500',
-    Bold   = 'bold',
+    Normal   = 'normal',
+    Medium   = '500',
+    SemiBold = '600',
+    Bold     = 'bold',
 }
 
 // Italic vs upright. Same shape as WPF FontStyles.
