@@ -155,4 +155,78 @@ resources PragmaticSurfaces
     {
         Template = @DefaultDrawerPane;
     }
+
+    // ── BottomSheet: top-rounded surface (bottom edges square) ────────
+    Template x:key="DefaultBottomSheet" [TargetType = BottomSheet]
+    {
+        Border x:name="PART_Sheet"
+            [ Fill = @Bg1,
+              Stroke = Pen [ Brush = @Border, Thickness = 1 ],
+              CornerRadius = (@RadiusXl,@RadiusXl,0,0),
+              Effect = @ShadowSm,
+              Padding = (@Space4,@Space4,@Space4,@Space4) ]
+        {
+            ContentPresenter
+        }
+        when ( ThemeManager.Density = Compact ) { PART_Sheet.Padding = (@Space3,@Space3,@Space3,@Space3); }
+        when ( ThemeManager.Density = Comfortable ) { PART_Sheet.Padding = (@Space5,@Space5,@Space5,@Space5); }
+    }
+    Style [TargetType = BottomSheet]
+    {
+        Template = @DefaultBottomSheet;
+    }
+
+    // ── SideSheet: lateral sheet (Standard + Modal) ──────────────────
+    // Body ContentPresenter declared FIRST so ContentControl's depth-first
+    // slot walk binds Content to it (not the header's close button), then
+    // positioned into row 1 by Grid.Row.
+    Template x:key="DefaultSideSheet" [TargetType = SideSheet]
+    {
+        Border x:name="PART_Sheet" [ Fill = @Bg2 ]
+        {
+            DockPanel [ LastChildFill = true ]
+            {
+                Line x:name="PART_DividerLeft"
+                    [ DockPanel.Dock = Left, Orientation = Vertical, Stroke = Pen [ Brush = @Border, Thickness = 1 ] ]
+                Line x:name="PART_DividerRight"
+                    [ DockPanel.Dock = Right, Orientation = Vertical, Stroke = Pen [ Brush = @Border, Thickness = 1 ], Visibility = Collapsed ]
+                Grid
+                {
+                    RowDefinitions
+                    {
+                        RowDefinition [ Height = GridLength.Auto ]
+                        RowDefinition [ Height = GridLength.Star ]
+                    }
+                    ContentPresenter
+                        [ Grid.Row = 1,
+                          Margin = (@Space4,@Space2,@Space4,@Space4) ]
+                    Border [ Grid.Row = 0, Padding = (@Space4,@Space3,@Space2,@Space3) ]
+                    {
+                        DockPanel [ LastChildFill = true ]
+                        {
+                            IconButton x:name="PART_CloseButton"
+                                [ Variant = Standard, DockPanel.Dock = Right ]
+                            {
+                                Shape [ Geometry = @IconClose, Fill = @Fg2, Width = 18, Height = 18 ]
+                            }
+                            TextBlock x:name="PART_Title"
+                                [ Text = $$Title,
+                                  Style = @UiLabel,
+                                  Foreground = @Fg1,
+                                  VerticalAlignment = Center ]
+                        }
+                    }
+                }
+            }
+        }
+        when ( Anchor = Left )
+        {
+            PART_DividerLeft.Visibility = Collapsed;
+            PART_DividerRight.Visibility = Visible;
+        }
+    }
+    Style [TargetType = SideSheet]
+    {
+        Template = @DefaultSideSheet;
+    }
 }
