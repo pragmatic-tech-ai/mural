@@ -16,4 +16,5 @@ resources PragmaticControls
     import PragmaticIconButtons from "../../framework/pragmatic/icon-buttons/icon-buttons.template.mu.js"
     import PragmaticInputs from "../../framework/pragmatic/inputs/textbox.template.mu.js"
     import PragmaticToggles from "../../framework/pragmatic/toggles/toggles.template.mu.js"
+    import PragmaticSliders from "../../framework/pragmatic/sliders/sliders.template.mu.js"
 }
