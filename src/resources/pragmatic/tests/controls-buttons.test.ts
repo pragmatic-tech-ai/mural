@@ -102,38 +102,35 @@ describe('Pragmatic Button', () =>
         ControlHarness.Reset();
     });
 
-    // SKIPPED — tracks a real, scoped bug found by this Wave: a
-    // `Pen [ Brush = @Token ]` trigger value (used here for
+    // Regression test for Wave-1 follow-up (E): tracked a real, scoped bug
+    // where a `Pen [ Brush = @Token ]` trigger value (used here for
     // PART_FocusRing.Stroke) compiles to a SINGLE shared Pen instance
     // built once at template-construction time (see the compiled
     // buttons.template.mu.js: `new Pen()` sits inside a module-scope
     // const array, not inside the per-instance template-application
     // path). Pen is not a Visual, so its DynamicResourceBinding never
     // gets the attach/detach re-wire hook a fresh Border gets on every
-    // templated instantiation — the binding stays wired to whichever
+    // templated instantiation — the binding stayed wired to whichever
     // Application was current the FIRST time that shared Pen was ever
     // built, for the lifetime of the process.
     //
     // ControlHarness activates a fresh `Application` per test (by design,
     // to stop state leaking between cases), so once ANY earlier test in
     // this file renders a focused Button under Light, the ring's resolved
-    // colour is pinned to the Light @BorderFocus value forever — this
-    // Dark-focused render still paints rgb(34,130,77) (Light) instead of
-    // rgb(46,168,98) (Dark @BorderFocus / #2EA862).
+    // colour used to pin to the Light @BorderFocus value forever — this
+    // Dark-focused render used to still paint rgb(34,130,77) (Light)
+    // instead of rgb(46,168,98) (Dark @BorderFocus / #2EA862).
     //
     // Confirmed this does NOT affect a real single-Application runtime
     // Light<->Dark toggle: ThemeManager.ApplyScheme mutates the SAME
     // Application's Resources in place, and that IS the Resources
     // dictionary the shared Pen's binding is subscribed to. The bug only
-    // bites when Application.current is swapped to a DIFFERENT instance
+    // bit when Application.current was swapped to a DIFFERENT instance
     // (this harness; latent risk for multi-window / multi-Application
-    // scenarios). Engine fix belongs in dynamic-resource.ts — either
-    // materialise resource-block trigger values per templated instance,
-    // or teach DynamicResourceBinding to re-wire when Application.current
-    // is reassigned to a different instance, not just null -> populated.
-    // Deferred to a Wave-1 follow-up (E), out of this pass's scope.
-    // Re-enable once that lands.
-    test('focus ring paints @BorderFocus under Dark after a Light render — SKIPPED: shared Pen DynamicResourceBinding does not re-wire on Application-instance swap; see Wave-1 follow-up (E)', { skip: true }, () =>
+    // scenarios). Fixed in dynamic-resource.ts: DynamicResourceBinding now
+    // re-wires on EVERY Application.current reassignment, not just the
+    // initial null -> populated transition.
+    test('focus ring paints @BorderFocus under Dark after a Light render', () =>
     {
         const { svg } = ControlHarness.Render(() =>
         {

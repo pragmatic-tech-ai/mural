@@ -66,9 +66,12 @@ class DynamicResourceBinding extends Binding
     private readonly host: Visual | MuralBase;
     private readonly key: string;
     private readonly unsubscribeRewire: (() => void) | undefined;
-    // One-shot: set only when this binding was created before any Application
-    // existed, so it can re-wire the app-level subscription once one appears.
-    private unsubscribeAppAppear: (() => void) | undefined;
+    // Registered for the binding's whole lifetime — not only until the first
+    // Application appears — so a LATER swap to a different Application
+    // instance also re-wires this binding's Application-level subscription,
+    // not just the initial null -> populated transition. Unsubscribed only
+    // in dispose().
+    private readonly unsubscribeAppCurrentChanged: () => void;
     // In-flight scheme-transition animation driven by this binding. Held
     // so the next refresh / dispose can Stop() it cleanly; otherwise a
     // back-to-back scheme swap would leave the prior animation pinning
@@ -94,28 +97,29 @@ class DynamicResourceBinding extends Binding
         this.unsubscribeRewire = isVisualHost(host)
             ? host._subscribe_dynamic_resource(() => { this.rewire(); })
             : undefined;
-        // No Application yet? wireSubscriptions couldn't reach the app-level
-        // Resources (where theme + merged dictionaries live), so this binding
-        // resolved to undefined. Re-wire once an Application becomes current
-        // (a merge / Set afterwards then flows through). Covers resource
+        // Registered unconditionally — not only when no Application exists
+        // yet at construction. Application._onCurrentChanged fires on EVERY
+        // `new Application()` (see application.ts's constructor), so this
+        // also catches a LATER swap to a different, already-current
+        // Application — not just the initial null -> populated transition.
+        // rewire() drops the stale Application.Resources subscription
+        // (wired against whichever Application was current at construction
+        // / the previous swap) and re-subscribes against the new
+        // Application.current.Resources, then re-resolves. Covers resource
         // references built at module-import time — before app.mu's
-        // `new Application()` runs — such as icons on module-const capabilities.
-        if (Application.current === null || Application.current === undefined)
+        // `new Application()` runs — such as icons on module-const
+        // capabilities, as well as a fresh-Application-per-test harness.
+        this.unsubscribeAppCurrentChanged = Application._onCurrentChanged(() =>
         {
-            this.unsubscribeAppAppear = Application._onCurrentChanged(() =>
-            {
-                this.unsubscribeAppAppear?.();
-                this.unsubscribeAppAppear = undefined;
-                this.rewire();
-            });
-        }
+            this.rewire();
+        });
     }
 
     public override dispose(): void
     {
         super.dispose();
         this.unsubscribeRewire?.();
-        this.unsubscribeAppAppear?.();
+        this.unsubscribeAppCurrentChanged();
         for (const unsub of this.subscriptions) unsub();
         this.subscriptions.length = 0;
         this.activeStoryboard?.Stop();
