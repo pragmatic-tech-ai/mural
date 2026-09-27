@@ -83,7 +83,7 @@ export class Badge extends Control
     ): void
     {
         super.OnPropertyChanged(descriptor, oldValue, newValue);
-        if (descriptor.Owner === Badge && descriptor.Name === 'Count')
+        if (descriptor === Badge.CountKey.descriptor)
         {
             this.set_property_value_with_key(Badge._CountTextPriv, String(newValue as number));
         }

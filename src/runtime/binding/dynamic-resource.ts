@@ -70,8 +70,24 @@ class DynamicResourceBinding extends Binding
     // Application appears — so a LATER swap to a different Application
     // instance also re-wires this binding's Application-level subscription,
     // not just the initial null -> populated transition. Unsubscribed only
-    // in dispose().
+    // in dispose(). Deliberate trade-off: exactly like the per-key
+    // app.Resources.SubscribeKey subscription it drives (see
+    // wireAppSubscription below), this listener retains the binding —
+    // and everything it closes over — for the process's life if the owner
+    // forgets to dispose(). Both leaks are cleared by the same dispose()
+    // call, so this mirrors an already-accepted trade-off rather than
+    // introducing a new one.
     private readonly unsubscribeAppCurrentChanged: () => void;
+    // The Application.Resources subscription (last leg of
+    // wireSubscriptions), tracked separately from the ancestor-chain
+    // `subscriptions` above so an Application swap can replace just this
+    // one registration without re-walking the Visual ancestor chain — see
+    // wireAppSubscription().
+    private appSubscription: (() => void) | undefined;
+    // The Application instance `appSubscription` is currently wired
+    // against (undefined before the first wireAppSubscription() call).
+    // Compared against Application.current by the swap listener below.
+    private wiredApp: Application | null | undefined;
     // In-flight scheme-transition animation driven by this binding. Held
     // so the next refresh / dispose can Stop() it cleanly; otherwise a
     // back-to-back scheme swap would leave the prior animation pinning
@@ -102,16 +118,40 @@ class DynamicResourceBinding extends Binding
         // `new Application()` (see application.ts's constructor), so this
         // also catches a LATER swap to a different, already-current
         // Application — not just the initial null -> populated transition.
-        // rewire() drops the stale Application.Resources subscription
-        // (wired against whichever Application was current at construction
-        // / the previous swap) and re-subscribes against the new
-        // Application.current.Resources, then re-resolves. Covers resource
-        // references built at module-import time — before app.mu's
+        // wireAppSubscription() drops the stale Application.Resources
+        // subscription (wired against whichever Application was current at
+        // construction / the previous swap) and re-subscribes against the
+        // new Application.current.Resources, then re-resolves. Covers
+        // resource references built at module-import time — before app.mu's
         // `new Application()` runs — such as icons on module-const
         // capabilities, as well as a fresh-Application-per-test harness.
         this.unsubscribeAppCurrentChanged = Application._onCurrentChanged(() =>
         {
-            this.rewire();
+            // Early-out for the steady-state single-Application path: a
+            // binding never receives an _onCurrentChanged notification at
+            // all unless SOME `new Application()` ran, and this check would
+            // additionally cover the (currently impossible, but cheap to
+            // guard against) case of a redundant notification for the
+            // Application this binding is already wired to. It does NOT by
+            // itself cut the cost of a genuine swap — Application's
+            // constructor always makes a brand-new instance current before
+            // notifying, so `wiredApp` never equals `Application.current`
+            // on a real swap. That's what wireAppSubscription() below is
+            // for.
+            if (this.wiredApp === Application.current) return;
+            // A genuine swap. Re-walking the full ancestor chain here (as
+            // `rewire()` does for tree attach/detach) would be wasted work:
+            // swapping the Application doesn't change the host's Visual
+            // ancestry or any of its dictionaries — only which
+            // Application.Resources instance backs the trailing,
+            // Application-level subscription. Replacing just that one
+            // subscription turns each binding's per-swap cost from
+            // O(ancestor-depth) into O(1), which is what actually bounds
+            // the O(N) total work per swap (N = undisposed bindings) that
+            // the fresh-Application-per-test harness / multi-window churn
+            // triggers.
+            this.wireAppSubscription();
+            this.refresh();
         });
     }
 
@@ -122,6 +162,8 @@ class DynamicResourceBinding extends Binding
         this.unsubscribeAppCurrentChanged();
         for (const unsub of this.subscriptions) unsub();
         this.subscriptions.length = 0;
+        this.appSubscription?.();
+        this.appSubscription = undefined;
         this.activeStoryboard?.Stop();
         this.activeStoryboard = undefined;
     }
@@ -196,11 +238,23 @@ class DynamicResourceBinding extends Binding
                 cursor = back['_logicalParent'] ?? back['_templatedParent'];
             }
         }
+        this.wireAppSubscription();
+    }
+
+    // Wires (or re-wires) ONLY the Application.Resources subscription,
+    // leaving any ancestor-chain subscriptions untouched. Used both by the
+    // full wireSubscriptions() walk above (construction / tree rewire) and,
+    // on its own, by the Application-swap listener — an app swap changes
+    // which Application.Resources dictionary is in play but never the
+    // host's Visual ancestry, so there's nothing else to redo.
+    private wireAppSubscription(): void
+    {
+        this.appSubscription?.();
         const app = Application.current;
-        if (app !== undefined && app !== null)
-        {
-            this.subscriptions.push(app.Resources.SubscribeKey(this.key, () => this.refresh()));
-        }
+        this.appSubscription = (app !== undefined && app !== null)
+            ? app.Resources.SubscribeKey(this.key, () => this.refresh())
+            : undefined;
+        this.wiredApp = app;
     }
 
     private refresh(): void

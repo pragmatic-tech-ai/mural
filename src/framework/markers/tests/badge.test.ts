@@ -50,6 +50,33 @@ describe('Badge — Numeric variant render', () =>
         const svg = dc.ToFragment();
         assert.ok(svg.includes('>0<'), `expected the rendered pill to carry "0", got: ${svg}`);
     });
+
+    // Closes the coverage gap between "renders the initial Count" (above)
+    // and "CountText stays in lock-step" (below): this proves the full
+    // reactive repaint chain — mutating Count after the first render
+    // actually reaches the next render's SVG output, not just the
+    // intermediate CountText DP.
+    test('mutating Count after the first render updates the next render', () =>
+    {
+        initTestApp();
+        const badge = new Badge();
+        badge.Variant = BadgeVariant.Numeric;
+        badge.Count = 5;
+
+        const target = new HeadlessTarget(32, 32, badge);
+        const firstDc = new SvgDrawingContext();
+        target.Render(firstDc);
+        const firstSvg = firstDc.ToFragment();
+        assert.ok(firstSvg.includes('>5<'), `expected the first render to carry "5", got: ${firstSvg}`);
+
+        badge.Count = 12;
+
+        const secondDc = new SvgDrawingContext();
+        assert.doesNotThrow(() => target.Render(secondDc));
+        const secondSvg = secondDc.ToFragment();
+        assert.ok(secondSvg.includes('>12<'), `expected the repaint to carry "12", got: ${secondSvg}`);
+        assert.ok(!secondSvg.includes('>5<'), `expected the repaint to drop the stale "5", got: ${secondSvg}`);
+    });
 });
 
 describe('Badge.CountText — derived string DP', () =>

@@ -7,6 +7,14 @@
 // @H1Tracking = -0.88`), so a line can yield more than one assignment.
 export class SchemeValues
 {
+    // Deliberately has no `^\s*` line anchor — an anchor only ever matches
+    // once per line, and the 4-assignments-per-line type-scale rows above
+    // need repeated, non-anchored matches via matchAll. The relaxation's
+    // accepted cost: an `@Name=` that appears mid-token (not just at a
+    // line/assignment boundary) would also match. Fine for this test-only
+    // scheme-file parser, which is only ever fed well-formed scheme `.mu`
+    // source — restoring the anchor would break multi-match and isn't
+    // needed for that input.
     private static readonly Assignment =
         /@([A-Za-z0-9]+)\s*=\s*(.+?)(?=\s+@[A-Za-z0-9]+\s*=|\s*$)/g;
 
