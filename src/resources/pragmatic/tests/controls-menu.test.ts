@@ -11,10 +11,13 @@ import { ControlHarness } from './control-harness.js';
 // The MenuItem row chrome is applied imperatively (RowTemplate -> _rowRoot),
 // exposed as the public visualChildren[0]; its named parts are fished out via
 // FindName on that root (the popup Template is separate + detached).
-function RowPart(it: MenuItem, name: string): Border
+class MenuRow
 {
-    const root = it.visualChildren[0];
-    return root!.FindName(name) as Border;
+    public static Part(it: MenuItem, name: string): Border
+    {
+        const root = it.visualChildren[0];
+        return root!.FindName(name) as Border;
+    }
 }
 
 describe('Pragmatic menu family', () =>
@@ -38,7 +41,7 @@ describe('Pragmatic menu family', () =>
         const it = new MenuItem();
         it.Header = 'Open';
         it._setIsMouseOver(true);
-        const row = RowPart(it, 'PART_Row');
+        const row = MenuRow.Part(it, 'PART_Row');
         assert.equal((row.Fill as SolidColorBrush).Color.ToCss(), ControlHarness.TokenCss('Bg2'), 'hovered row steps @Bg2');
         ControlHarness.Reset();
     });
@@ -50,7 +53,7 @@ describe('Pragmatic menu family', () =>
         it.Header = 'Bold';
         it.IsChecked = true;
         it._setIsMouseOver(true);
-        const selected = RowPart(it, 'PART_Selected');
+        const selected = MenuRow.Part(it, 'PART_Selected');
         assert.equal((selected.Fill as SolidColorBrush).Color.ToCss(), ControlHarness.TokenCss('SurfaceSelected'), 'checked+hovered row keeps @SurfaceSelected on the dedicated layer');
         ControlHarness.Reset();
     });
@@ -73,7 +76,7 @@ describe('Pragmatic menu family', () =>
         const it = new MenuItem();
         it.Header = 'Bold';
         it.IsChecked = true;
-        const selected = RowPart(it, 'PART_Selected');
+        const selected = MenuRow.Part(it, 'PART_Selected');
         assert.equal((selected.Fill as SolidColorBrush).Color.ToCss(), ControlHarness.TokenCss('SurfaceSelected'), 'dark checked row fills the dark @SurfaceSelected');
         ControlHarness.Reset();
     });
