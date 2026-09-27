@@ -32,4 +32,5 @@ resources PragmaticControls
     import PragmaticMenus from "../../framework/pragmatic/menu/menu.template.mu.js"
     import PragmaticSplitButton from "../../framework/pragmatic/button-groups/split-button.template.mu.js"
     import PragmaticTopAppBar from "../../framework/pragmatic/top-app-bar/top-app-bar.template.mu.js"
+    import PragmaticBottomAppBar from "../../framework/pragmatic/bottom-app-bar/bottom-app-bar.template.mu.js"
 }
