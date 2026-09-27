@@ -719,6 +719,24 @@ export const TYPE_REF_META_ATTRS: ReadonlySet<string> = new Set([
     'DataType',
 ]);
 
+// Property names that are Pen-typed DPs (`RegisterProperty<Pen>`). A
+// parenthesized 2-cell tuple assigned to one of these compiles to
+// `new Pen(brush, thickness)` instead of the default Thickness/CornerRadius
+// tuple shape — see compileTupleValue's isPenTarget branch. Sourced from a
+// grep of `RegisterProperty<Pen` across the framework:
+//   Visual.Stroke                     (visual-engine/visual.ts)
+//   ShapeFormatControl.Stroke         (framework/formatting/shape-format-control.ts)
+//   PenEditor.Pen                     (framework/formatting/pen-editor.ts)
+//   ConnectorCapDataContext.Pen       (framework/diagram/caps/connector-cap-data-context.ts)
+//   Diagram.SelectionFormatStroke     (framework/diagram/diagram.ts)
+//   CapOption.GlyphStroke             (framework/formatting/cap-option.ts)
+export const PEN_PROPERTIES: ReadonlySet<string> = new Set([
+    'Stroke',
+    'Pen',
+    'SelectionFormatStroke',
+    'GlyphStroke',
+]);
+
 // Per-control default-slot info. Used by the emitter to translate
 // `Border{ TextBlock{…} }` → `_border.Child = _text` vs
 // `Canvas{ A B C }` → `_canvas.Children.push(_a/_b/_c)`.
