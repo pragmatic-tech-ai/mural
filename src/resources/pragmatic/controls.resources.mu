@@ -19,4 +19,5 @@ resources PragmaticControls
     import PragmaticSliders from "../../framework/pragmatic/sliders/sliders.template.mu.js"
     import PragmaticMarkers from "../../framework/pragmatic/markers/markers.template.mu.js"
     import PragmaticText from "../../framework/pragmatic/text/text.template.mu.js"
+    import PragmaticListBox from "../../framework/pragmatic/lists/list-box.template.mu.js"
 }
