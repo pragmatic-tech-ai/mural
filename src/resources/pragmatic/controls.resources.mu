@@ -22,4 +22,5 @@ resources PragmaticControls
     import PragmaticListBox from "../../framework/pragmatic/lists/list-box.template.mu.js"
     import PragmaticTreeView from "../../framework/pragmatic/lists/tree-view.template.mu.js"
     import PragmaticComboBox from "../../framework/pragmatic/lists/combo-box.template.mu.js"
+    import PragmaticScrollBar from "../../framework/pragmatic/scroll/scroll-bar.template.mu.js"
 }
