@@ -28,4 +28,5 @@ resources PragmaticControls
     import PragmaticTabs from "../../framework/pragmatic/tabs/tabs.template.mu.js"
     import PragmaticSurfaces from "../../framework/pragmatic/surfaces/surfaces.template.mu.js"
     import PragmaticTooltips from "../../framework/pragmatic/tooltips/tooltips.template.mu.js"
+    import PragmaticNotifications from "../../framework/pragmatic/notifications/notifications.template.mu.js"
 }
