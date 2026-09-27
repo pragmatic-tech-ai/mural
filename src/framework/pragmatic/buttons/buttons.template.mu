@@ -15,9 +15,11 @@
 //   * Disabled dims the surface to @OpacityDisabled.
 //
 // Only Pragmatic tokens are used — no raw hex, no M3 (@Primary /
-// @OnSurface / @Shape* / @Elevation* / @*Layer) token. Padding tuples are
-// inline structural layout constants, matching every Material button
-// template (Material never tokenises paddings).
+// @OnSurface / @Shape* / @Elevation* / @*Layer) token. The focus-ring
+// offset binds to @FocusRingOffset via a single-cell tuple
+// (`Padding = (@FocusRingOffset)` → a uniform Thickness). The content
+// inset stays an inline (16,8,16,8) layout tuple, matching every Material
+// button template (Material never tokenises its content paddings).
 //
 // Merged into the theme via PragmaticControls (controls.resources.mu),
 // listed AFTER MuralFramework so this key-less Style[TargetType=Button]
@@ -31,7 +33,7 @@ resources PragmaticButtons
     {
         Border x:name="PART_FocusRing"
             [ Fill = #00000000,
-              Padding = (2,2,2,2),
+              Padding = (@FocusRingOffset),
               CornerRadius = $$CornerRadius ]
         {
             Border x:name="PART_Root"
@@ -59,7 +61,7 @@ resources PragmaticButtons
     {
         Border x:name="PART_FocusRing"
             [ Fill = #00000000,
-              Padding = (2,2,2,2),
+              Padding = (@FocusRingOffset),
               CornerRadius = $$CornerRadius ]
         {
             Border x:name="PART_Root"
@@ -87,7 +89,7 @@ resources PragmaticButtons
     {
         Border x:name="PART_FocusRing"
             [ Fill = #00000000,
-              Padding = (2,2,2,2),
+              Padding = (@FocusRingOffset),
               CornerRadius = $$CornerRadius ]
         {
             Border x:name="PART_Root"
@@ -115,7 +117,7 @@ resources PragmaticButtons
     {
         Border x:name="PART_FocusRing"
             [ Fill = #00000000,
-              Padding = (2,2,2,2),
+              Padding = (@FocusRingOffset),
               CornerRadius = $$CornerRadius ]
         {
             Border x:name="PART_Root"

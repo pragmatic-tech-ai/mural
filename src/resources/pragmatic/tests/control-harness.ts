@@ -60,6 +60,15 @@ export class ControlHarness
         return app;
     }
 
+    // Tear down after a Render/Activate: clear the ThemeManager registry
+    // and the current Application so the next test starts clean. Every
+    // Pragmatic control-fork test calls this at the end of each case.
+    public static Reset(): void
+    {
+        ThemeManager._resetForTesting();
+        Application.current = undefined;
+    }
+
     // Activate `scheme`, build the control, and paint it once to SVG.
     public static Render(makeControl: () => Element, opts: RenderOptions): RenderResult
     {
