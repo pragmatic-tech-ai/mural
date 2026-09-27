@@ -111,11 +111,34 @@ resources PragmaticSliders
             // arranged slot via Visual.Arrange's explicit-size-wins
             // rule. See the header GOTCHA for why this can't be a
             // zero-Padding wrapper the way Button / Toggle's ring is.
+            //   GOTCHA (offset, not just size): Visual.Arrange's
+            // computeOffsetX/Y treat overflow (renderSize >= slot) as a
+            // FLUSH fit — `extra = slotWidth - renderWidth; if (extra
+            // <= 0) return 0` (visual.ts ~1486) — Stretch/Center never
+            // centre an overflowing box; it anchors flush at the slot's
+            // own origin. An 8-wide ring given a 4-wide slot at
+            // thumbOffset therefore renders at exactly thumbOffset (not
+            // thumbOffset-2), pushing its centre — and the nested
+            // thumb's centre — 2dp past the true value position (caught
+            // by this fork's own geometry render test: thumb centre
+            // landed at thumbOffset+4 instead of thumbOffset+2).
+            //   Fix: a uniform NEGATIVE Margin equal to -@FocusRingOffset
+            // on every side EXPANDS the marginedRect the ring is offered
+            // to exactly the ring's own size before the offset calc
+            // runs (visual.ts ~1361: `marginedRect.Width = finalRect.
+            // Width - margin.Horizontal`, and margin.Horizontal is
+            // negative here, so it ADDS) — so extra lands at exactly 0
+            // for an EXACT fit at the shifted origin (thumbOffset-2),
+            // not an overflowing one, re-centring the ring (and the
+            // thumb nested inside it) back on the true thumbOffset+2
+            // value position. Works unchanged for both orientations —
+            // the overflow is 2dp per side on both axes either way.
             Border x:name="PART_FocusRing"
                 [ Fill = #00000000,
                   CornerRadius = @RadiusPill,
                   Width = 8,
-                  Height = 20 ]
+                  Height = 20,
+                  Margin = (-2,-2,-2,-2) ]
             {
                 Border x:name="PART_Thumb"
                     [ Fill = @ControlAccent,

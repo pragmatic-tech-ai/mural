@@ -6,6 +6,7 @@ import { HeadlessTarget, SvgDrawingContext } from '../../../visual-engine/index.
 import { Slider } from '../../../basic/slider.js';
 import { SpinEdit } from '../../../basic/spin-edit.js';
 import { TextBox } from '../../../basic/text-box.js';
+import { Orientation } from '../../../basic/panels/orientation.js';
 import { PragmaticLight } from '../pragmatic.js';
 import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
@@ -28,6 +29,63 @@ function pointer(overrides: Partial<PointerEventInit> = {}): PointerEventInit
         PointerType: 'mouse',
         ...overrides,
     };
+}
+
+// Parses the thumb's rendered GLOBAL geometry out of the SVG fragment, to
+// regression-test a real layout bug (see task-5-report.md fix round 2):
+// wrapping the thumb in a fixed-size PART_FocusRing shifted its rendered
+// centre 2dp off the true value position, because Visual.Arrange's overflow
+// handling anchors an oversized child FLUSH at its slot origin rather than
+// centring it — a colour-only assertion (the rest of this file) can't catch
+// that; only rendered coordinates can.
+class SliderRenderGeometry
+{
+    // PART_FocusRing/PART_Thumb render as a `<g>` immediately containing its
+    // own `<rect>` and then a NESTED `<g>` — a shape unique to this pair
+    // (Track/Fill are flat, or at most singly wrapped in their own `<g>`).
+    private static readonly RingThumbPattern =
+        /<g transform="matrix\(1,0,0,1,(-?[\d.]+),(-?[\d.]+)\)">\s*<rect x="(-?[\d.]+)" y="(-?[\d.]+)" width="(-?[\d.]+)" height="(-?[\d.]+)"[^>]*\/>\s*<g transform="matrix\(1,0,0,1,(-?[\d.]+),(-?[\d.]+)\)">\s*<rect x="(-?[\d.]+)" y="(-?[\d.]+)" width="(-?[\d.]+)" height="(-?[\d.]+)"/;
+    private static readonly GroupTransform = /<g transform="matrix\(1,0,0,1,(-?[\d.]+),(-?[\d.]+)\)">/g;
+    private static readonly Rect = /<rect x="(-?[\d.]+)" y="(-?[\d.]+)" width="(-?[\d.]+)" height="(-?[\d.]+)"/g;
+
+    // The thumb's GLOBAL centre — ring group offset + nested thumb group
+    // offset + the thumb's own local rect (never Stroke-inset, since
+    // PART_Thumb never sets Stroke).
+    public static ThumbCenter(svg: string): { X: number; Y: number }
+    {
+        const m = SliderRenderGeometry.RingThumbPattern.exec(svg);
+        assert.ok(m, 'expected the PART_FocusRing / PART_Thumb nested-group geometry in the rendered SVG');
+        const [, ringX, ringY, , , , , thumbGroupX, thumbGroupY, thumbLocalX, thumbLocalY, thumbW, thumbH] = m!.map(Number);
+        return {
+            X: ringX! + thumbGroupX! + thumbLocalX! + thumbW! / 2,
+            Y: ringY! + thumbGroupY! + thumbLocalY! + thumbH! / 2,
+        };
+    }
+
+    // PART_Fill is always the second painted rect (after PART_Track),
+    // rendered before the PART_FocusRing/PART_Thumb structure — located as
+    // the last rect (optionally wrapped in its own single `<g>` translate,
+    // when its ArrangedRect has a nonzero origin) preceding that nested
+    // pattern's start index. Returns the fill's trailing edge along the
+    // given orientation's primary axis — the same `thumbCentreX`/
+    // `thumbCentreY` position Slider.ArrangeSliderParts derives the thumb's
+    // own placement from, so this is an independent cross-check that the
+    // fill and the thumb agree on where "the value" actually is.
+    public static FillEdge(svg: string, orientation: Orientation): number
+    {
+        const ringMatch = SliderRenderGeometry.RingThumbPattern.exec(svg);
+        assert.ok(ringMatch, 'expected the PART_FocusRing / PART_Thumb nested-group geometry in the rendered SVG');
+        const preamble = svg.slice(0, ringMatch!.index);
+        const lastGroup = [...preamble.matchAll(SliderRenderGeometry.GroupTransform)].pop();
+        const groupX = lastGroup ? Number(lastGroup[1]) : 0;
+        const groupY = lastGroup ? Number(lastGroup[2]) : 0;
+        const rects = [...preamble.matchAll(SliderRenderGeometry.Rect)];
+        const fillRect = rects[rects.length - 1]!;
+        const fillX = groupX + Number(fillRect[1]);
+        const fillY = groupY + Number(fillRect[2]);
+        const fillW = Number(fillRect[3]);
+        return orientation === Orientation.Vertical ? fillY : fillX + fillW;
+    }
 }
 
 describe('Pragmatic Slider', () =>
@@ -67,6 +125,53 @@ describe('Pragmatic Slider', () =>
         const controlAccent = ControlHarness.TokenCss('ControlAccent');
         assert.equal(controlAccent, 'rgb(34,130,77)');
         assert.ok(svg.includes(controlAccent!), 'Slider fill paints @ControlAccent');
+        ControlHarness.Reset();
+    });
+
+    test('the rendered thumb centre aligns with the true value position — Horizontal (regression: PART_FocusRing geometry)', () =>
+    {
+        ControlHarness.Activate(PragmaticLight);
+        const sl = new Slider();
+        sl.Minimum = 0;
+        sl.Maximum = 100;
+        sl.Value = 50;
+        // Fixed width, auto height — a deterministic 200x16 arrange (see
+        // the drag test below for the same pattern). At Value=50 (the
+        // midpoint of [Min,Max]), the thumb's THUMB_PRIMARY/2 terms in
+        // Slider.ArrangeSliderParts cancel out exactly, so the expected
+        // centre is trackLength/2 regardless of the thumb's own pixel
+        // size — an assertion that doesn't depend on THUMB_PRIMARY's
+        // private value.
+        const target = new HeadlessTarget(200, undefined, sl);
+        const dc = new SvgDrawingContext();
+        target.Render(dc);
+        const svg = dc.ToFragment();
+
+        const center = SliderRenderGeometry.ThumbCenter(svg);
+        const fillEdge = SliderRenderGeometry.FillEdge(svg, Orientation.Horizontal);
+        assert.equal(center.X, fillEdge, 'the thumb centre must land exactly on PART_Fill\'s trailing edge');
+        assert.equal(center.X, 100, 'at Value=50 of [0,100] on a 200px track, the true centre is trackLength/2');
+        ControlHarness.Reset();
+    });
+
+    test('the rendered thumb centre aligns with the true value position — Vertical (regression: PART_FocusRing geometry)', () =>
+    {
+        ControlHarness.Activate(PragmaticLight);
+        const sl = new Slider();
+        sl.Orientation = Orientation.Vertical;
+        sl.Minimum = 0;
+        sl.Maximum = 100;
+        sl.Value = 50;
+        // Fixed height, auto width — a deterministic 16x200 arrange.
+        const target = new HeadlessTarget(undefined, 200, sl);
+        const dc = new SvgDrawingContext();
+        target.Render(dc);
+        const svg = dc.ToFragment();
+
+        const center = SliderRenderGeometry.ThumbCenter(svg);
+        const fillEdge = SliderRenderGeometry.FillEdge(svg, Orientation.Vertical);
+        assert.equal(center.Y, fillEdge, 'the thumb centre must land exactly on PART_Fill\'s edge');
+        assert.equal(center.Y, 100, 'at Value=50 of [0,100] on a 200px track, the true centre is trackLength/2');
         ControlHarness.Reset();
     });
 
