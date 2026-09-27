@@ -131,4 +131,12 @@ scheme PragmaticLight against Pragmatic
     @ShadowSm = PragmaticShadowEffect [Level = "sm"]
     @ShadowMd = PragmaticShadowEffect [Level = "md"]
     @ShadowLg = PragmaticShadowEffect [Level = "lg"]
+    // ── Semantic aliases (Theme.* bridge — see basic/theme.ts) ──────
+    // Theme-agnostic keys the imperative Theme.* helper resolves so it
+    // doesn't hardcode Material token names. Value is a literal copy of
+    // this scheme's own backing token — kept in sync by
+    // src/basic/tests/theme.test.ts, not by a live reference (no
+    // intra-scheme aliasing syntax exists in this file format).
+    @Ink = #22211E        // = @Fg1
+    @AccentInk = #22824D  // = @ControlAccent
 }
