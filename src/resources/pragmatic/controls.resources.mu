@@ -13,4 +13,5 @@
 resources PragmaticControls
 {
     import PragmaticButtons from "../../framework/pragmatic/buttons/buttons.template.mu.js"
+    import PragmaticIconButtons from "../../framework/pragmatic/icon-buttons/icon-buttons.template.mu.js"
 }
