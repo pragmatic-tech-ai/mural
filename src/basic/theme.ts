@@ -1,29 +1,34 @@
 import { Application, Color } from '../runtime/index.js';
 import { SolidColorBrush } from '../visual-engine/index.js';
 
-// Material 3 token proxy.
+// Theme-agnostic semantic-token proxy.
 //
 // Background: this file used to hold a hard-coded MUI palette read by
 // imperative refresh closures in controls (Slider thumb tinting,
 // ScrollBar thumb hover, ComboBox border focus, Menu item hover, …).
-// Templates now read Material tokens via `@Primary` / `@Surface` /
-// etc. (DynamicResource bindings), but the imperative paths haven't
-// been migrated yet — each touches a Visual property directly and
-// needs a Brush right now, not a Binding.
+// Templates now read theme tokens via `@Primary` / `@Surface` / etc.
+// (DynamicResource bindings), but the imperative paths haven't been
+// migrated yet — each touches a Visual property directly and needs a
+// Brush right now, not a Binding.
 //
 // To keep both worlds running we expose `Theme.<name>` as getters that
-// resolve the matching Material token from Application.Resources each
-// time they're read. Theme swap (light → dark) reflects in the next
-// imperative refresh, which is good enough until those paths migrate
-// to template triggers or per-control DynamicResource bindings.
+// resolve a shared semantic key (`@Ink`, `@AccentInk`, …) from
+// Application.Resources each time they're read. Every registered
+// theme's scheme files (`light.mu`/`dark.mu`) define these keys as a
+// literal copy of that theme's own backing colour, so `theme.ts` never
+// hardcodes a Material-specific — or any other theme-specific — token
+// name; it just resolves the same key every theme provides. Theme swap
+// (light → dark) reflects in the next imperative refresh, which is
+// good enough until those paths migrate to template triggers or
+// per-control DynamicResource bindings.
 //
-// Fallback: when no Application or no Material palette has been
+// Fallback: when no Application or no matching palette has been
 // registered (test harness, unmounted control), each getter returns a
 // neutral grey so the control draws *something* instead of crashing
-// on `.Background = undefined`. The previous default-Material hex
-// values would have been a defensible fallback too — but neutrals
-// make a missing-theme bug visually obvious, which is what we want
-// from a fallback.
+// on `.Background = undefined`. A theme's own default hex values would
+// have been a defensible fallback too — but neutrals make a
+// missing-theme bug visually obvious, which is what we want from a
+// fallback.
 
 // Single neutral brush returned when a token can't be resolved. Cached
 // so consumers don't pay per-access allocations during fallback.
@@ -36,18 +41,6 @@ function brush(key: string): SolidColorBrush
     const v = app.Resources.Resolve(key);
     if (v instanceof SolidColorBrush) return v;
     return NEUTRAL;
-}
-
-// Same lookup as `brush()`, but reports a miss as `undefined` instead of
-// the NEUTRAL marker — lets a caller chain a native token ahead of the
-// M3 fallback with `??` (brush() always returns SOMETHING, so it can
-// never sit on the left of that chain).
-function brushOrNull(key: string): SolidColorBrush | undefined
-{
-    const app = Application.current;
-    if (app === null) return undefined;
-    const v = app.Resources.Resolve(key);
-    return v instanceof SolidColorBrush ? v : undefined;
 }
 
 // Default font family — owned by the theme module so the framework's
@@ -79,20 +72,17 @@ export const Theme = {
     get navHover()         { return brush('SurfaceContainer'); },
 
     // ── Ink (foreground colours on surfaces) ────────────────────────
-    // Native @Fg1 first (Pragmatic body ink), Material @OnSurface
-    // fallback — a migration bridge until Theme.* is dismantled in the
-    // Material-removal phase. Material's own catalogue has no 'Fg1'
-    // token, so brushOrNull('Fg1') misses there and this falls through
-    // to brush('OnSurface') exactly as before; Pragmatic has no
-    // 'OnSurface' token but does have 'Fg1', so it resolves natively
-    // instead of hitting the NEUTRAL marker.
-    get ink()              { return brushOrNull('Fg1') ?? brush('OnSurface'); },
+    // Resolves the shared `@Ink` semantic key — every registered
+    // theme's scheme files define it as a literal copy of that theme's
+    // own body-ink token (Material's `@OnSurface`, Pragmatic's
+    // `@Fg1`), so no per-theme fallback chain is needed here.
+    get ink()              { return brush('Ink'); },
     get hint()             { return brush('OnSurfaceVariant'); },
     get placeholder()      { return brush('OnSurfaceVariant'); },
     get fieldText()        { return brush('OnSurface'); },
 
     // ── Primary tier ────────────────────────────────────────────────
-    get primary()          { return brush('Primary'); },
+    get primary()          { return brush('AccentInk'); },
     get primaryHover()     { return brush('PrimaryHover'); },
     get primaryPress()     { return brush('PrimaryPress'); },
     get primaryInk()       { return brush('OnPrimary'); },

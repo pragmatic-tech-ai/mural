@@ -282,4 +282,13 @@ scheme MaterialDark against Material {
     @MotionEasingEmphasized = Easings.Emphasized
     @MotionEasingEmphasizedAccelerate = Easings.EmphasizedAccelerate
     @MotionEasingEmphasizedDecelerate = Easings.EmphasizedDecelerate
+
+    // ── Semantic aliases (Theme.* bridge — see basic/theme.ts) ──────
+    // Theme-agnostic keys the imperative Theme.* helper resolves so it
+    // doesn't hardcode Material token names. Value is a literal copy of
+    // this scheme's own backing token — kept in sync by
+    // src/basic/tests/theme.test.ts, not by a live reference (no
+    // intra-scheme aliasing syntax exists in this file format).
+    @Ink = #E6E1E5        // = @OnSurface
+    @AccentInk = #D0BCFF  // = @Primary
 }
