@@ -140,4 +140,7 @@ scheme PragmaticDark against Pragmatic
     // intra-scheme aliasing syntax exists in this file format).
     @Ink = #E8E7E2        // = @Fg1
     @AccentInk = #2EA862  // = @ControlAccent
+    // Scroll/splitter chrome bridge (see thumb.ts / splitter.ts).
+    @ControlTrack = #3D3B36   // = @BorderStrong
+    @ControlActive = #2EA862  // = @ControlAccent
 }

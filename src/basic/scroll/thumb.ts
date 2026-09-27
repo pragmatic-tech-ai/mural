@@ -79,6 +79,12 @@ export interface DragCompletedEventArgs
 
 export class Thumb extends Element
 {
+    // Theme-agnostic resting-chrome token. Every scheme aliases it to its
+    // own neutral divider colour (Material @OutlineVariant, Pragmatic
+    // @BorderStrong), so the inline Border resolves the right value under
+    // any theme without hardcoding an M3 name here.
+    protected static readonly TrackTokenName = 'ControlTrack';
+
     // Read-only DP exposing the drag state so triggers can react.
     // Backing store flips through setIsDraggingInternal so external
     // writers can't desync the state machine.
@@ -104,11 +110,11 @@ export class Thumb extends Element
         this.Focusable = true;
         this._border = new Border();
         // Fill tracks the active theme via DynamicResource —
-        // a theme switch re-resolves @OutlineVariant against the new
+        // a theme switch re-resolves @ControlTrack against the new
         // dictionary and re-paints without an imperative refresh.
         this._border.set_property_value(
             resolveKey(this._border, undefined, 'Fill'),
-            DynamicResource(this._border, 'OutlineVariant'),
+            DynamicResource(this._border, Thumb.TrackTokenName),
         );
         this.AttachVisual(this._border);
     }

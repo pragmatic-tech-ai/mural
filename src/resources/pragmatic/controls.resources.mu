@@ -19,4 +19,11 @@ resources PragmaticControls
     import PragmaticSliders from "../../framework/pragmatic/sliders/sliders.template.mu.js"
     import PragmaticMarkers from "../../framework/pragmatic/markers/markers.template.mu.js"
     import PragmaticText from "../../framework/pragmatic/text/text.template.mu.js"
+    import PragmaticListBox from "../../framework/pragmatic/lists/list-box.template.mu.js"
+    import PragmaticTreeView from "../../framework/pragmatic/lists/tree-view.template.mu.js"
+    import PragmaticComboBox from "../../framework/pragmatic/lists/combo-box.template.mu.js"
+    import PragmaticScrollBar from "../../framework/pragmatic/scroll/scroll-bar.template.mu.js"
+    import PragmaticSplitter from "../../framework/pragmatic/scroll/splitter.template.mu.js"
+    import PragmaticSegmentedButton from "../../framework/pragmatic/button-groups/segmented-button.template.mu.js"
+    import PragmaticTabs from "../../framework/pragmatic/tabs/tabs.template.mu.js"
 }

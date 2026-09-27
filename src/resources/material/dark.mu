@@ -291,4 +291,7 @@ scheme MaterialDark against Material {
     // intra-scheme aliasing syntax exists in this file format).
     @Ink = #E6E1E5        // = @OnSurface
     @AccentInk = #D0BCFF  // = @Primary
+    // Scroll/splitter chrome bridge (see thumb.ts / splitter.ts).
+    @ControlTrack = #49454F   // = @OutlineVariant
+    @ControlActive = #D0BCFF  // = @Primary
 }

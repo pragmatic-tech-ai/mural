@@ -158,6 +158,10 @@ export class Splitter extends Thumb
     // hit area is its host-assigned Width/Height; the line sits inside it.
     private static readonly REST_THICKNESS = 1;
 
+    // Theme-agnostic accent token for hover/drag tint + the drag preview.
+    // Every scheme aliases it (Material @Primary, Pragmatic @ControlAccent).
+    private static readonly ActiveTokenName = 'ControlActive';
+
     // VSCode-sash chrome. At rest the divider is a thin, faint line; on
     // hover or drag it tints to the accent and thickens to fill the hit
     // area. Driven off the inherited Thumb.Border handle because Thumb
@@ -181,7 +185,7 @@ export class Splitter extends Thumb
         {
             // Hover / drag → accent tint. DynamicResource so a theme switch
             // re-tints live (matches how Thumb seeds the resting brush).
-            border.set_property_value(fillKey, DynamicResource(border, 'Primary'));
+            border.set_property_value(fillKey, DynamicResource(border, Splitter.ActiveTokenName));
         }
         else if (this.RestBrush !== undefined)
         {
@@ -192,7 +196,7 @@ export class Splitter extends Thumb
         }
         else
         {
-            border.set_property_value(fillKey, DynamicResource(border, 'OutlineVariant'));
+            border.set_property_value(fillKey, DynamicResource(border, Splitter.TrackTokenName));
         }
     }
 
