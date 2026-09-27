@@ -45,7 +45,12 @@ describe('Pragmatic TextBox (Outlined)', () =>
         }, { scheme: PragmaticLight });
         const borderFocus = ControlHarness.TokenCss('BorderFocus');
         assert.equal(borderFocus, 'rgb(34,130,77)');
-        assert.ok(svg.includes(borderFocus!), 'focused Outlined TextBox paints @BorderFocus');
+        // Stroke-attribute form, not a bare substring check: @ActionPrimary
+        // resolves to the SAME rgb() as @BorderFocus under PragmaticLight, so
+        // a loose `svg.includes(borderFocus)` would pass even if the colour
+        // painted as a fill (or the tuple->Thickness compiler bug silently
+        // dropped the stroke entirely — see the template's GOTCHA comment).
+        assert.ok(svg.includes(`stroke="${borderFocus}"`), 'focused Outlined TextBox paints @BorderFocus as a border stroke');
         ControlHarness.Reset();
     });
 
@@ -91,7 +96,10 @@ describe('Pragmatic TextBox (Filled)', () =>
         }, { scheme: PragmaticLight });
         const borderFocus = ControlHarness.TokenCss('BorderFocus');
         assert.equal(borderFocus, 'rgb(34,130,77)');
-        assert.ok(svg.includes(borderFocus!), 'focused Filled TextBox underline paints @BorderFocus');
+        // Stroke-attribute form — see the Outlined focus test above for why
+        // a bare substring check is too loose here (@ActionPrimary shares
+        // the same rgb() as @BorderFocus under PragmaticLight).
+        assert.ok(svg.includes(`stroke="${borderFocus}"`), 'focused Filled TextBox underline paints @BorderFocus as a stroke');
         ControlHarness.Reset();
     });
 
