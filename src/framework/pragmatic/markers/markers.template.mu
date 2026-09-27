@@ -182,41 +182,29 @@ resources PragmaticMarkers
               Height          = 16 ]
         {
             TextBlock
-                // $$Count — a TemplateBinding to the templated PARENT's
-                // own Count DP (compiler: TemplateBinding(_templatedParent,
-                // "Count")), matching how the badge demo actually drives
-                // this (demo/demos/badge/badge.mu: `Badge [ Variant =
-                // Numeric, Count = $Count, ... ]` binds the CONTROL's own
-                // Count from its view-model at the use site; the template
-                // should relay Badge.Count, not re-read the ambient
-                // DataContext itself). Material's own markers.template.mu
-                // source uses the single-`$` DataContextBinding sigil here
-                // (`Text = $Count`), which reads a `Count` field off the
-                // TextBlock's inherited DataContext directly instead —
-                // it happens to still resolve inside that demo (the
-                // Badge's inherited DataContext there is the same VM,
-                // which also exposes `Count`), but for a standalone Badge
-                // with no bound view-model, `$Count` is undefined, so
-                // `new FormattedText` receives `undefined` and
-                // SvgDrawingContext.escapeXmlText throws on
-                // `undefined.replace`. Confirmed this reproduces
-                // identically against Material's own DefaultNumericBadge
-                // under a headless render (pre-existing, never previously
-                // exercised — Badge had zero test coverage before this
-                // fork). Fixed here with the correct `$$` sigil, which
-                // decouples the template from having to match the host's
-                // DataContext shape; Material's file is left untouched
-                // (out of this task's scope) — see task-6-report.md.
+                // $$CountText — a TemplateBinding to the templated
+                // PARENT's own CountText DP (compiler: TemplateBinding(
+                // _templatedParent, "CountText")), relaying Badge's own
+                // Count rather than re-reading the ambient DataContext
+                // (Material's own markers.template.mu source used to read
+                // `Text = $Count` — a `$`-DataContextBinding pulling a
+                // `Count` field off the TextBlock's inherited DataContext
+                // instead of the templated Badge's own Count DP; wrong
+                // source for a standalone Badge with no bound view-model).
                 //
-                // Separately: TextBlock.Text is string-typed and Count is
-                // a number, and neither `$` nor `$$` in the current
-                // compiler supports a converter on this binding form (only
-                // the `binding` — single `$` — grammar accepts a `<<
-                // converter` chain; `template-binding` does not), so a
-                // real numeric render still needs a follow-up (a Count
-                // value converter, or a string-typed derived property on
-                // Badge). Out of scope here — see task-6-report.md.
-                [ Text                = $$Count,
+                // CountText (Badge.ts) is a derived STRING mirror of
+                // Count, kept in lock-step via OnPropertyChanged — needed
+                // because TextBlock.Text is string-typed, Count is a
+                // number, and neither `$` nor `$$` supports a converter
+                // on a TemplateBinding today (only the `binding` — single
+                // `$` — grammar accepts a `<< converter` chain). Binding
+                // straight to the numeric Count crashed
+                // SvgDrawingContext.escapeXmlText (`s.replace` on a
+                // number) — confirmed this reproduced identically against
+                // Material's own DefaultNumericBadge under a headless
+                // render; Badge had zero test coverage before Wave-1.
+                // Fixed for both themes — see Wave-1 follow-up (B).
+                [ Text                = $$CountText,
                   Foreground          = @FgOnAccent,
                   Style               = @UiCaption,
                   HorizontalAlignment = Center,

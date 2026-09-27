@@ -1,4 +1,4 @@
-﻿import { MetaData, MuralBase, Element } from '../../runtime/index.js';
+﻿import { MetaData, MuralBase, Element, type PropertyDescriptor } from '../../runtime/index.js';
 import { Control } from '../base/control.js';
 
 // M3 Badge — small visual flag, either a 6dp dot (no count) or a pill
@@ -36,11 +36,24 @@ export class Badge extends Control
     public static readonly CountKey = MuralBase.RegisterProperty<number>(
         Badge, 'Count', 0, MetaData.Render);
 
+    // Derived string mirror of Count, kept in lock-step by OnPropertyChanged
+    // below. TextBlock.Text is string-typed and neither the `$` nor `$$`
+    // binding grammar supports a converter on a TemplateBinding today (see
+    // markers.template.mu), so the numeric pill's Text binds to THIS
+    // property instead of Count directly — a plain `String(n)` stringify.
+    // Room for a later "99+" cap policy: that's a display-formatting
+    // concern that belongs right here, not in the template.
+    private static readonly _CountTextPriv = MuralBase.RegisterReadOnlyProperty<string>(
+        Badge, 'CountText', '0', MetaData.None);
+    public static readonly CountTextKey = Badge._CountTextPriv;
+
     public get Variant(): BadgeVariant { return this.get_property_value(Badge.VariantKey); }
     public set Variant(v: BadgeVariant) { this.set_property_value(Badge.VariantKey, v); }
 
     public get Count(): number { return this.get_property_value(Badge.CountKey); }
     public set Count(v: number) { this.set_property_value(Badge.CountKey, v); }
+
+    public get CountText(): string { return this.get_property_value(Badge.CountTextKey); }
 
     constructor()
     {
@@ -61,5 +74,18 @@ export class Badge extends Control
         MuralBase.OverrideMetadata(
             Badge, Element.DefaultStyleKeyKey,
             { default_value: Badge });
+    }
+
+    protected override OnPropertyChanged(
+        descriptor: PropertyDescriptor,
+        oldValue:   unknown,
+        newValue:   unknown,
+    ): void
+    {
+        super.OnPropertyChanged(descriptor, oldValue, newValue);
+        if (descriptor.Owner === Badge && descriptor.Name === 'Count')
+        {
+            this.set_property_value_with_key(Badge._CountTextPriv, String(newValue as number));
+        }
     }
 }
