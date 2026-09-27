@@ -1,0 +1,127 @@
+import { test, describe } from 'node:test';
+import assert from 'node:assert/strict';
+import { TextBox, TextBoxVariant } from '../../../basic/text-box.js';
+import { PragmaticLight } from '../pragmatic.js';
+import { MaterialLight } from '../../material/material.js';
+import { ControlHarness } from './control-harness.js';
+
+describe('Pragmatic TextBox (Outlined)', () =>
+{
+    // Resolution-only (Activate, not Render) — deliberately does NOT paint.
+    // Before this fork is wired, an un-forked TextBox under Pragmatic still
+    // resolves MATERIAL's Style, whose ControlTemplate/Style reference M3
+    // tokens (@Outline, @Primary, @ShapeExtraSmall, @ListRowHeight*, …) that
+    // the Pragmatic scheme never defines. Actually PAINTING that
+    // combination (HeadlessTarget + SvgDrawingContext) hangs the process
+    // indefinitely — confirmed empirically pre-fork: CPU-pegged, no
+    // pending timer/handle, only killable externally, so it is a
+    // DynamicResource retry-loop against a permanently-missing token, not a
+    // slow render. A resolution-only check (TryFindResource, no layout/
+    // paint) proves the same fact — Pragmatic style used or not — without
+    // ever entering that path, both before AND after wiring.
+    test('resolves the Pragmatic style under Pragmatic', () =>
+    {
+        ControlHarness.Activate(PragmaticLight);
+        const control = new TextBox();
+        assert.ok(ControlHarness.IsPragmaticStyle(control), 'TextBox uses the Pragmatic override style');
+        ControlHarness.Reset();
+    });
+
+    test('rest state paints the outlined border (@BorderStrong)', () =>
+    {
+        const { svg } = ControlHarness.Render(() => new TextBox(), { scheme: PragmaticLight });
+        const borderStrong = ControlHarness.TokenCss('BorderStrong');
+        assert.ok(svg.includes(borderStrong!), 'Outlined TextBox paints @BorderStrong at rest');
+        ControlHarness.Reset();
+    });
+
+    test('focus swaps the border to @BorderFocus (#22824D)', () =>
+    {
+        const { svg } = ControlHarness.Render(() =>
+        {
+            const tb = new TextBox();
+            tb._setIsFocused(true);
+            return tb;
+        }, { scheme: PragmaticLight });
+        const borderFocus = ControlHarness.TokenCss('BorderFocus');
+        assert.equal(borderFocus, 'rgb(34,130,77)');
+        assert.ok(svg.includes(borderFocus!), 'focused Outlined TextBox paints @BorderFocus');
+        ControlHarness.Reset();
+    });
+
+    test('no grey fallback — every token resolves under Pragmatic', () =>
+    {
+        const { svg } = ControlHarness.Render(() => new TextBox(), { scheme: PragmaticLight });
+        assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss),
+            'no #808080 neutral — an unresolved token would paint the marker');
+        ControlHarness.Reset();
+    });
+
+    test('Material is unaffected — a TextBox under Material keeps the Material style', () =>
+    {
+        const { control } = ControlHarness.Render(() => new TextBox(), { scheme: MaterialLight });
+        assert.ok(!ControlHarness.IsPragmaticStyle(control), 'Material TextBox does NOT resolve the Pragmatic style');
+        ControlHarness.Reset();
+    });
+});
+
+describe('Pragmatic TextBox (Filled)', () =>
+{
+    test('fills with @Bg2', () =>
+    {
+        const { svg } = ControlHarness.Render(() =>
+        {
+            const tb = new TextBox();
+            tb.Variant = TextBoxVariant.Filled;
+            return tb;
+        }, { scheme: PragmaticLight });
+        const bg2 = ControlHarness.TokenCss('Bg2');
+        assert.ok(svg.includes(bg2!), 'Filled TextBox paints @Bg2');
+        ControlHarness.Reset();
+    });
+
+    test('focus flips the underline to @BorderFocus (#22824D)', () =>
+    {
+        const { svg } = ControlHarness.Render(() =>
+        {
+            const tb = new TextBox();
+            tb.Variant = TextBoxVariant.Filled;
+            tb._setIsFocused(true);
+            return tb;
+        }, { scheme: PragmaticLight });
+        const borderFocus = ControlHarness.TokenCss('BorderFocus');
+        assert.equal(borderFocus, 'rgb(34,130,77)');
+        assert.ok(svg.includes(borderFocus!), 'focused Filled TextBox underline paints @BorderFocus');
+        ControlHarness.Reset();
+    });
+
+    test('no grey fallback — every token resolves under Pragmatic', () =>
+    {
+        const { svg } = ControlHarness.Render(() =>
+        {
+            const tb = new TextBox();
+            tb.Variant = TextBoxVariant.Filled;
+            return tb;
+        }, { scheme: PragmaticLight });
+        assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss),
+            'no #808080 neutral — an unresolved token would paint the marker');
+        ControlHarness.Reset();
+    });
+});
+
+describe('Pragmatic TextBox (Plain)', () =>
+{
+    test('resolves the Pragmatic style and paints no chrome fallback', () =>
+    {
+        const { control, svg } = ControlHarness.Render(() =>
+        {
+            const tb = new TextBox();
+            tb.Variant = TextBoxVariant.Plain;
+            return tb;
+        }, { scheme: PragmaticLight });
+        assert.ok(ControlHarness.IsPragmaticStyle(control), 'Plain TextBox still uses the Pragmatic override style');
+        assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss),
+            'no #808080 neutral — an unresolved token would paint the marker');
+        ControlHarness.Reset();
+    });
+});
