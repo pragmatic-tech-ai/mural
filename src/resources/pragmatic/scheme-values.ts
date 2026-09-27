@@ -17,7 +17,9 @@ export class SchemeValues
         {
             for (const m of line.matchAll(SchemeValues.Assignment))
             {
-                out.set(m[1], m[2].replace(/\s*\/\/.*$/, '').trim());
+                // Assignment has two non-optional capture groups, so a match
+                // always populates both m[1] (name) and m[2] (raw value).
+                out.set(m[1]!, m[2]!.replace(/\s*\/\/.*$/, '').trim());
             }
         }
         return out;

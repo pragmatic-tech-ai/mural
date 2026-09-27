@@ -14,12 +14,16 @@ export class ColorValue
         const hex = ColorValue.HexPattern.exec(v);
         if (hex !== null)
         {
-            return ColorValue.fromHex(hex[1]);
+            // HexPattern has exactly one, non-optional capture group, so a
+            // successful match always populates hex[1].
+            return ColorValue.fromHex(hex[1]!);
         }
         const rgb = ColorValue.RgbPattern.exec(v);
         if (rgb !== null)
         {
-            return ColorValue.fromRgb(rgb[1]);
+            // RgbPattern has exactly one, non-optional capture group, so a
+            // successful match always populates rgb[1].
+            return ColorValue.fromRgb(rgb[1]!);
         }
         throw new Error(`Not a colour literal: '${value}'.`);
     }
@@ -32,9 +36,9 @@ export class ColorValue
         let a = 255;
         if (body.length === 3)
         {
-            r = parseInt(body[0] + body[0], 16);
-            g = parseInt(body[1] + body[1], 16);
-            b = parseInt(body[2] + body[2], 16);
+            r = parseInt(body.charAt(0) + body.charAt(0), 16);
+            g = parseInt(body.charAt(1) + body.charAt(1), 16);
+            b = parseInt(body.charAt(2) + body.charAt(2), 16);
         }
         else if (body.length === 6 || body.length === 8)
         {

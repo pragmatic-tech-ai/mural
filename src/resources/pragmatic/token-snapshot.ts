@@ -255,7 +255,9 @@ export class TokenSnapshot
         const alias = TokenSnapshot.AliasPattern.exec(raw.trim());
         if (alias !== null)
         {
-            return this.Resolve(alias[1], theme);
+            // AliasPattern has exactly one, non-optional capture group, so a
+            // successful match always populates alias[1].
+            return this.Resolve(alias[1]!, theme);
         }
         return raw;
     }
