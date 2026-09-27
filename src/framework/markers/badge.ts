@@ -42,6 +42,20 @@ export class Badge extends Control
     public get Count(): number { return this.get_property_value(Badge.CountKey); }
     public set Count(v: number) { this.set_property_value(Badge.CountKey, v); }
 
+    constructor()
+    {
+        super();
+        // Resolve + apply the default Style so the PART_Dot / PART_Pill
+        // template materializes for a standalone/unmounted Badge (a
+        // tree-mounted one would eventually pick it up via AttachLogical,
+        // but a bare `new Badge()` — e.g. under a headless render harness —
+        // would otherwise carry Template = undefined and paint nothing).
+        // Every other templated control in this codebase (its sibling
+        // Divider included, right below) makes this call per Control's own
+        // subclass contract (basic/control.ts); Badge had been missing it.
+        this.applyDefaultStyle();
+    }
+
     static
     {
         MuralBase.OverrideMetadata(
