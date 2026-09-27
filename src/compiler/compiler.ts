@@ -106,6 +106,7 @@ import {
     ENUM_MEMBERS,
     PROPERTY_TO_ENUM,
     STATIC_MEMBERS,
+    PEN_PROPERTIES,
     type SymbolMap,
     type SlotInfo,
 } from './symbol-table.js';
@@ -4473,6 +4474,32 @@ export class Compiler
 
     private compileTupleValue(tuple: TupleValue, ctx: ValueCtx): string
     {
+        // Pen-typed DPs (Stroke, Pen, SelectionFormatStroke, GlyphStroke —
+        // see PEN_PROPERTIES) special-case a 2-cell tuple to `new
+        // Pen(brush, thickness)` instead of falling into the Thickness
+        // WPF fill-in below. Pen.Brush/Pen.Thickness are plain settable
+        // DPs (not raw-number ctor args needing synchronous resolution),
+        // so cells compile the same way compileElementValue compiles a
+        // `Pen[Brush=…]`'s attrs — i.e. as direct-attribute values
+        // against the outer target (ctx.targetExpr ?? '_t'), NOT the
+        // insideTuple sync-resource-lookup path Thickness cells use.
+        if (PEN_PROPERTIES.has(ctx.propertyName ?? ''))
+        {
+            if (tuple.values.length !== 2)
+            {
+                throw new EmitError(
+                    `tuple of ${tuple.values.length} values has no Pen shape — `
+                    + `'${ctx.propertyName}' expects exactly 2 cells (brush, thickness)`,
+                    tuple.span);
+            }
+            this.ensureImport('Pen');
+            const penCellCtx: ValueCtx = { targetExpr: ctx.targetExpr ?? '_t' };
+            const penExprs = tuple.values.map(v => this.compileValue(v, penCellCtx));
+            const penBody = `new Pen(${penExprs[0]}, ${penExprs[1]})`;
+            if (ctx.targetExpr !== undefined) return penBody;
+            this.ensureImport('SetterFactory');
+            return `new SetterFactory((_t) => ${penBody})`;
+        }
         // Tuples in value position default to Thickness — the spec's
         // most common case (Padding, Margin, BorderThickness,
         // CornerRadius). WPF fill-in semantics:
