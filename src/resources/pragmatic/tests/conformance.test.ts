@@ -76,11 +76,47 @@ describe('Pragmatic conformance', () =>
         }
     });
 
-    // NOTE: type-scale (fontSize/weight/lineHeight/tracking) conformance is a
-    // deferred follow-up — the snapshot's style names are not a clean function
-    // of the Pascal tokens (h1 vs display-1) and lineHeight/tracking need
-    // ratio/em conversion, so a reliable guard needs an explicit role->style
-    // map + conversion table. The current transcription was verified correct.
+    // Role -> design-system style-name map. Hand-authored: not derivable via
+    // kebab() (kebab('H1') -> 'h-1', but the JSON key is 'h1'; 'BodySm' ->
+    // 'body-sm' is an abbreviation, not a case transform).
+    const TypeRoleMap: ReadonlyMap<string, string> = new Map([
+        ['Display1',   'display-1'],
+        ['Display2',   'display-2'],
+        ['H1',         'h1'],
+        ['H2',         'h2'],
+        ['H3',         'h3'],
+        ['H4',         'h4'],
+        ['Body',       'body'],
+        ['BodySm',     'body-sm'],
+        ['BodySerif',  'body-serif'],
+        ['UiLabel',    'ui-label'],
+        ['UiLabelSm',  'ui-label-sm'],
+        ['UiCaption',  'ui-caption'],
+        ['Code',       'code'],
+        ['Label',      'label'],
+    ]);
+
+    test('type-scale tokens (weight/size/lineHeight/tracking) equal the converted snapshot', () =>
+    {
+        for (const [scheme, themeName] of [[light, 'light'], [dark, 'dark']] as const)
+        {
+            for (const [role, styleName] of TypeRoleMap)
+            {
+                assert.equal(
+                    scheme.get(`${role}Weight`), snap.TypeWeight(styleName),
+                    `${themeName} ${role}Weight (${styleName})`);
+                assert.equal(
+                    Number(scheme.get(`${role}Size`)), snap.TypeSize(styleName),
+                    `${themeName} ${role}Size (${styleName})`);
+                assert.equal(
+                    Number(scheme.get(`${role}LineHeight`)), snap.TypeLineHeight(styleName),
+                    `${themeName} ${role}LineHeight (${styleName})`);
+                assert.equal(
+                    Number(scheme.get(`${role}Tracking`)), snap.TypeTracking(styleName),
+                    `${themeName} ${role}Tracking (${styleName})`);
+            }
+        }
+    });
 
     test('shadow layers equal the snapshot in both themes', () =>
     {

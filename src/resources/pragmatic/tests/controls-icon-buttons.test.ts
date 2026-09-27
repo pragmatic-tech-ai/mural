@@ -72,15 +72,15 @@ describe('Pragmatic IconButton', () =>
         ControlHarness.Reset();
     });
 
-    // SKIPPED — see the equivalent Button test's comment
-    // (controls-buttons.test.ts) for the full root-cause writeup: a
-    // `Pen [ Brush = @Token ]` trigger value is a single shared instance
-    // built once at template-construction time, and its
-    // DynamicResourceBinding never re-wires when Application.current is
-    // swapped to a different instance (ControlHarness does this between
+    // Regression test for Wave-1 follow-up (E) — see the equivalent Button
+    // test's comment (controls-buttons.test.ts) for the full root-cause
+    // writeup: a `Pen [ Brush = @Token ]` trigger value is a single shared
+    // instance built once at template-construction time, and its
+    // DynamicResourceBinding used to never re-wire when Application.current
+    // was swapped to a different instance (ControlHarness does this between
     // tests). Confirmed harmless for a real single-Application runtime
-    // Light<->Dark toggle. Engine fix deferred to Wave-1 follow-up (E).
-    test('focus ring paints @BorderFocus under Dark after a Light render — SKIPPED: shared Pen DynamicResourceBinding does not re-wire on Application-instance swap; see Wave-1 follow-up (E)', { skip: true }, () =>
+    // Light<->Dark toggle. Fixed in dynamic-resource.ts.
+    test('focus ring paints @BorderFocus under Dark after a Light render', () =>
     {
         const { svg } = ControlHarness.Render(() =>
         {

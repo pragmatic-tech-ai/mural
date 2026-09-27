@@ -126,9 +126,18 @@ resources Markers {
 
     // ── Badge: M3 dot / numeric flag ───────────────────────────────
     // Two templates — one per Variant. Variant=Dot ships a 6×6dp
-    // filled circle; Variant=Numeric ships a pill carrying the Count
-    // bound via a $-binding. Both use @Error / @OnError per the M3
+    // filled circle; Variant=Numeric ships a pill carrying Badge's
+    // own Count, relayed as a string via a $$-TemplateBinding to
+    // CountText (Badge.ts). Both use @Error / @OnError per the M3
     // spec; consumers wanting a non-error tint re-template.
+    //
+    // Wave-1 follow-up (B): this used to read `Text = $Count` — a
+    // `$`-DataContextBinding, which reads the ambient DataContext's
+    // `Count` field rather than the templated Badge's own Count DP,
+    // AND handed a raw number into the string-typed Text DP, which
+    // crashed SvgDrawingContext.escapeXmlText. $$CountText fixes
+    // both: `$$` relays the templated parent's own property, and
+    // CountText is Badge's derived STRING mirror of Count.
     Template x:key="DefaultDotBadge" [TargetType = Badge] {
         Border x:name="PART_Dot"
             [ Fill      = @Error,
@@ -144,7 +153,7 @@ resources Markers {
               MinWidth        = 16,
               Height          = 16 ] {
             TextBlock
-                [ Text                = $Count,
+                [ Text                = $$CountText,
                   Foreground          = @OnError,
                   Style               = @LabelSmall,
                   HorizontalAlignment = Center,
