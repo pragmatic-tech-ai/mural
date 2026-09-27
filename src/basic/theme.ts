@@ -38,6 +38,18 @@ function brush(key: string): SolidColorBrush
     return NEUTRAL;
 }
 
+// Same lookup as `brush()`, but reports a miss as `undefined` instead of
+// the NEUTRAL marker — lets a caller chain a native token ahead of the
+// M3 fallback with `??` (brush() always returns SOMETHING, so it can
+// never sit on the left of that chain).
+function brushOrNull(key: string): SolidColorBrush | undefined
+{
+    const app = Application.current;
+    if (app === null) return undefined;
+    const v = app.Resources.Resolve(key);
+    return v instanceof SolidColorBrush ? v : undefined;
+}
+
 // Default font family — owned by the theme module so the framework's
 // typography defaults live in one place. M3 baseline is Roboto but
 // the value here is the OS-system stack so the framework doesn't ship
@@ -67,7 +79,14 @@ export const Theme = {
     get navHover()         { return brush('SurfaceContainer'); },
 
     // ── Ink (foreground colours on surfaces) ────────────────────────
-    get ink()              { return brush('OnSurface'); },
+    // Native @Fg1 first (Pragmatic body ink), Material @OnSurface
+    // fallback — a migration bridge until Theme.* is dismantled in the
+    // Material-removal phase. Material's own catalogue has no 'Fg1'
+    // token, so brushOrNull('Fg1') misses there and this falls through
+    // to brush('OnSurface') exactly as before; Pragmatic has no
+    // 'OnSurface' token but does have 'Fg1', so it resolves natively
+    // instead of hitting the NEUTRAL marker.
+    get ink()              { return brushOrNull('Fg1') ?? brush('OnSurface'); },
     get hint()             { return brush('OnSurfaceVariant'); },
     get placeholder()      { return brush('OnSurfaceVariant'); },
     get fieldText()        { return brush('OnSurface'); },
