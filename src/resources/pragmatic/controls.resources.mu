@@ -34,4 +34,5 @@ resources PragmaticControls
     import PragmaticTopAppBar from "../../framework/pragmatic/top-app-bar/top-app-bar.template.mu.js"
     import PragmaticBottomAppBar from "../../framework/pragmatic/bottom-app-bar/bottom-app-bar.template.mu.js"
     import PragmaticStatusBars from "../../framework/pragmatic/status-bar/status-bar.template.mu.js"
+    import PragmaticSearchBar from "../../framework/pragmatic/search-bar/search-bar.template.mu.js"
 }
