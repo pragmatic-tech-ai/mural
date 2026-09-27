@@ -12,9 +12,8 @@
 //   * EVERY stroke uses the Pen form — `Stroke = Pen [ Brush = @Token,
 //     Thickness = n ]`. A `(brush, width)` tuple assigned to a Pen-typed
 //     property silently compiles to a Thickness instead (confirmed by
-//     the TextBox fork's GOTCHA comment); every unchecked box/ring
-//     outline, the Switch track outline, and every focus re-stroke below
-//     uses the working Pen form.
+//     the TextBox fork's GOTCHA comment); every outline / focus-ring
+//     stroke below uses the working Pen form.
 //   * Checked/selected fill rides a nested opaque PART_Selected layer,
 //     copied from icon-buttons.template.mu:97-134 — a ControlTemplate
 //     trigger stack resolves a shared-property tie by whichever
@@ -29,6 +28,24 @@
 //     pre-emptively even though nothing today hover-tints the track
 //     Fill, per the Wave 1 controller note — so a later hover-on-track
 //     addition can't silently erase the "on" indication.
+//   * Focus rides a DEDICATED PART_FocusRing element, never a re-stroke
+//     of the checked-state element (PART_Box / PART_Ring / PART_Track).
+//     An earlier revision had `when(IsChecked)` and `when(IsFocused)`
+//     both write that element's OWN Stroke — the exact shared-property
+//     hazard the PART_Selected pattern above exists to avoid, just on
+//     Stroke instead of Fill. It only looked correct because
+//     @ControlAccent and @BorderFocus happen to share the same rgb()
+//     under PragmaticLight: a checked+focused control silently lost
+//     whichever cue's trigger fired first (SVG showed exactly ONE
+//     stroke, not two), and the two states would visibly diverge the
+//     moment either token's value changed. Fixed per the Button /
+//     IconButton exemplars' own PART_FocusRing wrapper (buttons.
+//     template.mu: a transparent outer Border, `Padding =
+//     (@FocusRingOffset)`, whose Stroke ONLY `when(IsFocused)` paints
+//     `Pen[Brush=@BorderFocus, Thickness=2]`) — here it wraps the fixed-
+//     size box/ring/track (inside PART_HitTarget, outside PART_Box /
+//     PART_Ring / PART_Track), so checked and focused now write
+//     entirely different elements' Stroke and can never collide.
 //
 // Design (per the Wave 1 task-4 brief):
 //   * Unchecked — box / ring: transparent fill, @BorderStrong 2dp Pen
@@ -38,7 +55,9 @@
 //     language as the Checkbox glyph, so unlike Material's outline-ring
 //     RadioButton, the Pragmatic RadioButton fills solid like the
 //     Checkbox with a contrasting inner dot.
-//   * Focus — `when (IsFocused)` re-strokes the outline to @BorderFocus.
+//   * Focus — `when (IsFocused)` paints PART_FocusRing's own Stroke to
+//     @BorderFocus, offset from the box/ring/track by @FocusRingOffset;
+//     coexists with the checked state instead of overwriting it.
 //   * Hover — box / ring / thumb Fill tints one step (@Bg2); press tints
 //     a second step (@Bg3).
 //   * Touch target — control Width/Height grow to 48 on
@@ -68,31 +87,40 @@ resources PragmaticToggles
               HorizontalAlignment = Stretch,
               VerticalAlignment = Stretch ]
         {
-            Border x:name="PART_Track"
-                [ Fill = @Bg3,
-                  Stroke = Pen [ Brush = @BorderStrong, Thickness = 2 ],
+            // PART_FocusRing — dedicated ring, own Stroke only under
+            // IsFocused. Never shares a property with the checked-state
+            // trigger below (see header comment).
+            Border x:name="PART_FocusRing"
+                [ Fill = #00000000,
+                  Padding = (@FocusRingOffset),
                   CornerRadius = @RadiusPill,
-                  Width = 36.4,
-                  Height = 22.4,
                   HorizontalAlignment = Center,
                   VerticalAlignment = Center ]
             {
-                // PART_Selected — opaque "on" layer, transparent at rest so
-                // PART_Track's @Bg3 shows through; IsChecked paints it
-                // @ControlAccent, covering PART_Track regardless of any
-                // hover tint on the track underneath (see header comment).
-                Border x:name="PART_Selected"
-                    [ Fill = #00000000,
-                      CornerRadius = @RadiusPill ]
+                Border x:name="PART_Track"
+                    [ Fill = @Bg3,
+                      Stroke = Pen [ Brush = @BorderStrong, Thickness = 2 ],
+                      CornerRadius = @RadiusPill,
+                      Width = 36.4,
+                      Height = 22.4 ]
                 {
-                    Border x:name="PART_Thumb"
-                        [ Fill = @Bg1,
-                          CornerRadius = @RadiusPill,
-                          Width = 11.2,
-                          Height = 11.2,
-                          VerticalAlignment = Center,
-                          HorizontalAlignment = Left,
-                          Margin = (5.6,0,0,0) ]
+                    // PART_Selected — opaque "on" layer, transparent at rest so
+                    // PART_Track's @Bg3 shows through; IsChecked paints it
+                    // @ControlAccent, covering PART_Track regardless of any
+                    // hover tint on the track underneath (see header comment).
+                    Border x:name="PART_Selected"
+                        [ Fill = #00000000,
+                          CornerRadius = @RadiusPill ]
+                    {
+                        Border x:name="PART_Thumb"
+                            [ Fill = @Bg1,
+                              CornerRadius = @RadiusPill,
+                              Width = 11.2,
+                              Height = 11.2,
+                              VerticalAlignment = Center,
+                              HorizontalAlignment = Left,
+                              Margin = (5.6,0,0,0) ]
+                    }
                 }
             }
         }
@@ -111,7 +139,7 @@ resources PragmaticToggles
         // ladder below).
         when ( IsMouseOver ) { PART_Thumb.Fill = @Bg2; }
         when ( IsPressed ) { PART_Thumb.Fill = @Bg3; }
-        when ( IsFocused ) { PART_Track.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
+        when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
         when ( IsEnabled = false ) { PART_Track.Opacity = @OpacityDisabled; }
     }
     Style [TargetType = Switch]
@@ -134,27 +162,36 @@ resources PragmaticToggles
               HorizontalAlignment = Stretch,
               VerticalAlignment = Stretch ]
         {
-            Border x:name="PART_Box"
+            // PART_FocusRing — dedicated ring, own Stroke only under
+            // IsFocused. Never shares a property with the checked-state
+            // trigger below (see header comment).
+            Border x:name="PART_FocusRing"
                 [ Fill = #00000000,
-                  Stroke = Pen [ Brush = @BorderStrong, Thickness = 2 ],
+                  Padding = (@FocusRingOffset),
                   CornerRadius = @RadiusXs,
-                  Width = 18,
-                  Height = 18,
                   HorizontalAlignment = Center,
                   VerticalAlignment = Center ]
             {
-                Border x:name="PART_Selected"
+                Border x:name="PART_Box"
                     [ Fill = #00000000,
-                      CornerRadius = @RadiusXs ]
+                      Stroke = Pen [ Brush = @BorderStrong, Thickness = 2 ],
+                      CornerRadius = @RadiusXs,
+                      Width = 18,
+                      Height = 18 ]
                 {
-                    Shape x:name="PART_Mark"
-                        [ Geometry = @IconCheck,
-                          Fill = @FgOnAccent,
-                          Width = 16,
-                          Height = 16,
-                          HorizontalAlignment = Center,
-                          VerticalAlignment = Center,
-                          Opacity = 0 ]
+                    Border x:name="PART_Selected"
+                        [ Fill = #00000000,
+                          CornerRadius = @RadiusXs ]
+                    {
+                        Shape x:name="PART_Mark"
+                            [ Geometry = @IconCheck,
+                              Fill = @FgOnAccent,
+                              Width = 16,
+                              Height = 16,
+                              HorizontalAlignment = Center,
+                              VerticalAlignment = Center,
+                              Opacity = 0 ]
+                    }
                 }
             }
         }
@@ -170,7 +207,7 @@ resources PragmaticToggles
         // checked, regardless of event order (see header comment).
         when ( IsMouseOver ) { PART_Box.Fill = @Bg2; }
         when ( IsPressed ) { PART_Box.Fill = @Bg3; }
-        when ( IsFocused ) { PART_Box.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
+        when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
         when ( IsEnabled = false ) { PART_Box.Opacity = @OpacityDisabled; }
     }
     Style [TargetType = Checkbox]
@@ -192,27 +229,36 @@ resources PragmaticToggles
               HorizontalAlignment = Stretch,
               VerticalAlignment = Stretch ]
         {
-            Border x:name="PART_Ring"
+            // PART_FocusRing — dedicated ring, own Stroke only under
+            // IsFocused. Never shares a property with the checked-state
+            // trigger below (see header comment).
+            Border x:name="PART_FocusRing"
                 [ Fill = #00000000,
-                  Stroke = Pen [ Brush = @BorderStrong, Thickness = 2 ],
+                  Padding = (@FocusRingOffset),
                   CornerRadius = @RadiusPill,
-                  Width = 20,
-                  Height = 20,
                   HorizontalAlignment = Center,
                   VerticalAlignment = Center ]
             {
-                Border x:name="PART_Selected"
+                Border x:name="PART_Ring"
                     [ Fill = #00000000,
-                      CornerRadius = @RadiusPill ]
+                      Stroke = Pen [ Brush = @BorderStrong, Thickness = 2 ],
+                      CornerRadius = @RadiusPill,
+                      Width = 20,
+                      Height = 20 ]
                 {
-                    Border x:name="PART_Dot"
-                        [ Fill = @FgOnAccent,
-                          CornerRadius = @RadiusPill,
-                          Width = 8,
-                          Height = 8,
-                          HorizontalAlignment = Center,
-                          VerticalAlignment = Center,
-                          Opacity = 0 ]
+                    Border x:name="PART_Selected"
+                        [ Fill = #00000000,
+                          CornerRadius = @RadiusPill ]
+                    {
+                        Border x:name="PART_Dot"
+                            [ Fill = @FgOnAccent,
+                              CornerRadius = @RadiusPill,
+                              Width = 8,
+                              Height = 8,
+                              HorizontalAlignment = Center,
+                              VerticalAlignment = Center,
+                              Opacity = 0 ]
+                    }
                 }
             }
         }
@@ -224,7 +270,7 @@ resources PragmaticToggles
         }
         when ( IsMouseOver ) { PART_Ring.Fill = @Bg2; }
         when ( IsPressed ) { PART_Ring.Fill = @Bg3; }
-        when ( IsFocused ) { PART_Ring.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
+        when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
         when ( IsEnabled = false ) { PART_Ring.Opacity = @OpacityDisabled; }
     }
     Style [TargetType = RadioButton]

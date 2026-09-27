@@ -83,6 +83,36 @@ describe('Pragmatic Checkbox', () =>
         ControlHarness.Reset();
     });
 
+    test('checked + focused shows BOTH the checked stroke and a separate focus-ring stroke', () =>
+    {
+        const { svg } = ControlHarness.Render(() =>
+        {
+            const c = new Checkbox();
+            c.IsChecked = true;
+            c._setIsFocused(true);
+            return c;
+        }, { scheme: PragmaticLight });
+        const controlAccent = ControlHarness.TokenCss('ControlAccent');
+        const borderFocus = ControlHarness.TokenCss('BorderFocus');
+        // @ControlAccent and @BorderFocus share the same rgb() under
+        // PragmaticLight, so the two states can't be told apart by colour —
+        // only by STRUCTURE. If focus reused PART_Box's Stroke (the bug this
+        // regression guards against), IsFocused's SetTriggerValue call (it
+        // runs after IsChecked's here) would overwrite the checked stroke,
+        // leaving exactly ONE `stroke="rgb(34,130,77)"` in the document. A
+        // dedicated PART_FocusRing element paints its OWN stroke on top of
+        // PART_Box's still-intact checked stroke, so both attributes
+        // survive — asserting the count is 2 fails against the old
+        // shared-Stroke structure and passes once focus has its own ring.
+        assert.equal(controlAccent, borderFocus);
+        const strokeAttr = `stroke="${controlAccent}"`;
+        const occurrences = svg.split(strokeAttr).length - 1;
+        assert.equal(occurrences, 2,
+            'checked Checkbox paints two distinct stroke="rgb(34,130,77)" attributes — PART_Box\'s checked ' +
+            'outline AND PART_FocusRing\'s focus ring — proving focus did not overwrite the checked stroke');
+        ControlHarness.Reset();
+    });
+
     test('no grey fallback — every token resolves under Pragmatic', () =>
     {
         const { svg } = ControlHarness.Render(() => new Checkbox(), { scheme: PragmaticLight });
@@ -164,6 +194,29 @@ describe('Pragmatic RadioButton', () =>
         ControlHarness.Reset();
     });
 
+    test('checked + focused shows BOTH the checked stroke and a separate focus-ring stroke', () =>
+    {
+        const { svg } = ControlHarness.Render(() =>
+        {
+            const r = new RadioButton();
+            r.IsChecked = true;
+            r._setIsFocused(true);
+            return r;
+        }, { scheme: PragmaticLight });
+        const controlAccent = ControlHarness.TokenCss('ControlAccent');
+        const borderFocus = ControlHarness.TokenCss('BorderFocus');
+        assert.equal(controlAccent, borderFocus);
+        // See the equivalent Checkbox test above for why this must be a
+        // structural (occurrence-count) assertion rather than a colour one —
+        // @ControlAccent and @BorderFocus share the same rgb() here.
+        const strokeAttr = `stroke="${controlAccent}"`;
+        const occurrences = svg.split(strokeAttr).length - 1;
+        assert.equal(occurrences, 2,
+            'checked RadioButton paints two distinct stroke="rgb(34,130,77)" attributes — PART_Ring\'s checked ' +
+            'outline AND PART_FocusRing\'s focus ring — proving focus did not overwrite the checked stroke');
+        ControlHarness.Reset();
+    });
+
     test('no grey fallback — every token resolves under Pragmatic', () =>
     {
         const { svg } = ControlHarness.Render(() => new RadioButton(), { scheme: PragmaticLight });
@@ -194,6 +247,14 @@ describe('Pragmatic Switch', () =>
         const { svg } = ControlHarness.Render(() => new Switch(), { scheme: PragmaticLight });
         const bg3 = ControlHarness.TokenCss('Bg3');
         assert.ok(svg.includes(bg3!), 'off Switch track paints @Bg3');
+        ControlHarness.Reset();
+    });
+
+    test('unchecked track paints the @BorderStrong outline stroke', () =>
+    {
+        const { svg } = ControlHarness.Render(() => new Switch(), { scheme: PragmaticLight });
+        const borderStrong = ControlHarness.TokenCss('BorderStrong');
+        assert.ok(svg.includes(`stroke="${borderStrong}"`), 'unchecked Switch track paints @BorderStrong as a stroke');
         ControlHarness.Reset();
     });
 
@@ -229,6 +290,29 @@ describe('Pragmatic Switch', () =>
         }, { scheme: PragmaticLight });
         const borderFocus = ControlHarness.TokenCss('BorderFocus');
         assert.ok(svg.includes(`stroke="${borderFocus}"`), 'focused Switch paints @BorderFocus as a track stroke');
+        ControlHarness.Reset();
+    });
+
+    test('checked + focused shows BOTH the checked stroke and a separate focus-ring stroke', () =>
+    {
+        const { svg } = ControlHarness.Render(() =>
+        {
+            const s = new Switch();
+            s.IsChecked = true;
+            s._setIsFocused(true);
+            return s;
+        }, { scheme: PragmaticLight });
+        const controlAccent = ControlHarness.TokenCss('ControlAccent');
+        const borderFocus = ControlHarness.TokenCss('BorderFocus');
+        assert.equal(controlAccent, borderFocus);
+        // See the equivalent Checkbox test above for why this must be a
+        // structural (occurrence-count) assertion rather than a colour one —
+        // @ControlAccent and @BorderFocus share the same rgb() here.
+        const strokeAttr = `stroke="${controlAccent}"`;
+        const occurrences = svg.split(strokeAttr).length - 1;
+        assert.equal(occurrences, 2,
+            'checked Switch paints two distinct stroke="rgb(34,130,77)" attributes — PART_Track\'s checked ' +
+            'outline AND PART_FocusRing\'s focus ring — proving focus did not overwrite the checked stroke');
         ControlHarness.Reset();
     });
 
