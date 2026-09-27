@@ -130,4 +130,38 @@ resources PragmaticNotifications
         LetterSpacing = @BodyTracking;
         MeasurementFidelity = Exact;
     }
+
+    // ── Snackbar: transient inverse message ──────────────────────────
+    Template x:key="DefaultSnackbar" [TargetType = Snackbar]
+    {
+        Border x:name="PART_Snackbar"
+            [ Fill = @BgInverse,
+              CornerRadius = @RadiusMd,
+              Effect = @ShadowLg,
+              Padding = (@Space4,@Space3,@Space2,@Space3) ]
+        {
+            DockPanel [ LastChildFill = true ]
+            {
+                ContentPresenter
+                    [ DockPanel.Dock = Right,
+                      Content = $Actions,
+                      VerticalAlignment = Center,
+                      Margin = (@Space4,0,0,0) ]
+                ContentPresenter [ VerticalAlignment = Center ]
+            }
+        }
+        when ( ThemeManager.Density = Compact ) { PART_Snackbar.Padding = (@Space3,@Space2,@Space1,@Space2); }
+        when ( ThemeManager.Density = Comfortable ) { PART_Snackbar.Padding = (@Space5,@Space4,@Space3,@Space4); }
+    }
+    Style [TargetType = Snackbar]
+    {
+        Template = @DefaultSnackbar;
+        Foreground = @FgInverse;
+        FontFamily = @FontSans;
+        FontWeight = @BodyWeight;
+        FontSize = @BodySize;
+        LineHeight = @BodyLineHeight;
+        LetterSpacing = @BodyTracking;
+        MeasurementFidelity = Exact;
+    }
 }
