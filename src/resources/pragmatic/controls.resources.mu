@@ -24,4 +24,5 @@ resources PragmaticControls
     import PragmaticComboBox from "../../framework/pragmatic/lists/combo-box.template.mu.js"
     import PragmaticScrollBar from "../../framework/pragmatic/scroll/scroll-bar.template.mu.js"
     import PragmaticSplitter from "../../framework/pragmatic/scroll/splitter.template.mu.js"
+    import PragmaticSegmentedButton from "../../framework/pragmatic/button-groups/segmented-button.template.mu.js"
 }
