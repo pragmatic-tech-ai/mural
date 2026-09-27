@@ -89,4 +89,45 @@ resources PragmaticNotifications
     {
         Template = @DefaultLoadingIndicator;
     }
+
+    // ── Banner: in-flow alert / message strip ────────────────────────
+    Template x:key="DefaultBanner" [TargetType = Banner]
+    {
+        StackPanel [ Orientation = Vertical ]
+        {
+            Border x:name="PART_Banner"
+                [ Fill = @Bg1,
+                  Padding = (@Space4,@Space3,@Space4,@Space3) ]
+            {
+                DockPanel [ LastChildFill = true ]
+                {
+                    ContentPresenter
+                        [ DockPanel.Dock = Left,
+                          Content = $Leading,
+                          VerticalAlignment = Center,
+                          Margin = (0,0,@Space3,0) ]
+                    ContentPresenter
+                        [ DockPanel.Dock = Right,
+                          Content = $Actions,
+                          VerticalAlignment = Center,
+                          Margin = (@Space3,0,0,0) ]
+                    ContentPresenter [ VerticalAlignment = Center ]
+                }
+            }
+            Line [ Orientation = Horizontal, Stroke = Pen [ Brush = @Border, Thickness = 1 ] ]
+        }
+        when ( ThemeManager.Density = Compact ) { PART_Banner.Padding = (@Space3,@Space2,@Space3,@Space2); }
+        when ( ThemeManager.Density = Comfortable ) { PART_Banner.Padding = (@Space5,@Space4,@Space5,@Space4); }
+    }
+    Style [TargetType = Banner]
+    {
+        Template = @DefaultBanner;
+        Foreground = @Fg1;
+        FontFamily = @FontSans;
+        FontWeight = @BodyWeight;
+        FontSize = @BodySize;
+        LineHeight = @BodyLineHeight;
+        LetterSpacing = @BodyTracking;
+        MeasurementFidelity = Exact;
+    }
 }
