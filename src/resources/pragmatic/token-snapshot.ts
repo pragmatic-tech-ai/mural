@@ -27,8 +27,14 @@ interface ScalarFamily
 
 interface TypeStyle
 {
-    name:      string;
-    fontSize?: string;
+    name:           string;
+    fontSize?:      string;
+    fontWeight?:    number;
+    // A unitless ratio (Display/Headings/Body/Mono groups, e.g. `1.15`) or
+    // an absolute px string (UI group, e.g. `"20px"`) — see
+    // TokenSnapshot.lineHeightPx().
+    lineHeight?:    string | number;
+    letterSpacing?: string;
 }
 
 interface TypeGroup
@@ -46,14 +52,26 @@ interface ShadowLayerSpec
 export class TokenSnapshot
 {
     private static readonly AliasPattern = /^\{([^}]+)\}$/;
+    private static readonly EmPattern    = /em$/i;
 
     // Scalar (non-colour) families whose tokens the schemes also carry.
     private static readonly ScalarFamilies: ReadonlyArray<string> =
         ['spacing', 'radius', 'sizing', 'density', 'duration', 'opacity', 'focus'];
 
+    // fontWeight (JSON number) -> FontWeight enum member name, as used in
+    // the scheme .mu source (`FontWeight.SemiBold`).
+    private static readonly FontWeightNames: ReadonlyMap<number, string> = new Map([
+        [400, 'Normal'],
+        [500, 'Medium'],
+        [600, 'SemiBold'],
+        [700, 'Bold'],
+    ]);
+    private static readonly FontWeightExprPrefix = 'FontWeight.';
+
     private readonly colors:  Map<string, ColorTokenValue>;
     private readonly scalars: Map<string, number>;
     private readonly typeSizes: Map<string, number>;
+    private readonly typeStyles: Map<string, TypeStyle>;
     private readonly root: {
         color?:  { tokens?: ColorToken[] };
         type?:   { groups?: TypeGroup[] };
@@ -80,7 +98,8 @@ export class TokenSnapshot
             }
         }
 
-        this.typeSizes = new Map();
+        this.typeSizes  = new Map();
+        this.typeStyles = new Map();
         for (const g of this.root.type?.groups ?? [])
         {
             for (const s of g.styles ?? [])
@@ -89,6 +108,7 @@ export class TokenSnapshot
                 {
                     this.typeSizes.set(s.name, TokenSnapshot.toNumber(s.fontSize));
                 }
+                this.typeStyles.set(s.name, s);
             }
         }
     }
@@ -133,6 +153,65 @@ export class TokenSnapshot
             throw new Error(`Unknown type style '${styleName}'.`);
         }
         return v;
+    }
+
+    // The `FontWeight.<Name>` expression a scheme authors for this style,
+    // e.g. 'FontWeight.SemiBold' for a JSON fontWeight of 600.
+    public TypeWeight(styleName: string): string
+    {
+        const style = this.typeStyle(styleName);
+        if (style.fontWeight === undefined)
+        {
+            throw new Error(`Type style '${styleName}' has no fontWeight.`);
+        }
+        const name = TokenSnapshot.FontWeightNames.get(style.fontWeight);
+        if (name === undefined)
+        {
+            throw new Error(`Unmapped fontWeight ${style.fontWeight} for '${styleName}'.`);
+        }
+        return `${TokenSnapshot.FontWeightExprPrefix}${name}`;
+    }
+
+    // lineHeight in px, matching what the scheme authors as `@<Role>LineHeight`.
+    // A unitless ratio (Display/Headings/Body/Mono groups) is converted to
+    // the rounded pixel value (fontSize_px * ratio); an absolute px string
+    // (the UI group) is used directly.
+    public TypeLineHeight(styleName: string): number
+    {
+        const style = this.typeStyle(styleName);
+        if (style.lineHeight === undefined)
+        {
+            throw new Error(`Type style '${styleName}' has no lineHeight.`);
+        }
+        if (typeof style.lineHeight === 'string')
+        {
+            return TokenSnapshot.toNumber(style.lineHeight);
+        }
+        return Math.round(this.TypeSize(styleName) * style.lineHeight);
+    }
+
+    // letterSpacing in px, matching what the scheme authors as
+    // `@<Role>Tracking`. An em string is converted via fontSize_px * em;
+    // an absent letterSpacing is 0.
+    public TypeTracking(styleName: string): number
+    {
+        const style = this.typeStyle(styleName);
+        if (style.letterSpacing === undefined)
+        {
+            return 0;
+        }
+        const em = Number(style.letterSpacing.replace(TokenSnapshot.EmPattern, '').trim());
+        return Math.round(this.TypeSize(styleName) * em * 100) / 100;
+    }
+
+    private typeStyle(styleName: string): TypeStyle
+    {
+        const style = this.typeStyles.get(styleName);
+        if (style === undefined)
+        {
+            throw new Error(`Unknown type style '${styleName}'.`);
+        }
+        return style;
     }
 
     // The design system's shadow layers for a level ('sm'|'md'|'lg'), parsed
