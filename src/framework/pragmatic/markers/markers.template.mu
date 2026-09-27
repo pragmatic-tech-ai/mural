@@ -72,20 +72,25 @@ resources PragmaticMarkers
     // same constraint the tool-bar / navigation / list forks work around
     // by setting the control's own inherited Foreground in the Style
     // instead).
-    Template x:key="DefaultChip" [TargetType = Chip] {
+    Template x:key="DefaultChip" [TargetType = Chip]
+    {
         Border x:name="PART_FocusRing"
             [ Fill = #00000000,
               Padding = (@FocusRingOffset),
-              CornerRadius = @RadiusPill ] {
+              CornerRadius = @RadiusPill ]
+        {
             Border x:name="PART_Chip"
                 [ Fill      = @Bg1,
                   Stroke     = Pen [ Brush = @Border, Thickness = 1 ],
-                  CornerRadius    = @RadiusPill ] {
+                  CornerRadius    = @RadiusPill ]
+            {
                 Border x:name="PART_Selected"
                     [ Fill      = #00000000,
                       CornerRadius    = @RadiusPill,
-                      Padding         = (5,2,5,2) ] {
-                    DockPanel [ LastChildFill = true ] {
+                      Padding         = (5,2,5,2) ]
+                {
+                    DockPanel [ LastChildFill = true ]
+                    {
                         Border x:name="PART_LeadingSlot"
                             [ DockPanel.Dock    = Left,
                               VerticalAlignment = Center ]
@@ -107,7 +112,8 @@ resources PragmaticMarkers
         when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
         when ( IsEnabled = false ) { PART_Chip.Opacity = @OpacityDisabled; }
     }
-    Style [TargetType = Chip] {
+    Style [TargetType = Chip]
+    {
         Template = @DefaultChip;
         Foreground = @Fg1;
         FontFamily = @FontSans;
@@ -135,19 +141,22 @@ resources PragmaticMarkers
     // Both stroke a `Line` in its oriented stretch-and-fill mode (see
     // basic/shapes/line.ts) with the Pen form, so the rule renders as
     // a `stroke="…"` attribute rather than a Fill rectangle.
-    Template x:key="DefaultHorizontalDivider" [TargetType = Divider] {
+    Template x:key="DefaultHorizontalDivider" [TargetType = Divider]
+    {
         Line x:name="PART_Rule"
             [ Orientation         = Horizontal,
               Stroke              = Pen [ Brush = @Border, Thickness = 1 ],
               HorizontalAlignment = Stretch ]
     }
-    Template x:key="DefaultVerticalDivider" [TargetType = Divider] {
+    Template x:key="DefaultVerticalDivider" [TargetType = Divider]
+    {
         Line x:name="PART_Rule"
             [ Orientation       = Vertical,
               Stroke            = Pen [ Brush = @Border, Thickness = 1 ],
               VerticalAlignment = Stretch ]
     }
-    Style [TargetType = Divider] {
+    Style [TargetType = Divider]
+    {
         Template = @DefaultHorizontalDivider;
         when ( Orientation = Vertical ) { Template = @DefaultVerticalDivider; }
     }
@@ -155,20 +164,23 @@ resources PragmaticMarkers
     // ── Badge: dot / numeric flag ────────────────────────────────────
     // Two templates — one per Variant. Both use @StateDanger / @FgOnAccent
     // per the brief (tone-driven variants are a later follow-up).
-    Template x:key="DefaultDotBadge" [TargetType = Badge] {
+    Template x:key="DefaultDotBadge" [TargetType = Badge]
+    {
         Border x:name="PART_Dot"
             [ Fill      = @StateDanger,
               CornerRadius    = @RadiusPill,
               Width           = 6,
               Height          = 6 ]
     }
-    Template x:key="DefaultNumericBadge" [TargetType = Badge] {
+    Template x:key="DefaultNumericBadge" [TargetType = Badge]
+    {
         Border x:name="PART_Pill"
             [ Fill      = @StateDanger,
               CornerRadius    = @RadiusPill,
               Padding         = (@Space1,0,@Space1,0),
               MinWidth        = 16,
-              Height          = 16 ] {
+              Height          = 16 ]
+        {
             TextBlock
                 // $$Count — a TemplateBinding to the templated PARENT's
                 // own Count DP (compiler: TemplateBinding(_templatedParent,
@@ -211,7 +223,8 @@ resources PragmaticMarkers
                   VerticalAlignment   = Center ]
         }
     }
-    Style [TargetType = Badge] {
+    Style [TargetType = Badge]
+    {
         Template = @DefaultNumericBadge;
         when ( Variant = Dot ) { Template = @DefaultDotBadge; }
     }
