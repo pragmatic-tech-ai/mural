@@ -6,7 +6,7 @@ import { Divider } from '../../../framework/markers/divider.js';
 import { Orientation } from '../../../basic/panels/orientation.js';
 import { Border } from '../../../basic/border.js';
 import { SolidColorBrush } from '../../../visual-engine/index.js';
-import { PragmaticLight } from '../pragmatic.js';
+import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
 import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
@@ -89,6 +89,22 @@ describe('Pragmatic Chip', () =>
         const { svg } = ControlHarness.Render(() => new Chip(), { scheme: PragmaticLight });
         assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss),
             'no #808080 neutral — an unresolved token would paint the marker');
+        ControlHarness.Reset();
+    });
+
+    test('renders under PragmaticDark with no grey fallback and paints the dark @SurfaceSelected fill', () =>
+    {
+        const { svg } = ControlHarness.Render(() =>
+        {
+            const c = new Chip();
+            c.IsChecked = true;
+            return c;
+        }, { scheme: PragmaticDark });
+        const selected = ControlHarness.TokenCss('SurfaceSelected');
+        assert.equal(selected, 'rgb(15,42,26)', '@SurfaceSelected under PragmaticDark is #0F2A1A');
+        assert.ok(svg.includes(selected!), 'selected Chip paints the dark @SurfaceSelected');
+        assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss),
+            'no #808080 neutral fallback — every token resolves under PragmaticDark');
         ControlHarness.Reset();
     });
 });

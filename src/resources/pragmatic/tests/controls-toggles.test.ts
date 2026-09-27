@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { Checkbox } from '../../../framework/toggles/checkbox.js';
 import { RadioButton } from '../../../framework/toggles/radio-button.js';
 import { Switch } from '../../../framework/toggles/switch.js';
-import { PragmaticLight } from '../pragmatic.js';
+import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
 import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
@@ -118,6 +118,22 @@ describe('Pragmatic Checkbox', () =>
         const { svg } = ControlHarness.Render(() => new Checkbox(), { scheme: PragmaticLight });
         assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss),
             'no #808080 neutral — an unresolved token would paint the marker');
+        ControlHarness.Reset();
+    });
+
+    test('renders under PragmaticDark with no grey fallback and paints the dark @ControlAccent fill', () =>
+    {
+        const { svg } = ControlHarness.Render(() =>
+        {
+            const c = new Checkbox();
+            c.IsChecked = true;
+            return c;
+        }, { scheme: PragmaticDark });
+        const controlAccent = ControlHarness.TokenCss('ControlAccent');
+        assert.equal(controlAccent, 'rgb(46,168,98)', '@ControlAccent under PragmaticDark is #2EA862');
+        assert.ok(svg.includes(controlAccent!), 'checked Checkbox paints the dark @ControlAccent fill');
+        assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss),
+            'no #808080 neutral fallback — every token resolves under PragmaticDark');
         ControlHarness.Reset();
     });
 });

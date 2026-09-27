@@ -63,7 +63,8 @@ resources PragmaticIconButtons
         when ( IsPressed ) { PART_Root.Fill = @Bg3; }
         when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
         when ( IsEnabled = false ) { PART_Root.Opacity = @OpacityDisabled; }
-        when ( ThemeManager.Pointer = Coarse ) {
+        when ( ThemeManager.Pointer = Coarse )
+        {
             PART_Root.Width = 48;
             PART_Root.Height = 48;
         }
@@ -132,7 +133,8 @@ resources PragmaticIconButtons
         when ( IsChecked ) { PART_Selected.Fill = @SurfaceSelected; }
         when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
         when ( IsEnabled = false ) { PART_Root.Opacity = @OpacityDisabled; }
-        when ( ThemeManager.Pointer = Coarse ) {
+        when ( ThemeManager.Pointer = Coarse )
+        {
             PART_Root.Width = 48;
             PART_Root.Height = 48;
         }

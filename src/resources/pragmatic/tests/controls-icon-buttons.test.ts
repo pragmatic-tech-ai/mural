@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { IconButton } from '../../../framework/buttons/icon-button.js';
 import { IconButtonToggle } from '../../../framework/buttons/icon-button-toggle.js';
 import { FloatingActionButton, FabSize } from '../../../framework/buttons/fab.js';
-import { PragmaticLight } from '../pragmatic.js';
+import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
 import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
@@ -46,6 +46,22 @@ describe('Pragmatic IconButton', () =>
         // would pass whether or not the ring actually painted — assert the
         // STROKE attribute specifically, which only the focus ring emits.
         assert.ok(svg.includes(`stroke="${borderFocus}"`), 'focused IconButton paints the @BorderFocus ring stroke');
+        ControlHarness.Reset();
+    });
+
+    test('renders under PragmaticDark with no grey fallback and paints the dark @BorderFocus ring', () =>
+    {
+        const { svg } = ControlHarness.Render(() =>
+        {
+            const b = new IconButton();
+            b._setIsFocused(true);
+            return b;
+        }, { scheme: PragmaticDark });
+        const borderFocus = ControlHarness.TokenCss('BorderFocus');
+        assert.equal(borderFocus, 'rgb(46,168,98)', '@BorderFocus under PragmaticDark is #2EA862');
+        assert.ok(svg.includes(`stroke="${borderFocus}"`), 'focused IconButton paints the dark @BorderFocus ring stroke');
+        assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss),
+            'no #808080 neutral fallback — every token resolves under PragmaticDark');
         ControlHarness.Reset();
     });
 });

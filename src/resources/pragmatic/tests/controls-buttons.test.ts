@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { Application } from '../../../runtime/index.js';
 import { Button, ButtonVariant } from '../../../framework/buttons/button.js';
 import { ComboBox } from '../../../framework/list/combo-box.js';
-import { Pragmatic, PragmaticControls, PragmaticLight } from '../pragmatic.js';
+import { Pragmatic, PragmaticControls, PragmaticLight, PragmaticDark } from '../pragmatic.js';
 import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
@@ -82,6 +82,22 @@ describe('Pragmatic Button', () =>
         // painted (the primary fill already contains that colour) — assert
         // the STROKE attribute specifically, which only the focus ring emits.
         assert.ok(svg.includes(`stroke="${borderFocus}"`), 'focused Button paints the @BorderFocus ring stroke');
+        ControlHarness.Reset();
+    });
+
+    test('renders under PragmaticDark with no grey fallback and paints the dark @BorderFocus ring', () =>
+    {
+        const { svg } = ControlHarness.Render(() =>
+        {
+            const b = new Button();
+            b._setIsFocused(true);
+            return b;
+        }, { scheme: PragmaticDark });
+        const borderFocus = ControlHarness.TokenCss('BorderFocus');
+        assert.equal(borderFocus, 'rgb(46,168,98)', '@BorderFocus under PragmaticDark is #2EA862');
+        assert.ok(svg.includes(`stroke="${borderFocus}"`), 'focused Button paints the dark @BorderFocus ring stroke');
+        assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss),
+            'no #808080 neutral fallback — every token resolves under PragmaticDark');
         ControlHarness.Reset();
     });
 

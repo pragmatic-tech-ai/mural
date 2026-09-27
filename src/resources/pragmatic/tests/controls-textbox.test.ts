@@ -1,7 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { TextBox, TextBoxVariant } from '../../../basic/text-box.js';
-import { PragmaticLight } from '../pragmatic.js';
+import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
 import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
@@ -51,6 +51,22 @@ describe('Pragmatic TextBox (Outlined)', () =>
         // painted as a fill (or the tuple->Thickness compiler bug silently
         // dropped the stroke entirely — see the template's GOTCHA comment).
         assert.ok(svg.includes(`stroke="${borderFocus}"`), 'focused Outlined TextBox paints @BorderFocus as a border stroke');
+        ControlHarness.Reset();
+    });
+
+    test('renders under PragmaticDark with no grey fallback and paints the dark @BorderFocus border', () =>
+    {
+        const { svg } = ControlHarness.Render(() =>
+        {
+            const tb = new TextBox();
+            tb._setIsFocused(true);
+            return tb;
+        }, { scheme: PragmaticDark });
+        const borderFocus = ControlHarness.TokenCss('BorderFocus');
+        assert.equal(borderFocus, 'rgb(46,168,98)', '@BorderFocus under PragmaticDark is #2EA862');
+        assert.ok(svg.includes(`stroke="${borderFocus}"`), 'focused Outlined TextBox paints the dark @BorderFocus stroke');
+        assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss),
+            'no #808080 neutral fallback — every token resolves under PragmaticDark');
         ControlHarness.Reset();
     });
 

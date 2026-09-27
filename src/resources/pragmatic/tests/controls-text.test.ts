@@ -1,7 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { TextBlock, RichTextBlock, RichTextBox, FlowDocument, Paragraph, Run } from '../../../basic/index.js';
-import { PragmaticLight } from '../pragmatic.js';
+import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
 import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
@@ -11,13 +11,16 @@ import { ControlHarness } from './control-harness.js';
 // 15px font serialises as a bare integer, double-quoted.
 const BodyFontSizeAttr = 'font-size="15"';
 
-function singleRunDocument(text: string): FlowDocument
+class RichTextDocuments
 {
-    const doc = new FlowDocument();
-    const p = new Paragraph();
-    p.AddChild(new Run(text));
-    doc.AddChild(p);
-    return doc;
+    public static SingleRunDocument(text: string): FlowDocument
+    {
+        const doc = new FlowDocument();
+        const p = new Paragraph();
+        p.AddChild(new Run(text));
+        doc.AddChild(p);
+        return doc;
+    }
 }
 
 describe('Pragmatic TextBlock', () =>
@@ -38,6 +41,17 @@ describe('Pragmatic TextBlock', () =>
         assert.ok(svg.includes(`fill="${fg1}"`), 'bare TextBlock paints @Fg1 as its render-time ink fallback');
         assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss),
             'no #808080 neutral — Theme.ink must resolve natively under Pragmatic');
+        ControlHarness.Reset();
+    });
+
+    test('renders under PragmaticDark with no grey fallback and paints the dark @Fg1 ink', () =>
+    {
+        const { svg } = ControlHarness.Render(() => new TextBlock('Hello'), { scheme: PragmaticDark });
+        const fg1 = ControlHarness.TokenCss('Fg1');
+        assert.equal(fg1, 'rgb(232,231,226)', '@Fg1 under PragmaticDark is #E8E7E2');
+        assert.ok(svg.includes(`fill="${fg1}"`), 'bare TextBlock paints the dark @Fg1 ink');
+        assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss),
+            'no #808080 neutral fallback — every token resolves under PragmaticDark');
         ControlHarness.Reset();
     });
 
@@ -68,7 +82,7 @@ describe('Pragmatic RichTextBlock', () =>
         const { control, svg } = ControlHarness.Render(() =>
         {
             const rtb = new RichTextBlock();
-            rtb.Document = singleRunDocument('Hello');
+            rtb.Document = RichTextDocuments.SingleRunDocument('Hello');
             return rtb;
         }, { scheme: PragmaticLight });
         assert.ok(ControlHarness.IsPragmaticStyle(control), 'RichTextBlock uses the Pragmatic override style');
@@ -85,7 +99,7 @@ describe('Pragmatic RichTextBox', () =>
         const { control, svg } = ControlHarness.Render(() =>
         {
             const rtb = new RichTextBox();
-            rtb.Document = singleRunDocument('Hello');
+            rtb.Document = RichTextDocuments.SingleRunDocument('Hello');
             return rtb;
         }, { scheme: PragmaticLight });
         assert.ok(ControlHarness.IsPragmaticStyle(control), 'RichTextBox uses the Pragmatic override style');

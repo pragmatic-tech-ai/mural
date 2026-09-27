@@ -7,7 +7,7 @@ import { Slider } from '../../../basic/slider.js';
 import { SpinEdit } from '../../../basic/spin-edit.js';
 import { TextBox } from '../../../basic/text-box.js';
 import { Orientation } from '../../../basic/panels/orientation.js';
-import { PragmaticLight } from '../pragmatic.js';
+import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
 import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
@@ -16,19 +16,22 @@ import { ControlHarness } from './control-harness.js';
 // drag scenario, same as that suite, rather than through ControlHarness.Render
 // — a real drag needs a live Arrange pass plus pointer injection between two
 // paints, which the single-shot harness doesn't expose).
-function pointer(overrides: Partial<PointerEventInit> = {}): PointerEventInit
+class SliderPointerEvents
 {
-    return {
-        HostX:       0,
-        HostY:       0,
-        Button:      PointerButton.Primary,
-        Buttons:     1,
-        Modifiers:   NoModifiers,
-        PointerId:   0,
-        Pressure:    0,
-        PointerType: 'mouse',
-        ...overrides,
-    };
+    public static Pointer(overrides: Partial<PointerEventInit> = {}): PointerEventInit
+    {
+        return {
+            HostX:       0,
+            HostY:       0,
+            Button:      PointerButton.Primary,
+            Buttons:     1,
+            Modifiers:   NoModifiers,
+            PointerId:   0,
+            Pressure:    0,
+            PointerType: 'mouse',
+            ...overrides,
+        };
+    }
 }
 
 // Parses the thumb's rendered GLOBAL geometry out of the SVG fragment, to
@@ -219,8 +222,8 @@ describe('Pragmatic Slider', () =>
         target.Render(new SvgDrawingContext());
 
         const im = new InputManager();
-        im.InjectPointerDown(sl.Thumb, pointer({ HostX: 100, HostY: 8 }));
-        im.InjectPointerMove(sl.Thumb, pointer({ HostX: 105, HostY: 8 }));
+        im.InjectPointerDown(sl.Thumb, SliderPointerEvents.Pointer({ HostX: 100, HostY: 8 }));
+        im.InjectPointerMove(sl.Thumb, SliderPointerEvents.Pointer({ HostX: 105, HostY: 8 }));
         assert.equal(sl.IsDragging, true, 'the drag gesture is under way');
 
         const dc = new SvgDrawingContext();
@@ -232,7 +235,7 @@ describe('Pragmatic Slider', () =>
         assert.ok(svg.includes(press!), 'dragging thumb paints @BrandGreenPress');
         assert.ok(!svg.includes(hover!), 'the drag colour wins outright — no lingering @BrandGreenHover paint');
 
-        im.InjectPointerUp(sl.Thumb, pointer({ HostX: 105, HostY: 8 }));
+        im.InjectPointerUp(sl.Thumb, SliderPointerEvents.Pointer({ HostX: 105, HostY: 8 }));
         ControlHarness.Reset();
     });
 
@@ -241,6 +244,24 @@ describe('Pragmatic Slider', () =>
         const { svg } = ControlHarness.Render(() => new Slider(), { scheme: PragmaticLight });
         assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss),
             'no #808080 neutral — an unresolved token would paint the marker');
+        ControlHarness.Reset();
+    });
+
+    test('renders under PragmaticDark with no grey fallback and paints the dark @ControlAccent fill', () =>
+    {
+        const { svg } = ControlHarness.Render(() =>
+        {
+            const s = new Slider();
+            s.Minimum = 0;
+            s.Maximum = 100;
+            s.Value = 50;
+            return s;
+        }, { scheme: PragmaticDark });
+        const controlAccent = ControlHarness.TokenCss('ControlAccent');
+        assert.equal(controlAccent, 'rgb(46,168,98)', '@ControlAccent under PragmaticDark is #2EA862');
+        assert.ok(svg.includes(controlAccent!), 'Slider fill paints the dark @ControlAccent');
+        assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss),
+            'no #808080 neutral fallback — every token resolves under PragmaticDark');
         ControlHarness.Reset();
     });
 });
