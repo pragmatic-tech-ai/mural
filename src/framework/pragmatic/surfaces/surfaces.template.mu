@@ -137,4 +137,22 @@ resources PragmaticSurfaces
     {
         Template = @DefaultDialog;
     }
+
+    // ── Drawer (pane) ────────────────────────────────────────────────
+    Template x:key="DefaultDrawerPane" [TargetType = Drawer]
+    {
+        Border x:name="PART_Pane"
+            [ Fill = @Bg2,
+              Stroke = Pen [ Brush = @Border, Thickness = 1 ],
+              Padding = (0,@Space3,0,0) ]
+        {
+            ContentPresenter
+        }
+        when ( Variant = Temporary ) { PART_Pane.Effect = @ShadowSm; }
+        when ( IsEnabled = false ) { PART_Pane.Opacity = @OpacityDisabled; }
+    }
+    Style [TargetType = Drawer]
+    {
+        Template = @DefaultDrawerPane;
+    }
 }
