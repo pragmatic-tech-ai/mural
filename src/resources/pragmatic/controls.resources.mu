@@ -26,4 +26,9 @@ resources PragmaticControls
     import PragmaticSplitter from "../../framework/pragmatic/scroll/splitter.template.mu.js"
     import PragmaticSegmentedButton from "../../framework/pragmatic/button-groups/segmented-button.template.mu.js"
     import PragmaticTabs from "../../framework/pragmatic/tabs/tabs.template.mu.js"
+    import PragmaticSurfaces from "../../framework/pragmatic/surfaces/surfaces.template.mu.js"
+    import PragmaticTooltips from "../../framework/pragmatic/tooltips/tooltips.template.mu.js"
+    import PragmaticNotifications from "../../framework/pragmatic/notifications/notifications.template.mu.js"
+    import PragmaticMenus from "../../framework/pragmatic/menu/menu.template.mu.js"
+    import PragmaticSplitButton from "../../framework/pragmatic/button-groups/split-button.template.mu.js"
 }
