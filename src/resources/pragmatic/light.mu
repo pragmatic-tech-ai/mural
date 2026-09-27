@@ -139,4 +139,8 @@ scheme PragmaticLight against Pragmatic
     // intra-scheme aliasing syntax exists in this file format).
     @Ink = #22211E        // = @Fg1
     @AccentInk = #22824D  // = @ControlAccent
+    // Scroll/splitter chrome bridge (see thumb.ts / splitter.ts): the
+    // Thumb-derived primitives resolve these theme-agnostic keys.
+    @ControlTrack = #D6D5D0   // = @BorderStrong (Thumb/Splitter/GridSplitter rest)
+    @ControlActive = #22824D  // = @ControlAccent (Splitter hover/drag + drag-preview)
 }
