@@ -61,7 +61,7 @@ resources PragmaticIconButtons
         }
         when ( IsMouseOver ) { PART_Root.Fill = @Bg2; }
         when ( IsPressed ) { PART_Root.Fill = @Bg3; }
-        when ( IsFocused ) { PART_FocusRing.Stroke = (@BorderFocus, 2); }
+        when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
         when ( IsEnabled = false ) { PART_Root.Opacity = @OpacityDisabled; }
         when ( ThemeManager.Pointer = Coarse ) {
             PART_Root.Width = 48;
@@ -130,7 +130,7 @@ resources PragmaticIconButtons
         when ( IsMouseOver ) { PART_Root.Fill = @Bg2; }
         when ( IsPressed ) { PART_Root.Fill = @Bg3; }
         when ( IsChecked ) { PART_Selected.Fill = @SurfaceSelected; }
-        when ( IsFocused ) { PART_FocusRing.Stroke = (@BorderFocus, 2); }
+        when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
         when ( IsEnabled = false ) { PART_Root.Opacity = @OpacityDisabled; }
         when ( ThemeManager.Pointer = Coarse ) {
             PART_Root.Width = 48;
@@ -175,7 +175,7 @@ resources PragmaticIconButtons
         }
         when ( IsMouseOver ) { PART_Root.Fill = @ActionPrimaryHover; }
         when ( IsPressed ) { PART_Root.Fill = @ActionPrimaryPress; }
-        when ( IsFocused ) { PART_FocusRing.Stroke = (@BorderFocus, 2); }
+        when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
         when ( IsEnabled = false ) { PART_Root.Opacity = @OpacityDisabled; }
     }
 
@@ -202,7 +202,7 @@ resources PragmaticIconButtons
         }
         when ( IsMouseOver ) { PART_Root.Fill = @ActionPrimaryHover; }
         when ( IsPressed ) { PART_Root.Fill = @ActionPrimaryPress; }
-        when ( IsFocused ) { PART_FocusRing.Stroke = (@BorderFocus, 2); }
+        when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
         when ( IsEnabled = false ) { PART_Root.Opacity = @OpacityDisabled; }
     }
 
@@ -229,7 +229,7 @@ resources PragmaticIconButtons
         }
         when ( IsMouseOver ) { PART_Root.Fill = @ActionPrimaryHover; }
         when ( IsPressed ) { PART_Root.Fill = @ActionPrimaryPress; }
-        when ( IsFocused ) { PART_FocusRing.Stroke = (@BorderFocus, 2); }
+        when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
         when ( IsEnabled = false ) { PART_Root.Opacity = @OpacityDisabled; }
     }
 
@@ -254,7 +254,7 @@ resources PragmaticIconButtons
         }
         when ( IsMouseOver ) { PART_Root.Fill = @ActionPrimaryHover; }
         when ( IsPressed ) { PART_Root.Fill = @ActionPrimaryPress; }
-        when ( IsFocused ) { PART_FocusRing.Stroke = (@BorderFocus, 2); }
+        when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
         when ( IsEnabled = false ) { PART_Root.Opacity = @OpacityDisabled; }
     }
 

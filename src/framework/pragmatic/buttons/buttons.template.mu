@@ -48,7 +48,7 @@ resources PragmaticButtons
         }
         when ( IsMouseOver ) { PART_Root.Fill = @ActionPrimaryHover; }
         when ( IsPressed ) { PART_Root.Fill = @ActionPrimaryPress; }
-        when ( IsFocused ) { PART_FocusRing.Stroke = (@BorderFocus, 2); }
+        when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
         when ( IsEnabled = false ) { PART_Root.Opacity = @OpacityDisabled; }
         when ( ThemeManager.Density = Compact ) { PART_Root.MinHeight = @ControlHCompact; }
         when ( ThemeManager.Pointer = Coarse ) { PART_Root.MinHeight = @ControlHTouch; }
@@ -77,7 +77,7 @@ resources PragmaticButtons
         }
         when ( IsMouseOver ) { PART_Root.Fill = @Bg2; }
         when ( IsPressed ) { PART_Root.Fill = @Bg3; }
-        when ( IsFocused ) { PART_FocusRing.Stroke = (@BorderFocus, 2); }
+        when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
         when ( IsEnabled = false ) { PART_Root.Opacity = @OpacityDisabled; }
         when ( ThemeManager.Density = Compact ) { PART_Root.MinHeight = @ControlHCompact; }
         when ( ThemeManager.Pointer = Coarse ) { PART_Root.MinHeight = @ControlHTouch; }
@@ -104,7 +104,7 @@ resources PragmaticButtons
         }
         when ( IsMouseOver ) { PART_Root.Fill = @Bg2; }
         when ( IsPressed ) { PART_Root.Fill = @Bg3; }
-        when ( IsFocused ) { PART_FocusRing.Stroke = (@BorderFocus, 2); }
+        when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
         when ( IsEnabled = false ) { PART_Root.Opacity = @OpacityDisabled; }
         when ( ThemeManager.Density = Compact ) { PART_Root.MinHeight = @ControlHCompact; }
         when ( ThemeManager.Pointer = Coarse ) { PART_Root.MinHeight = @ControlHTouch; }
@@ -132,7 +132,7 @@ resources PragmaticButtons
         }
         when ( IsMouseOver ) { PART_Root.Opacity = 0.92; }
         when ( IsPressed ) { PART_Root.Opacity = 0.85; }
-        when ( IsFocused ) { PART_FocusRing.Stroke = (@BorderFocus, 2); }
+        when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
         when ( IsEnabled = false ) { PART_Root.Opacity = @OpacityDisabled; }
         when ( ThemeManager.Density = Compact ) { PART_Root.MinHeight = @ControlHCompact; }
         when ( ThemeManager.Pointer = Coarse ) { PART_Root.MinHeight = @ControlHTouch; }

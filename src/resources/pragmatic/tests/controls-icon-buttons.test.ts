@@ -30,6 +30,24 @@ describe('Pragmatic IconButton', () =>
         assert.ok(!ControlHarness.IsPragmaticStyle(control), 'Material IconButton does NOT resolve the Pragmatic style');
         ControlHarness.Reset();
     });
+
+    test('focus paints the ring stroke (@BorderFocus)', () =>
+    {
+        const { svg } = ControlHarness.Render(() =>
+        {
+            const b = new IconButton();
+            b._setIsFocused(true);
+            return b;
+        }, { scheme: PragmaticLight });
+        const borderFocus = ControlHarness.TokenCss('BorderFocus');
+        assert.equal(borderFocus, 'rgb(34,130,77)');
+        // @ActionPrimary (and other Pragmatic surfaces) can resolve to the
+        // SAME rgb() as @BorderFocus, so a bare svg.includes(borderFocus)
+        // would pass whether or not the ring actually painted — assert the
+        // STROKE attribute specifically, which only the focus ring emits.
+        assert.ok(svg.includes(`stroke="${borderFocus}"`), 'focused IconButton paints the @BorderFocus ring stroke');
+        ControlHarness.Reset();
+    });
 });
 
 describe('Pragmatic IconButtonToggle', () =>

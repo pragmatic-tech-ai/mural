@@ -67,6 +67,24 @@ describe('Pragmatic Button', () =>
         ControlHarness.Reset();
     });
 
+    test('focus paints the ring stroke (@BorderFocus)', () =>
+    {
+        const { svg } = ControlHarness.Render(() =>
+        {
+            const b = new Button();
+            b._setIsFocused(true);
+            return b;
+        }, { scheme: PragmaticLight });
+        const borderFocus = ControlHarness.TokenCss('BorderFocus');
+        assert.equal(borderFocus, 'rgb(34,130,77)');
+        // @ActionPrimary resolves to the SAME rgb() as @BorderFocus, so a
+        // bare svg.includes(borderFocus) would pass whether or not the ring
+        // painted (the primary fill already contains that colour) — assert
+        // the STROKE attribute specifically, which only the focus ring emits.
+        assert.ok(svg.includes(`stroke="${borderFocus}"`), 'focused Button paints the @BorderFocus ring stroke');
+        ControlHarness.Reset();
+    });
+
     test('fallback intact — the fork is Button-scoped, so ComboBox keeps its Material chrome', () =>
     {
         // The override layer must be purely additive: it may shadow Button
