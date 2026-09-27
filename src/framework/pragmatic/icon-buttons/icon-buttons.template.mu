@@ -76,11 +76,34 @@ resources PragmaticIconButtons
     }
 
     // ── IconButtonToggle: IconButton + a checked surface ─────────────
-    // Same ghost chrome; IsChecked swaps PART_Root's fill to
-    // @SurfaceSelected. Ink stays @Fg1 — the selected-surface token is
-    // a light tint, so the dark @Fg1 glyph stays legible without a
-    // separate checked foreground (matches ListItem's own IsSelected
-    // treatment, which keeps its resting ink too).
+    // Same ghost chrome, but checked and hover/press CANNOT share one
+    // Fill trigger the way a plain (non-checked) control can. Reordering
+    // the `when` clauses does not help — a ControlTemplate trigger stack
+    // resolves ties by which condition's SetTriggerValue call happens
+    // LAST AT RUNTIME (a real PointerEnter / a real IsChecked flip),
+    // never by which `when` clause is declared last in this file. An
+    // already-checked, later-hovered toggle enters IsMouseOver's trigger
+    // chronologically AFTER IsChecked's, so a shared-property trigger
+    // always loses the checked cue to hover no matter how the two `when`
+    // clauses are ordered here (verified empirically before writing this
+    // structure — see task-2-report.md's fix entry).
+    //
+    // The robust fix is Material's own answer to this exact combinatorial
+    // problem (buttons.template.mu ~342-360: PART_Border + PART_StateLayer),
+    // adapted to Pragmatic's OPAQUE surface-step rule instead of M3's
+    // translucent state layer:
+    //   * PART_Root — the ghost hover/press surface, exactly like
+    //     IconButton (transparent rest, @Bg2 hover, @Bg3 press).
+    //   * PART_Selected — a second, opaque Border NESTED INSIDE
+    //     PART_Root, transparent unless checked. When IsChecked sets it
+    //     to @SurfaceSelected, it opaquely PAINTS OVER whatever PART_Root
+    //     is currently showing (hover or press included) — a z-order
+    //     compositing guarantee, not a trigger-priority one, so it holds
+    //     regardless of event chronology. When unchecked, PART_Selected
+    //     stays transparent and PART_Root's hover/press shows through
+    //     normally.
+    // Content padding (8dp) and the @Fg1 ink move to PART_Selected — it's
+    // now the innermost painted layer around the glyph slot.
     Template x:key="DefaultIconButtonToggle" [TargetType = IconButtonToggle]
     {
         Border x:name="PART_FocusRing"
@@ -92,16 +115,21 @@ resources PragmaticIconButtons
                 [ Fill = #00000000,
                   CornerRadius = $$CornerRadius,
                   Width = 40,
-                  Height = 40,
-                  Padding = (8,8,8,8),
-                  TextBlock.Foreground = @Fg1 ]
+                  Height = 40 ]
             {
-                ContentPresenter x:name="PART_Content" [ HorizontalAlignment = Center, VerticalAlignment = Center ]
+                Border x:name="PART_Selected"
+                    [ Fill = #00000000,
+                      CornerRadius = $$CornerRadius,
+                      Padding = (8,8,8,8),
+                      TextBlock.Foreground = @Fg1 ]
+                {
+                    ContentPresenter x:name="PART_Content" [ HorizontalAlignment = Center, VerticalAlignment = Center ]
+                }
             }
         }
-        when ( IsChecked ) { PART_Root.Fill = @SurfaceSelected; }
         when ( IsMouseOver ) { PART_Root.Fill = @Bg2; }
         when ( IsPressed ) { PART_Root.Fill = @Bg3; }
+        when ( IsChecked ) { PART_Selected.Fill = @SurfaceSelected; }
         when ( IsFocused ) { PART_FocusRing.Stroke = (@BorderFocus, 2); }
         when ( IsEnabled = false ) { PART_Root.Opacity = @OpacityDisabled; }
         when ( ThemeManager.Pointer = Coarse ) {

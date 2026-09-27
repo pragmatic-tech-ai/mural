@@ -53,6 +53,40 @@ describe('Pragmatic IconButtonToggle', () =>
         assert.ok(svg.includes(selected!), 'checked IconButtonToggle paints @SurfaceSelected');
         ControlHarness.Reset();
     });
+
+    test('checked + hovered keeps the selected surface — hover must not erase the checked cue', () =>
+    {
+        const { svg } = ControlHarness.Render(() =>
+        {
+            const t = new IconButtonToggle();
+            t.IsChecked = true;
+            // Force the hover DP the way the input pipeline would while the
+            // pointer sits over an already-checked toggle. Regression guard:
+            // a ControlTemplate trigger stack resolves a shared-property tie
+            // by whichever condition's SetTriggerValue call happens LAST AT
+            // RUNTIME (here, whichever DP is mutated last — IsChecked, then
+            // IsMouseOver), never by which `when` clause is declared last in
+            // the .mu file. Setting IsChecked before forcing hover reproduces
+            // exactly the "already checked, then hovered" sequence that used
+            // to erase the checked cue when both triggers wrote the same
+            // PART_Root.Fill. The fix paints the checked surface on a
+            // separate, opaquely-covering PART_Selected layer nested inside
+            // PART_Root, so it wins by z-order compositing — not trigger
+            // timing — regardless of which DP changed most recently.
+            t._setIsMouseOver(true);
+            return t;
+        }, { scheme: PragmaticLight });
+        const selected = ControlHarness.TokenCss('SurfaceSelected');
+        const hover = ControlHarness.TokenCss('Bg2');
+        const selectedIndex = svg.indexOf(selected!);
+        const hoverIndex = svg.indexOf(hover!);
+        assert.notEqual(selectedIndex, -1, 'checked + hovered IconButtonToggle still paints @SurfaceSelected');
+        assert.notEqual(hoverIndex, -1, 'the hover surface (@Bg2) still paints underneath — this is the base ghost layer');
+        assert.ok(selectedIndex > hoverIndex,
+            'the @SurfaceSelected layer must paint AFTER (on top of, in SVG document order) the @Bg2 hover layer, ' +
+            'so the checked cue visually wins while hovered');
+        ControlHarness.Reset();
+    });
 });
 
 describe('Pragmatic FloatingActionButton', () =>
