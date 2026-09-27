@@ -89,4 +89,52 @@ resources PragmaticSurfaces
         when ( Variant = Elevated ) { Template = @DefaultElevatedCard; }
         when ( Variant = Outlined ) { Template = @DefaultOutlinedCard; }
     }
+
+    // ── Dialog: floating modal surface (scrim is service-owned) ──────
+    DataTemplate x:key="DialogActionTemplate" [DataType = DialogAction]
+    {
+        Button [ Variant = $Variant, Command = $Command, Margin = (@Space2,0,0,0) ]
+        {
+            TextBlock [ Text = $Label ]
+        }
+    }
+    ItemsPanelTemplate x:key="DialogActionsPanel"
+    {
+        StackPanel [ Orientation = Horizontal, HorizontalAlignment = Right ]
+    }
+
+    Template x:key="DefaultDialog" [TargetType = Dialog]
+    {
+        Border x:name="PART_Dialog"
+            [ Fill = @Bg1,
+              Stroke = Pen [ Brush = @Border, Thickness = 1 ],
+              CornerRadius = @RadiusXl,
+              Effect = @ShadowLg,
+              Padding = (@Space5,@Space5,@Space5,@Space5) ]
+        {
+            DockPanel [ LastChildFill = true ]
+            {
+                TextBlock x:name="PART_Title"
+                    [ DockPanel.Dock = Top,
+                      Text = $$Title,
+                      Foreground = @Fg1,
+                      Style = @H3,
+                      Margin = (0,0,0,@Space4) ]
+                ItemsControl x:name="PART_Actions"
+                    [ DockPanel.Dock = Bottom,
+                      ItemsSource = $$Actions,
+                      ItemTemplate = @DialogActionTemplate,
+                      ItemsPanel = @DialogActionsPanel,
+                      HorizontalAlignment = Right,
+                      Margin = (0,@Space4,0,0) ]
+                ContentPresenter
+            }
+        }
+        when ( ThemeManager.Density = Compact ) { PART_Dialog.Padding = (@Space4,@Space4,@Space4,@Space4); }
+        when ( ThemeManager.Density = Comfortable ) { PART_Dialog.Padding = (@Space6,@Space6,@Space6,@Space6); }
+    }
+    Style [TargetType = Dialog]
+    {
+        Template = @DefaultDialog;
+    }
 }
