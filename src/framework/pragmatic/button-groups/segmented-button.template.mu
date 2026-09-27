@@ -48,10 +48,14 @@ resources PragmaticSegmentedButton
                   Stroke = Pen [ Brush = @Border, Thickness = 1 ] ]
             Border x:name="PART_Border"
                 [ Fill = @Bg1,
-                  Padding = (@Space3,@Space1,@Space3,@Space1),
                   MinHeight = @ControlHDefault ]
             {
-                Border x:name="PART_Selected" [ Fill = #00000000 ]
+                // PART_Selected carries the segment Padding (NOT PART_Border) so
+                // its @SurfaceSelected fill spans the full segment (no gaps to
+                // the dividers) and covers the @Bg2 hover fill.
+                Border x:name="PART_Selected"
+                    [ Fill = #00000000,
+                      Padding = (@Space3,@Space1,@Space3,@Space1) ]
                 {
                     ContentPresenter [ VerticalAlignment = Center, HorizontalAlignment = Center ]
                 }

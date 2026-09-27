@@ -47,12 +47,15 @@ resources PragmaticTreeView
         StackPanel x:name="PART_OuterStack" [ Orientation = Vertical ]
         {
             ClickableRow x:name="PART_Row"
-                [ Padding = (@Space2,@Space1,@Space2,@Space1),
-                  MinHeight = @RowHDefault ]
+                [ MinHeight = @RowHDefault ]
             {
+                // PART_Selected carries the row Padding (NOT PART_Row) so its
+                // @SurfaceSelected fill spans the full row rect and covers the
+                // @Bg2 hover fill; the Padding insets only the content.
                 Border x:name="PART_Selected"
                     [ Fill = #00000000,
-                      CornerRadius = @RadiusMd ]
+                      CornerRadius = @RadiusMd,
+                      Padding = (@Space2,@Space1,@Space2,@Space1) ]
                 {
                     DockPanel x:name="PART_RowInner" [ LastChildFill = true ]
                     {

@@ -113,4 +113,30 @@ describe('Pragmatic ListBoxItem', () =>
         assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss), 'no #808080 under PragmaticDark');
         ControlHarness.Reset();
     });
+
+    test('selected fill covers the FULL row — same rect as the hover fill, not inset by padding', () =>
+    {
+        // Regression (whole-branch review, Important): PART_Selected must not
+        // sit inside PART_Border's Padding, or the @SurfaceSelected fill is
+        // inset from the row edges and doesn't cover the @Bg2 hover rect.
+        const { svg } = ControlHarness.Render(() =>
+        {
+            const it = new ListBoxItem();
+            it.Content = 'Row';
+            it.IsSelected = true;
+            it._setIsMouseOver(true);
+            return it;
+        }, { scheme: PragmaticLight });
+        const selected = ControlHarness.TokenCss('SurfaceSelected')!.replace(/[()]/g, '\\$&');  // rgb\(226,243,233\)
+        const hover = ControlHarness.TokenCss('Bg2')!.replace(/[()]/g, '\\$&');                 // rgb\(244,244,242\)
+        const selRect = svg.match(new RegExp(`<rect[^>]*fill="${selected}"\\s*/>`))![0];
+        const hoverRect = svg.match(new RegExp(`<rect[^>]*fill="${hover}"\\s*/>`))![0];
+        const selW = Number(selRect.match(/width="([\d.]+)"/)![1]);
+        const hoverW = Number(hoverRect.match(/width="([\d.]+)"/)![1]);
+        const selH = Number(selRect.match(/height="([\d.]+)"/)![1]);
+        const hoverH = Number(hoverRect.match(/height="([\d.]+)"/)![1]);
+        assert.equal(selW, hoverW, 'selected fill spans the full row width (matches hover)');
+        assert.equal(selH, hoverH, 'selected fill spans the full row height (matches hover)');
+        ControlHarness.Reset();
+    });
 });

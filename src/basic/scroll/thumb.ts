@@ -110,7 +110,7 @@ export class Thumb extends Element
         this.Focusable = true;
         this._border = new Border();
         // Fill tracks the active theme via DynamicResource —
-        // a theme switch re-resolves @OutlineVariant against the new
+        // a theme switch re-resolves @ControlTrack against the new
         // dictionary and re-paints without an imperative refresh.
         this._border.set_property_value(
             resolveKey(this._border, undefined, 'Fill'),

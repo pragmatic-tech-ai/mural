@@ -64,12 +64,15 @@ resources PragmaticListBox
             Border x:name="PART_Border"
                 [ Fill = #00000000,
                   CornerRadius = @RadiusMd,
-                  MinHeight = @RowHDefault,
-                  Padding = (@Space2,@Space1,@Space2,@Space1) ]
+                  MinHeight = @RowHDefault ]
             {
+                // PART_Selected carries the row Padding (NOT PART_Border) so
+                // its @SurfaceSelected fill spans the full row rect and covers
+                // the @Bg2 hover fill; the Padding insets only the content.
                 Border x:name="PART_Selected"
                     [ Fill = #00000000,
-                      CornerRadius = @RadiusMd ]
+                      CornerRadius = @RadiusMd,
+                      Padding = (@Space2,@Space1,@Space2,@Space1) ]
                 {
                     DockPanel [ LastChildFill = true ]
                     {
