@@ -2,7 +2,7 @@ import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { initTestApp } from '../../../basic/tests/test-app.js';
 
-import { Application, Color, Setter, Style, Element, Visual } from '../../../runtime/index.js';
+import { Color, Setter, Style, Element, Visual } from '../../../runtime/index.js';
 import { ListBox, ListBoxItem } from '../list-box.js';
 import { Border } from '../../../basic/border.js';
 import { ContentPresenter } from '../../../basic/templates/content-presenter.js';
@@ -237,34 +237,28 @@ describe('ListBox selection survives container recycle by data identity', () => 
             're-attach with no new invalidation must not replay anything');
     });
 
-    test('PART_Border.Fill clears on rebind to a non-selected item (chrome end-to-end)', async () => {
-        // The default ListBoxItem template's IsSelected trigger writes
-        // PART_Border.Fill = @SecondaryContainer. That's a
-        // DynamicResource lookup that needs SOME palette merged into
-        // Application.Resources — without it the trigger value
-        // resolves to undefined and the assertion below has nothing
-        // to snapshot. Register a Material palette for the same
-        // reason real demos do.
-        new Application();
-        const { SetTheme } = await import('../../../resources/material/index.js');
-        SetTheme('light');
+    test('PART_Selected.Fill clears on rebind to a non-selected item (chrome end-to-end)', () => {
+        // The default ListBoxItem template's IsSelected trigger writes Fill on
+        // PART_Selected (the opaque selection layer above PART_Border's hover
+        // surface) via DynamicResource, which needs a palette merged into
+        // Application.Resources — the Pragmatic harness palette (initTestApp)
+        // provides it, without which the trigger value resolves to undefined and
+        // there is nothing to snapshot.
+        initTestApp();
 
         const lb = new ListBox();
         lb.Items = ['A', 'B', 'C', 'D'];
         lb.SelectedItem = 'B';
 
         const containerB = lb.Generator.ContainerFromItem('B') as ListBoxItem;
-        // Resolve PART_Border via the template root's namescope.
-        // Default template wraps content in a PART_Border the
-        // IsSelected trigger writes Fill on.
+        // Resolve PART_Selected via the template root's namescope.
         const root = containerB.visualChildren[0]!;
-        const partBorder = root.FindName('PART_Border') as Border | undefined;
-        assert.ok(partBorder instanceof Border,
-            'PART_Border must be findable in the templated row');
-        // While selected, the IsSelected trigger writes the
-        // SecondaryContainer brush. Snapshot it so we can verify it
-        // clears after rebind.
-        const selectedBg = partBorder.Fill;
+        const partSelected = root.FindName('PART_Selected') as Border | undefined;
+        assert.ok(partSelected instanceof Border,
+            'PART_Selected must be findable in the templated row');
+        // While selected, the IsSelected trigger writes the @SurfaceSelected
+        // brush. Snapshot it so we can verify it clears after rebind.
+        const selectedBg = partSelected.Fill;
         assert.ok(selectedBg !== undefined,
             'selected row should have a non-undefined background from the trigger');
 
@@ -272,9 +266,10 @@ describe('ListBox selection survives container recycle by data identity', () => 
         const recycled = lb.Generator.ClaimRecycled() as ListBoxItem;
         lb.RebindContainerForItemOverride(recycled, 'D');
         assert.equal(recycled.IsSelected, false);
-        const partBorderAfter = recycled.visualChildren[0]!.FindName('PART_Border') as Border | undefined;
-        assert.ok(partBorderAfter instanceof Border);
-        assert.equal(partBorderAfter.Fill, undefined,
-            'after rebind to a non-selected item the chrome background should clear');
+        const partSelectedAfter = recycled.visualChildren[0]!.FindName('PART_Selected') as Border | undefined;
+        assert.ok(partSelectedAfter instanceof Border);
+        const clearedFill = partSelectedAfter.Fill;
+        assert.ok(clearedFill instanceof SolidColorBrush && clearedFill.Color.ToCss() === 'rgba(0,0,0,0)',
+            'after rebind to a non-selected item the selection layer reverts to its transparent base');
     });
 });

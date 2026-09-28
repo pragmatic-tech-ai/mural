@@ -21,7 +21,7 @@ import { ThemeManager, Color } from '../../runtime/index.js';
 import { SolidColorBrush } from '../../visual-engine/index.js';
 import { initTestApp } from './test-app.js';
 import { TextBox } from '../text-box.js';
-import { MaterialLight, MaterialDark } from '../../resources/material/material.js';
+import { PragmaticLight, PragmaticDark } from '../../resources/pragmatic/pragmatic.js';
 
 interface EditorLike { InvalidateVisual(): void }
 function editorOf(tb: TextBox): EditorLike
@@ -34,7 +34,7 @@ describe('TextBox — editor re-tints on a Foreground (scheme) change', () => {
 
     test('a scheme swap re-resolving @OnSurface invalidates the editor surface', () => {
         initTestApp();
-        ThemeManager.ActivateScheme(MaterialLight.name);
+        ThemeManager.ActivateScheme(PragmaticLight.name);
 
         const tb = new TextBox();
         tb.Text = 'hello';
@@ -46,17 +46,17 @@ describe('TextBox — editor re-tints on a Foreground (scheme) change', () => {
 
         // Swap to dark → Style[TextBox] @OnSurface DynamicResource updates
         // tb.Foreground → fix forwards to editor.InvalidateVisual.
-        ThemeManager.ActivateScheme(MaterialDark.name);
+        ThemeManager.ActivateScheme(PragmaticDark.name);
         assert.ok(invalidated > 0, 'editor invalidated on scheme swap (dark)');
 
         invalidated = 0;
-        ThemeManager.ActivateScheme(MaterialLight.name);
+        ThemeManager.ActivateScheme(PragmaticLight.name);
         assert.ok(invalidated > 0, 'editor invalidated on scheme swap (light)');
     });
 
     test('a direct Foreground write also invalidates the editor', () => {
         initTestApp();
-        ThemeManager.ActivateScheme(MaterialLight.name);
+        ThemeManager.ActivateScheme(PragmaticLight.name);
 
         const tb = new TextBox();
         tb.Text = 'x';

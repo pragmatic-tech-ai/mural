@@ -5,7 +5,7 @@ import { SolidColorBrush } from '../../../visual-engine/index.js';
 import { ApplicationSettings } from '../../shell/services/application-settings-service.js';
 import { DiagramSettings, DiagramSettingKey, SidePortsOptimizer } from '../diagram-settings.js';
 import { SettingKind } from '../../shell/settings/setting-definition.js';
-import { Material, MaterialLight, MaterialDark } from '../../../resources/material/material.js';
+import { Pragmatic, PragmaticLight, PragmaticDark } from '../../../resources/pragmatic/pragmatic.js';
 
 // Build an Application with ApplicationSettings registered at the ROOT — the
 // same shape Plexus / EditorShell produce, and where the static helper resolves
@@ -240,24 +240,24 @@ describe('DiagramSettings', () => {
     // in light mode). The hook routes activation into the same change signal.
     test('Subscribe fires on a scheme swap so theme-linked colours repaint', () => {
         new Application();                                   // constructor sets Application.current
-        if (ThemeManager.GetTheme(Material.instance.name) === undefined)
+        if (ThemeManager.GetTheme(Pragmatic.instance.name) === undefined)
         {
-            ThemeManager.RegisterTheme(Material.instance);
+            ThemeManager.RegisterTheme(Pragmatic.instance);
         }
-        ThemeManager.ActivateTheme(Material.instance.name, { scheme: MaterialLight.name });
+        ThemeManager.ActivateTheme(Pragmatic.instance.name, { scheme: PragmaticLight.name });
 
         let fired = 0;
         const unsub = DiagramSettings.Subscribe(() => { fired++; });
-        ThemeManager.ActivateScheme(MaterialDark.name);
+        ThemeManager.ActivateScheme(PragmaticDark.name);
         assert.ok(fired >= 1, 'Subscribe notified on scheme swap (light → dark)');
 
         fired = 0;
-        ThemeManager.ActivateScheme(MaterialLight.name);
+        ThemeManager.ActivateScheme(PragmaticLight.name);
         assert.ok(fired >= 1, 'Subscribe notified on scheme swap (dark → light)');
 
         unsub();
         fired = 0;
-        ThemeManager.ActivateScheme(MaterialDark.name);
+        ThemeManager.ActivateScheme(PragmaticDark.name);
         assert.equal(fired, 0, 'no notification after unsubscribe');
     });
 });

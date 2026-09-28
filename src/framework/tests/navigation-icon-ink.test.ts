@@ -6,8 +6,8 @@
 // render-time default, which freezes on the scheme active at first paint
 // (washed-out icons after a light/dark swap). The fix sets a reactive
 // TextBlock.Foreground on the NavigationItem Style (DynamicResource), so
-// the slotted icon inherits @OnSurfaceVariant at rest and
-// @OnSecondaryContainer on the active pill — the M3 icon roles.
+// the slotted icon inherits @Fg2 at rest and
+// @BrandGreenInk on the active pill — the Pragmatic icon roles.
 
 import { describe, test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -19,7 +19,7 @@ import { Border } from '../../basic/border.js';
 import { TextBlock } from '../../basic/text-block.js';
 import { NavigationItem } from '../navigation/navigation-item.js';
 import { initTestApp } from '../../basic/tests/test-app.js';
-import { MaterialLight } from '../../resources/material/material.js';
+import { PragmaticLight } from '../../resources/pragmatic/pragmatic.js';
 
 function harness(): { renderer: SvgRenderer; surface: SVGSVGElement }
 {
@@ -46,9 +46,9 @@ function iconFill(surface: SVGSVGElement): string | null
 
 describe('NavigationItem — slotted icon takes reactive themed ink', () => {
 
-    test('unselected icon = @OnSurfaceVariant, selected = @OnSecondaryContainer', () => {
+    test('unselected icon = @Fg2, selected = @BrandGreenInk', () => {
         const app = initTestApp();
-        ThemeManager.ActivateScheme(MaterialLight.name);
+        ThemeManager.ActivateScheme(PragmaticLight.name);
 
         const item = new NavigationItem();
         item.Icon = new TextBlock('animation');
@@ -63,16 +63,16 @@ describe('NavigationItem — slotted icon takes reactive themed ink', () => {
         };
 
         paint();
-        assert.equal(iconFill(surface), tokenCss(app, 'OnSurfaceVariant'),
-            'resting icon inherits @OnSurfaceVariant from the item');
+        assert.equal(iconFill(surface), tokenCss(app, 'Fg2'),
+            'resting icon inherits @Fg2 from the item');
 
         item.IsSelected = true;
         paint();
-        assert.equal(iconFill(surface), tokenCss(app, 'OnSecondaryContainer'),
-            'selected icon inherits @OnSecondaryContainer');
+        assert.equal(iconFill(surface), tokenCss(app, 'BrandGreenInk'),
+            'selected icon inherits @BrandGreenInk');
 
-        // Not the non-reactive @OnSurface fallback (the pre-fix behaviour).
-        assert.notEqual(iconFill(surface), tokenCss(app, 'OnSurface'),
-            'icon ink is themed, not the render-time @OnSurface fallback');
+        // Not the non-reactive @Fg1 default ink (the pre-fix behaviour).
+        assert.notEqual(iconFill(surface), tokenCss(app, 'Fg1'),
+            'icon ink is themed, not the render-time @Fg1 default ink');
     });
 });

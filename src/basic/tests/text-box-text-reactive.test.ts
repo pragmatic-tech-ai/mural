@@ -16,7 +16,7 @@ import assert from 'node:assert/strict';
 import { ThemeManager } from '../../runtime/index.js';
 import { initTestApp } from './test-app.js';
 import { TextBox } from '../text-box.js';
-import { MaterialLight } from '../../resources/material/material.js';
+import { PragmaticLight } from '../../resources/pragmatic/pragmatic.js';
 
 interface EditorLike { InvalidateVisual(): void }
 function editorOf(tb: TextBox): EditorLike
@@ -29,7 +29,7 @@ describe('TextBox — editor repaints on a binding / VM-driven Text change', () 
 
     test('a raw set_property_value on TextKey (the binding path) invalidates the editor', () => {
         initTestApp();
-        ThemeManager.ActivateScheme(MaterialLight.name);
+        ThemeManager.ActivateScheme(PragmaticLight.name);
 
         const tb = new TextBox();
         tb.Text = 'hello';
