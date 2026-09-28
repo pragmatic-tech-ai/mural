@@ -41,4 +41,5 @@ resources PragmaticControls
     import PragmaticRibbons from "../../framework/pragmatic/ribbon/ribbon.template.mu.js"
     import PragmaticPickers from "../../framework/pragmatic/pickers/pickers.template.mu.js"
     import PragmaticCarousels from "../../framework/pragmatic/carousel/carousel.template.mu.js"
+    import PragmaticThemeSelectors from "../../framework/pragmatic/theme-selector/theme-selector.template.mu.js"
 }
