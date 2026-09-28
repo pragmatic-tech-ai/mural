@@ -1,6 +1,6 @@
 {
   "name": "@pragmatic-tech-ai/mural",
-  "version": "0.55.18",
+  "version": "0.56.0",
   "description": "WPF-style visual tree, property system, and 2D drawing primitives for TypeScript",
   "type": "module",
   "main": "dist/index.js",
@@ -46,6 +46,13 @@
       "import": {
         "development": "./src/resources/material/index.ts",
         "default": "./dist/resources/material/index.js"
+      }
+    },
+    "./resources/pragmatic": {
+      "types": "./dist/resources/pragmatic/index.d.ts",
+      "import": {
+        "development": "./src/resources/pragmatic/index.ts",
+        "default": "./dist/resources/pragmatic/index.js"
       }
     },
     "./framework/*.js": {
