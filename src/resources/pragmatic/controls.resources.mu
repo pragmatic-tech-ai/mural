@@ -31,4 +31,11 @@ resources PragmaticControls
     import PragmaticNotifications from "../../framework/pragmatic/notifications/notifications.template.mu.js"
     import PragmaticMenus from "../../framework/pragmatic/menu/menu.template.mu.js"
     import PragmaticSplitButton from "../../framework/pragmatic/button-groups/split-button.template.mu.js"
+    import PragmaticTopAppBar from "../../framework/pragmatic/top-app-bar/top-app-bar.template.mu.js"
+    import PragmaticBottomAppBar from "../../framework/pragmatic/bottom-app-bar/bottom-app-bar.template.mu.js"
+    import PragmaticStatusBars from "../../framework/pragmatic/status-bar/status-bar.template.mu.js"
+    import PragmaticSearchBar from "../../framework/pragmatic/search-bar/search-bar.template.mu.js"
+    import PragmaticNavigation from "../../framework/pragmatic/navigation/navigation.template.mu.js"
+    import PragmaticToolBars from "../../framework/pragmatic/tool-bar/tool-bar.template.mu.js"
+    import PragmaticShells from "../../framework/pragmatic/shell/shell.template.mu.js"
 }
