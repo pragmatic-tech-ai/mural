@@ -336,10 +336,16 @@ scheme MaterialLight against Material {
     // intra-scheme aliasing syntax exists in this file format).
     @Ink = #1C1B1F        // = @OnSurface
     @AccentInk = #6750A4  // = @Primary
+    @AccentInkOn = #FFFFFF  // = @OnPrimary
     // Scroll/splitter chrome bridge (see thumb.ts / splitter.ts): the
     // Thumb-derived primitives resolve these theme-agnostic keys instead
     // of hardcoded M3 names. Material aliases its own values so it stays
     // byte-identical.
     @ControlTrack = #CAC4D0   // = @OutlineVariant (Thumb/Splitter/GridSplitter rest)
     @ControlActive = #6750A4  // = @Primary (Splitter hover/drag + drag-preview)
+    // Wave 5: theme-agnostic aliases (literal copies of the M3 backing
+    // tokens — same value, so Material output is unchanged).
+    @RowHoverFill = #1C1B1F14 // = @StateHoverOverlay
+    @InkVariant = #49454F     // = @OnSurfaceVariant
+    @SurfaceBg = #FFFBFE      // = @Surface
 }

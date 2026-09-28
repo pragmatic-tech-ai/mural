@@ -176,32 +176,32 @@ describe('DiagramSettings', () => {
 
     test('theme-linked colours resolve the active scheme token when unoverridden', () => {
         appWithScheme({
-            OnSurface:        '#112233',
-            OnSurfaceVariant: '#445566',
-            Surface:          '#778899',
-            Primary:          '#aabbcc',
+            Ink:        '#112233',
+            InkVariant: '#445566',
+            SurfaceBg:          '#778899',
+            AccentInk:          '#aabbcc',
         });
         const hex = (b: SolidColorBrush): string => b.Color.ToHex().toLowerCase();
         assert.equal(hex(DiagramSettings.ShapeLabelInk()),          '#112233');
         assert.equal(hex(DiagramSettings.ConnectorDefaultStroke()), '#445566');
         assert.equal(hex(DiagramSettings.RulerFill()),              '#778899');
         assert.equal(hex(DiagramSettings.RulerTickColor()),         '#445566');
-        // Ruler hover is a Primary WASH — the token re-tinted to α=41 (#29).
+        // Ruler hover is a AccentInk WASH — the token re-tinted to α=41 (#29).
         assert.equal(hex(DiagramSettings.RulerHoverFill()),         '#aabbcc29');
     });
 
     test('a theme-linked colour re-resolves after the scheme token changes', () => {
-        const app = appWithScheme({ OnSurface: '#111111' });
+        const app = appWithScheme({ Ink: '#111111' });
         assert.equal(DiagramSettings.ShapeLabelInk().Color.ToHex().toLowerCase(), '#111111');
         // Swap the token (a scheme swap merges a new dict last-added-wins).
         const dark = new ResourceDictionary();
-        dark.Set('OnSurface', new SolidColorBrush(Color.FromHex('#eeeeee')));
+        dark.Set('Ink', new SolidColorBrush(Color.FromHex('#eeeeee')));
         app.Resources.AddMergedDictionary(dark);
         assert.equal(DiagramSettings.ShapeLabelInk().Color.ToHex().toLowerCase(), '#eeeeee');
     });
 
     test('with a settings host but no override, a theme-linked colour still resolves the scheme token', () => {
-        const app = appWithScheme({ OnSurface: '#123456' });
+        const app = appWithScheme({ Ink: '#123456' });
         app.Services.register(ApplicationSettings.Key, p => new ApplicationSettings(p));
         // Reading binds + contributes the definitions (seeding an UNDEFINED
         // default for the linked key), yet the accessor derives from the theme.
@@ -209,7 +209,7 @@ describe('DiagramSettings', () => {
     });
 
     test('a user override wins over the theme-linked default', () => {
-        const app = appWithScheme({ OnSurface: '#123456' });
+        const app = appWithScheme({ Ink: '#123456' });
         app.Services.register(ApplicationSettings.Key, p => new ApplicationSettings(p));
         const settings = app.Services.getRequired(ApplicationSettings.Key);
         DiagramSettings.ShapeLabelInk();                 // bind + contribute
@@ -234,9 +234,9 @@ describe('DiagramSettings', () => {
     });
 
     // Regression: a light/dark scheme swap changes the tokens the theme-linked
-    // colours resolve against (RulerFill = @Surface, …) but touches no Setting,
+    // colours resolve against (RulerFill = @SurfaceBg, …) but touches no Setting,
     // so without the ThemeManager hook Subscribe stayed silent and the rulers
-    // kept the previous scheme's colours (a dark @Surface reads as a black strip
+    // kept the previous scheme's colours (a dark @SurfaceBg reads as a black strip
     // in light mode). The hook routes activation into the same change signal.
     test('Subscribe fires on a scheme swap so theme-linked colours repaint', () => {
         new Application();                                   // constructor sets Application.current

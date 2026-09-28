@@ -142,9 +142,9 @@ export class DatePicker extends TemplatedControl
         // FirstColumn offsets the first cell into the right column.
         grid.FirstColumn = new Date(year, mon, 1).getDay();
 
-        const primary          = this.brush('Primary',          new SolidColorBrush(new Color(103, 80, 164, 255)));
-        const onPrimary        = this.brush('OnPrimary',        new SolidColorBrush(new Color(255, 255, 255, 255)));
-        const onSurface        = this.brush('OnSurface',        new SolidColorBrush(new Color(28, 27, 31, 255)));
+        const primary          = this.brush('AccentInk',          new SolidColorBrush(new Color(103, 80, 164, 255)));
+        const onPrimary        = this.brush('AccentInkOn',        new SolidColorBrush(new Color(255, 255, 255, 255)));
+        const onSurface        = this.brush('Ink',        new SolidColorBrush(new Color(28, 27, 31, 255)));
         const total = daysInMonth(year, mon);
 
         for (let day = 1; day <= total; day++)
