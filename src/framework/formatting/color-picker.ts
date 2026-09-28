@@ -144,7 +144,7 @@ function wireSwatchHover(
 ): () => void
 {
     const restStroke = sw.Stroke;   // the pen carries its own width now
-    const accent = (Application.current?.Resources.Resolve('Primary') as Brush | undefined)
+    const accent = (Application.current?.Resources.Resolve('AccentInk') as Brush | undefined)
         ?? ACCENT_BORDER;
 
     const clear = (): void => {
@@ -730,7 +730,7 @@ export class ColorPicker extends TemplatedControl
         // use. Resolved once off the active theme (stable while the gallery
         // is open); each row tints its Fill on IsMouseOver and clears
         // it on leave, giving the same hover feedback as a MenuItem.
-        const hover = Application.current?.Resources.Resolve('StateHoverOverlay') as Brush | undefined;
+        const hover = Application.current?.Resources.Resolve('RowHoverFill') as Brush | undefined;
         for (const scheme of OFFICE_COLOR_SCHEMES)
         {
             const row = new ClickableBorder();
