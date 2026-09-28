@@ -119,7 +119,7 @@ export class ThemeSelector extends ContentControl
         // direct ThemeManager calls) keep the picker honest.
         this.syncFromThemeManager();
         ThemeManager.AddActivatedListener(this._onThemeActivated);
-        // Re-apply a persisted custom / scheme choice (no-op without an
+        // Re-apply a persisted scheme choice (no-op without an
         // ApplicationSettings service or a saved value).
         this.restorePersistedOnce();
     }
