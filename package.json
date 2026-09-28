@@ -48,6 +48,13 @@
         "default": "./dist/resources/material/index.js"
       }
     },
+    "./resources/pragmatic": {
+      "types": "./dist/resources/pragmatic/index.d.ts",
+      "import": {
+        "development": "./src/resources/pragmatic/index.ts",
+        "default": "./dist/resources/pragmatic/index.js"
+      }
+    },
     "./framework/*.js": {
       "types": "./dist/framework/*.d.ts",
       "import": {
