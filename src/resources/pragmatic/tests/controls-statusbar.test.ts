@@ -1,5 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
+import { SolidColorBrush } from '../../../visual-engine/index.js';
 import { StatusBar, StatusBarItem, StatusBarSeparator } from '../../../framework/status-bar/status-bar.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
 import { MaterialLight } from '../../material/material.js';
@@ -37,6 +38,19 @@ describe('Pragmatic StatusBar family', () =>
         assert.equal(ControlHarness.TokenCss('Bg1'), 'rgb(255,255,255)', '@Bg1 strip fill resolves');
         assert.equal(ControlHarness.TokenCss('Border'), 'rgb(233,232,228)', '@Border top-rule/separator resolves');
         assert.notEqual(ControlHarness.TokenCss('Bg1'), ControlHarness.NeutralFallbackCss, 'not the grey fallback');
+        ControlHarness.Reset();
+    });
+
+    test('StatusBarSeparator LineBrush references @Border directly (reachable — its ctor applies the default style)', () =>
+    {
+        // StatusBarSeparator has no Template; its ctor calls applyDefaultStyle,
+        // so LineBrush is reachable headless (same as ToolBarSeparator). Assert
+        // the fork REFERENCES @Border, not just that @Border resolves in the
+        // table — a regression to @OutlineVariant/@BorderStrong would pass a
+        // token-value proxy but fail this identity-of-value check.
+        ControlHarness.Activate(PragmaticLight);
+        const sep = new StatusBarSeparator();
+        assert.equal((sep.LineBrush as SolidColorBrush).Color.ToCss(), ControlHarness.TokenCss('Border'), 'separator line is @Border');
         ControlHarness.Reset();
     });
 
