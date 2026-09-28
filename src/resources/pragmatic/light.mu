@@ -143,4 +143,9 @@ scheme PragmaticLight against Pragmatic
     // Thumb-derived primitives resolve these theme-agnostic keys.
     @ControlTrack = #D6D5D0   // = @BorderStrong (Thumb/Splitter/GridSplitter rest)
     @ControlActive = #22824D  // = @ControlAccent (Splitter hover/drag + drag-preview)
+    // Wave 5: theme-agnostic aliases for code-level colour resolution
+    // (color-picker.ts row hover; diagram-settings.ts THEME_LINK).
+    @RowHoverFill = #F4F4F2   // = @Bg2 (menu/scheme-row hover)
+    @InkVariant = #5F5C56     // = @Fg2 (diagram ruler tick / connector stroke)
+    @SurfaceBg = #FFFFFF      // = @Bg1 (diagram ruler / backdrop fill)
 }

@@ -342,4 +342,9 @@ scheme MaterialLight against Material {
     // byte-identical.
     @ControlTrack = #CAC4D0   // = @OutlineVariant (Thumb/Splitter/GridSplitter rest)
     @ControlActive = #6750A4  // = @Primary (Splitter hover/drag + drag-preview)
+    // Wave 5: theme-agnostic aliases (literal copies of the M3 backing
+    // tokens — same value, so Material output is unchanged).
+    @RowHoverFill = #1C1B1F14 // = @StateHoverOverlay
+    @InkVariant = #49454F     // = @OnSurfaceVariant
+    @SurfaceBg = #FFFBFE      // = @Surface
 }

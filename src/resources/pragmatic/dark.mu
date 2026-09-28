@@ -143,4 +143,8 @@ scheme PragmaticDark against Pragmatic
     // Scroll/splitter chrome bridge (see thumb.ts / splitter.ts).
     @ControlTrack = #3D3B36   // = @BorderStrong
     @ControlActive = #2EA862  // = @ControlAccent
+    // Wave 5: theme-agnostic aliases (see light.mu).
+    @RowHoverFill = #22211E   // = @Bg2
+    @InkVariant = #B5B3AC     // = @Fg2
+    @SurfaceBg = #141312      // = @Bg1
 }

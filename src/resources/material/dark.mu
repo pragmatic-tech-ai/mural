@@ -294,4 +294,8 @@ scheme MaterialDark against Material {
     // Scroll/splitter chrome bridge (see thumb.ts / splitter.ts).
     @ControlTrack = #49454F   // = @OutlineVariant
     @ControlActive = #D0BCFF  // = @Primary
+    // Wave 5: theme-agnostic aliases (see material/light.mu).
+    @RowHoverFill = #E6E1E514 // = @StateHoverOverlay
+    @InkVariant = #CAC4D0     // = @OnSurfaceVariant
+    @SurfaceBg = #1C1B1F      // = @Surface
 }
