@@ -348,15 +348,15 @@ const CHOICE_DEFAULTS: ReadonlyMap<DiagramSettingKey, string> =
 interface ThemeLink { readonly token: string; readonly alpha?: number; }
 
 const THEME_LINK: ReadonlyMap<DiagramSettingKey, ThemeLink> = new Map<DiagramSettingKey, ThemeLink>([
-    [DiagramSettingKey.ShapeLabelInk,          { token: 'OnSurface' }],
-    [DiagramSettingKey.ConnectorDefaultStroke, { token: 'OnSurfaceVariant' }],
-    [DiagramSettingKey.ContainerDefaultFill,   { token: 'Primary', alpha: 28 }], // ≈ 11% brand wash
-    [DiagramSettingKey.RulerFill,              { token: 'Surface' }],
-    [DiagramSettingKey.RulerTickColor,         { token: 'OnSurfaceVariant' }],
-    [DiagramSettingKey.RulerHoverFill,         { token: 'Primary', alpha: 41 }], // ≈ 16%
-    [DiagramSettingKey.ChromeLayoutPreviewBackdrop, { token: 'Surface' }],       // opaque — hides the live diagram
-    [DiagramSettingKey.ChromeLayoutPreviewNodeFill, { token: 'Primary', alpha: 61 }], // ≈ 24% brand wash
-    [DiagramSettingKey.ChromeLayoutPreviewStroke,   { token: 'Primary' }],
+    [DiagramSettingKey.ShapeLabelInk,          { token: 'Ink' }],
+    [DiagramSettingKey.ConnectorDefaultStroke, { token: 'InkVariant' }],
+    [DiagramSettingKey.ContainerDefaultFill,   { token: 'AccentInk', alpha: 28 }], // ≈ 11% brand wash
+    [DiagramSettingKey.RulerFill,              { token: 'SurfaceBg' }],
+    [DiagramSettingKey.RulerTickColor,         { token: 'InkVariant' }],
+    [DiagramSettingKey.RulerHoverFill,         { token: 'AccentInk', alpha: 41 }], // ≈ 16%
+    [DiagramSettingKey.ChromeLayoutPreviewBackdrop, { token: 'SurfaceBg' }],       // opaque — hides the live diagram
+    [DiagramSettingKey.ChromeLayoutPreviewNodeFill, { token: 'AccentInk', alpha: 61 }], // ≈ 24% brand wash
+    [DiagramSettingKey.ChromeLayoutPreviewStroke,   { token: 'AccentInk' }],
 ]);
 
 // Every catalogued key, numeric + colour + choice — the change-listener wiring
