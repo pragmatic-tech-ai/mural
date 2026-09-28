@@ -25,11 +25,11 @@ describe('Pragmatic ThemeSelector', () =>
         ControlHarness.Reset();
     });
 
-    test('icon glyph foreground resolves @Fg2 (no grey)', () =>
+    test('renders with no grey fallback (icon glyphs resolve @Fg2)', () =>
     {
-        ControlHarness.Activate(PragmaticLight);
-        assert.equal(ControlHarness.TokenCss('Fg2'), 'rgb(95,92,86)', '@Fg2 resolves for the icon glyphs');
-        assert.notEqual(ControlHarness.TokenCss('Fg2'), ControlHarness.NeutralFallbackCss, 'not the grey fallback');
+        const { svg } = ControlHarness.Render(() => new ThemeSelector(), { scheme: PragmaticLight });
+        assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss), 'no #808080 — every ThemeSelector token resolves');
+        assert.ok(svg.includes(`fill="${ControlHarness.TokenCss('Fg2')}"`), 'icon glyphs paint @Fg2');
         ControlHarness.Reset();
     });
 });

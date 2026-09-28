@@ -94,4 +94,13 @@ describe('Pragmatic Formatting editors — chrome', () =>
         assert.equal((chevron.Fill as SolidColorBrush).Color.ToCss(), ControlHarness.TokenCss('Fg2'), 'ColorPicker chevron @Fg2');
         ControlHarness.Reset();
     });
+
+    test('FillEditor section header ink is @Fg1 (reachable static part)', () =>
+    {
+        ControlHarness.Activate(PragmaticLight);
+        const fe = new FillEditor();
+        const header = fe.GetTemplateChild('PART_Header') as { Foreground?: SolidColorBrush };
+        assert.equal((header.Foreground as SolidColorBrush).Color.ToCss(), ControlHarness.TokenCss('Fg1'), 'FillEditor header ink @Fg1');
+        ControlHarness.Reset();
+    });
 });
