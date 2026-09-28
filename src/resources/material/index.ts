@@ -13,9 +13,3 @@ export {
     ToggleTheme,
     MaterialThemeName,
 } from './material.js';
-export {
-    DynamicSchemeVariant,
-    makeDynamicScheme,
-    makeDynamicLightDarkPair,
-    type DynamicSchemeOptions,
-} from './dynamic-scheme.js';

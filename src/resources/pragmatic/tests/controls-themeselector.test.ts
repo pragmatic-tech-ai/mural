@@ -8,8 +8,9 @@ import { ControlHarness } from './control-harness.js';
 // Wave 5 Task 5 — ThemeSelector fork (resources PragmaticThemeSelectors).
 // Retokenize only: icon glyphs @LabelLarge->@UiLabel, @OnSurfaceVariant->@Fg2.
 // The two inner ComboBoxes inherit the already-forked PragmaticComboBox. The
-// spec's Custom-seed / makeDynamicScheme retirement is a .ts feature removal
-// (decoupled from this template) and is deferred as a user-facing decision.
+// spec's Custom-seed / makeDynamicScheme retirement is now complete (Phase 3
+// sub-project 1: dynamic-scheme.ts deleted, the selector offers built-in
+// schemes only — see framework/theme-selector/tests/theme-selector.test.ts).
 describe('Pragmatic ThemeSelector', () =>
 {
     test('resolves the Pragmatic style; Material unaffected', () =>
