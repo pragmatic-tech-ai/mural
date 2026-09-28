@@ -38,4 +38,5 @@ resources PragmaticControls
     import PragmaticNavigation from "../../framework/pragmatic/navigation/navigation.template.mu.js"
     import PragmaticToolBars from "../../framework/pragmatic/tool-bar/tool-bar.template.mu.js"
     import PragmaticShells from "../../framework/pragmatic/shell/shell.template.mu.js"
+    import PragmaticRibbons from "../../framework/pragmatic/ribbon/ribbon.template.mu.js"
 }
