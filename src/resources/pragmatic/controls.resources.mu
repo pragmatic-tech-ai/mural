@@ -43,4 +43,5 @@ resources PragmaticControls
     import PragmaticCarousels from "../../framework/pragmatic/carousel/carousel.template.mu.js"
     import PragmaticThemeSelectors from "../../framework/pragmatic/theme-selector/theme-selector.template.mu.js"
     import PragmaticFormatting from "../../framework/pragmatic/formatting/formatting.template.mu.js"
+    import PragmaticDiagrams from "../../framework/pragmatic/diagram/diagram.template.mu.js"
 }
