@@ -1,11 +1,11 @@
 import { Application, ThemeManager } from '../../runtime/index.js';
-import { Material, MaterialLight } from '../../resources/material/material.js';
+import { Pragmatic, PragmaticLight } from '../../resources/pragmatic/pragmatic.js';
 
-// Test fixture — spins up an Application with Material activated.
+// Test fixture — spins up an Application with Pragmatic activated.
 //
 // Use this in tests that construct controls. Controls read their
 // default templates from the active theme's dictionaries, so a test
-// that doesn't activate Material gets
+// that doesn't activate the theme gets
 // `Application.ResolveDefaultResource(MyClass) === undefined` and
 // `defaultTemplate(MyClass)` throws.
 //
@@ -34,13 +34,13 @@ export function initTestApp(): Application
     {
         // Idempotent re-registration in case some prior test reset
         // ThemeManager via `_resetForTesting()`.
-        if (ThemeManager.GetTheme(Material.instance.name) === undefined)
+        if (ThemeManager.GetTheme(Pragmatic.instance.name) === undefined)
         {
-            ThemeManager.RegisterTheme(Material.instance);
+            ThemeManager.RegisterTheme(Pragmatic.instance);
         }
-        Application.RegisterDefaultTheme(Material);
+        Application.RegisterDefaultTheme(Pragmatic);
         _sharedApp = new Application();
-        _sharedApp.initialize({ theme: Material, scheme: MaterialLight });
+        _sharedApp.initialize({ theme: Pragmatic, scheme: PragmaticLight });
     }
     Application.current = _sharedApp;
     return _sharedApp;
