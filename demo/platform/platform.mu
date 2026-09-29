@@ -23,8 +23,8 @@ import DemoGroupService from "./demo-group-service.mjs"
 import DemoVM from "./demo-group-service.mjs"
 import DemoPlatformIcons from "./demo-platform-icons.mu.js"
 import EditorShell from "@pragmatic-tech-ai/mural/framework/shell/editor-shell.js"
-import Material from "@pragmatic-tech-ai/mural/resources/material"
-import MaterialLight from "@pragmatic-tech-ai/mural/resources/material"
+import Pragmatic from "@pragmatic-tech-ai/mural/resources/pragmatic"
+import PragmaticLight from "@pragmatic-tech-ai/mural/resources/pragmatic"
 
 // Persistence backend for the framework's DiagramStorageKey — resolved by the
 // Diagrammer / Commands demos through DI. (DiagramStorageKey is a default compiler
@@ -44,7 +44,7 @@ import PatternsModule from "./groups/patterns.module.mu.js"
 import StylesModule from "./groups/styles.module.mu.js"
 import ShapeLibraryModule from "./groups/shape-library.module.mu.js"
 
-Application [ Theme = Material, Scheme = MaterialLight ] {
+Application [ Theme = Pragmatic, Scheme = PragmaticLight ] {
     .services: {
         // Persistence backend, bound to the framework's DiagramStorageKey token.
         DemoStorageStore -> DiagramStorageKey

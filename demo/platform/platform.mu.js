@@ -13,12 +13,12 @@ import { DiagramStorageKey } from "@pragmatic-tech-ai/mural/framework/diagram/di
 import { ListBox } from "@pragmatic-tech-ai/mural/framework/list/list-box.js";
 import { EditorShell } from "@pragmatic-tech-ai/mural/framework/shell/editor-shell.js";
 import { ContentHostService } from "@pragmatic-tech-ai/mural/framework/shell/services/content-host-service.js";
-import { Material, MaterialLight } from "@pragmatic-tech-ai/mural/resources/material";
+import { Pragmatic, PragmaticLight } from "@pragmatic-tech-ai/mural/resources/pragmatic";
 import { Application, DataContextBinding, NameScope, ServiceProvider, Thickness } from "@pragmatic-tech-ai/mural/runtime";
 
 export const app = (() => {
     const _app0 = new Application();
-    _app0.initialize({ theme: Material, scheme: MaterialLight });
+    _app0.initialize({ theme: Pragmatic, scheme: PragmaticLight });
     _app0.Services.register(ServiceProvider.tokenFor(DiagramStorageKey), (p) => new DemoStorageStore(p), 'singleton');
     _app0.Services.register(ServiceProvider.tokenFor(ContentHostService), (p) => new ContentHostService(p), 'singleton');
     _app0.AddModule(AnimationsModule);

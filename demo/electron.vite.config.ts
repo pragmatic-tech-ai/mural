@@ -24,6 +24,7 @@ export default defineConfig({
         { find: '@pragmatic-tech-ai/mural/basic', replacement: repo('dist/basic/index.js') },
         { find: '@pragmatic-tech-ai/mural/framework', replacement: repo('dist/framework/index.js') },
         { find: '@pragmatic-tech-ai/mural/resources/material', replacement: repo('dist/resources/material/index.js') },
+        { find: '@pragmatic-tech-ai/mural/resources/pragmatic', replacement: repo('dist/resources/pragmatic/index.js') },
         { find: '@pragmatic-tech-ai/mural/visual-engine', replacement: repo('dist/visual-engine/index.js') },
         { find: /^@pragmatic-tech-ai\/todl-runtime$/, replacement: repo('node_modules/@pragmatic-tech-ai/todl-runtime/dist/index.js') },
       ],

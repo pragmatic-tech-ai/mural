@@ -1,7 +1,7 @@
 import { app } from '../../platform/platform.mu.js'
 import { HtmlTarget } from '@pragmatic-tech-ai/mural/visual-engine'
 import { ThemeManager, Density } from '@pragmatic-tech-ai/mural/runtime'
-import { Material, MaterialLight, MaterialDark } from '@pragmatic-tech-ai/mural/resources/material'
+import { Pragmatic, PragmaticLight, PragmaticDark } from '@pragmatic-tech-ai/mural/resources/pragmatic'
 
 // Expose the initialized Application for the Playwright smoke to assert module
 // composition end-to-end in the real renderer.
@@ -9,7 +9,7 @@ import { Material, MaterialLight, MaterialDark } from '@pragmatic-tech-ai/mural/
 
 const status = document.getElementById('status') as HTMLPreElement
 
-app.initialize({ theme: Material, autoScheme: { light: MaterialLight, dark: MaterialDark } })
+app.initialize({ theme: Pragmatic, autoScheme: { light: PragmaticLight, dark: PragmaticDark } })
 ThemeManager.Density = Density.Compact
 
 async function mount(): Promise<void>
