@@ -19,22 +19,22 @@ resources Formatting {
         // Without it the outlined border stretched full-width while the
         // swatch/label/chevron clustered on the left.
         ClickableBorder x:name="PART_SelectionTrigger"
-            [ Fill          = @Surface,
-              Stroke         = Pen [ Brush = @Outline ],
-              CornerRadius        = @ShapeExtraSmall,
+            [ Fill          = @Bg1,
+              Stroke         = Pen [ Brush = @BorderStrong ],
+              CornerRadius        = @RadiusSm,
               HorizontalAlignment = Left,
-              Padding             = (@Spacing3,@Spacing2,@Spacing3,@Spacing2) ] {
+              Padding             = (@Space3,@Space2,@Space3,@Space2) ] {
             StackPanel [ Orientation = Horizontal, HorizontalAlignment = Left ] {
                 Border
                     [ Width           = 22,
                       Height          = 18,
                       CornerRadius    = 3,
-                      Stroke     = Pen [ Brush = @OutlineVariant ],
-                      Margin          = (0,0,@Spacing3,0),
+                      Stroke     = Pen [ Brush = @Border ],
+                      Margin          = (0,0,@Space3,0),
                       Fill      = $$SwatchBrush ]
                 Shape x:name="PART_Chevron"
                     [ Geometry          = @ChevronDown,
-                      Fill              = @OnSurfaceVariant,
+                      Fill              = @Fg2,
                       Width             = 10,
                       Height            = 10,
                       VerticalAlignment = Center ]
@@ -42,24 +42,24 @@ resources Formatting {
         }
 
         when ( PART_SelectionTrigger.IsMouseOver ) {
-            PART_SelectionTrigger.Fill = @StateHoverOverlay;
+            PART_SelectionTrigger.Fill = @Bg2;
         }
         when ( PART_SelectionTrigger.IsPressed ) {
-            PART_SelectionTrigger.Fill = @StatePressOverlay;
+            PART_SelectionTrigger.Fill = @Bg3;
         }
-        when ( IsDropDownOpen ) { PART_SelectionTrigger.Stroke = Pen [ Brush = @Primary ]; }
+        when ( IsDropDownOpen ) { PART_SelectionTrigger.Stroke = Pen [ Brush = @ControlAccent ]; }
 
         // Density ladder — same Padding shape the TextBox / SpinEdit use,
         // so the closed colour dropdown tracks the height of the numeric
         // fields it sits beside. The chevron scales too: Compact = 40%
         // smaller, Comfortable = 20% bigger than the 10dp regular glyph.
         when ( ThemeManager.Density = Compact ) {
-            PART_SelectionTrigger.Padding = (@Spacing3,@Spacing1,@Spacing3,@Spacing1);
+            PART_SelectionTrigger.Padding = (@Space3,@Space1,@Space3,@Space1);
             PART_Chevron.Width = 6;
             PART_Chevron.Height = 6;
         }
         when ( ThemeManager.Density = Comfortable ) {
-            PART_SelectionTrigger.Padding = (@Spacing3,@Spacing3,@Spacing3,@Spacing3);
+            PART_SelectionTrigger.Padding = (@Space3,@Space3,@Space3,@Space3);
             PART_Chevron.Width = 12;
             PART_Chevron.Height = 12;
         }
@@ -69,7 +69,7 @@ resources Formatting {
         // density lands on top of the trigger stack and wins (the
         // a11y-favouring outcome).
         when ( ThemeManager.Pointer = Coarse ) {
-            PART_SelectionTrigger.Padding = (@Spacing3,@Spacing3,@Spacing3,@Spacing3);
+            PART_SelectionTrigger.Padding = (@Space3,@Space3,@Space3,@Space3);
             PART_Chevron.Width = 12;
             PART_Chevron.Height = 12;
         }
@@ -90,10 +90,10 @@ resources Formatting {
         MenuPopupHost x:name="PART_PopupHost" {
             ClickAwayScrim x:name="PART_Scrim"
             Border x:name="PART_PopupBody"
-                [ Fill      = @SurfaceContainerHigh,
-                  Stroke     = Pen [ Brush = @OutlineVariant ],
-                  CornerRadius    = @ShapeExtraSmall,
-                  Effect          = @Elevation2,
+                [ Fill      = @Bg1,
+                  Stroke     = Pen [ Brush = @Border ],
+                  CornerRadius    = @RadiusLg,
+                  Effect          = @ShadowMd,
                   Padding         = (0),
                   Width           = 268 ] {
                 StackPanel [ Orientation = Vertical ] {
@@ -103,7 +103,7 @@ resources Formatting {
                     // and separators below can span edge-to-edge like a
                     // popup menu. buildThemeGrid still sees a 242dp content
                     // width: 268 − 2 (body border) − 24 (this margin).
-                    StackPanel [ Orientation = Vertical, Margin = (@Spacing3,@Spacing3,@Spacing3,@Spacing3) ] {
+                    StackPanel [ Orientation = Vertical, Margin = (@Space3,@Space3,@Space3,@Space3) ] {
                     // ── Theme Colors ───────────────────────────────
                     // One column per ColorScheme base colour: a base row
                     // plus a tint row per scheme.tints and a shade row per
@@ -112,9 +112,9 @@ resources Formatting {
                     // picker or shared via `[ColorScheme=@key]`.
                     TextBlock
                         [ Text       = "Theme Colors",
-                          Foreground = @OnSurfaceVariant,
-                          FontSize   = @BodySmallSize,
-                          Margin     = (0,0,0,@Spacing1) ]
+                          Foreground = @Fg2,
+                          FontSize   = @BodySmSize,
+                          Margin     = (0,0,0,@Space1) ]
                     StackPanel x:name="PART_ThemeGrid" [ Orientation = Vertical ]
 
                     // ── Standard Colors ────────────────────────────
@@ -122,78 +122,78 @@ resources Formatting {
                     // literals; ColorPicker wires each like a theme swatch.
                     TextBlock
                         [ Text       = "Standard Colors",
-                          Foreground = @OnSurfaceVariant,
-                          FontSize   = @BodySmallSize,
-                          Margin     = (0,@Spacing2,0,@Spacing1) ]
+                          Foreground = @Fg2,
+                          FontSize   = @BodySmSize,
+                          Margin     = (0,@Space2,0,@Space1) ]
                     StackPanel x:name="PART_StandardRow" [ Orientation = Horizontal ] {
                         ClickableBorder
                             [ Width           = 22,
                               Height          = 16,
                               CornerRadius    = 2,
-                              Stroke     = Pen [ Brush = @OutlineVariant ],
+                              Stroke     = Pen [ Brush = @Border ],
                               Margin          = (0,0,2,0),
                               Fill      = #C00000 ]
                         ClickableBorder
                             [ Width           = 22,
                               Height          = 16,
                               CornerRadius    = 2,
-                              Stroke     = Pen [ Brush = @OutlineVariant ],
+                              Stroke     = Pen [ Brush = @Border ],
                               Margin          = (0,0,2,0),
                               Fill      = #FF0000 ]
                         ClickableBorder
                             [ Width           = 22,
                               Height          = 16,
                               CornerRadius    = 2,
-                              Stroke     = Pen [ Brush = @OutlineVariant ],
+                              Stroke     = Pen [ Brush = @Border ],
                               Margin          = (0,0,2,0),
                               Fill      = #FFC000 ]
                         ClickableBorder
                             [ Width           = 22,
                               Height          = 16,
                               CornerRadius    = 2,
-                              Stroke     = Pen [ Brush = @OutlineVariant ],
+                              Stroke     = Pen [ Brush = @Border ],
                               Margin          = (0,0,2,0),
                               Fill      = #FFFF00 ]
                         ClickableBorder
                             [ Width           = 22,
                               Height          = 16,
                               CornerRadius    = 2,
-                              Stroke     = Pen [ Brush = @OutlineVariant ],
+                              Stroke     = Pen [ Brush = @Border ],
                               Margin          = (0,0,2,0),
                               Fill      = #92D050 ]
                         ClickableBorder
                             [ Width           = 22,
                               Height          = 16,
                               CornerRadius    = 2,
-                              Stroke     = Pen [ Brush = @OutlineVariant ],
+                              Stroke     = Pen [ Brush = @Border ],
                               Margin          = (0,0,2,0),
                               Fill      = #00B050 ]
                         ClickableBorder
                             [ Width           = 22,
                               Height          = 16,
                               CornerRadius    = 2,
-                              Stroke     = Pen [ Brush = @OutlineVariant ],
+                              Stroke     = Pen [ Brush = @Border ],
                               Margin          = (0,0,2,0),
                               Fill      = #00B0F0 ]
                         ClickableBorder
                             [ Width           = 22,
                               Height          = 16,
                               CornerRadius    = 2,
-                              Stroke     = Pen [ Brush = @OutlineVariant ],
+                              Stroke     = Pen [ Brush = @Border ],
                               Margin          = (0,0,2,0),
                               Fill      = #0070C0 ]
                         ClickableBorder
                             [ Width           = 22,
                               Height          = 16,
                               CornerRadius    = 2,
-                              Stroke     = Pen [ Brush = @OutlineVariant ],
+                              Stroke     = Pen [ Brush = @Border ],
                               Margin          = (0,0,2,0),
                               Fill      = #002060 ]
                         ClickableBorder
                             [ Width           = 22,
                               Height          = 16,
                               CornerRadius    = 2,
-                              Stroke     = Pen [ Brush = @OutlineVariant ],
+                              Stroke     = Pen [ Brush = @Border ],
                               Margin          = (0,0,0,0),
                               Fill      = #7030A0 ]
                     }
@@ -206,9 +206,9 @@ resources Formatting {
                           Visibility  = Collapsed ] {
                         TextBlock
                             [ Text       = "Recent Colors",
-                              Foreground = @OnSurfaceVariant,
-                              FontSize   = @BodySmallSize,
-                              Margin     = (0,@Spacing2,0,@Spacing1) ]
+                              Foreground = @Fg2,
+                              FontSize   = @BodySmSize,
+                              Margin     = (0,@Space2,0,@Space1) ]
                         WrapPanel x:name="PART_RecentRow" [ Orientation = Horizontal ]
                     }
                     }
@@ -221,31 +221,31 @@ resources Formatting {
                     // Rows + separators span edge-to-edge because the body
                     // has no padding. Built inline — deliberately NOT reusing
                     // the MenuItem / MenuSeparator templates.
-                    Border [ Height = 1, Fill = @OutlineVariant ]
+                    Border [ Height = 1, Fill = @Border ]
 
                     // More Colors… — opens the advanced editor dialog
                     // (HS box + sliders + hex) as a secondary overlay.
                     ClickableBorder x:name="PART_MoreColors"
-                        [ Padding = (@Spacing3,@Spacing2,@Spacing3,@Spacing2) ] {
+                        [ Padding = (@Space3,@Space2,@Space3,@Space2) ] {
                         TextBlock
                             [ Text       = "More Colors…",
-                              Foreground = @OnSurface,
-                              Style      = @LabelLarge ]
+                              Foreground = @Fg1,
+                              Style      = @UiLabel ]
                     }
 
-                    Border [ Height = 1, Fill = @OutlineVariant ]
+                    Border [ Height = 1, Fill = @Border ]
 
                     // No Color — clears the selection to a transparent
                     // sentinel. Plain text row, matching More Colors.
                     ClickableBorder x:name="PART_NoColor"
-                        [ Padding = (@Spacing3,@Spacing2,@Spacing3,@Spacing2) ] {
+                        [ Padding = (@Space3,@Space2,@Space3,@Space2) ] {
                         TextBlock
                             [ Text       = "No Color",
-                              Foreground = @OnSurface,
-                              Style      = @LabelLarge ]
+                              Foreground = @Fg1,
+                              Style      = @UiLabel ]
                     }
 
-                    Border [ Height = 1, Fill = @OutlineVariant ]
+                    Border [ Height = 1, Fill = @Border ]
 
                     // Color Scheme — side-flyout submenu. The chevron marks
                     // it expandable; ColorPicker anchors the scheme gallery
@@ -253,27 +253,27 @@ resources Formatting {
                     // right like a nested menu. PART_SchemeName shows the
                     // active scheme; ColorPicker keeps it in sync.
                     ClickableBorder x:name="PART_SchemeButton"
-                        [ Padding = (@Spacing3,@Spacing2,@Spacing3,@Spacing2) ] {
+                        [ Padding = (@Space3,@Space2,@Space3,@Space2) ] {
                         DockPanel {
                             Shape
                                 [ DockPanel.Dock    = Right,
                                   Geometry          = @ChevronRight,
-                                  Fill              = @OnSurfaceVariant,
+                                  Fill              = @Fg2,
                                   Width             = 12,
                                   Height            = 12,
                                   VerticalAlignment = Center ]
                             StackPanel [ Orientation = Horizontal ] {
                                 TextBlock
                                     [ Text              = "Color Scheme",
-                                      Foreground        = @OnSurface,
-                                      Style             = @LabelLarge,
+                                      Foreground        = @Fg1,
+                                      Style             = @UiLabel,
                                       VerticalAlignment = Center ]
                                 TextBlock x:name="PART_SchemeName"
                                     [ Text              = "Office",
-                                      Foreground        = @OnSurfaceVariant,
-                                      Style             = @LabelMedium,
+                                      Foreground        = @Fg2,
+                                      Style             = @UiCaption,
                                       VerticalAlignment = Center,
-                                      Margin            = (@Spacing2,0,0,0) ]
+                                      Margin            = (@Space2,0,0,0) ]
                             }
                         }
                     }
@@ -281,12 +281,11 @@ resources Formatting {
             }
         }
 
-        when ( PART_NoColor.IsMouseOver ) { PART_NoColor.Fill = @StateHoverOverlay; }
+        when ( PART_NoColor.IsMouseOver ) { PART_NoColor.Fill = @Bg2; }
         when ( PART_SchemeButton.IsMouseOver ) {
-            PART_SchemeButton.Fill = @StateHoverOverlay;
+            PART_SchemeButton.Fill = @Bg2;
         }
-        when ( PART_MoreColors.IsMouseOver ) { PART_MoreColors.Fill = @StateHoverOverlay; }
-        when ( ThemeManager.PrefersContrast = More ) { PART_PopupBody.Stroke = (@OutlineVariant, 2); }
+        when ( PART_MoreColors.IsMouseOver ) { PART_MoreColors.Fill = @Bg2; }
     }
 
     // ── ColorPicker: More Colors… dialog ───────────────────────────
@@ -301,25 +300,25 @@ resources Formatting {
         MenuPopupHost x:name="PART_PopupHost" {
             ClickAwayScrim x:name="PART_Scrim"
             Border x:name="PART_PopupBody"
-                [ Fill      = @SurfaceContainerHigh,
-                  Stroke     = Pen [ Brush = @OutlineVariant ],
-                  CornerRadius    = @ShapeExtraSmall,
-                  Effect          = @Elevation2,
+                [ Fill      = @Bg1,
+                  Stroke     = Pen [ Brush = @Border ],
+                  CornerRadius    = @RadiusLg,
+                  Effect          = @ShadowMd,
                   Padding         = (10),
                   Width           = 280 ] {
                 StackPanel [ Orientation = Vertical ] {
                     TextBlock
                         [ Text       = "More Colors",
-                          Foreground = @OnSurface,
-                          Style      = @TitleSmall,
-                          Margin     = (0,0,0,@Spacing3) ]
+                          Foreground = @Fg1,
+                          Style      = @UiLabel,
+                          Margin     = (0,0,0,@Space3) ]
 
                     StackPanel [ Orientation = Horizontal, Margin = (0,0,0,8) ] {
                         Border
                             [ Width           = 36,
                               Height          = 36,
                               CornerRadius    = 4,
-                              Stroke     = Pen [ Brush = @OutlineVariant ],
+                              Stroke     = Pen [ Brush = @Border ],
                               Margin          = (0,0,8,0),
                               Fill      = $$SwatchBrush ]
                         TextBox x:name="PART_HexInput" [ Width = 220, VerticalAlignment = Center ]
@@ -339,7 +338,7 @@ resources Formatting {
                             Border x:name="PART_VRailFill"
                                 [ Width           = 20,
                                   Height          = 140,
-                                  Stroke     = Pen [ Brush = @OutlineVariant ] ]
+                                  Stroke     = Pen [ Brush = @Border ] ]
                             Border x:name="PART_VRailCursor"
                                 [ Width      = 26,
                                   Height     = 4,
@@ -351,7 +350,7 @@ resources Formatting {
                         TextBlock
                             [ Text              = "R",
                               Width             = 14,
-                              Foreground        = @OnSurfaceVariant,
+                              Foreground        = @Fg2,
                               VerticalAlignment = Center,
                               Margin            = (0,0,6,0) ]
                         Slider x:name="PART_RSlider"
@@ -365,7 +364,7 @@ resources Formatting {
                         TextBlock
                             [ Text              = "G",
                               Width             = 14,
-                              Foreground        = @OnSurfaceVariant,
+                              Foreground        = @Fg2,
                               VerticalAlignment = Center,
                               Margin            = (0,0,6,0) ]
                         Slider x:name="PART_GSlider"
@@ -379,7 +378,7 @@ resources Formatting {
                         TextBlock
                             [ Text              = "B",
                               Width             = 14,
-                              Foreground        = @OnSurfaceVariant,
+                              Foreground        = @Fg2,
                               VerticalAlignment = Center,
                               Margin            = (0,0,6,0) ]
                         Slider x:name="PART_BSlider"
@@ -393,7 +392,7 @@ resources Formatting {
                         TextBlock
                             [ Text              = "A",
                               Width             = 14,
-                              Foreground        = @OnSurfaceVariant,
+                              Foreground        = @Fg2,
                               VerticalAlignment = Center,
                               Margin            = (0,0,6,0) ]
                         Slider x:name="PART_ASlider"
@@ -407,32 +406,31 @@ resources Formatting {
                     StackPanel
                         [ Orientation         = Horizontal,
                           HorizontalAlignment = Right,
-                          Margin              = (0,@Spacing4,0,0) ] {
+                          Margin              = (0,@Space4,0,0) ] {
                         ClickableBorder x:name="PART_MoreCancel"
-                            [ CornerRadius = @ShapeExtraSmall,
-                              Padding      = (@Spacing4,@Spacing2,@Spacing4,@Spacing2),
-                              Margin       = (0,0,@Spacing2,0) ] {
+                            [ CornerRadius = @RadiusSm,
+                              Padding      = (@Space4,@Space2,@Space4,@Space2),
+                              Margin       = (0,0,@Space2,0) ] {
                             TextBlock
                                 [ Text       = "Cancel",
-                                  Foreground = @Primary,
-                                  FontSize   = @LabelLargeSize ]
+                                  Foreground = @ControlAccent,
+                                  FontSize   = @UiLabelSize ]
                         }
                         ClickableBorder x:name="PART_MoreOk"
-                            [ CornerRadius = @ShapeExtraSmall,
-                              Fill   = @Primary,
-                              Padding      = (@Spacing4,@Spacing2,@Spacing4,@Spacing2) ] {
+                            [ CornerRadius = @RadiusSm,
+                              Fill   = @ControlAccent,
+                              Padding      = (@Space4,@Space2,@Space4,@Space2) ] {
                             TextBlock
                                 [ Text       = "OK",
-                                  Foreground = @OnPrimary,
-                                  FontSize   = @LabelLargeSize ]
+                                  Foreground = @BrandGreenInk,
+                                  FontSize   = @UiLabelSize ]
                         }
                     }
                 }
             }
         }
 
-        when ( PART_MoreCancel.IsMouseOver ) { PART_MoreCancel.Fill = @StateHoverOverlay; }
-        when ( ThemeManager.PrefersContrast = More ) { PART_PopupBody.Stroke = (@OutlineVariant, 2); }
+        when ( PART_MoreCancel.IsMouseOver ) { PART_MoreCancel.Fill = @Bg2; }
     }
 
     // ── ColorPicker: scheme gallery (Office "Colors") ──────────────
@@ -444,11 +442,11 @@ resources Formatting {
         MenuPopupHost x:name="PART_PopupHost" {
             ClickAwayScrim x:name="PART_Scrim"
             Border x:name="PART_PopupBody"
-                [ Fill      = @SurfaceContainerHigh,
-                  Stroke     = Pen [ Brush = @OutlineVariant ],
-                  CornerRadius    = @ShapeExtraSmall,
-                  Effect          = @Elevation2,
-                  Padding         = (@Spacing2),
+                [ Fill      = @Bg1,
+                  Stroke     = Pen [ Brush = @Border ],
+                  CornerRadius    = @RadiusLg,
+                  Effect          = @ShadowMd,
+                  Padding         = (@Space2),
                   Width           = 288 ] {
                 // Width sized to the widest scheme row (preview strip + full
                 // name like "Office 2013 - 2022", ~247dp measured) plus the
@@ -461,7 +459,6 @@ resources Formatting {
             }
         }
 
-        when ( ThemeManager.PrefersContrast = More ) { PART_PopupBody.Stroke = (@OutlineVariant, 2); }
     }
 
     Style [TargetType = ColorPicker] {
@@ -481,27 +478,27 @@ resources Formatting {
     // Leave on PART_SelectionTrigger.
     Template x:key="DefaultBrushPicker" [TargetType = BrushPicker] {
         ClickableBorder x:name="PART_SelectionTrigger"
-            [ Fill      = @Surface,
-              Stroke     = Pen [ Brush = @Outline ],
-              CornerRadius    = @ShapeExtraSmall,
-              Padding         = (@Spacing3,@Spacing2,@Spacing3,@Spacing2) ] {
+            [ Fill      = @Bg1,
+              Stroke     = Pen [ Brush = @BorderStrong ],
+              CornerRadius    = @RadiusSm,
+              Padding         = (@Space3,@Space2,@Space3,@Space2) ] {
             StackPanel [ Orientation = Horizontal ] {
                 Border
                     [ Width           = 36,
                       Height          = 18,
                       CornerRadius    = 3,
-                      Stroke     = Pen [ Brush = @OutlineVariant ],
-                      Margin          = (0,0,@Spacing3,0),
+                      Stroke     = Pen [ Brush = @Border ],
+                      Margin          = (0,0,@Space3,0),
                       Fill      = $$PreviewBrush ]
                 TextBlock x:name="PART_VariantLabel"
                     [ Text              = "Solid",
-                      Foreground        = @OnSurface,
-                      Style             = @BodyMedium,
+                      Foreground        = @Fg1,
+                      Style             = @Body,
                       VerticalAlignment = Center,
-                      Margin            = (0,0,@Spacing3,0) ]
+                      Margin            = (0,0,@Space3,0) ]
                 Shape x:name="PART_Chevron"
                     [ Geometry          = @ChevronDown,
-                      Fill              = @OnSurfaceVariant,
+                      Fill              = @Fg2,
                       Width             = 10,
                       Height            = 10,
                       VerticalAlignment = Center ]
@@ -509,12 +506,12 @@ resources Formatting {
         }
 
         when ( PART_SelectionTrigger.IsMouseOver ) {
-            PART_SelectionTrigger.Fill = @StateHoverOverlay;
+            PART_SelectionTrigger.Fill = @Bg2;
         }
         when ( PART_SelectionTrigger.IsPressed ) {
-            PART_SelectionTrigger.Fill = @StatePressOverlay;
+            PART_SelectionTrigger.Fill = @Bg3;
         }
-        when ( IsDropDownOpen ) { PART_SelectionTrigger.Stroke = Pen [ Brush = @Primary ]; }
+        when ( IsDropDownOpen ) { PART_SelectionTrigger.Stroke = Pen [ Brush = @ControlAccent ]; }
         when ( Variant = Linear ) { PART_VariantLabel.Text = "Linear gradient"; }
         when ( Variant = Radial ) { PART_VariantLabel.Text = "Radial gradient"; }
         when ( Variant = Pattern ) { PART_VariantLabel.Text = "Pattern"; }
@@ -524,12 +521,12 @@ resources Formatting {
         // field heights, and scale the chevron the same way (Compact 40%
         // smaller, Comfortable 20% bigger than the 10dp regular glyph).
         when ( ThemeManager.Density = Compact ) {
-            PART_SelectionTrigger.Padding = (@Spacing3,@Spacing1,@Spacing3,@Spacing1);
+            PART_SelectionTrigger.Padding = (@Space3,@Space1,@Space3,@Space1);
             PART_Chevron.Width = 6;
             PART_Chevron.Height = 6;
         }
         when ( ThemeManager.Density = Comfortable ) {
-            PART_SelectionTrigger.Padding = (@Spacing3,@Spacing3,@Spacing3,@Spacing3);
+            PART_SelectionTrigger.Padding = (@Space3,@Space3,@Space3,@Space3);
             PART_Chevron.Width = 12;
             PART_Chevron.Height = 12;
         }
@@ -537,7 +534,7 @@ resources Formatting {
         // footprint regardless of density; declared last so it wins over a
         // coincident Compact density trigger. Mirrors ColorPicker.
         when ( ThemeManager.Pointer = Coarse ) {
-            PART_SelectionTrigger.Padding = (@Spacing3,@Spacing3,@Spacing3,@Spacing3);
+            PART_SelectionTrigger.Padding = (@Space3,@Space3,@Space3,@Space3);
             PART_Chevron.Width = 12;
             PART_Chevron.Height = 12;
         }
@@ -555,53 +552,53 @@ resources Formatting {
         MenuPopupHost x:name="PART_PopupHost" {
             ClickAwayScrim x:name="PART_Scrim"
             Border x:name="PART_PopupBody"
-                [ Fill      = @SurfaceContainerHigh,
-                  Stroke     = Pen [ Brush = @OutlineVariant ],
-                  CornerRadius    = @ShapeExtraSmall,
-                  Effect          = @Elevation2,
+                [ Fill      = @Bg1,
+                  Stroke     = Pen [ Brush = @Border ],
+                  CornerRadius    = @RadiusLg,
+                  Effect          = @ShadowMd,
                   Padding         = (10),
                   Width           = 320 ] {
                 StackPanel [ Orientation = Vertical ] {
                     // ── Variant tabs ─────────────────────────────
                     StackPanel [ Orientation = Horizontal, Margin = (0,0,0,10) ] {
                         ClickableBorder x:name="PART_TabSolid"
-                            [ Fill   = @SecondaryContainer,
-                              CornerRadius = @ShapeExtraSmall,
+                            [ Fill   = @SurfaceSelected,
+                              CornerRadius = @RadiusSm,
                               Padding      = (10,4,10,4),
                               Margin       = (0,0,4,0) ] {
                             TextBlock
                                 [ Text       = "Solid",
-                                  Foreground = @OnSecondaryContainer,
-                                  Style      = @LabelMedium ]
+                                  Foreground = @BrandGreenInk,
+                                  Style      = @UiCaption ]
                         }
                         ClickableBorder x:name="PART_TabLinear"
-                            [ Fill   = @Surface,
-                              CornerRadius = @ShapeExtraSmall,
+                            [ Fill   = @Bg1,
+                              CornerRadius = @RadiusSm,
                               Padding      = (10,4,10,4),
                               Margin       = (0,0,4,0) ] {
                             TextBlock
                                 [ Text       = "Linear",
-                                  Foreground = @OnSurface,
-                                  Style      = @LabelMedium ]
+                                  Foreground = @Fg1,
+                                  Style      = @UiCaption ]
                         }
                         ClickableBorder x:name="PART_TabRadial"
-                            [ Fill   = @Surface,
-                              CornerRadius = @ShapeExtraSmall,
+                            [ Fill   = @Bg1,
+                              CornerRadius = @RadiusSm,
                               Padding      = (10,4,10,4),
                               Margin       = (0,0,4,0) ] {
                             TextBlock
                                 [ Text       = "Radial",
-                                  Foreground = @OnSurface,
-                                  Style      = @LabelMedium ]
+                                  Foreground = @Fg1,
+                                  Style      = @UiCaption ]
                         }
                         ClickableBorder x:name="PART_TabPattern"
-                            [ Fill   = @Surface,
-                              CornerRadius = @ShapeExtraSmall,
+                            [ Fill   = @Bg1,
+                              CornerRadius = @RadiusSm,
                               Padding      = (10,4,10,4) ] {
                             TextBlock
                                 [ Text       = "Pattern",
-                                  Foreground = @OnSurface,
-                                  Style      = @LabelMedium ]
+                                  Foreground = @Fg1,
+                                  Style      = @UiCaption ]
                         }
                     }
                     // ── Solid body ───────────────────────────────
@@ -618,73 +615,73 @@ resources Formatting {
         MenuPopupHost x:name="PART_PopupHost" {
             ClickAwayScrim x:name="PART_Scrim"
             Border x:name="PART_PopupBody"
-                [ Fill      = @SurfaceContainerHigh,
-                  Stroke     = Pen [ Brush = @OutlineVariant ],
-                  CornerRadius    = @ShapeExtraSmall,
-                  Effect          = @Elevation2,
+                [ Fill      = @Bg1,
+                  Stroke     = Pen [ Brush = @Border ],
+                  CornerRadius    = @RadiusLg,
+                  Effect          = @ShadowMd,
                   Padding         = (10),
                   Width           = 320 ] {
                 StackPanel [ Orientation = Vertical ] {
                     StackPanel [ Orientation = Horizontal, Margin = (0,0,0,10) ] {
                         ClickableBorder x:name="PART_TabSolid"
-                            [ Fill   = @Surface,
-                              CornerRadius = @ShapeExtraSmall,
+                            [ Fill   = @Bg1,
+                              CornerRadius = @RadiusSm,
                               Padding      = (10,4,10,4),
                               Margin       = (0,0,4,0) ] {
                             TextBlock
                                 [ Text       = "Solid",
-                                  Foreground = @OnSurface,
-                                  Style      = @LabelMedium ]
+                                  Foreground = @Fg1,
+                                  Style      = @UiCaption ]
                         }
                         ClickableBorder x:name="PART_TabLinear"
-                            [ Fill   = @SecondaryContainer,
-                              CornerRadius = @ShapeExtraSmall,
+                            [ Fill   = @SurfaceSelected,
+                              CornerRadius = @RadiusSm,
                               Padding      = (10,4,10,4),
                               Margin       = (0,0,4,0) ] {
                             TextBlock
                                 [ Text       = "Linear",
-                                  Foreground = @OnSecondaryContainer,
-                                  Style      = @LabelMedium ]
+                                  Foreground = @BrandGreenInk,
+                                  Style      = @UiCaption ]
                         }
                         ClickableBorder x:name="PART_TabRadial"
-                            [ Fill   = @Surface,
-                              CornerRadius = @ShapeExtraSmall,
+                            [ Fill   = @Bg1,
+                              CornerRadius = @RadiusSm,
                               Padding      = (10,4,10,4),
                               Margin       = (0,0,4,0) ] {
                             TextBlock
                                 [ Text       = "Radial",
-                                  Foreground = @OnSurface,
-                                  Style      = @LabelMedium ]
+                                  Foreground = @Fg1,
+                                  Style      = @UiCaption ]
                         }
                         ClickableBorder x:name="PART_TabPattern"
-                            [ Fill   = @Surface,
-                              CornerRadius = @ShapeExtraSmall,
+                            [ Fill   = @Bg1,
+                              CornerRadius = @RadiusSm,
                               Padding      = (10,4,10,4) ] {
                             TextBlock
                                 [ Text       = "Pattern",
-                                  Foreground = @OnSurface,
-                                  Style      = @LabelMedium ]
+                                  Foreground = @Fg1,
+                                  Style      = @UiCaption ]
                         }
                     }
                     StackPanel [ Orientation = Vertical, Margin = (0,4,0,0) ] {
                         TextBlock
                             [ Text       = "Start colour",
-                              Style      = @LabelSmall,
-                              Foreground = @OnSurfaceVariant,
+                              Style      = @UiCaption,
+                              Foreground = @Fg2,
                               Margin     = (0,0,0,2) ]
                         ColorPicker x:name="PART_LinearStart"
                         TextBlock
                             [ Text       = "End colour",
-                              Style      = @LabelSmall,
-                              Foreground = @OnSurfaceVariant,
+                              Style      = @UiCaption,
+                              Foreground = @Fg2,
                               Margin     = (0,8,0,2) ]
                         ColorPicker x:name="PART_LinearEnd"
                         StackPanel [ Orientation = Horizontal, Margin = (0,10,0,0) ] {
                             TextBlock
                                 [ Text              = "Angle",
                                   Width             = 48,
-                                  Style             = @LabelSmall,
-                                  Foreground        = @OnSurfaceVariant,
+                                  Style             = @UiCaption,
+                                  Foreground        = @Fg2,
                                   VerticalAlignment = Center ]
                             Slider x:name="PART_LinearAngle"
                                 [ Width       = 240,
@@ -706,73 +703,73 @@ resources Formatting {
         MenuPopupHost x:name="PART_PopupHost" {
             ClickAwayScrim x:name="PART_Scrim"
             Border x:name="PART_PopupBody"
-                [ Fill      = @SurfaceContainerHigh,
-                  Stroke     = Pen [ Brush = @OutlineVariant ],
-                  CornerRadius    = @ShapeExtraSmall,
-                  Effect          = @Elevation2,
+                [ Fill      = @Bg1,
+                  Stroke     = Pen [ Brush = @Border ],
+                  CornerRadius    = @RadiusLg,
+                  Effect          = @ShadowMd,
                   Padding         = (10),
                   Width           = 320 ] {
                 StackPanel [ Orientation = Vertical ] {
                     StackPanel [ Orientation = Horizontal, Margin = (0,0,0,10) ] {
                         ClickableBorder x:name="PART_TabSolid"
-                            [ Fill   = @Surface,
-                              CornerRadius = @ShapeExtraSmall,
+                            [ Fill   = @Bg1,
+                              CornerRadius = @RadiusSm,
                               Padding      = (10,4,10,4),
                               Margin       = (0,0,4,0) ] {
                             TextBlock
                                 [ Text       = "Solid",
-                                  Foreground = @OnSurface,
-                                  Style      = @LabelMedium ]
+                                  Foreground = @Fg1,
+                                  Style      = @UiCaption ]
                         }
                         ClickableBorder x:name="PART_TabLinear"
-                            [ Fill   = @Surface,
-                              CornerRadius = @ShapeExtraSmall,
+                            [ Fill   = @Bg1,
+                              CornerRadius = @RadiusSm,
                               Padding      = (10,4,10,4),
                               Margin       = (0,0,4,0) ] {
                             TextBlock
                                 [ Text       = "Linear",
-                                  Foreground = @OnSurface,
-                                  Style      = @LabelMedium ]
+                                  Foreground = @Fg1,
+                                  Style      = @UiCaption ]
                         }
                         ClickableBorder x:name="PART_TabRadial"
-                            [ Fill   = @SecondaryContainer,
-                              CornerRadius = @ShapeExtraSmall,
+                            [ Fill   = @SurfaceSelected,
+                              CornerRadius = @RadiusSm,
                               Padding      = (10,4,10,4),
                               Margin       = (0,0,4,0) ] {
                             TextBlock
                                 [ Text       = "Radial",
-                                  Foreground = @OnSecondaryContainer,
-                                  Style      = @LabelMedium ]
+                                  Foreground = @BrandGreenInk,
+                                  Style      = @UiCaption ]
                         }
                         ClickableBorder x:name="PART_TabPattern"
-                            [ Fill   = @Surface,
-                              CornerRadius = @ShapeExtraSmall,
+                            [ Fill   = @Bg1,
+                              CornerRadius = @RadiusSm,
                               Padding      = (10,4,10,4) ] {
                             TextBlock
                                 [ Text       = "Pattern",
-                                  Foreground = @OnSurface,
-                                  Style      = @LabelMedium ]
+                                  Foreground = @Fg1,
+                                  Style      = @UiCaption ]
                         }
                     }
                     StackPanel [ Orientation = Vertical, Margin = (0,4,0,0) ] {
                         TextBlock
                             [ Text       = "Inner colour",
-                              Style      = @LabelSmall,
-                              Foreground = @OnSurfaceVariant,
+                              Style      = @UiCaption,
+                              Foreground = @Fg2,
                               Margin     = (0,0,0,2) ]
                         ColorPicker x:name="PART_RadialInner"
                         TextBlock
                             [ Text       = "Outer colour",
-                              Style      = @LabelSmall,
-                              Foreground = @OnSurfaceVariant,
+                              Style      = @UiCaption,
+                              Foreground = @Fg2,
                               Margin     = (0,8,0,2) ]
                         ColorPicker x:name="PART_RadialOuter"
                         StackPanel [ Orientation = Horizontal, Margin = (0,10,0,0) ] {
                             TextBlock
                                 [ Text              = "Cx %",
                                   Width             = 48,
-                                  Style             = @LabelSmall,
-                                  Foreground        = @OnSurfaceVariant,
+                                  Style             = @UiCaption,
+                                  Foreground        = @Fg2,
                                   VerticalAlignment = Center ]
                             Slider x:name="PART_RadialCenterX"
                                 [ Width       = 240,
@@ -785,8 +782,8 @@ resources Formatting {
                             TextBlock
                                 [ Text              = "Cy %",
                                   Width             = 48,
-                                  Style             = @LabelSmall,
-                                  Foreground        = @OnSurfaceVariant,
+                                  Style             = @UiCaption,
+                                  Foreground        = @Fg2,
                                   VerticalAlignment = Center ]
                             Slider x:name="PART_RadialCenterY"
                                 [ Width       = 240,
@@ -799,8 +796,8 @@ resources Formatting {
                             TextBlock
                                 [ Text              = "Radius %",
                                   Width             = 48,
-                                  Style             = @LabelSmall,
-                                  Foreground        = @OnSurfaceVariant,
+                                  Style             = @UiCaption,
+                                  Foreground        = @Fg2,
                                   VerticalAlignment = Center ]
                             Slider x:name="PART_RadialRadius"
                                 [ Width       = 240,
@@ -824,52 +821,52 @@ resources Formatting {
         MenuPopupHost x:name="PART_PopupHost" {
             ClickAwayScrim x:name="PART_Scrim"
             Border x:name="PART_PopupBody"
-                [ Fill      = @SurfaceContainerHigh,
-                  Stroke     = Pen [ Brush = @OutlineVariant ],
-                  CornerRadius    = @ShapeExtraSmall,
-                  Effect          = @Elevation2,
+                [ Fill      = @Bg1,
+                  Stroke     = Pen [ Brush = @Border ],
+                  CornerRadius    = @RadiusLg,
+                  Effect          = @ShadowMd,
                   Padding         = (10),
                   Width           = 320 ] {
                 StackPanel [ Orientation = Vertical ] {
                     StackPanel [ Orientation = Horizontal, Margin = (0,0,0,10) ] {
                         ClickableBorder x:name="PART_TabSolid"
-                            [ Fill   = @Surface,
-                              CornerRadius = @ShapeExtraSmall,
+                            [ Fill   = @Bg1,
+                              CornerRadius = @RadiusSm,
                               Padding      = (10,4,10,4),
                               Margin       = (0,0,4,0) ] {
                             TextBlock
                                 [ Text       = "Solid",
-                                  Foreground = @OnSurface,
-                                  Style      = @LabelMedium ]
+                                  Foreground = @Fg1,
+                                  Style      = @UiCaption ]
                         }
                         ClickableBorder x:name="PART_TabLinear"
-                            [ Fill   = @Surface,
-                              CornerRadius = @ShapeExtraSmall,
+                            [ Fill   = @Bg1,
+                              CornerRadius = @RadiusSm,
                               Padding      = (10,4,10,4),
                               Margin       = (0,0,4,0) ] {
                             TextBlock
                                 [ Text       = "Linear",
-                                  Foreground = @OnSurface,
-                                  Style      = @LabelMedium ]
+                                  Foreground = @Fg1,
+                                  Style      = @UiCaption ]
                         }
                         ClickableBorder x:name="PART_TabRadial"
-                            [ Fill   = @Surface,
-                              CornerRadius = @ShapeExtraSmall,
+                            [ Fill   = @Bg1,
+                              CornerRadius = @RadiusSm,
                               Padding      = (10,4,10,4),
                               Margin       = (0,0,4,0) ] {
                             TextBlock
                                 [ Text       = "Radial",
-                                  Foreground = @OnSurface,
-                                  Style      = @LabelMedium ]
+                                  Foreground = @Fg1,
+                                  Style      = @UiCaption ]
                         }
                         ClickableBorder x:name="PART_TabPattern"
-                            [ Fill   = @SecondaryContainer,
-                              CornerRadius = @ShapeExtraSmall,
+                            [ Fill   = @SurfaceSelected,
+                              CornerRadius = @RadiusSm,
                               Padding      = (10,4,10,4) ] {
                             TextBlock
                                 [ Text       = "Pattern",
-                                  Foreground = @OnSecondaryContainer,
-                                  Style      = @LabelMedium ]
+                                  Foreground = @BrandGreenInk,
+                                  Style      = @UiCaption ]
                         }
                     }
                     StackPanel [ Orientation = Vertical, Margin = (0,4,0,0) ] {
@@ -877,29 +874,29 @@ resources Formatting {
                             TextBlock
                                 [ Text              = "Kind",
                                   Width             = 64,
-                                  Style             = @LabelSmall,
-                                  Foreground        = @OnSurfaceVariant,
+                                  Style             = @UiCaption,
+                                  Foreground        = @Fg2,
                                   VerticalAlignment = Center ]
                             ComboBox x:name="PART_PatternKind" [ Width = 232 ]
                         }
                         TextBlock
                             [ Text       = "Foreground",
-                              Style      = @LabelSmall,
-                              Foreground = @OnSurfaceVariant,
+                              Style      = @UiCaption,
+                              Foreground = @Fg2,
                               Margin     = (0,0,0,2) ]
                         ColorPicker x:name="PART_PatternForeground"
                         TextBlock
                             [ Text       = "Background",
-                              Style      = @LabelSmall,
-                              Foreground = @OnSurfaceVariant,
+                              Style      = @UiCaption,
+                              Foreground = @Fg2,
                               Margin     = (0,8,0,2) ]
                         ColorPicker x:name="PART_PatternBackground"
                         StackPanel [ Orientation = Horizontal, Margin = (0,10,0,0) ] {
                             TextBlock
                                 [ Text              = "Size",
                                   Width             = 64,
-                                  Style             = @LabelSmall,
-                                  Foreground        = @OnSurfaceVariant,
+                                  Style             = @UiCaption,
+                                  Foreground        = @Fg2,
                                   VerticalAlignment = Center ]
                             Slider x:name="PART_PatternSize"
                                 [ Width       = 232,
@@ -912,8 +909,8 @@ resources Formatting {
                             TextBlock
                                 [ Text              = "Angle",
                                   Width             = 64,
-                                  Style             = @LabelSmall,
-                                  Foreground        = @OnSurfaceVariant,
+                                  Style             = @UiCaption,
+                                  Foreground        = @Fg2,
                                   VerticalAlignment = Center ]
                             Slider x:name="PART_PatternAngle"
                                 [ Width       = 232,
@@ -926,8 +923,8 @@ resources Formatting {
                             TextBlock
                                 [ Text              = "Stroke",
                                   Width             = 64,
-                                  Style             = @LabelSmall,
-                                  Foreground        = @OnSurfaceVariant,
+                                  Style             = @UiCaption,
+                                  Foreground        = @Fg2,
                                   VerticalAlignment = Center ]
                             Slider x:name="PART_PatternStroke"
                                 [ Width       = 232,
@@ -984,11 +981,11 @@ resources Formatting {
             TextBlock
                 [ Grid.Row        = 0,
                   Grid.ColumnSpan = 2,
-                  Style           = @TitleSmall,
+                  Style           = @UiLabel,
                   Text            = "Line",
-                  Foreground      = @OnSurface,
-                  Margin          = (0,0,0,@Spacing2) ]
-            Divider [ Grid.Row = 1, Grid.ColumnSpan = 2, Margin = (0,0,0,@Spacing3) ]
+                  Foreground      = @Fg1,
+                  Margin          = (0,0,0,@Space2) ]
+            Divider [ Grid.Row = 1, Grid.ColumnSpan = 2, Margin = (0,0,0,@Space3) ]
             // Stroke brush — the SAME tabbed variant editor the Fill section
             // uses, inline. Spans both columns; Header="" suppresses its own
             // title since the "Line" header names the section. Its internal
@@ -998,7 +995,7 @@ resources Formatting {
                 [ Grid.Row        = 2,
                   Grid.ColumnSpan = 2,
                   Header          = "",
-                  Margin          = (0,0,0,@Spacing4) ]
+                  Margin          = (0,0,0,@Space4) ]
             // Two-column property grid — left column Auto-sized to the
             // widest label, right column takes the rest. Each editor row
             // is its own RowDefinition. The Miter limit row's label +
@@ -1030,15 +1027,15 @@ resources Formatting {
                 TextBlock
                     [ Grid.Row          = 0,
                       Grid.Column       = 0,
-                      Style             = @LabelSmall,
+                      Style             = @UiCaption,
                       Text              = "Thickness",
-                      Foreground        = @OnSurface,
+                      Foreground        = @Fg1,
                       VerticalAlignment = Center,
-                      Margin            = (0,0,@Spacing3,@Spacing3) ]
+                      Margin            = (0,0,@Space3,@Space3) ]
                 SpinEdit x:name="PART_Thickness"
                     [ Grid.Row            = 0,
                       Grid.Column         = 1,
-                      TextBlock.FontSize  = @BodySmallSize,
+                      TextBlock.FontSize  = @BodySmSize,
                       HorizontalAlignment = Right,
                       MaxWidth            = 120,
                       Width               = 120,
@@ -1047,7 +1044,7 @@ resources Formatting {
                       SmallChange         = 0.5,
                       LargeChange         = 2,
                       DecimalPlaces       = 1,
-                      Margin              = (0,0,0,@Spacing3) ]
+                      Margin              = (0,0,0,@Space3) ]
                 // DashStyle — Items + SelectedItem populated by
                 // PenEditor.adoptTemplateParts (see DASH_OPTIONS there).
                 // DisplayMemberPath = "Label" so the dropdown shows the
@@ -1055,56 +1052,56 @@ resources Formatting {
                 TextBlock
                     [ Grid.Row          = 1,
                       Grid.Column       = 0,
-                      Style             = @LabelSmall,
+                      Style             = @UiCaption,
                       Text              = "Dash",
-                      Foreground        = @OnSurface,
+                      Foreground        = @Fg1,
                       VerticalAlignment = Center,
-                      Margin            = (0,0,@Spacing3,@Spacing3) ]
+                      Margin            = (0,0,@Space3,@Space3) ]
                 ComboBox x:name="PART_Dash"
                     [ Grid.Row            = 1,
                       Grid.Column         = 1,
-                      TextBlock.FontSize  = @BodySmallSize,
+                      TextBlock.FontSize  = @BodySmSize,
                       DisplayMemberPath   = "Label",
                       HorizontalAlignment = Right,
                       MaxWidth            = 120,
                       Width               = 120,
-                      Margin              = (0,0,0,@Spacing3) ]
+                      Margin              = (0,0,0,@Space3) ]
                 // Cap
                 TextBlock
                     [ Grid.Row          = 2,
                       Grid.Column       = 0,
-                      Style             = @LabelSmall,
+                      Style             = @UiCaption,
                       Text              = "Cap",
-                      Foreground        = @OnSurface,
+                      Foreground        = @Fg1,
                       VerticalAlignment = Center,
-                      Margin            = (0,0,@Spacing3,@Spacing3) ]
+                      Margin            = (0,0,@Space3,@Space3) ]
                 ComboBox x:name="PART_Cap"
                     [ Grid.Row            = 2,
                       Grid.Column         = 1,
-                      TextBlock.FontSize  = @BodySmallSize,
+                      TextBlock.FontSize  = @BodySmSize,
                       DisplayMemberPath   = "Label",
                       HorizontalAlignment = Right,
                       MaxWidth            = 120,
                       Width               = 120,
-                      Margin              = (0,0,0,@Spacing3) ]
+                      Margin              = (0,0,0,@Space3) ]
                 // Join
                 TextBlock
                     [ Grid.Row          = 3,
                       Grid.Column       = 0,
-                      Style             = @LabelSmall,
+                      Style             = @UiCaption,
                       Text              = "Join",
-                      Foreground        = @OnSurface,
+                      Foreground        = @Fg1,
                       VerticalAlignment = Center,
-                      Margin            = (0,0,@Spacing3,@Spacing3) ]
+                      Margin            = (0,0,@Space3,@Space3) ]
                 ComboBox x:name="PART_Join"
                     [ Grid.Row            = 3,
                       Grid.Column         = 1,
-                      TextBlock.FontSize  = @BodySmallSize,
+                      TextBlock.FontSize  = @BodySmSize,
                       DisplayMemberPath   = "Label",
                       HorizontalAlignment = Right,
                       MaxWidth            = 120,
                       Width               = 120,
-                      Margin              = (0,0,0,@Spacing3) ]
+                      Margin              = (0,0,0,@Space3) ]
                 // Miter limit — only meaningful when LineJoin=Miter.
                 // PenEditor.refreshMiterRowVisibility toggles
                 // PART_MiterLabel + PART_MiterLimit in lock-step;
@@ -1113,15 +1110,15 @@ resources Formatting {
                 TextBlock x:name="PART_MiterLabel"
                     [ Grid.Row          = 4,
                       Grid.Column       = 0,
-                      Style             = @LabelSmall,
+                      Style             = @UiCaption,
                       Text              = "Miter limit",
-                      Foreground        = @OnSurface,
+                      Foreground        = @Fg1,
                       VerticalAlignment = Center,
-                      Margin            = (0,0,@Spacing3,0) ]
+                      Margin            = (0,0,@Space3,0) ]
                 SpinEdit x:name="PART_MiterLimit"
                     [ Grid.Row            = 4,
                       Grid.Column         = 1,
-                      TextBlock.FontSize  = @BodySmallSize,
+                      TextBlock.FontSize  = @BodySmSize,
                       HorizontalAlignment = Right,
                       MaxWidth            = 120,
                       Width               = 120,
@@ -1170,96 +1167,96 @@ resources Formatting {
             TextBlock x:name="PART_Header"
                 [ Grid.Row        = 0,
                   Grid.ColumnSpan = 2,
-                  Style           = @TitleSmall,
+                  Style           = @UiLabel,
                   Text            = "Fill",
-                  Foreground      = @OnSurface,
-                  Margin          = (0,0,0,@Spacing2) ]
+                  Foreground      = @Fg1,
+                  Margin          = (0,0,0,@Space2) ]
             // Header divider — FillEditor.ts collapses this in lock-step
             // with PART_Header (so the embedded Header="" brush editor in
             // the Line section shows neither title nor rule).
-            Divider x:name="PART_HeaderRule" [ Grid.Row = 1, Grid.ColumnSpan = 2, Margin = (0,0,0,@Spacing3) ]
+            Divider x:name="PART_HeaderRule" [ Grid.Row = 1, Grid.ColumnSpan = 2, Margin = (0,0,0,@Space3) ]
             // ── Variant tabs ────────────────────────────────────
             // ClickableBorder for each of the six variants. Default
-            // background is @Surface; the Style triggers below flip
-            // the active one to @SecondaryContainer. UniformGrid 3×2
+            // background is @Bg1; the Style triggers below flip
+            // the active one to @SurfaceSelected. UniformGrid 3×2
             // lays them in two rows regardless of pane width.
-            UniformGrid [ Grid.Row = 2, Grid.ColumnSpan = 2, Columns = 3, Margin = (0,0,0,@Spacing4) ] {
+            UniformGrid [ Grid.Row = 2, Grid.ColumnSpan = 2, Columns = 3, Margin = (0,0,0,@Space4) ] {
                 ClickableBorder x:name="PART_TabNone"
-                    [ Fill          = @Surface,
-                      Stroke         = Pen [ Brush = @OutlineVariant ],
-                      CornerRadius        = @ShapeExtraSmall,
+                    [ Fill          = @Bg1,
+                      Stroke         = Pen [ Brush = @Border ],
+                      CornerRadius        = @RadiusSm,
                       Padding             = (12,6,12,6),
                       Margin              = (0,0,4,4),
                       HorizontalAlignment = Stretch ] {
                     TextBlock
                         [ Text                = "No fill",
-                          Foreground          = @OnSurface,
-                          Style               = @LabelMedium,
+                          Foreground          = @Fg1,
+                          Style               = @UiCaption,
                           HorizontalAlignment = Center ]
                 }
                 ClickableBorder x:name="PART_TabSolid"
-                    [ Fill          = @Surface,
-                      Stroke         = Pen [ Brush = @OutlineVariant ],
-                      CornerRadius        = @ShapeExtraSmall,
+                    [ Fill          = @Bg1,
+                      Stroke         = Pen [ Brush = @Border ],
+                      CornerRadius        = @RadiusSm,
                       Padding             = (12,6,12,6),
                       Margin              = (0,0,4,4),
                       HorizontalAlignment = Stretch ] {
                     TextBlock
                         [ Text                = "Solid",
-                          Foreground          = @OnSurface,
-                          Style               = @LabelMedium,
+                          Foreground          = @Fg1,
+                          Style               = @UiCaption,
                           HorizontalAlignment = Center ]
                 }
                 ClickableBorder x:name="PART_TabLinear"
-                    [ Fill          = @Surface,
-                      Stroke         = Pen [ Brush = @OutlineVariant ],
-                      CornerRadius        = @ShapeExtraSmall,
+                    [ Fill          = @Bg1,
+                      Stroke         = Pen [ Brush = @Border ],
+                      CornerRadius        = @RadiusSm,
                       Padding             = (12,6,12,6),
                       Margin              = (0,0,4,4),
                       HorizontalAlignment = Stretch ] {
                     TextBlock
                         [ Text                = "Linear",
-                          Foreground          = @OnSurface,
-                          Style               = @LabelMedium,
+                          Foreground          = @Fg1,
+                          Style               = @UiCaption,
                           HorizontalAlignment = Center ]
                 }
                 ClickableBorder x:name="PART_TabRadial"
-                    [ Fill          = @Surface,
-                      Stroke         = Pen [ Brush = @OutlineVariant ],
-                      CornerRadius        = @ShapeExtraSmall,
+                    [ Fill          = @Bg1,
+                      Stroke         = Pen [ Brush = @Border ],
+                      CornerRadius        = @RadiusSm,
                       Padding             = (12,6,12,6),
                       Margin              = (0,0,4,4),
                       HorizontalAlignment = Stretch ] {
                     TextBlock
                         [ Text                = "Radial",
-                          Foreground          = @OnSurface,
-                          Style               = @LabelMedium,
+                          Foreground          = @Fg1,
+                          Style               = @UiCaption,
                           HorizontalAlignment = Center ]
                 }
                 ClickableBorder x:name="PART_TabPattern"
-                    [ Fill          = @Surface,
-                      Stroke         = Pen [ Brush = @OutlineVariant ],
-                      CornerRadius        = @ShapeExtraSmall,
+                    [ Fill          = @Bg1,
+                      Stroke         = Pen [ Brush = @Border ],
+                      CornerRadius        = @RadiusSm,
                       Padding             = (12,6,12,6),
                       Margin              = (0,0,4,4),
                       HorizontalAlignment = Stretch ] {
                     TextBlock
                         [ Text                = "Pattern",
-                          Foreground          = @OnSurface,
-                          Style               = @LabelMedium,
+                          Foreground          = @Fg1,
+                          Style               = @UiCaption,
                           HorizontalAlignment = Center ]
                 }
                 ClickableBorder x:name="PART_TabPicture"
-                    [ Fill          = @Surface,
-                      Stroke         = Pen [ Brush = @OutlineVariant ],
-                      CornerRadius        = @ShapeExtraSmall,
+                    [ Fill          = @Bg1,
+                      Stroke         = Pen [ Brush = @Border ],
+                      CornerRadius        = @RadiusSm,
                       Padding             = (12,6,12,6),
                       Margin              = (0,0,4,4),
                       HorizontalAlignment = Stretch ] {
                     TextBlock
                         [ Text                = "Picture",
-                          Foreground          = @OnSurface,
-                          Style               = @LabelMedium,
+                          Foreground          = @Fg1,
+                          Style               = @UiCaption,
                           HorizontalAlignment = Center ]
                 }
             }
@@ -1271,7 +1268,7 @@ resources Formatting {
             // MaxWidth caps the slot so the per-variant 2-column Grids
             // below don't inflate their Star tracks to Infinity when
             // the editor lives inside an unbounded host (ScrollViewer).
-            Border x:name="PART_BodyHost" [ Grid.Row = 3, Grid.ColumnSpan = 2, Margin = (0,0,0,@Spacing4) ]
+            Border x:name="PART_BodyHost" [ Grid.Row = 3, Grid.ColumnSpan = 2, Margin = (0,0,0,@Space4) ]
 
             // ── Opacity row ─────────────────────────────────────
             // Visible for every non-None variant; collapsed by
@@ -1295,14 +1292,14 @@ resources Formatting {
                 }
                 TextBlock
                     [ Grid.Column       = 0,
-                      Style             = @LabelSmall,
+                      Style             = @UiCaption,
                       Text              = "Transparency",
-                      Foreground        = @OnSurface,
+                      Foreground        = @Fg1,
                       VerticalAlignment = Center,
-                      Margin            = (0,0,@Spacing3,0) ]
+                      Margin            = (0,0,@Space3,0) ]
                 SliderSpinEdit x:name="PART_OpacityEdit"
                     [ Grid.Column        = 1,
-                      TextBlock.FontSize = @BodySmallSize,
+                      TextBlock.FontSize = @BodySmSize,
                       Unit               = "%",
                       Minimum            = 0,
                       Maximum            = 100,
@@ -1312,12 +1309,12 @@ resources Formatting {
             }
         }
 
-        when ( Variant = None ) { PART_TabNone.Fill = @SecondaryContainer; }
-        when ( Variant = Solid ) { PART_TabSolid.Fill = @SecondaryContainer; }
-        when ( Variant = Linear ) { PART_TabLinear.Fill = @SecondaryContainer; }
-        when ( Variant = Radial ) { PART_TabRadial.Fill = @SecondaryContainer; }
-        when ( Variant = Pattern ) { PART_TabPattern.Fill = @SecondaryContainer; }
-        when ( Variant = Picture ) { PART_TabPicture.Fill = @SecondaryContainer; }
+        when ( Variant = None ) { PART_TabNone.Fill = @SurfaceSelected; }
+        when ( Variant = Solid ) { PART_TabSolid.Fill = @SurfaceSelected; }
+        when ( Variant = Linear ) { PART_TabLinear.Fill = @SurfaceSelected; }
+        when ( Variant = Radial ) { PART_TabRadial.Fill = @SurfaceSelected; }
+        when ( Variant = Pattern ) { PART_TabPattern.Fill = @SurfaceSelected; }
+        when ( Variant = Picture ) { PART_TabPicture.Fill = @SurfaceSelected; }
     }
 
     // ── Body templates ─────────────────────────────────────────────
@@ -1353,11 +1350,11 @@ resources Formatting {
             }
             TextBlock
                 [ Grid.Column       = 0,
-                  Style             = @LabelSmall,
+                  Style             = @UiCaption,
                   Text              = "Colour",
-                  Foreground        = @OnSurface,
+                  Foreground        = @Fg1,
                   VerticalAlignment = Center,
-                  Margin            = (0,0,@Spacing3,0) ]
+                  Margin            = (0,0,@Space3,0) ]
             ColorPicker x:name="PART_SolidColor" [ Grid.Column = 1, Variant = RGB, HorizontalAlignment = Right ]
         }
     }
@@ -1376,37 +1373,37 @@ resources Formatting {
             TextBlock
                 [ Grid.Row          = 0,
                   Grid.Column       = 0,
-                  Style             = @LabelSmall,
+                  Style             = @UiCaption,
                   Text              = "Start colour",
-                  Foreground        = @OnSurfaceVariant,
+                  Foreground        = @Fg2,
                   VerticalAlignment = Center,
-                  Margin            = (0,0,@Spacing3,@Spacing2) ]
+                  Margin            = (0,0,@Space3,@Space2) ]
             ColorPicker x:name="PART_LinearStart"
                 [ Grid.Row            = 0,
                   Grid.Column         = 1,
                   HorizontalAlignment = Right,
-                  Margin              = (0,0,0,@Spacing2) ]
+                  Margin              = (0,0,0,@Space2) ]
             TextBlock
                 [ Grid.Row          = 1,
                   Grid.Column       = 0,
-                  Style             = @LabelSmall,
+                  Style             = @UiCaption,
                   Text              = "End colour",
-                  Foreground        = @OnSurfaceVariant,
+                  Foreground        = @Fg2,
                   VerticalAlignment = Center,
-                  Margin            = (0,0,@Spacing3,@Spacing2) ]
+                  Margin            = (0,0,@Space3,@Space2) ]
             ColorPicker x:name="PART_LinearEnd"
                 [ Grid.Row            = 1,
                   Grid.Column         = 1,
                   HorizontalAlignment = Right,
-                  Margin              = (0,0,0,@Spacing2) ]
+                  Margin              = (0,0,0,@Space2) ]
             TextBlock
                 [ Grid.Row          = 2,
                   Grid.Column       = 0,
-                  Style             = @LabelSmall,
+                  Style             = @UiCaption,
                   Text              = "Angle",
-                  Foreground        = @OnSurfaceVariant,
+                  Foreground        = @Fg2,
                   VerticalAlignment = Center,
-                  Margin            = (0,0,@Spacing3,0) ]
+                  Margin            = (0,0,@Space3,0) ]
             Slider x:name="PART_LinearAngle"
                 [ Grid.Row    = 2,
                   Grid.Column = 1,
@@ -1433,37 +1430,37 @@ resources Formatting {
             TextBlock
                 [ Grid.Row          = 0,
                   Grid.Column       = 0,
-                  Style             = @LabelSmall,
+                  Style             = @UiCaption,
                   Text              = "Inner colour",
-                  Foreground        = @OnSurfaceVariant,
+                  Foreground        = @Fg2,
                   VerticalAlignment = Center,
-                  Margin            = (0,0,@Spacing3,@Spacing2) ]
+                  Margin            = (0,0,@Space3,@Space2) ]
             ColorPicker x:name="PART_RadialInner"
                 [ Grid.Row            = 0,
                   Grid.Column         = 1,
                   HorizontalAlignment = Right,
-                  Margin              = (0,0,0,@Spacing2) ]
+                  Margin              = (0,0,0,@Space2) ]
             TextBlock
                 [ Grid.Row          = 1,
                   Grid.Column       = 0,
-                  Style             = @LabelSmall,
+                  Style             = @UiCaption,
                   Text              = "Outer colour",
-                  Foreground        = @OnSurfaceVariant,
+                  Foreground        = @Fg2,
                   VerticalAlignment = Center,
-                  Margin            = (0,0,@Spacing3,@Spacing2) ]
+                  Margin            = (0,0,@Space3,@Space2) ]
             ColorPicker x:name="PART_RadialOuter"
                 [ Grid.Row            = 1,
                   Grid.Column         = 1,
                   HorizontalAlignment = Right,
-                  Margin              = (0,0,0,@Spacing2) ]
+                  Margin              = (0,0,0,@Space2) ]
             TextBlock
                 [ Grid.Row          = 2,
                   Grid.Column       = 0,
-                  Style             = @LabelSmall,
+                  Style             = @UiCaption,
                   Text              = "Cx %",
-                  Foreground        = @OnSurfaceVariant,
+                  Foreground        = @Fg2,
                   VerticalAlignment = Center,
-                  Margin            = (0,0,@Spacing3,@Spacing2) ]
+                  Margin            = (0,0,@Space3,@Space2) ]
             Slider x:name="PART_RadialCenterX"
                 [ Grid.Row    = 2,
                   Grid.Column = 1,
@@ -1471,15 +1468,15 @@ resources Formatting {
                   Maximum     = 100,
                   SmallChange = 1,
                   LargeChange = 10,
-                  Margin      = (0,0,0,@Spacing2) ]
+                  Margin      = (0,0,0,@Space2) ]
             TextBlock
                 [ Grid.Row          = 3,
                   Grid.Column       = 0,
-                  Style             = @LabelSmall,
+                  Style             = @UiCaption,
                   Text              = "Cy %",
-                  Foreground        = @OnSurfaceVariant,
+                  Foreground        = @Fg2,
                   VerticalAlignment = Center,
-                  Margin            = (0,0,@Spacing3,@Spacing2) ]
+                  Margin            = (0,0,@Space3,@Space2) ]
             Slider x:name="PART_RadialCenterY"
                 [ Grid.Row    = 3,
                   Grid.Column = 1,
@@ -1487,15 +1484,15 @@ resources Formatting {
                   Maximum     = 100,
                   SmallChange = 1,
                   LargeChange = 10,
-                  Margin      = (0,0,0,@Spacing2) ]
+                  Margin      = (0,0,0,@Space2) ]
             TextBlock
                 [ Grid.Row          = 4,
                   Grid.Column       = 0,
-                  Style             = @LabelSmall,
+                  Style             = @UiCaption,
                   Text              = "Radius %",
-                  Foreground        = @OnSurfaceVariant,
+                  Foreground        = @Fg2,
                   VerticalAlignment = Center,
-                  Margin            = (0,0,@Spacing3,0) ]
+                  Margin            = (0,0,@Space3,0) ]
             Slider x:name="PART_RadialRadius"
                 [ Grid.Row    = 4,
                   Grid.Column = 1,
@@ -1523,53 +1520,53 @@ resources Formatting {
             TextBlock
                 [ Grid.Row          = 0,
                   Grid.Column       = 0,
-                  Style             = @LabelSmall,
+                  Style             = @UiCaption,
                   Text              = "Kind",
-                  Foreground        = @OnSurfaceVariant,
+                  Foreground        = @Fg2,
                   VerticalAlignment = Center,
-                  Margin            = (0,0,@Spacing3,@Spacing2) ]
+                  Margin            = (0,0,@Space3,@Space2) ]
             ComboBox x:name="PART_PatternKind"
                 [ Grid.Row            = 0,
                   Grid.Column         = 1,
-                  TextBlock.FontSize  = @BodySmallSize,
+                  TextBlock.FontSize  = @BodySmSize,
                   HorizontalAlignment = Right,
                   MaxWidth            = 120,
                   Width               = 120,
-                  Margin              = (0,0,0,@Spacing2) ]
+                  Margin              = (0,0,0,@Space2) ]
             TextBlock
                 [ Grid.Row          = 1,
                   Grid.Column       = 0,
-                  Style             = @LabelSmall,
+                  Style             = @UiCaption,
                   Text              = "Foreground",
-                  Foreground        = @OnSurfaceVariant,
+                  Foreground        = @Fg2,
                   VerticalAlignment = Center,
-                  Margin            = (0,0,@Spacing3,@Spacing2) ]
+                  Margin            = (0,0,@Space3,@Space2) ]
             ColorPicker x:name="PART_PatternForeground"
                 [ Grid.Row            = 1,
                   Grid.Column         = 1,
                   HorizontalAlignment = Right,
-                  Margin              = (0,0,0,@Spacing2) ]
+                  Margin              = (0,0,0,@Space2) ]
             TextBlock
                 [ Grid.Row          = 2,
                   Grid.Column       = 0,
-                  Style             = @LabelSmall,
+                  Style             = @UiCaption,
                   Text              = "Background",
-                  Foreground        = @OnSurfaceVariant,
+                  Foreground        = @Fg2,
                   VerticalAlignment = Center,
-                  Margin            = (0,0,@Spacing3,@Spacing2) ]
+                  Margin            = (0,0,@Space3,@Space2) ]
             ColorPicker x:name="PART_PatternBackground"
                 [ Grid.Row            = 2,
                   Grid.Column         = 1,
                   HorizontalAlignment = Right,
-                  Margin              = (0,0,0,@Spacing2) ]
+                  Margin              = (0,0,0,@Space2) ]
             TextBlock
                 [ Grid.Row          = 3,
                   Grid.Column       = 0,
-                  Style             = @LabelSmall,
+                  Style             = @UiCaption,
                   Text              = "Size",
-                  Foreground        = @OnSurfaceVariant,
+                  Foreground        = @Fg2,
                   VerticalAlignment = Center,
-                  Margin            = (0,0,@Spacing3,@Spacing2) ]
+                  Margin            = (0,0,@Space3,@Space2) ]
             Slider x:name="PART_PatternSize"
                 [ Grid.Row    = 3,
                   Grid.Column = 1,
@@ -1577,15 +1574,15 @@ resources Formatting {
                   Maximum     = 64,
                   SmallChange = 1,
                   LargeChange = 4,
-                  Margin      = (0,0,0,@Spacing2) ]
+                  Margin      = (0,0,0,@Space2) ]
             TextBlock
                 [ Grid.Row          = 4,
                   Grid.Column       = 0,
-                  Style             = @LabelSmall,
+                  Style             = @UiCaption,
                   Text              = "Angle",
-                  Foreground        = @OnSurfaceVariant,
+                  Foreground        = @Fg2,
                   VerticalAlignment = Center,
-                  Margin            = (0,0,@Spacing3,@Spacing2) ]
+                  Margin            = (0,0,@Space3,@Space2) ]
             Slider x:name="PART_PatternAngle"
                 [ Grid.Row    = 4,
                   Grid.Column = 1,
@@ -1593,15 +1590,15 @@ resources Formatting {
                   Maximum     = 180,
                   SmallChange = 1,
                   LargeChange = 15,
-                  Margin      = (0,0,0,@Spacing2) ]
+                  Margin      = (0,0,0,@Space2) ]
             TextBlock
                 [ Grid.Row          = 5,
                   Grid.Column       = 0,
-                  Style             = @LabelSmall,
+                  Style             = @UiCaption,
                   Text              = "Stroke",
-                  Foreground        = @OnSurfaceVariant,
+                  Foreground        = @Fg2,
                   VerticalAlignment = Center,
-                  Margin            = (0,0,@Spacing3,0) ]
+                  Margin            = (0,0,@Space3,0) ]
             Slider x:name="PART_PatternStroke"
                 [ Grid.Row    = 5,
                   Grid.Column = 1,
@@ -1635,37 +1632,37 @@ resources Formatting {
                 TextBlock
                     [ Grid.Row          = 0,
                       Grid.Column       = 0,
-                      Style             = @LabelSmall,
+                      Style             = @UiCaption,
                       Text              = "Image URL",
-                      Foreground        = @OnSurfaceVariant,
+                      Foreground        = @Fg2,
                       VerticalAlignment = Center,
-                      Margin            = (0,0,@Spacing3,@Spacing2) ]
+                      Margin            = (0,0,@Space3,@Space2) ]
                 TextBox x:name="PART_PictureUri"
                     [ Grid.Row    = 0,
                       Grid.Column = 1,
-                      Margin      = (0,0,0,@Spacing2) ]
+                      Margin      = (0,0,0,@Space2) ]
                 TextBlock
                     [ Grid.Row          = 1,
                       Grid.Column       = 0,
-                      Style             = @LabelSmall,
+                      Style             = @UiCaption,
                       Text              = "Stretch",
-                      Foreground        = @OnSurfaceVariant,
+                      Foreground        = @Fg2,
                       VerticalAlignment = Center,
-                      Margin            = (0,0,@Spacing3,0) ]
+                      Margin            = (0,0,@Space3,0) ]
                 ComboBox x:name="PART_PictureStretch"
                     [ Grid.Row            = 1,
                       Grid.Column         = 1,
-                      TextBlock.FontSize  = @BodySmallSize,
+                      TextBlock.FontSize  = @BodySmSize,
                       HorizontalAlignment = Right,
                       MaxWidth            = 120,
                       Width               = 120 ]
             }
             TextBlock
-                [ Style        = @LabelSmall,
+                [ Style        = @UiCaption,
                   Text         = "Paste an absolute URL or a workspace-relative path. Uniform stretch keeps aspect; Fill stretches independently; UniformToFill crops to bbox.",
-                  Foreground   = @OnSurfaceVariant,
+                  Foreground   = @Fg2,
                   TextWrapping = Wrap,
-                  Margin       = (0,@Spacing2,0,0) ]
+                  Margin       = (0,@Space2,0,0) ]
         }
     }
 
@@ -1704,13 +1701,13 @@ resources Formatting {
                 [ Width             = 24,
                   Height            = 14,
                   VerticalAlignment = Center,
-                  Margin            = (0,0,@Spacing2,0) ] {
+                  Margin            = (0,0,@Space2,0) ] {
                 Path [ Data = $Glyph, Fill = $GlyphFill, Stroke = $GlyphStroke ]
             }
             TextBlock
                 [ Text              = $Label,
-                  Style             = @BodySmall,
-                  Foreground        = @OnSurface,
+                  Style             = @BodySm,
+                  Foreground        = @Fg1,
                   VerticalAlignment = Center ]
         }
     }
@@ -1718,22 +1715,22 @@ resources Formatting {
     Template x:key="DefaultShapeFormatControl" [TargetType = ShapeFormatControl] {
         StackPanel [ Orientation = Vertical ] {
             TextBlock x:name="PART_EmptyMessage"
-                [ Style               = @BodySmall,
+                [ Style               = @BodySm,
                   Text                = "Select a shape to format its fill and outline.",
-                  Foreground          = @OnSurfaceVariant,
+                  Foreground          = @Fg2,
                   TextWrapping        = Wrap,
                   HorizontalAlignment = Stretch,
-                  Margin              = (0,@Spacing4,0,0) ]
+                  Margin              = (0,@Space4,0,0) ]
             StackPanel x:name="PART_Editors" [ Orientation = Vertical ] {
                 FillEditor x:name="PART_FillEditor"
-                PenEditor x:name="PART_PenEditor" [ Margin = (0,@Spacing4,0,0) ]
+                PenEditor x:name="PART_PenEditor" [ Margin = (0,@Space4,0,0) ]
             }
             // Connector end-caps — ShapeFormatControl.ts collapses this
             // whole section unless ShowCaps (a connector is selected).
             // Both combos share @CapOptionTemplate for the glyph preview
             // and DisplayMemberPath="Label" for the collapsed selection box.
             Grid x:name="PART_CapSection"
-                [ Margin   = (0,@Spacing4,0,0),
+                [ Margin   = (0,@Space4,0,0),
                   MaxWidth = 300 ] {
                 ColumnDefinitions {
                     ColumnDefinition [ Width = GridLength.Auto, SharedSizeGroup = "ShapeFormatLabels" ]
@@ -1750,72 +1747,72 @@ resources Formatting {
                 TextBlock
                     [ Grid.Row        = 0,
                       Grid.ColumnSpan = 2,
-                      Style           = @TitleSmall,
+                      Style           = @UiLabel,
                       Text            = "Connector ends",
-                      Foreground      = @OnSurface,
-                      Margin          = (0,0,0,@Spacing2) ]
-                Divider [ Grid.Row = 1, Grid.ColumnSpan = 2, Margin = (0,0,0,@Spacing3) ]
+                      Foreground      = @Fg1,
+                      Margin          = (0,0,0,@Space2) ]
+                Divider [ Grid.Row = 1, Grid.ColumnSpan = 2, Margin = (0,0,0,@Space3) ]
                 TextBlock
                     [ Grid.Row          = 2,
                       Grid.Column       = 0,
-                      Style             = @LabelSmall,
+                      Style             = @UiCaption,
                       Text              = "Start",
-                      Foreground        = @OnSurface,
+                      Foreground        = @Fg1,
                       VerticalAlignment = Center,
-                      Margin            = (0,0,@Spacing3,@Spacing3) ]
+                      Margin            = (0,0,@Space3,@Space3) ]
                 ComboBox x:name="PART_SourceCap"
                     [ Grid.Row           = 2,
                       Grid.Column        = 1,
                       ItemTemplate       = @CapOptionTemplate,
                       DisplayMemberPath  = "Label",
-                      TextBlock.FontSize = @BodySmallSize,
-                      Margin             = (0,0,0,@Spacing3) ]
+                      TextBlock.FontSize = @BodySmSize,
+                      Margin             = (0,0,0,@Space3) ]
                 TextBlock
                     [ Grid.Row          = 3,
                       Grid.Column       = 0,
-                      Style             = @LabelSmall,
+                      Style             = @UiCaption,
                       Text              = "Start size",
-                      Foreground        = @OnSurfaceVariant,
+                      Foreground        = @Fg2,
                       VerticalAlignment = Center,
-                      Margin            = (0,0,@Spacing3,@Spacing3) ]
+                      Margin            = (0,0,@Space3,@Space3) ]
                 SliderSpinEdit x:name="PART_SourceCapScale"
                     [ Grid.Row           = 3,
                       Grid.Column        = 1,
-                      TextBlock.FontSize = @BodySmallSize,
+                      TextBlock.FontSize = @BodySmSize,
                       Minimum            = 0.5,
                       Maximum            = 1.5,
                       SmallChange        = 0.1,
                       LargeChange        = 0.5,
                       DecimalPlaces      = 1,
                       Unit               = "×",
-                      Margin             = (0,0,0,@Spacing3) ]
+                      Margin             = (0,0,0,@Space3) ]
                 TextBlock
                     [ Grid.Row          = 4,
                       Grid.Column       = 0,
-                      Style             = @LabelSmall,
+                      Style             = @UiCaption,
                       Text              = "End",
-                      Foreground        = @OnSurface,
+                      Foreground        = @Fg1,
                       VerticalAlignment = Center,
-                      Margin            = (0,0,@Spacing3,@Spacing3) ]
+                      Margin            = (0,0,@Space3,@Space3) ]
                 ComboBox x:name="PART_TargetCap"
                     [ Grid.Row           = 4,
                       Grid.Column        = 1,
                       ItemTemplate       = @CapOptionTemplate,
                       DisplayMemberPath  = "Label",
-                      TextBlock.FontSize = @BodySmallSize,
-                      Margin             = (0,0,0,@Spacing3) ]
+                      TextBlock.FontSize = @BodySmSize,
+                      Margin             = (0,0,0,@Space3) ]
                 TextBlock
                     [ Grid.Row          = 5,
                       Grid.Column       = 0,
-                      Style             = @LabelSmall,
+                      Style             = @UiCaption,
                       Text              = "End size",
-                      Foreground        = @OnSurfaceVariant,
+                      Foreground        = @Fg2,
                       VerticalAlignment = Center,
-                      Margin            = (0,0,@Spacing3,0) ]
+                      Margin            = (0,0,@Space3,0) ]
                 SliderSpinEdit x:name="PART_TargetCapScale"
                     [ Grid.Row           = 5,
                       Grid.Column        = 1,
-                      TextBlock.FontSize = @BodySmallSize,
+                      TextBlock.FontSize = @BodySmSize,
                       Minimum            = 0.5,
                       Maximum            = 1.5,
                       SmallChange        = 0.1,

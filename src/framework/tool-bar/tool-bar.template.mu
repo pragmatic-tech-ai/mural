@@ -1,388 +1,232 @@
-// Default theme entries for the tool-bar family — ToolBar (the
-// horizontal command strip with inline-vs-overflow chevron) plus
-// its connected-bar item types (ToolBarButton, ToolBarToggleButton,
-// ToolBarSeparator).
+// Pragmatic theme — ToolBar family (Wave 4 Task 6).
 //
-// Merged into the root MuralFramework dictionary via an `import`
-// clause in src/resources/framework.resources.mu.
-
-resources ToolBars {
-    // ── ToolBarButton: connected-bar chrome ────────────────────────
-    // A ToolBarButton lives inside a ToolBar's inline strip alongside
-    // peer buttons and ToolBarSeparators. The strip is meant to read as
-    // one connected bar (Google Docs / Material 3 toolbar look), not a
-    // row of disconnected pill buttons — so the default CornerRadius is
-    // 0 (square), and the owning ToolBar rewrites the button's Position
-    // DP after each layout pass to surface where it sits in its group:
-    //
-    //   * Position = Only   — sole button in its group → fully pill
-    //   * Position = First  — leftmost in a multi-button group →
-    //                          outer-left corners rounded, inner right
-    //                          corners square (flush with the next
-    //                          button).
-    //   * Position = Last   — rightmost in a multi-button group → mirror
-    //                          of First.
-    //   * Position = Middle — interior of a group → every corner square.
-    //   * Position = None   — standalone (no owning ToolBar) or in the
-    //                          overflow popup → square corners.
-    //
-    // Padding is the M3 icon-button spec (4-square padding around a 24px
-    // glyph); a ToolBarButton with `ShowText=true` carries enough room
-    // for the label via the inner StackPanel's margin (set by
-    // rebuildContent in tool-bar-items.ts).
-    //
-    // Chrome shape follows the split button (DefaultToolBarSplitTrigger): a
-    // connected group reads as one @ShapeSmall-cornered capsule with a 1dp
-    // divider cueing each internal boundary — exactly the two-half split-button
-    // look, generalised to N buttons. The leading PART_Divider (same idiom as
-    // SegmentedItem) is collapsed on the group's first/only button (the group's
-    // own left edge is the boundary there) and shown for Middle / Last so every
-    // interior seam gets its hairline. Group-end rounding uses @ShapeSmall (not
-    // the former full pill) so the capsule matches the split button's size.
-    Template x:key="DefaultToolBarButton" [TargetType = ToolBarButton] {
-        StackPanel [ Orientation = Horizontal ] {
-            // Leading boundary with the preceding button in the group. Vertical
-            // Line stretches to the button height; cross-axis size = 1dp pen.
-            // Sits OUTSIDE PART_Border so the hover / press state layer never
-            // tints it — it stays a constant hairline like the split button's.
+// Flat-toolbar + selected-over-hover delta: Material carries a resting
+// @SurfaceContainerHigh base with a translucent OnSurfaceVariant state-layer
+// hover on PART_StateLayer. Pragmatic reads flatter: PART_Border is the base
+// chip (rest @Bg2), hover steps PART_Border itself to @Bg3 (NOT the state
+// layer). PART_StateLayer stays transparent (#00000000) and carries only the
+// padding + the Position corner-radius triggers — for ToolBarToggleButton it
+// is ALSO the checked cue (`when(IsChecked){ PART_StateLayer.Fill =
+// @SurfaceSelected }`), the TOP layer so the checked fill survives a
+// concurrent hover by z-order (PART_Border still steps to @Bg3 underneath).
+// Split-button halves get the same repoint: hover targets the outer
+// PART_Primary / PART_Arrow Border, leaving PART_PrimaryState / PART_ArrowState
+// transparent + padding-only. Popups use the canonical Pragmatic popover
+// (@Bg1 + @Border 1dp + @RadiusLg + @ShadowMd, same as the menu / ComboBox
+// popups) with the PrefersContrast triggers dropped. Press is deferred.
+//
+// Pragmatic tokens only. Merged via PragmaticControls (after MuralFramework).
+resources ToolBars
+{
+    // ── ToolBarButton: flat connected-bar chrome ───────────────────
+    Template x:key="DefaultToolBarButton" [TargetType = ToolBarButton]
+    {
+        StackPanel [ Orientation = Horizontal ]
+        {
             Line x:name="PART_Divider"
-                [ Orientation = Vertical, Stroke = Pen [ Brush = @OutlineVariant ], Visibility = Collapsed ]
-            Border x:name="PART_Border"
-                [ Fill      = @SurfaceContainerHigh,
-                  CornerRadius    = 0 ] {
-                // Transparent inner state layer (M3 state-layer model): the
-                // resting @SurfaceContainerHigh base stays put and hover / press
-                // paint a translucent OnSurfaceVariant tint ON TOP of it here,
-                // rather than swapping the base to a darker container step — which
-                // read as an abrupt "goes dark" flash. The layer carries the
-                // button padding so the tint covers the whole button; Border does
-                // NOT clip its child to CornerRadius, so the Position triggers
-                // round this layer in lock-step with PART_Border.
-                Border x:name="PART_StateLayer"
-                    [ Fill   = #00000000,
-                      CornerRadius = 0,
-                      Padding      = (12,8,12,8) ] {
+                [ Orientation = Vertical, Stroke = Pen [ Brush = @Border, Thickness = 1 ], Visibility = Collapsed ]
+            Border x:name="PART_Border" [ Fill = @Bg2, CornerRadius = 0 ]
+            {
+                Border x:name="PART_StateLayer" [ Fill = #00000000, CornerRadius = 0, Padding = (12,8,12,8) ]
+                {
                     ContentPresenter
                 }
             }
         }
-        when ( IsMouseOver ) { PART_StateLayer.Fill = @OnSurfaceVariantHoverLayer; }
-        when ( IsPressed ) { PART_StateLayer.Fill = @OnSurfaceVariantPressLayer; }
-        when ( Position = Only ) { PART_Border.CornerRadius = @ShapeSmall; PART_StateLayer.CornerRadius = @ShapeSmall; }
-        when ( Position = First ) { PART_Border.CornerRadius = (@ShapeSmall,0,0,@ShapeSmall); PART_StateLayer.CornerRadius = (@ShapeSmall,0,0,@ShapeSmall); }
+        when ( IsMouseOver ) { PART_Border.Fill = @Bg3; }
+        when ( Position = Only ) { PART_Border.CornerRadius = @RadiusMd; PART_StateLayer.CornerRadius = @RadiusMd; }
+        when ( Position = First ) { PART_Border.CornerRadius = (@RadiusMd,0,0,@RadiusMd); PART_StateLayer.CornerRadius = (@RadiusMd,0,0,@RadiusMd); }
         when ( Position = Middle ) { PART_Divider.Visibility = Visible; }
-        when ( Position = Last ) { PART_Border.CornerRadius = (0,@ShapeSmall,@ShapeSmall,0); PART_StateLayer.CornerRadius = (0,@ShapeSmall,@ShapeSmall,0); PART_Divider.Visibility = Visible; }
-        // Adaptive layout — tighter in Compact, larger touch target
-        // on coarse-pointer devices.
+        when ( Position = Last ) { PART_Border.CornerRadius = (0,@RadiusMd,@RadiusMd,0); PART_StateLayer.CornerRadius = (0,@RadiusMd,@RadiusMd,0); PART_Divider.Visibility = Visible; }
         when ( ThemeManager.Density = Compact ) { PART_StateLayer.Padding = (8,6,8,6); }
         when ( ThemeManager.Density = Comfortable ) { PART_StateLayer.Padding = (16,10,16,10); }
         when ( ThemeManager.Pointer = Coarse ) { PART_StateLayer.Padding = (16,14,16,14); }
     }
-
-    Style [TargetType = ToolBarButton] {
+    Style [TargetType = ToolBarButton]
+    {
         Template = @DefaultToolBarButton;
-        // Center vertically so the button sizes to its content, not the bar
-        // height. ToolBarPanel arranges every inline child at the full panel
-        // height; without this a button STRETCHES to whatever the tallest item is
-        // (e.g. an editor control the shell hosts in the same bar), reading as a
-        // giant pill next to the naturally-sized split buttons (which center).
         VerticalAlignment = Center;
-        // Establish the toolbar ink on the button so it cascades into the
-        // slotted content: a bare icon Shape (Fill unset) paints through
-        // effectiveFill's inherited-Foreground fallback. Text labels and
-        // colour emoji ignore it; only geometry icons depend on it. A
-        // 2-segment attached-on-self setter (a ControlTemplate trigger
-        // can't reach the 3-segment PART_Border.TextBlock.Foreground path).
-        TextBlock.Foreground = @OnSurfaceVariant;
+        TextBlock.Foreground = @Fg2;
     }
 
-    // ── ToolBarToggleButton: connected-bar chrome ──────────────────
-    // Same shape as ToolBarButton but with an IsChecked trigger on top —
-    // the chrome reads as "Filled" (@Primary) while checked so a sticky
-    // toggle (Bold, Italic, …) reads unmistakably against the surrounding
-    // square buttons. The position triggers ride on top of IsChecked
-    // because they target a different DP (CornerRadius vs Fill).
-    //
-    // Checked ink: the Style below flips the inherited TextBlock.Foreground
-    // to @OnPrimary while checked, so a bare icon Shape (Fill unset) painted
-    // through effectiveFill's Foreground fallback stays legible on the
-    // @Primary fill. The flip lives in the Style (a 2-segment attached-on-
-    // self setter) because a ControlTemplate trigger can't target the
-    // 3-segment PART_Border.TextBlock.Foreground path — same reason the
-    // IconButtonToggle Style carries its checked foregrounds.
-    Template x:key="DefaultToolBarToggleButton" [TargetType = ToolBarToggleButton] {
-        StackPanel [ Orientation = Horizontal ] {
-            // Leading group boundary — same split-button hairline as
-            // DefaultToolBarButton; outside PART_Border so the checked @Primary
-            // fill and the state layer never swallow it. Collapsed on First /
-            // Only, shown for Middle / Last.
+    // ── ToolBarToggleButton: same chrome + checked-over-hover cue ──
+    // PART_StateLayer is the ONLY carrier of the checked fill; it sits on
+    // top of PART_Border so IsChecked survives a concurrent hover.
+    Template x:key="DefaultToolBarToggleButton" [TargetType = ToolBarToggleButton]
+    {
+        StackPanel [ Orientation = Horizontal ]
+        {
             Line x:name="PART_Divider"
-                [ Orientation = Vertical, Stroke = Pen [ Brush = @OutlineVariant ], Visibility = Collapsed ]
-            Border x:name="PART_Border"
-                [ Fill      = @SurfaceContainerHigh,
-                  CornerRadius    = 0 ] {
-                // Same transparent state layer as DefaultToolBarButton — hover /
-                // press ride a translucent OnSurfaceVariant tint ON TOP of the
-                // base, matching the Filled IconButtonToggle. IsChecked swaps the
-                // base fill (PART_Border.Fill) to @Primary; the state layer
-                // overlays either base without touching it, so checked + hover
-                // composes as Primary + tint instead of one darkening the other.
-                Border x:name="PART_StateLayer"
-                    [ Fill   = #00000000,
-                      CornerRadius = 0,
-                      Padding      = (12,8,12,8) ] {
+                [ Orientation = Vertical, Stroke = Pen [ Brush = @Border, Thickness = 1 ], Visibility = Collapsed ]
+            Border x:name="PART_Border" [ Fill = @Bg2, CornerRadius = 0 ]
+            {
+                Border x:name="PART_StateLayer" [ Fill = #00000000, CornerRadius = 0, Padding = (12,8,12,8) ]
+                {
                     ContentPresenter
                 }
             }
         }
-        when ( IsMouseOver ) { PART_StateLayer.Fill = @OnSurfaceVariantHoverLayer; }
-        when ( IsPressed ) { PART_StateLayer.Fill = @OnSurfaceVariantPressLayer; }
-        when ( IsChecked ) { PART_Border.Fill = @Primary; }
-        when ( Position = Only ) { PART_Border.CornerRadius = @ShapeSmall; PART_StateLayer.CornerRadius = @ShapeSmall; }
-        when ( Position = First ) { PART_Border.CornerRadius = (@ShapeSmall,0,0,@ShapeSmall); PART_StateLayer.CornerRadius = (@ShapeSmall,0,0,@ShapeSmall); }
+        when ( IsMouseOver ) { PART_Border.Fill = @Bg3; }
+        when ( IsChecked ) { PART_StateLayer.Fill = @SurfaceSelected; }
+        when ( Position = Only ) { PART_Border.CornerRadius = @RadiusMd; PART_StateLayer.CornerRadius = @RadiusMd; }
+        when ( Position = First ) { PART_Border.CornerRadius = (@RadiusMd,0,0,@RadiusMd); PART_StateLayer.CornerRadius = (@RadiusMd,0,0,@RadiusMd); }
         when ( Position = Middle ) { PART_Divider.Visibility = Visible; }
-        when ( Position = Last ) { PART_Border.CornerRadius = (0,@ShapeSmall,@ShapeSmall,0); PART_StateLayer.CornerRadius = (0,@ShapeSmall,@ShapeSmall,0); PART_Divider.Visibility = Visible; }
-        // Adaptive layout (§ 17.7) — match DefaultToolBarButton's
-        // density / pointer triggers so the connected-bar group stays
-        // visually consistent when one button is a toggle.
+        when ( Position = Last ) { PART_Border.CornerRadius = (0,@RadiusMd,@RadiusMd,0); PART_StateLayer.CornerRadius = (0,@RadiusMd,@RadiusMd,0); PART_Divider.Visibility = Visible; }
         when ( ThemeManager.Density = Compact ) { PART_StateLayer.Padding = (8,6,8,6); }
         when ( ThemeManager.Density = Comfortable ) { PART_StateLayer.Padding = (16,10,16,10); }
         when ( ThemeManager.Pointer = Coarse ) { PART_StateLayer.Padding = (16,14,16,14); }
     }
-
-    Style [TargetType = ToolBarToggleButton] {
+    Style [TargetType = ToolBarToggleButton]
+    {
         Template = @DefaultToolBarToggleButton;
-        // Center vertically (see ToolBarButton) so a toggle sizes to its content
-        // instead of stretching to the full bar height.
         VerticalAlignment = Center;
-        // Icon ink. Resting = @OnSurfaceVariant (matches the peer
-        // ToolBarButtons); checked = @OnPrimary so a bare icon Shape stays
-        // legible on the @Primary checked fill. Set as the control's own
-        // inherited TextBlock.Foreground so it cascades into the slotted
-        // icon (Shape.effectiveFill falls back to the inherited Foreground
-        // when Fill is unset). A checked-state trigger can't live in the
-        // ControlTemplate (3-segment part path), so it rides here.
-        TextBlock.Foreground = @OnSurfaceVariant;
-        when ( IsChecked ) { TextBlock.Foreground = @OnPrimary; }
+        TextBlock.Foreground = @Fg2;
+        when ( IsChecked ) { TextBlock.Foreground = @BrandGreenInk; }
     }
 
-    // ── ToolBarSplitButton ─────────────────────────────────────────
-    // A connected-pair split button: PART_Primary fires the primary Command,
-    // PART_Arrow opens the dropdown of MenuItem children (auto-closing on
-    // click). Two flat halves share the toolbar's @SurfaceContainerHigh base
-    // with the same translucent state-layer hover/press the peer buttons use
-    // (per-half so each highlights independently); a faint divider between
-    // them cues the two targets, and the outer corners round into one pill.
-    //
-    // Vertical stack for the dropdown rows.
-    ItemsPanelTemplate x:key="DefaultToolBarMenuPanel" {
+    // ── ToolBarSplitButton ───────────────────────────────────────────
+    ItemsPanelTemplate x:key="DefaultToolBarMenuPanel"
+    {
         StackPanel [ Orientation = Vertical ]
     }
-    // Trigger chrome (visible split button) — set as TriggerTemplate; the
-    // control's primary Template slot hosts the popup below.
-    Template x:key="DefaultToolBarSplitTrigger" [TargetType = ToolBarSplitButton] {
-        StackPanel [ Orientation = Horizontal ] {
-            Border x:name="PART_Primary"
-                [ Fill      = @SurfaceContainerHigh,
-                  CornerRadius    = (@ShapeSmall,0,0,@ShapeSmall) ] {
-                Border x:name="PART_PrimaryState"
-                    [ Fill   = #00000000,
-                      CornerRadius = (@ShapeSmall,0,0,@ShapeSmall),
-                      Padding      = (12,8,10,8) ] {
+    Template x:key="DefaultToolBarSplitTrigger" [TargetType = ToolBarSplitButton]
+    {
+        StackPanel [ Orientation = Horizontal ]
+        {
+            Border x:name="PART_Primary" [ Fill = @Bg2, CornerRadius = (@RadiusMd,0,0,@RadiusMd) ]
+            {
+                Border x:name="PART_PrimaryState" [ Fill = #00000000, CornerRadius = (@RadiusMd,0,0,@RadiusMd), Padding = (12,8,10,8) ]
+                {
                     Border x:name="PART_Content" [ HorizontalAlignment = Center, VerticalAlignment = Center ]
                 }
             }
-            Border x:name="PART_Arrow"
-                [ Fill      = @SurfaceContainerHigh,
-                  CornerRadius    = (0,@ShapeSmall,@ShapeSmall,0) ] {
-                // Left divider between the two halves — was Border
-                // BorderThickness (1,0,0,0); now a vertical oriented Line
-                // docked Left so the 1dp rule cues the two hit targets.
-                DockPanel [ LastChildFill = true ] {
-                    Line [ DockPanel.Dock = Left, Orientation = Vertical, Stroke = Pen [ Brush = @OutlineVariant ] ]
-                    Border x:name="PART_ArrowState"
-                        [ Fill   = #00000000,
-                          CornerRadius = (0,@ShapeSmall,@ShapeSmall,0),
-                          Padding      = (6,8,8,8) ] {
-                        Shape [ Geometry = @ChevronDown, Fill = @OnSurfaceVariant, Width = 12, Height = 12, VerticalAlignment = Center ]
+            Border x:name="PART_Arrow" [ Fill = @Bg2, CornerRadius = (0,@RadiusMd,@RadiusMd,0) ]
+            {
+                DockPanel [ LastChildFill = true ]
+                {
+                    Line [ DockPanel.Dock = Left, Orientation = Vertical, Stroke = Pen [ Brush = @Border ] ]
+                    Border x:name="PART_ArrowState" [ Fill = #00000000, CornerRadius = (0,@RadiusMd,@RadiusMd,0), Padding = (6,8,8,8) ]
+                    {
+                        Shape [ Geometry = @ChevronDown, Fill = @Fg2, Width = 12, Height = 12, VerticalAlignment = Center ]
                     }
                 }
             }
         }
-        when ( PART_Primary.IsMouseOver ) { PART_PrimaryState.Fill = @OnSurfaceVariantHoverLayer; }
-        when ( PART_Primary.IsPressed ) { PART_PrimaryState.Fill = @OnSurfaceVariantPressLayer; }
-        when ( PART_Arrow.IsMouseOver ) { PART_ArrowState.Fill = @OnSurfaceVariantHoverLayer; }
-        when ( PART_Arrow.IsPressed ) { PART_ArrowState.Fill = @OnSurfaceVariantPressLayer; }
-        when ( IsEnabled = false ) { PART_Primary.Opacity = @DisabledContentOpacity; PART_Arrow.Opacity = @DisabledContentOpacity; }
-        // Density ladder — mirror DefaultToolBarButton's VERTICAL padding
-        // (base 8 → Compact 4, Comfortable 10, Coarse 14) so a split button's
-        // height tracks the flat toolbar buttons it sits beside. Without this the
-        // split button ignored density and stood a size taller than its peers in
-        // a Compact toolbar.
-        when ( ThemeManager.Density = Compact ) {
+        when ( PART_Primary.IsMouseOver ) { PART_Primary.Fill = @Bg3; }
+        when ( PART_Arrow.IsMouseOver ) { PART_Arrow.Fill = @Bg3; }
+        when ( IsEnabled = false ) { PART_Primary.Opacity = @OpacityDisabled; PART_Arrow.Opacity = @OpacityDisabled; }
+        when ( ThemeManager.Density = Compact )
+        {
             PART_PrimaryState.Padding = (8,6,8,6);
             PART_ArrowState.Padding = (6,6,6,6);
         }
-        when ( ThemeManager.Density = Comfortable ) {
+        when ( ThemeManager.Density = Comfortable )
+        {
             PART_PrimaryState.Padding = (16,10,14,10);
             PART_ArrowState.Padding = (10,10,10,10);
         }
-        when ( ThemeManager.Pointer = Coarse ) {
+        when ( ThemeManager.Pointer = Coarse )
+        {
             PART_PrimaryState.Padding = (16,14,14,14);
             PART_ArrowState.Padding = (10,14,10,14);
         }
     }
-    // Dropdown chrome (single-part) — adopted when the split button has NO
-    // Command, so the whole button is one hit region that opens the popup.
-    // One rounded Border (no primary/arrow divide), content + chevron inline;
-    // PART_Primary is the whole surface (the control wires it; there's no
-    // PART_Arrow in this variant). The affordance is the default @ChevronDown
-    // dropdown glyph; a consumer wanting a "more" (three-dots) overflow —
-    // e.g. an editor extended-commands strip — re-declares the no-command
-    // trigger in its own scoped Style (see Plexus's @CompactSplitButtonStyle).
-    Template x:key="DefaultToolBarDropdownTrigger" [TargetType = ToolBarSplitButton] {
-        Border x:name="PART_Primary"
-            [ Fill      = @SurfaceContainerHigh,
-              CornerRadius    = @ShapeSmall ] {
-            Border x:name="PART_PrimaryState"
-                [ Fill   = #00000000,
-                  CornerRadius = @ShapeSmall,
-                  Padding      = (12,8,10,8) ] {
-                StackPanel [ Orientation = Horizontal, VerticalAlignment = Center ] {
+    Template x:key="DefaultToolBarDropdownTrigger" [TargetType = ToolBarSplitButton]
+    {
+        Border x:name="PART_Primary" [ Fill = @Bg2, CornerRadius = @RadiusMd ]
+        {
+            Border x:name="PART_PrimaryState" [ Fill = #00000000, CornerRadius = @RadiusMd, Padding = (12,8,10,8) ]
+            {
+                StackPanel [ Orientation = Horizontal, VerticalAlignment = Center ]
+                {
                     Border x:name="PART_Content" [ HorizontalAlignment = Center, VerticalAlignment = Center ]
-                    Shape [ Geometry = @ChevronDown, Fill = @OnSurfaceVariant, Width = 12, Height = 12, VerticalAlignment = Center, Margin = (6,0,0,0) ]
+                    Shape [ Geometry = @ChevronDown, Fill = @Fg2, Width = 12, Height = 12, VerticalAlignment = Center, Margin = (6,0,0,0) ]
                 }
             }
         }
-        when ( PART_Primary.IsMouseOver ) { PART_PrimaryState.Fill = @OnSurfaceVariantHoverLayer; }
-        when ( PART_Primary.IsPressed ) { PART_PrimaryState.Fill = @OnSurfaceVariantPressLayer; }
-        when ( IsEnabled = false ) { PART_Primary.Opacity = @DisabledContentOpacity; }
-        // Density ladder — match DefaultToolBarButton's padding so the icon-only
-        // dropdown (the command SplitMenu / SplitGrid groups) shrinks in Compact
-        // like its flat neighbours instead of standing a size taller.
+        when ( PART_Primary.IsMouseOver ) { PART_Primary.Fill = @Bg3; }
+        when ( IsEnabled = false ) { PART_Primary.Opacity = @OpacityDisabled; }
         when ( ThemeManager.Density = Compact ) { PART_PrimaryState.Padding = (8,6,8,6); }
         when ( ThemeManager.Density = Comfortable ) { PART_PrimaryState.Padding = (16,10,16,10); }
         when ( ThemeManager.Pointer = Coarse ) { PART_PrimaryState.Padding = (16,14,16,14); }
     }
-    // Popup chrome — MenuPopupHost positions PART_PopupContainer below the
-    // primary half; ItemsPresenter renders the MenuItem children.
-    Template x:key="DefaultToolBarSplitPopup" [TargetType = ToolBarSplitButton] {
-        MenuPopupHost x:name="PART_PopupHost" {
+    Template x:key="DefaultToolBarSplitPopup" [TargetType = ToolBarSplitButton]
+    {
+        MenuPopupHost x:name="PART_PopupHost"
+        {
             ClickAwayScrim x:name="PART_Scrim"
             Border x:name="PART_PopupContainer"
-                [ Fill      = @SurfaceContainerHigh,
-                  Stroke     = Pen [ Brush = @OutlineVariant ],
-                  CornerRadius    = @ShapeExtraSmall,
-                  Effect          = @Elevation2,
-                  Padding         = (4) ] {
+                [ Fill = @Bg1, Stroke = Pen [ Brush = @Border, Thickness = 1 ], CornerRadius = @RadiusLg, Effect = @ShadowMd, Padding = (4) ]
+            {
                 ItemsPresenter
             }
         }
-        when ( ThemeManager.PrefersContrast = More ) { PART_PopupContainer.Stroke = (@OutlineVariant, 2); }
     }
-    Style [TargetType = ToolBarSplitButton] {
+    Style [TargetType = ToolBarSplitButton]
+    {
         Template = @DefaultToolBarSplitPopup;
         TriggerTemplate = @DefaultToolBarSplitTrigger;
-        // No Command → degenerate to a single-chrome dropdown (one hit region,
-        // whole button opens the popup). The control re-adopts on the swap.
         when ( Command is unset ) { TriggerTemplate = @DefaultToolBarDropdownTrigger; }
         ItemsPanel = @DefaultToolBarMenuPanel;
         VerticalAlignment = Center;
-        // Toolbar ink for slotted content — a bare icon Shape in the
-        // primary Content paints through effectiveFill's inherited-
-        // Foreground fallback (same as ToolBarButton).
-        TextBlock.Foreground = @OnSurfaceVariant;
+        TextBlock.Foreground = @Fg2;
     }
 
-    // ── ToolBarSeparator (vertical divider) ────────────────────────
-    // 1-px line painted by the class's RenderOverride. The Style
-    // supplies Width / MinHeight / LineBrush so divider tints follow
-    // the active theme. Same shape MenuSeparator / StatusBarSeparator
-    // use — the imperative `LineBrush ?? Theme.fieldBorder` fallback
-    // is gone now that the DP default rides through DynamicResource.
-    Style [TargetType = ToolBarSeparator] {
+    // ── ToolBarSeparator (vertical divider) ─────────────────────────
+    Style [TargetType = ToolBarSeparator]
+    {
         Width = 9;
         MinHeight = 16;
-        LineBrush = @Outline;
+        LineBrush = @BorderStrong;
     }
 
-    // ── ToolBar: inline chrome ─────────────────────────────────────
-    // Border + DockPanel + chevron + ItemsPresenter. ToolBar's ctor
-    // calls applyDefaultStyle, then FindNames each PART_ — the chevron
-    // gets its click handler wired here, the popup is materialised
-    // separately via @DefaultToolBarPopup.
-    //
-    // The chevron is a plain Button (subtle peer chrome via
-    // @ToolBarChevronButton). Its Visibility is toggled between Visible and
-    // Collapsed by ToolBar.applyChevronVisibility based on whether any items
-    // have overflowed — collapsed reserves no space AND paints nothing, so the
-    // 16dp `⋯` glyph never leaks past an empty button.
-    // Chrome is borderless + fill-free by default: the connected-bar
-    // buttons carry their own @SurfaceContainerHigh chrome and rounded
-    // group ends (via ToolBarButton.Position), so an outlined @Surface box
-    // around the strip just reads as a redundant rectangle — especially
-    // when several ToolBars sit side by side. The bar therefore blends into
-    // whatever surface hosts it and only the button pills show. High
-    // contrast re-instates a 1px outline so the strip stays delineated for
-    // users who need the edge cue. BorderBrush stays declared so that
-    // trigger has a stroke to switch on.
-    // Overflow chevron chrome — the "⋯" reads as a PEER toolbar button, not the
-    // default Filled (primary-coloured) Button pill it used to be: subtle
-    // @SurfaceContainerHigh fill, @ShapeSmall corners, OnSurfaceVariant state
-    // layer, and the same density-tracked padding as the connected-bar buttons
-    // so it stands exactly their height (28dp in Compact) instead of a size
-    // taller and a colour louder than everything beside it.
-    Template x:key="ToolBarChevronButton" [ TargetType = Button ] {
-        Border x:name="PART_Border" [ Fill = @SurfaceContainerHigh, CornerRadius = @ShapeSmall ] {
-            Border x:name="PART_State" [ Fill = #00000000, CornerRadius = @ShapeSmall, Padding = (12,8,12,8) ] {
+    // ── ToolBar: inline chrome ───────────────────────────────────────
+    Template x:key="ToolBarChevronButton" [TargetType = Button]
+    {
+        Border x:name="PART_Border" [ Fill = @Bg2, CornerRadius = @RadiusMd ]
+        {
+            Border x:name="PART_State" [ Fill = #00000000, CornerRadius = @RadiusMd, Padding = (12,8,12,8) ]
+            {
                 ContentPresenter [ HorizontalAlignment = Center, VerticalAlignment = Center ]
             }
         }
-        when ( IsMouseOver ) { PART_State.Fill = @OnSurfaceVariantHoverLayer; }
-        when ( IsPressed ) { PART_State.Fill = @OnSurfaceVariantPressLayer; }
+        when ( IsMouseOver ) { PART_Border.Fill = @Bg3; }
         when ( ThemeManager.Density = Compact ) { PART_State.Padding = (8,6,8,6); }
         when ( ThemeManager.Density = Comfortable ) { PART_State.Padding = (16,10,16,10); }
         when ( ThemeManager.Pointer = Coarse ) { PART_State.Padding = (16,14,16,14); }
     }
 
-    Template x:key="DefaultToolBar" [TargetType = ToolBar] {
-        Border x:name="PART_Border"
-            [ Stroke     = (@Outline, 0),
-              Padding         = (4) ] {
-            DockPanel x:name="PART_Layout" [ LastChildFill = true ] {
-                Button x:name="PART_Chevron" [ DockPanel.Dock = Right, Template = @ToolBarChevronButton ] {
-                    Shape [ Geometry = @MoreHoriz, Fill = @OnSurfaceVariant, Width = 16, Height = 16 ]
+    Template x:key="DefaultToolBar" [TargetType = ToolBar]
+    {
+        Border x:name="PART_Border" [ Stroke = Pen [ Brush = @BorderStrong, Thickness = 0 ], Padding = (4) ]
+        {
+            DockPanel x:name="PART_Layout" [ LastChildFill = true ]
+            {
+                Button x:name="PART_Chevron" [ DockPanel.Dock = Right, Template = @ToolBarChevronButton ]
+                {
+                    Shape [ Geometry = @MoreHoriz, Fill = @Fg2, Width = 16, Height = 16 ]
                 }
                 ItemsPresenter x:name="PART_ItemsPresenter"
             }
         }
-
-        when ( ThemeManager.PrefersContrast = More ) { PART_Border.Stroke = (@Outline, 1); }
     }
 
-    // ── ToolBar: overflow popup ────────────────────────────────────
-    // Mounted onto the PresentationTarget's OverlayLayer when
-    // IsOverflowOpen flips true. PART_PopupList is an internal
-    // ItemsControl bound to ToolBar._overflowedItems (the items that
-    // moved off the inline strip because they wouldn't fit).
-    // PART_PopupHost.anchor is wired to the chevron in ToolBar's ctor.
-    Template x:key="DefaultToolBarPopup" [TargetType = ToolBar] {
-        ToolBarPopupHost x:name="PART_PopupHost" {
+    // ── ToolBar: overflow popup ──────────────────────────────────────
+    Template x:key="DefaultToolBarPopup" [TargetType = ToolBar]
+    {
+        ToolBarPopupHost x:name="PART_PopupHost"
+        {
             ClickAwayScrim x:name="PART_Scrim"
             Border x:name="PART_PopupContainer"
-                [ Fill      = @SurfaceContainerHigh,
-                  Stroke     = Pen [ Brush = @OutlineVariant ],
-                  Padding         = (4) ] {
+                [ Fill = @Bg1, Stroke = Pen [ Brush = @Border, Thickness = 1 ], CornerRadius = @RadiusLg, Effect = @ShadowMd, Padding = (4) ]
+            {
                 ToolBarOverflowItemsControl x:name="PART_PopupList"
             }
         }
-
-        // High-contrast popup chrome — see DefaultMenuButtonPopup for
-        // the rationale.
-        when ( ThemeManager.PrefersContrast = More ) { PART_PopupContainer.Stroke = (@OutlineVariant, 2); }
     }
 
-    Style [TargetType = ToolBar] {
+    Style [TargetType = ToolBar]
+    {
         Template = @DefaultToolBar;
         PopupTemplate = @DefaultToolBarPopup;
     }

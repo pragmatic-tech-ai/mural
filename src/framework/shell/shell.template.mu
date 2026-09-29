@@ -1,21 +1,52 @@
-// Default theme entries for the shell family — EditorShell and
-// ViewerShell, the two application-shell variants.
+// Pragmatic theme — Shell family (Wave 4 Task 7): EditorShell / ViewerShell
+// / ShellSideContentPane / PanelButton, plus every DataTemplate the shell
+// regions dispatch on (command bar items, document/panel tab headers, the
+// compact header icon-button/menu-button chrome).
 //
-// Both compose existing chrome (TopAppBar, ToolBar, NavigationRail,
-// StatusBar, …) into named region hosts. The shell is services-driven: it
-// takes no body children. Each region host binds its content declaratively
-// via `$service(Token)` — the Navigation host to the NavigationService
-// (whose destinations flatten from the modules composed on the Application),
-// the Inspector / Status hosts to their services. An app composes a shell by
-// declaring modules and registering services, not by tagging children:
+// Pure transcription of Material's shell.template.mu — every DockPanel /
+// Grid / DataTemplate, every $service(...)/$$Prop/$Prop/<<ToVisibility
+// binding, every PART_* name, and every keyed reference kept verbatim. Only
+// these substitutions + deltas are applied:
 //
-//     Application {
-//         .modules: { DiagramModule; LayersModule; … }
-//         resources: { EditorShell x:root { } }
-//     }
+//   * Fill = @Surface  → Fill = @Bg1  (EditorShell root Border, ViewerShell
+//     root Border, PART_CommandHost).
+//   * Fill = @SurfaceContainer → Fill = @Bg2 (ShellSideContentPane Style
+//     default Fill).
+//   * @OnSurfaceVariant → @Fg2 (every icon Fill, the side-pane title
+//     Foreground, the TextBlock.Foreground cascade in
+//     CompactHeaderIconButton / CompactHeaderMenuButton).
+//   * Stroke = (@OutlineVariant, 1) → Stroke = Pen [ Brush = @Border,
+//     Thickness = 1 ] (the command-host + side-pane header bottom rules —
+//     the Pragmatic Pen-object stroke convention, see tabs/status-bar/
+//     navigation/tool-bar forks).
+//   * Style = @TitleSmall → Style = @UiLabel (side-pane PART_Title).
+//   * @OnSurfaceVariantHoverLayer → @Bg2 on CompactHeaderIconButton's
+//     PART_StateLayer hover; @OnSurfaceVariantPressLayer dropped (no press
+//     cue — matches the Pragmatic icon-button/tool-bar forks' deferred
+//     press).
+//   * CornerRadius = @ShapeSmall → @RadiusMd (PanelButton Style).
+//   * @Spacing3/@Spacing2/@Spacing1 → @Space3/@Space2/@Space1 (side-pane
+//     header paddings/margins).
+//   * PanelButton Style: Template = @DefaultStandardIconButton →
+//     Template = @DefaultIconButton — the Pragmatic icon-button template
+//     key (@DefaultStandardIconButton exists ONLY in Material's buttons
+//     template and would drag Material chrome under Pragmatic). Variant =
+//     Standard and CornerRadius = @RadiusMd are kept.
 //
-// Merged into the root MuralFramework dictionary via an `import` clause
-// in src/resources/framework.resources.mu.
+// Keyed references (@ActivityBarRail, @ActivityBarItem, @RailActionsPanel,
+// @DefaultNavigationRailPanel, @DefaultNavigationBarPanel from the
+// navigation fork; the ToolBar/menu keys from the tool-bar fork) resolve
+// within the merged theme dictionary to their Pragmatic counterparts — not
+// redefined here. @CommandControlsPanel, @CommandGridPanel,
+// @CommandMenuRowTemplate, @CommandGridButtonTemplate,
+// @DocumentTabHeaderTemplate, @DockTabHeader, @CompactHeaderIconButton,
+// @CompactHeaderMenuButton, @DefaultShellSideContentPane,
+// @DefaultEditorShell, @DefaultViewerShell are (re)defined here, same keys
+// as Material, so last-merged-wins under this dictionary.
+//
+// Only Pragmatic tokens are used in every changed line — no M3 (@Surface /
+// @SurfaceContainer / @OnSurfaceVariant* / @OutlineVariant / @TitleSmall /
+// @ShapeSmall / @Spacing*) token, no raw hex except #00000000.
 
 resources Shells {
     // ── EditorShell — full editing chrome ──────────────────────────
@@ -51,12 +82,12 @@ resources Shells {
     // icons); empty until the app provides one.
     DataTemplate [DataType = RailAction] {
         IconButton [ Variant = Standard, Command = $Command ] {
-            Shape [ Geometry = $Icon, Fill = @OnSurfaceVariant, Width = 22, Height = 22 ]
+            Shape [ Geometry = $Icon, Fill = @Fg2, Width = 22, Height = 22 ]
         }
     }
 
     Template x:key="DefaultEditorShell" [TargetType = EditorShell] {
-        Border [ Fill = @Surface ] {
+        Border [ Fill = @Bg1 ] {
             AdornerDecorator {
                 DockPanel [ LastChildFill = true ] {
                     // Header (app-bar) region — presents the shell's HeaderContent
@@ -76,10 +107,10 @@ resources Shells {
                     // cluster plus the active document's commands — exists only
                     // for an active document, so ActiveDocument is the "non-empty"
                     // signal (an empty bar would otherwise leave a bare
-                    // @SurfaceContainer band under the header).
+                    // @Bg1 band under the header).
                     Border x:name="PART_CommandHost"
                         [ DockPanel.Dock  = Top,
-                          Fill      = @Surface,
+                          Fill      = @Bg1,
                           Padding         = (8,4,8,4),
                           Visibility      = $service(ContentHostService).ActiveDocument << ToVisibility ] {
                         // Command groups fill the bar as ONE ToolBar (each group's
@@ -93,7 +124,7 @@ resources Shells {
                         // Bottom rule: a horizontal Line docked Bottom draws the 1dp
                         // separator that used to be the Border's (0,0,0,1) bottom edge.
                         DockPanel [ LastChildFill = true ] {
-                            Line [ DockPanel.Dock = Bottom, Orientation = Horizontal, Stroke = (@OutlineVariant, 1) ]
+                            Line [ DockPanel.Dock = Bottom, Orientation = Horizontal, Stroke = Pen [ Brush = @Border, Thickness = 1 ] ]
                             // Document save cluster — host-owned Save / Save All,
                             // shown whenever a document is active (VS-style). Icons
                             // are app-supplied (@Save/@SaveAll via DynamicResource);
@@ -113,10 +144,10 @@ resources Shells {
                                   Margin            = (0,0,8,0),
                                   Visibility        = $service(ContentHostService).ActiveDocument << ToVisibility ] {
                                 ToolBarButton [ Command = $service(ContentHostService).SaveActiveCommand ] {
-                                    Shape [ Geometry = @Save, Fill = @OnSurfaceVariant, Width = 16, Height = 16 ]
+                                    Shape [ Geometry = @Save, Fill = @Fg2, Width = 16, Height = 16 ]
                                 }
                                 ToolBarButton [ Command = $service(ContentHostService).SaveAllCommand ] {
-                                    Shape [ Geometry = @SaveAll, Fill = @OnSurfaceVariant, Width = 16, Height = 16 ]
+                                    Shape [ Geometry = @SaveAll, Fill = @Fg2, Width = 16, Height = 16 ]
                                 }
                             }
                             ItemsControl
@@ -269,7 +300,7 @@ resources Shells {
     // SplitGrid dropdown cell — an icon-only button.
     DataTemplate x:key="CommandGridButtonTemplate" [DataType = CommandViewModel] {
         ToolBarButton [ Command = $Command ] {
-            Shape [ Geometry = $Definition.Icon, Fill = @OnSurfaceVariant, Width = 16, Height = 16, Margin = (2) ]
+            Shape [ Geometry = $Definition.Icon, Fill = @Fg2, Width = 16, Height = 16, Margin = (2) ]
         }
     }
 
@@ -282,7 +313,7 @@ resources Shells {
     // popup lists the members as menu rows.
     DataTemplate [DataType = ToolbarSplitMenuGroup] {
         ToolBarSplitButton
-            [ Content      = Shape [ Geometry = $Icon, Fill = @OnSurfaceVariant, Width = 16, Height = 16 ],
+            [ Content      = Shape [ Geometry = $Icon, Fill = @Fg2, Width = 16, Height = 16 ],
               ItemsSource  = $Items,
               ItemTemplate = @CommandMenuRowTemplate,
               Margin       = (1,0,1,0) ]
@@ -290,7 +321,7 @@ resources Shells {
     // SplitGrid — an icon-only dropdown whose popup tiles the members in a grid.
     DataTemplate [DataType = ToolbarSplitGridGroup] {
         ToolBarSplitButton
-            [ Content      = Shape [ Geometry = $Icon, Fill = @OnSurfaceVariant, Width = 16, Height = 16 ],
+            [ Content      = Shape [ Geometry = $Icon, Fill = @Fg2, Width = 16, Height = 16 ],
               ItemsSource  = $Items,
               ItemsPanel   = @CommandGridPanel,
               ItemTemplate = @CommandGridButtonTemplate,
@@ -367,7 +398,7 @@ resources Shells {
             // ($IsDirty binds against the document Model, reactive).
             Shape
                 [ Geometry          = @IconDirtyDot,
-                  Fill              = @OnSurfaceVariant,
+                  Fill              = @Fg2,
                   Width             = 6,
                   Height            = 6,
                   VerticalAlignment = Center,
@@ -380,7 +411,7 @@ resources Shells {
                   CommandParameter  = $Id,
                   VerticalAlignment = Center,
                   Margin            = (2,0,0,0) ] {
-                Shape [ Geometry = @IconClose, Fill = @OnSurfaceVariant, Width = 8, Height = 8 ]
+                Shape [ Geometry = @IconClose, Fill = @Fg2, Width = 8, Height = 8 ]
             }
         }
     }
@@ -395,7 +426,7 @@ resources Shells {
     //   Navigation → Left  (PART_NavHost,    single, stretches)
     //   Content    → fill  (PART_ContentHost, single)
     Template x:key="DefaultViewerShell" [TargetType = ViewerShell] {
-        Border [ Fill = @Surface ] {
+        Border [ Fill = @Bg1 ] {
             DockPanel [ LastChildFill = true ] {
                 Border x:name="PART_HeaderHost" [ DockPanel.Dock = Top ]
                 Border x:name="PART_NavHost"
@@ -443,7 +474,7 @@ resources Shells {
                   CommandParameter  = $Id,
                   VerticalAlignment = Center,
                   Margin            = (2,0,0,0) ] {
-                Shape [ Geometry = @IconClose, Fill = @OnSurfaceVariant, Width = 8, Height = 8 ]
+                Shape [ Geometry = @IconClose, Fill = @Fg2, Width = 8, Height = 8 ]
             }
         }
     }
@@ -452,21 +483,21 @@ resources Shells {
     // collapse (chevron) and close affordances, and the document tab close
     // button. The M3 IconButton variants hardcode a 40×40 PART_Border, too
     // large for a dense header row; this template sizes to a tight 16×16 with
-    // a transparent hover/press layer.
+    // a transparent hover/press layer. Press is deferred (matches the other
+    // Pragmatic icon-button forks), so only the hover trigger remains.
     Template x:key="CompactHeaderIconButton" [TargetType = IconButton] {
         Border x:name="PART_Border"
             [ Fill           = #00000000,
               CornerRadius         = (2),
               Width                = 16,
               Height               = 16,
-              TextBlock.Foreground = @OnSurfaceVariant ] {
+              TextBlock.Foreground = @Fg2 ] {
             Border x:name="PART_StateLayer"
                 [ Fill = #00000000, CornerRadius = (2) ] {
                 ContentPresenter [ HorizontalAlignment = Center, VerticalAlignment = Center ]
             }
         }
-        when ( IsMouseOver ) { PART_StateLayer.Fill = @OnSurfaceVariantHoverLayer; }
-        when ( IsPressed ) { PART_StateLayer.Fill = @OnSurfaceVariantPressLayer; }
+        when ( IsMouseOver ) { PART_StateLayer.Fill = @Bg2; }
     }
 
     // Compact icon-only MenuButton trigger — the header overflow (…) affordance.
@@ -481,7 +512,7 @@ resources Shells {
                   CornerRadius         = (2),
                   Width                = 16,
                   Height               = 16,
-                  TextBlock.Foreground = @OnSurfaceVariant ] {
+                  TextBlock.Foreground = @Fg2 ] {
                 StackPanel x:name="PART_TriggerStack"
                     [ Orientation        = Horizontal,
                       HorizontalAlignment = Center,
@@ -495,16 +526,16 @@ resources Shells {
     // ── PanelButton — rounded-rectangle icon button for panel headers ───────
     // The shell-panel affordance (pop-out / collapse / add): an IconButton
     // subclass whose default Style keeps the Standard (chrome-less) fill but
-    // trades IconButton's @ShapeFull circle for a small @ShapeSmall (8dp)
-    // corner — the rounded-square look. Reuses the Standard IconButton
-    // template verbatim: PanelButton IS an IconButton, so the
-    // [TargetType=IconButton] template applies, and its PART_Border /
-    // PART_StateLayer `$$CornerRadius` TemplateBinding picks up the radius
-    // set here.
+    // trades IconButton's @RadiusPill circle for a small @RadiusMd corner —
+    // the rounded-square look. Reuses the Pragmatic Standard IconButton
+    // template verbatim (@DefaultIconButton, icon-buttons.template.mu):
+    // PanelButton IS an IconButton, so the [TargetType=IconButton] template
+    // applies, and its PART_FocusRing / PART_Root `$$CornerRadius`
+    // TemplateBinding picks up the radius set here.
     Style [TargetType = PanelButton] {
         Variant      = Standard;
-        Template     = @DefaultStandardIconButton;
-        CornerRadius = @ShapeSmall;
+        Template     = @DefaultIconButton;
+        CornerRadius = @RadiusMd;
     }
 
     // ── ShellSideContentPane — a titled side pane (VSCode Explorer shape) ──
@@ -548,11 +579,11 @@ resources Shells {
                 // body (the same delineation the right dock's rail carries).
                 Border x:name="PART_Header"
                     [ Grid.Row       = 0,
-                      Padding         = (@Spacing3,@Spacing2,@Spacing2,@Spacing2) ] {
+                      Padding         = (@Space3,@Space2,@Space2,@Space2) ] {
                     DockPanel [ LastChildFill = true ] {
                         // 1dp bottom rule (was the Border's (0,0,0,1) bottom edge):
                         // a horizontal Line docked Bottom separates header from body.
-                        Line [ DockPanel.Dock = Bottom, Orientation = Horizontal, Stroke = (@OutlineVariant, 1) ]
+                        Line [ DockPanel.Dock = Bottom, Orientation = Horizontal, Stroke = Pen [ Brush = @Border, Thickness = 1 ] ]
                         // VSCode-style header button bar, pinned rightmost (declared
                         // before PART_Commands so it takes the outer Right edge):
                         // an overflow menu (…) for future per-panel actions + a
@@ -563,16 +594,16 @@ resources Shells {
                             [ DockPanel.Dock  = Right,
                               Orientation       = Horizontal,
                               VerticalAlignment = Center,
-                              Margin            = (@Spacing2,0,0,0) ] {
+                              Margin            = (@Space2,0,0,0) ] {
                             MenuButton x:name="PART_Overflow"
                                 [ TriggerTemplate = @CompactHeaderMenuButton,
-                                  Icon            = Shape [ Geometry = @MoreHoriz, Fill = @OnSurfaceVariant, Width = 12, Height = 12 ] ]
+                                  Icon            = Shape [ Geometry = @MoreHoriz, Fill = @Fg2, Width = 12, Height = 12 ] ]
                             IconButton x:name="PART_Close"
                                 [ Template          = @CompactHeaderIconButton,
                                   Command           = $$CloseCommand,
                                   VerticalAlignment = Center,
-                                  Margin            = (@Spacing1,0,0,0) ] {
-                                Shape [ Geometry = @IconClose, Fill = @OnSurfaceVariant, Width = 12, Height = 12 ]
+                                  Margin            = (@Space1,0,0,0) ] {
+                                Shape [ Geometry = @IconClose, Fill = @Fg2, Width = 12, Height = 12 ]
                             }
                         }
                         ContentPresenter x:name="PART_Commands"
@@ -580,9 +611,9 @@ resources Shells {
                               Content           = $$Commands,
                               VerticalAlignment = Center ]
                         TextBlock x:name="PART_Title"
-                            [ Style             = @TitleSmall,
+                            [ Style             = @UiLabel,
                               Text              = $$Header,
-                              Foreground        = @OnSurfaceVariant,
+                              Foreground        = @Fg2,
                               VerticalAlignment = Center ]
                     }
                 }
@@ -591,6 +622,6 @@ resources Shells {
     }
     Style [TargetType = ShellSideContentPane] {
         Template = @DefaultShellSideContentPane;
-        Fill = @SurfaceContainer;
+        Fill = @Bg2;
     }
 }

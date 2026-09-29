@@ -13,37 +13,37 @@ resources Pickers {
     // width, keeping their columns aligned.
     Template x:key="DefaultDatePicker" [TargetType = DatePicker] {
         Border x:name="PART_Root"
-            [ Fill      = @Surface,
-              Stroke     = Pen [ Brush = @OutlineVariant ],
-              CornerRadius    = @ShapeMedium,
-              Padding         = (@Spacing3,@Spacing3,@Spacing3,@Spacing3),
+            [ Fill      = @Bg1,
+              Stroke     = Pen [ Brush = @Border ],
+              CornerRadius    = @RadiusLg,
+              Padding         = (@Space3,@Space3,@Space3,@Space3),
               Width           = 306 ] {
             StackPanel [ Orientation = Vertical ] {
                 // Header — month navigation.
-                DockPanel [ LastChildFill = true, Margin = (0,0,0,@Spacing2) ] {
+                DockPanel [ LastChildFill = true, Margin = (0,0,0,@Space2) ] {
                     IconButton x:name="PART_PrevButton" [ Variant = Standard, DockPanel.Dock = Left ] {
-                        Shape [ Geometry = @ChevronLeft, Fill = @OnSurfaceVariant, Width = 18, Height = 18 ]
+                        Shape [ Geometry = @ChevronLeft, Fill = @Fg2, Width = 18, Height = 18 ]
                     }
                     IconButton x:name="PART_NextButton" [ Variant = Standard, DockPanel.Dock = Right ] {
-                        Shape [ Geometry = @ChevronRight, Fill = @OnSurfaceVariant, Width = 18, Height = 18 ]
+                        Shape [ Geometry = @ChevronRight, Fill = @Fg2, Width = 18, Height = 18 ]
                     }
                     TextBlock x:name="PART_MonthLabel"
                         [ Text                = "",
-                          Style               = @TitleSmall,
-                          Foreground          = @OnSurface,
+                          Style               = @UiLabel,
+                          Foreground          = @Fg1,
                           HorizontalAlignment = Center,
                           VerticalAlignment   = Center ]
                 }
                 // Weekday initials, Sunday-first (matches the grid's
                 // FirstColumn = 1st-of-month weekday).
                 UniformGrid [ Columns = 7 ] {
-                    TextBlock [ Text = "S", Style = @LabelSmall, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center ]
-                    TextBlock [ Text = "M", Style = @LabelSmall, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center ]
-                    TextBlock [ Text = "T", Style = @LabelSmall, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center ]
-                    TextBlock [ Text = "W", Style = @LabelSmall, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center ]
-                    TextBlock [ Text = "T", Style = @LabelSmall, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center ]
-                    TextBlock [ Text = "F", Style = @LabelSmall, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center ]
-                    TextBlock [ Text = "S", Style = @LabelSmall, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center ]
+                    TextBlock [ Text = "S", Style = @UiCaption, Foreground = @Fg2, HorizontalAlignment = Center ]
+                    TextBlock [ Text = "M", Style = @UiCaption, Foreground = @Fg2, HorizontalAlignment = Center ]
+                    TextBlock [ Text = "T", Style = @UiCaption, Foreground = @Fg2, HorizontalAlignment = Center ]
+                    TextBlock [ Text = "W", Style = @UiCaption, Foreground = @Fg2, HorizontalAlignment = Center ]
+                    TextBlock [ Text = "T", Style = @UiCaption, Foreground = @Fg2, HorizontalAlignment = Center ]
+                    TextBlock [ Text = "F", Style = @UiCaption, Foreground = @Fg2, HorizontalAlignment = Center ]
+                    TextBlock [ Text = "S", Style = @UiCaption, Foreground = @Fg2, HorizontalAlignment = Center ]
                 }
                 // Day cells — built by the control.
                 UniformGrid x:name="PART_DayGrid" [ Columns = 7 ]
@@ -62,36 +62,36 @@ resources Pickers {
     // and the readout/AM-PM parts.
     Template x:key="DefaultTimePicker" [TargetType = TimePicker] {
         Border x:name="PART_Root"
-            [ Fill      = @Surface,
-              Stroke     = Pen [ Brush = @OutlineVariant ],
-              CornerRadius    = @ShapeMedium,
-              Padding         = (@Spacing4,@Spacing4,@Spacing4,@Spacing4) ] {
+            [ Fill      = @Bg1,
+              Stroke     = Pen [ Brush = @Border ],
+              CornerRadius    = @RadiusLg,
+              Padding         = (@Space4,@Space4,@Space4,@Space4) ] {
             StackPanel [ Orientation = Vertical, HorizontalAlignment = Center ] {
                 // Digital readout — hour : minute (each a ring-switch) + AM/PM.
-                StackPanel [ Orientation = Horizontal, HorizontalAlignment = Center, Margin = (0,0,0,@Spacing4) ] {
+                StackPanel [ Orientation = Horizontal, HorizontalAlignment = Center, Margin = (0,0,0,@Space4) ] {
                     ClickableBorder x:name="PART_HourHit"
-                        [ Fill = @SurfaceContainerHighest, CornerRadius = @ShapeSmall, Padding = (@Spacing3,@Spacing1,@Spacing3,@Spacing1) ] {
-                        TextBlock x:name="PART_HourLabel" [ Text = "9", FontSize = 36, Foreground = @OnSurface ]
+                        [ Fill = @Bg2, CornerRadius = @RadiusMd, Padding = (@Space3,@Space1,@Space3,@Space1) ] {
+                        TextBlock x:name="PART_HourLabel" [ Text = "9", FontSize = 36, Foreground = @Fg1 ]
                     }
-                    TextBlock [ Text = ":", FontSize = 36, Foreground = @OnSurface, VerticalAlignment = Center, Margin = (@Spacing1,0,@Spacing1,0) ]
+                    TextBlock [ Text = ":", FontSize = 36, Foreground = @Fg1, VerticalAlignment = Center, Margin = (@Space1,0,@Space1,0) ]
                     ClickableBorder x:name="PART_MinuteHit"
-                        [ Fill = @SurfaceContainerHighest, CornerRadius = @ShapeSmall, Padding = (@Spacing3,@Spacing1,@Spacing3,@Spacing1) ] {
-                        TextBlock x:name="PART_MinuteLabel" [ Text = "00", FontSize = 36, Foreground = @OnSurface ]
+                        [ Fill = @Bg2, CornerRadius = @RadiusMd, Padding = (@Space3,@Space1,@Space3,@Space1) ] {
+                        TextBlock x:name="PART_MinuteLabel" [ Text = "00", FontSize = 36, Foreground = @Fg1 ]
                     }
-                    StackPanel [ Orientation = Vertical, Margin = (@Spacing3,0,0,0), VerticalAlignment = Center ] {
+                    StackPanel [ Orientation = Vertical, Margin = (@Space3,0,0,0), VerticalAlignment = Center ] {
                         ClickableBorder x:name="PART_AmButton"
-                            [ CornerRadius = @ShapeSmall, Padding = (@Spacing2,@Spacing1,@Spacing2,@Spacing1) ] {
-                            TextBlock [ Text = "AM", Style = @LabelLarge, Foreground = @OnSurface ]
+                            [ CornerRadius = @RadiusMd, Padding = (@Space2,@Space1,@Space2,@Space1) ] {
+                            TextBlock [ Text = "AM", Style = @UiLabel, Foreground = @Fg1 ]
                         }
                         ClickableBorder x:name="PART_PmButton"
-                            [ CornerRadius = @ShapeSmall, Padding = (@Spacing2,@Spacing1,@Spacing2,@Spacing1) ] {
-                            TextBlock [ Text = "PM", Style = @LabelLarge, Foreground = @OnSurface ]
+                            [ CornerRadius = @RadiusMd, Padding = (@Space2,@Space1,@Space2,@Space1) ] {
+                            TextBlock [ Text = "PM", Style = @UiLabel, Foreground = @Fg1 ]
                         }
                     }
                 }
                 // Clock face — a filled circle hosting the Canvas the control
                 // paints numbers / hand / pivot onto.
-                Border [ Width = 256, Height = 256, CornerRadius = @ShapeFull, Fill = @SurfaceContainerHighest ] {
+                Border [ Width = 256, Height = 256, CornerRadius = @RadiusPill, Fill = @Bg2 ] {
                     Canvas x:name="PART_ClockFace" [ Width = 256, Height = 256 ]
                 }
             }

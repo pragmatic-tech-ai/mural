@@ -12,7 +12,7 @@
 // Pragmatic tokens only (+ shared geometry @ChevronDown). Merged via
 // PragmaticControls.
 
-resources PragmaticSplitButton
+resources SplitButtons
 {
     Template x:key="DefaultSplitButton" [TargetType = SplitButton]
     {

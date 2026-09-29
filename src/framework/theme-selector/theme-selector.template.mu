@@ -27,15 +27,15 @@ resources ThemeSelectors {
     Template x:key="DefaultThemeSelector" [TargetType = ThemeSelector] {
         StackPanel x:name="PART_Layout" [ Orientation = Horizontal ] {
             // Always-visible icon affordances. TextBlock Foreground is
-            // tinted to @OnSurfaceVariant — the on-Surface content tone
+            // tinted to @Fg2 — the on-Surface content tone
             // shared by the top app bar (@Surface) and the status bar
             // (@SurfaceContainerLow), both surfaces this control rides.
             // (@OnPrimary here was near-invisible dark-on-dark once the
             // app bar moved to a Surface background.)
             TextBlock
-                [ Style             = @LabelLarge,
+                [ Style             = @UiLabel,
                   Text              = "Aa",
-                  Foreground        = @OnSurfaceVariant,
+                  Foreground        = @Fg2,
                   VerticalAlignment = Center,
                   Margin            = (4,0,4,0) ]
             Border x:name="PART_ThemeComboWrap"
@@ -47,9 +47,9 @@ resources ThemeSelectors {
             }
 
             TextBlock
-                [ Style             = @LabelLarge,
+                [ Style             = @UiLabel,
                   Text              = "◐",
-                  Foreground        = @OnSurfaceVariant,
+                  Foreground        = @Fg2,
                   VerticalAlignment = Center,
                   Margin            = (4,0,4,0) ]
             Border x:name="PART_SchemeComboWrap"

@@ -16,7 +16,7 @@
 // Only Pragmatic tokens — no M3 (@Outline / @Surface / @SecondaryContainer /
 // @State*Overlay / @Shape* / @Label*) token.
 
-resources PragmaticSegmentedButton
+resources SegmentedButtons
 {
     Template x:key="DefaultSegmentedButton" [TargetType = SegmentedButton]
     {

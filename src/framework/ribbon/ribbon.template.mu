@@ -31,14 +31,14 @@ resources Ribbons {
     Template x:key="DefaultRibbonButton" [TargetType = RibbonButton] {
         Border x:name="PART_Border"
             [ Fill   = #00000000,
-              CornerRadius = @ShapeExtraSmall,
-              Padding      = (@Spacing2,@Spacing1,@Spacing2,@Spacing1) ] {
+              CornerRadius = @RadiusSm,
+              Padding      = (@Space2,@Space1,@Space2,@Space1) ] {
             ContentPresenter [ HorizontalAlignment = Center, VerticalAlignment = Center ]
         }
-        when ( IsMouseOver ) { PART_Border.Fill = @StateHoverOverlay; }
-        when ( IsPressed ) { PART_Border.Fill = @StatePressOverlay; }
-        when ( IsEnabled = false ) { PART_Border.Opacity = @DisabledContentOpacity; }
-        when ( Size = Large ) { PART_Border.MinWidth = 56; PART_Border.MinHeight = 68; PART_Border.Padding = (@Spacing2,@Spacing2,@Spacing2,@Spacing2); }
+        when ( IsMouseOver ) { PART_Border.Fill = @Bg2; }
+        when ( IsPressed ) { PART_Border.Fill = @Bg3; }
+        when ( IsEnabled = false ) { PART_Border.Opacity = @OpacityDisabled; }
+        when ( Size = Large ) { PART_Border.MinWidth = 56; PART_Border.MinHeight = 68; PART_Border.Padding = (@Space2,@Space2,@Space2,@Space2); }
         // Medium — one icon+label row; three stack to roughly a Large's
         // height inside a RibbonSmallButtonColumn.
         when ( Size = Medium ) { PART_Border.MinHeight = 24; }
@@ -48,51 +48,60 @@ resources Ribbons {
         // padding rather than re-running a density ladder. Padding-only
         // (not MinHeight) so it composes with, rather than clobbers, the
         // Size trigger's height; declared last so it wins the padding slot.
-        when ( ThemeManager.Pointer = Coarse ) { PART_Border.Padding = (@Spacing3,@Spacing3,@Spacing3,@Spacing3); }
+        when ( ThemeManager.Pointer = Coarse ) { PART_Border.Padding = (@Space3,@Space3,@Space3,@Space3); }
     }
     Style [TargetType = RibbonButton] {
         Template = @DefaultRibbonButton;
         HorizontalAlignment = Left;
         VerticalAlignment = Top;
-        TextBlock.Foreground    = @OnSurface;
-        TextBlock.FontFamily    = @LabelSmallFont;
-        TextBlock.FontWeight    = @LabelSmallWeight;
-        TextBlock.FontSize      = @LabelSmallSize;
-        TextBlock.LineHeight    = @LabelSmallLineHeight;
-        TextBlock.LetterSpacing = @LabelSmallTracking;
+        TextBlock.Foreground    = @Fg1;
+        TextBlock.FontFamily    = @FontSans;
+        TextBlock.FontWeight    = @UiCaptionWeight;
+        TextBlock.FontSize      = @UiCaptionSize;
+        TextBlock.LineHeight    = @UiCaptionLineHeight;
+        TextBlock.LetterSpacing = @UiCaptionTracking;
     }
 
     // ── RibbonToggleButton ──────────────────────────────────────────
     // Same shape + an IsChecked trigger that swaps to a filled-tonal
     // chrome so a sticky toggle stays visible in a group.
     Template x:key="DefaultRibbonToggleButton" [TargetType = RibbonToggleButton] {
+        // PART_Border is the hover/press surface; the checked fill lives on a
+        // dedicated opaque PART_Selected layer ABOVE it (carrying the content
+        // padding) so a checked toggle that is also hovered keeps its
+        // @SurfaceSelected cue — triggers are chronological/last-event-wins,
+        // so a shared-element checked fill would be erased by hover.
         Border x:name="PART_Border"
             [ Fill   = #00000000,
-              CornerRadius = @ShapeExtraSmall,
-              Padding      = (@Spacing2,@Spacing1,@Spacing2,@Spacing1) ] {
-            ContentPresenter [ HorizontalAlignment = Center, VerticalAlignment = Center ]
+              CornerRadius = @RadiusSm ] {
+            Border x:name="PART_Selected"
+                [ Fill   = #00000000,
+                  CornerRadius = @RadiusSm,
+                  Padding      = (@Space2,@Space1,@Space2,@Space1) ] {
+                ContentPresenter [ HorizontalAlignment = Center, VerticalAlignment = Center ]
+            }
         }
-        when ( IsMouseOver ) { PART_Border.Fill = @StateHoverOverlay; }
-        when ( IsPressed ) { PART_Border.Fill = @StatePressOverlay; }
-        when ( IsChecked ) { PART_Border.Fill = @SecondaryContainer; }
-        when ( IsEnabled = false ) { PART_Border.Opacity = @DisabledContentOpacity; }
-        when ( Size = Large ) { PART_Border.MinWidth = 56; PART_Border.MinHeight = 68; PART_Border.Padding = (@Spacing2,@Spacing2,@Spacing2,@Spacing2); }
+        when ( IsMouseOver ) { PART_Border.Fill = @Bg2; }
+        when ( IsPressed ) { PART_Border.Fill = @Bg3; }
+        when ( IsChecked ) { PART_Selected.Fill = @SurfaceSelected; }
+        when ( IsEnabled = false ) { PART_Border.Opacity = @OpacityDisabled; }
+        when ( Size = Large ) { PART_Border.MinWidth = 56; PART_Border.MinHeight = 68; PART_Selected.Padding = (@Space2,@Space2,@Space2,@Space2); }
         when ( Size = Medium ) { PART_Border.MinHeight = 24; }
         when ( Size = Small ) { PART_Border.MinHeight = 24; }
         // Coarse pointer — enlarge tap padding only (density = Size DP). See
         // RibbonButton.
-        when ( ThemeManager.Pointer = Coarse ) { PART_Border.Padding = (@Spacing3,@Spacing3,@Spacing3,@Spacing3); }
+        when ( ThemeManager.Pointer = Coarse ) { PART_Selected.Padding = (@Space3,@Space3,@Space3,@Space3); }
     }
     Style [TargetType = RibbonToggleButton] {
         Template = @DefaultRibbonToggleButton;
         HorizontalAlignment = Left;
         VerticalAlignment = Top;
-        TextBlock.Foreground    = @OnSurface;
-        TextBlock.FontFamily    = @LabelSmallFont;
-        TextBlock.FontWeight    = @LabelSmallWeight;
-        TextBlock.FontSize      = @LabelSmallSize;
-        TextBlock.LineHeight    = @LabelSmallLineHeight;
-        TextBlock.LetterSpacing = @LabelSmallTracking;
+        TextBlock.Foreground    = @Fg1;
+        TextBlock.FontFamily    = @FontSans;
+        TextBlock.FontWeight    = @UiCaptionWeight;
+        TextBlock.FontSize      = @UiCaptionSize;
+        TextBlock.LineHeight    = @UiCaptionLineHeight;
+        TextBlock.LetterSpacing = @UiCaptionTracking;
     }
 
     // ── RibbonDropDownButton ────────────────────────────────────────
@@ -104,7 +113,7 @@ resources Ribbons {
         Button x:name="PART_Trigger" {
             StackPanel [ Orientation = Horizontal ] {
                 StackPanel x:name="PART_ContentHost" [ Orientation = Vertical ]
-                Shape [ Geometry = @ChevronDown, Fill = @OnSurface, Width = 12, Height = 12, Margin = (@Spacing1,0,0,0), VerticalAlignment = Center ]
+                Shape [ Geometry = @ChevronDown, Fill = @Fg1, Width = 12, Height = 12, Margin = (@Space1,0,0,0), VerticalAlignment = Center ]
             }
         }
     }
@@ -112,15 +121,14 @@ resources Ribbons {
         MenuPopupHost x:name="PART_PopupHost" {
             ClickAwayScrim x:name="PART_Scrim"
             Border x:name="PART_PopupContainer"
-                [ Fill      = @SurfaceContainerHigh,
-                  Stroke     = Pen [ Brush = @OutlineVariant ],
-                  CornerRadius    = @ShapeExtraSmall,
-                  Effect          = @Elevation2,
+                [ Fill      = @Bg1,
+                  Stroke     = Pen [ Brush = @Border ],
+                  CornerRadius    = @RadiusLg,
+                  Effect          = @ShadowMd,
                   Padding         = (0) ] {
                 ItemsPresenter
             }
         }
-        when ( ThemeManager.PrefersContrast = More ) { PART_PopupContainer.Stroke = (@OutlineVariant, 2); }
     }
     Style [TargetType = RibbonDropDownButton] {
         Template = @DefaultRibbonDropDownPopup;
@@ -139,7 +147,7 @@ resources Ribbons {
                 StackPanel x:name="PART_ContentHost" [ Orientation = Vertical ]
             }
             Button x:name="PART_Arrow" {
-                Shape [ Geometry = @ChevronDown, Fill = @OnSurface, Width = 12, Height = 12, VerticalAlignment = Center ]
+                Shape [ Geometry = @ChevronDown, Fill = @Fg1, Width = 12, Height = 12, VerticalAlignment = Center ]
             }
         }
     }
@@ -147,15 +155,14 @@ resources Ribbons {
         MenuPopupHost x:name="PART_PopupHost" {
             ClickAwayScrim x:name="PART_Scrim"
             Border x:name="PART_PopupContainer"
-                [ Fill      = @SurfaceContainerHigh,
-                  Stroke     = Pen [ Brush = @OutlineVariant ],
-                  CornerRadius    = @ShapeExtraSmall,
-                  Effect          = @Elevation2,
+                [ Fill      = @Bg1,
+                  Stroke     = Pen [ Brush = @Border ],
+                  CornerRadius    = @RadiusLg,
+                  Effect          = @ShadowMd,
                   Padding         = (0) ] {
                 ItemsPresenter
             }
         }
-        when ( ThemeManager.PrefersContrast = More ) { PART_PopupContainer.Stroke = (@OutlineVariant, 2); }
     }
     Style [TargetType = RibbonSplitButton] {
         Template = @DefaultRibbonSplitPopup;
@@ -181,9 +188,9 @@ resources Ribbons {
         // BorderThickness (0,0,1,0). Now a 1dp vertical oriented Line docked
         // at the group's right edge; the Border keeps only its padding.
         DockPanel [ LastChildFill = true ] {
-            Line [ DockPanel.Dock = Right, Orientation = Vertical, Stroke = (@OutlineVariant, 1) ]
+            Line [ DockPanel.Dock = Right, Orientation = Vertical, Stroke = (@Border, 1) ]
             Border x:name="PART_Border"
-                [ Padding         = (@Spacing2) ] {
+                [ Padding         = (@Space2) ] {
             DockPanel [ LastChildFill = true ] {
                 Grid [ DockPanel.Dock = Bottom ] {
                     // Content-height row (the header label + corner
@@ -197,8 +204,8 @@ resources Ribbons {
                     TextBlock
                         [ Text                = $$Header,
                           HorizontalAlignment = Center,
-                          Foreground          = @OnSurfaceVariant,
-                          Style               = @LabelSmall ]
+                          Foreground          = @Fg2,
+                          Style               = @UiCaption ]
                     Button x:name="PART_Launcher" [ HorizontalAlignment = Right, VerticalAlignment = Bottom ] {
                         TextBlock [ Text = "↘" ]
                     }
@@ -219,7 +226,7 @@ resources Ribbons {
     // The selected tab's body — a horizontal strip of its RibbonGroups.
     // The tab HEADER is rendered separately by the Ribbon (RibbonTabHeader).
     Template x:key="DefaultRibbonTab" [TargetType = RibbonTab] {
-        Border [ Padding = (@Spacing1) ] {
+        Border [ Padding = (@Space1) ] {
             ItemsPresenter
         }
     }
@@ -232,7 +239,7 @@ resources Ribbons {
     // One clickable tab header in the strip. AccentBrush (bound via
     // TemplateBinding) tints a contextual tab's background — undefined =
     // transparent (stable look). IsCurrent underlines the selected tab
-    // with @Primary; hover shows a fainter @Outline underline.
+    // with @ControlAccent; hover shows a fainter @BorderStrong underline.
     Template x:key="DefaultRibbonTabHeader" [TargetType = RibbonTabHeader] {
         DockPanel [ LastChildFill = true ] {
             // Selected/hover underline — was PART_Border's one-sided bottom
@@ -243,31 +250,35 @@ resources Ribbons {
             Line x:name="PART_Indicator" [ DockPanel.Dock = Bottom, Orientation = Horizontal, Stroke = (#00000000, 2) ]
             Border x:name="PART_Border"
                 [ Fill      = $$AccentBrush,
-                  Padding         = (@Spacing4,@Spacing2,@Spacing4,@Spacing2) ] {
+                  Padding         = (@Space4,@Space2,@Space4,@Space2) ] {
                 ContentPresenter [ VerticalAlignment = Center ]
             }
         }
-        when ( IsMouseOver ) { PART_Indicator.Stroke = (@Outline, 2); }
-        when ( IsCurrent ) { PART_Indicator.Stroke = (@Primary, 2); }
+        // The current-tab underline responds to IsCurrent only. Material also
+        // previewed a @BorderStrong underline on hover, but that shared the
+        // one PART_Indicator element with the current cue — a hovered current
+        // tab would lose its accent (chronological triggers). Dropped, matching
+        // the Pragmatic TabControl fork (no hover underline).
+        when ( IsCurrent ) { PART_Indicator.Stroke = (@ControlAccent, 2); }
         // Adaptive layout — the tab strip has no Size DP (that's the invoker
         // knob), so it carries the full density + coarse-pointer ladder on
         // its header padding, scaled from the resting (16,8) on the 4dp grid.
-        when ( ThemeManager.Density = Compact ) { PART_Border.Padding = (@Spacing3,@Spacing1,@Spacing3,@Spacing1); }
-        when ( ThemeManager.Density = Comfortable ) { PART_Border.Padding = (@Spacing5,@Spacing3,@Spacing5,@Spacing3); }
-        when ( ThemeManager.Pointer = Coarse ) { PART_Border.Padding = (@Spacing4,@Spacing3,@Spacing4,@Spacing3); }
+        when ( ThemeManager.Density = Compact ) { PART_Border.Padding = (@Space3,@Space1,@Space3,@Space1); }
+        when ( ThemeManager.Density = Comfortable ) { PART_Border.Padding = (@Space5,@Space3,@Space5,@Space3); }
+        when ( ThemeManager.Pointer = Coarse ) { PART_Border.Padding = (@Space4,@Space3,@Space4,@Space3); }
     }
     Style [TargetType = RibbonTabHeader] {
         Template = @DefaultRibbonTabHeader;
-        TextBlock.Foreground = @OnSurfaceVariant;
+        TextBlock.Foreground = @Fg2;
         // Full Title Small atom set (§ 18.13 — was Font/Weight/Size only).
         // Injected into the header text via cross-class TextBlock.* inherited
-        // writes, so it can't be a `Style = @TitleSmall`.
-        TextBlock.FontFamily = @TitleSmallFont;
-        TextBlock.FontWeight = @TitleSmallWeight;
-        TextBlock.FontSize   = @TitleSmallSize;
-        TextBlock.LineHeight = @TitleSmallLineHeight;
-        TextBlock.LetterSpacing = @TitleSmallTracking;
-        when ( IsCurrent ) { TextBlock.Foreground = @Primary; }
+        // writes, so it can't be a `Style = @UiLabel`.
+        TextBlock.FontFamily = @FontSans;
+        TextBlock.FontWeight = @UiLabelWeight;
+        TextBlock.FontSize   = @UiLabelSize;
+        TextBlock.LineHeight = @UiLabelLineHeight;
+        TextBlock.LetterSpacing = @UiLabelTracking;
+        when ( IsCurrent ) { TextBlock.Foreground = @ControlAccent; }
     }
 
     // ── RibbonGallery ───────────────────────────────────────────────
@@ -276,12 +287,12 @@ resources Ribbons {
     // in an overlay dropdown (PopupTemplate).
     Template x:key="DefaultRibbonGallery" [TargetType = RibbonGallery] {
         Border
-            [ Stroke     = Pen [ Brush = @OutlineVariant ],
-              CornerRadius    = @ShapeExtraSmall,
-              Padding         = (@Spacing1) ] {
+            [ Stroke     = Pen [ Brush = @Border ],
+              CornerRadius    = @RadiusSm,
+              Padding         = (@Space1) ] {
             DockPanel [ LastChildFill = true ] {
                 Button x:name="PART_More" [ DockPanel.Dock = Right ] {
-                    Shape [ Geometry = @ChevronDown, Fill = @OnSurface, Width = 12, Height = 12 ]
+                    Shape [ Geometry = @ChevronDown, Fill = @Fg1, Width = 12, Height = 12 ]
                 }
                 ItemsPresenter
             }
@@ -291,15 +302,14 @@ resources Ribbons {
         MenuPopupHost x:name="PART_PopupHost" {
             ClickAwayScrim x:name="PART_Scrim"
             Border x:name="PART_PopupContainer"
-                [ Fill      = @SurfaceContainerHigh,
-                  Stroke     = Pen [ Brush = @OutlineVariant ],
-                  CornerRadius    = @ShapeExtraSmall,
-                  Effect          = @Elevation2,
-                  Padding         = (@Spacing2) ] {
+                [ Fill      = @Bg1,
+                  Stroke     = Pen [ Brush = @Border ],
+                  CornerRadius    = @RadiusLg,
+                  Effect          = @ShadowMd,
+                  Padding         = (@Space2) ] {
                 RibbonGalleryPopupList x:name="PART_PopupList" [ MaxWidth = 320 ]
             }
         }
-        when ( ThemeManager.PrefersContrast = More ) { PART_PopupContainer.Stroke = (@OutlineVariant, 2); }
     }
     Style [TargetType = RibbonGallery] {
         Template = @DefaultRibbonGallery;
@@ -313,12 +323,12 @@ resources Ribbons {
     // PART_BodyContainer collapses when IsMinimized.
     Template x:key="DefaultRibbon" [TargetType = Ribbon] {
         Border x:name="PART_Root"
-            [ Fill      = @SurfaceContainerLow ] {
+            [ Fill      = @Bg1 ] {
             DockPanel [ LastChildFill = true ] {
                 StackPanel x:name="PART_Qat"
                     [ DockPanel.Dock = Top,
                       Orientation    = Horizontal,
-                      Fill      = @SurfaceContainer ]
+                      Fill      = @Bg2 ]
                 DockPanel [ DockPanel.Dock = Top, LastChildFill = true ] {
                     Button x:name="PART_MinimizeButton" [ DockPanel.Dock = Right ] {
                         TextBlock [ Text = "⌃" ]
@@ -328,11 +338,11 @@ resources Ribbons {
                 // Bottom edge rule — was PART_Root's one-sided bottom border
                 // BorderThickness (0,0,0,1); now a 1dp horizontal oriented Line
                 // docked at the ribbon's bottom edge.
-                Line [ DockPanel.Dock = Bottom, Orientation = Horizontal, Stroke = (@OutlineVariant, 1) ]
+                Line [ DockPanel.Dock = Bottom, Orientation = Horizontal, Stroke = (@Border, 1) ]
                 Border x:name="PART_BodyContainer"
                     [ DockPanel.Dock = Top,
-                      Fill      = @Surface,
-                      Padding         = (@Spacing2) ] {
+                      Fill      = @Bg1,
+                      Padding         = (@Space2) ] {
                     ContentPresenter x:name="PART_Body"
                 }
             }

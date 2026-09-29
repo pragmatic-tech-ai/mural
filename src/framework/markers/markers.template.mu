@@ -1,166 +1,218 @@
-// Default theme entries for the markers family — small visual marks
-// (Chip / Divider / Badge) that don't fit any other family.
+// Pragmatic theme — Chip / Divider / Badge chrome (Wave 1).
 //
-// Merged into the root MuralFramework dictionary via an `import`
-// clause in src/resources/framework.resources.mu; the compiler turns
-// that import into a Clone()-time fold so every entry below ends up
-// in MuralFramework's keyed table.
+// Forked from Material's markers.template.mu (DefaultChip, the
+// DefaultHorizontalDivider / DefaultVerticalDivider pair, and
+// DefaultDotBadge / DefaultNumericBadge), re-expressed with the same
+// Pragmatic mechanics the Button / IconButton / Toggle forks established
+// (framework/pragmatic/buttons/buttons.template.mu,
+// framework/pragmatic/icon-buttons/icon-buttons.template.mu,
+// framework/pragmatic/toggles/toggles.template.mu):
+//
+//   * EVERY stroke uses the Pen form — `Stroke = Pen [ Brush = @Token,
+//     Thickness = n ]`. A `(brush, width)` tuple assigned to a Pen-typed
+//     property silently compiles to a Thickness instead (confirmed by
+//     the TextBox fork's GOTCHA comment) and never paints. The Chip
+//     border and the Divider rule (both orientations) both use the Pen
+//     form.
+//   * Chip's selected fill rides a nested opaque PART_Selected layer,
+//     copied from icon-buttons.template.mu:97-134 / toggles.template.mu —
+//     a ControlTemplate trigger stack resolves a shared-property tie by
+//     whichever condition's SetTriggerValue call happens LAST AT RUNTIME
+//     (a real IsChecked flip vs. a real PointerEnter), never by `when`
+//     clause declaration order. Chip's selected fill (@SurfaceSelected)
+//     and its hover fill (@Bg2) share the chip's own surface, so a plain
+//     `when(IsChecked){ PART_Chip.Fill = @SurfaceSelected }` would lose
+//     the selected cue to a later hover exactly like the IconButtonToggle
+//     bug this pattern already fixed. PART_Selected is a second, opaque
+//     Border nested INSIDE PART_Chip, transparent unless checked; when
+//     checked it opaquely paints over whatever PART_Chip is currently
+//     showing (hover included) — a z-order compositing guarantee, not a
+//     trigger-priority one, so it holds regardless of event chronology.
+//     The label/leading/trailing content moves to PART_Selected — it's
+//     now the innermost painted layer.
+//   * Chip focus rides a DEDICATED PART_FocusRing element (never a
+//     re-stroke of PART_Chip's own border), matching the Button /
+//     IconButton / Toggle exemplars — focus (@BorderFocus) and the chip
+//     border (@Border) / selected state write DIFFERENT elements, so
+//     they can never collide or overwrite one another.
+//   * The Divider rule uses a `Line` shape (Orientation-driven stretch
+//     mode — see basic/shapes/line.ts) rather than Material's 1dp-tall
+//     filled Border. A Line strokes its geometry (`dc.DrawGeometry(
+//     undefined, stroke, geom)`), so it emits the same `stroke="…"` SVG
+//     attribute the Chip border / focus ring do — required so the rule
+//     renders through the Pen form rather than a Fill (a `(brush,width)`-
+//     shaped GOTCHA does not even apply to Fill, but the design intent
+//     here is a stroked rule, consistent with every other hairline in
+//     this file).
+//   * Chip ignores Kind (Assist / Filter / Input / Suggestion) — like
+//     IconButton going ghost-only, the Pragmatic Chip is a single
+//     chrome driven purely by IsChecked (ToggleButton's own selected
+//     state); Kind-specific chrome is out of Wave 1 scope.
+//
+// Only Pragmatic tokens are used — no raw hex (except the `#00000000`
+// transparent convention), no M3 tokens (@Surface / @OnSurface /
+// @Error / @OnError / @OutlineVariant / @Shape*). Radii stay at
+// @RadiusPill (the Chip / Badge pill shape), the one Pragmatic radius
+// above @RadiusXl the brief explicitly calls out as exempt from the cap.
+//
+// Merged into the theme via PragmaticControls (controls.resources.mu),
+// listed AFTER MuralFramework so these key-less
+// Style[TargetType=Chip|Divider|Badge] entries shadow Material's
+// (last-merged-wins on the runtime class key).
 
-resources Markers {
-    // ── Chip: M3 compact attribute / filter / input / suggestion ───
-    // 32dp tall pill chrome with leading + trailing slots and a
-    // ContentPresenter for the label. Kind-aware triggers tint the
-    // chrome per variant:
-    //   * Assist     — outlined surface, neutral OnSurface label.
-    //   * Filter     — outlined surface at rest; flips to filled
-    //                  @SecondaryContainer when IsChecked (the
-    //                  selectable filter affordance).
-    //   * Input      — outlined surface; trailing slot conventionally
-    //                  carries a remove icon (consumer-supplied).
-    //   * Suggestion — outlined surface; same chrome as Assist, the
-    //                  semantic difference is consumer-side.
-    //
-    // The Kind variants all share base chrome — the variant-specific
-    // triggers below override only the bits that differ. Filter is the
-    // only variant that observes IsChecked at the template level; the
-    // other variants ignore it entirely (the consumer can still toggle
-    // IsChecked programmatically through ToggleButton, no chrome
-    // change).
-    Template x:key="DefaultChip" [TargetType = Chip] {
-        Border x:name="PART_Chip"
-            [ Fill      = @Surface,
-              Stroke     = Pen [ Brush = @OutlineVariant ],
-              CornerRadius    = @ShapeSmall,
-              Padding         = (5,2,5,2) ] {
-            DockPanel [ LastChildFill = true ] {
-                Border x:name="PART_LeadingSlot"
-                    [ DockPanel.Dock    = Left,
-                      VerticalAlignment = Center ]
-                Border x:name="PART_TrailingSlot"
-                    [ DockPanel.Dock    = Right,
-                      VerticalAlignment = Center ]
-                ContentPresenter [ VerticalAlignment = Center ]
+resources Markers
+{
+    // ── Chip: compact attribute / filter / input / suggestion surface ──
+    // Rest — @Bg1 fill, 1dp @Border outline, @RadiusPill corners. Hover
+    // steps the outer chip surface to @Bg2. Selected (IsChecked) opaquely
+    // paints @SurfaceSelected over PART_Chip via PART_Selected, and the
+    // label ink flips to @BrandGreenInk (Style-level trigger — a
+    // ControlTemplate trigger can't target the 3-segment
+    // PART_Selected.TextBlock.Foreground attached-property path, the
+    // same constraint the tool-bar / navigation / list forks work around
+    // by setting the control's own inherited Foreground in the Style
+    // instead).
+    Template x:key="DefaultChip" [TargetType = Chip]
+    {
+        Border x:name="PART_FocusRing"
+            [ Fill = #00000000,
+              Padding = (@FocusRingOffset),
+              CornerRadius = @RadiusPill ]
+        {
+            Border x:name="PART_Chip"
+                [ Fill      = @Bg1,
+                  Stroke     = Pen [ Brush = @Border, Thickness = 1 ],
+                  CornerRadius    = @RadiusPill ]
+            {
+                Border x:name="PART_Selected"
+                    [ Fill      = #00000000,
+                      CornerRadius    = @RadiusPill,
+                      Padding         = (5,2,5,2) ]
+                {
+                    DockPanel [ LastChildFill = true ]
+                    {
+                        Border x:name="PART_LeadingSlot"
+                            [ DockPanel.Dock    = Left,
+                              VerticalAlignment = Center ]
+                        Border x:name="PART_TrailingSlot"
+                            [ DockPanel.Dock    = Right,
+                              VerticalAlignment = Center ]
+                        ContentPresenter [ VerticalAlignment = Center ]
+                    }
+                }
             }
         }
-        // Filter — selected fills with @SecondaryContainer; the
-        // outline reads as the M3 "input" indicator. The derived
-        // IsFilterSelected DP combines Kind=Filter and IsChecked
-        // because ControlTemplate triggers don't compose multi-term
-        // conjuncts; the class recomputes it on every Kind / IsChecked
-        // edge.
-        when ( IsFilterSelected ) {
-            PART_Chip.Fill = @SecondaryContainer;
-            PART_Chip.Stroke = Pen [ Brush = @SecondaryContainer ];
-        }
-
-        // State-layer ladder — translucent OnSurface overlays over
-        // whatever variant background is currently active. Ordered
-        // BEFORE the Filter-selected trigger so a hovered selected
-        // filter chip stays in its @SecondaryContainer tint (the
-        // state-layer overlay would otherwise wash it back to neutral).
-        when ( IsMouseOver ) { PART_Chip.Fill = @StateHoverOverlay; }
-        when ( IsFocused ) { PART_Chip.Fill = @StateFocusOverlay; }
-        when ( IsPressed ) { PART_Chip.Fill = @StatePressOverlay; }
-        when ( IsEnabled = false ) { PART_Chip.Opacity = @DisabledContentOpacity; }
-
-        // Adaptive layout (§ 18.6) — PART_Chip bears the interactive
-        // pill chrome, so density / pointer retuning rides here. Resting
-        // is Padding (5,2,5,2) with no explicit Height (the label drives
-        // it). Compact and Comfortable pin an explicit padding + height;
-        // Coarse pointer bumps the pill height for a larger touch target.
-        when ( ThemeManager.Density = Compact ) {
-            PART_Chip.Padding = (8,4,8,4);
-            PART_Chip.Height = 24;
-        }
-        when ( ThemeManager.Density = Comfortable ) {
-            PART_Chip.Padding = (16,6,16,6);
-            PART_Chip.Height = 40;
-        }
-        when ( ThemeManager.Pointer = Coarse ) {
-            PART_Chip.Padding = (16,8,16,8);
-            PART_Chip.Height = 44;
-        }
+        // Selected — PART_Selected opaquely covers PART_Chip regardless
+        // of hover (see header comment). Ordered before the hover /
+        // focus triggers below purely for readability; the z-order
+        // compositing guarantee (not trigger order) is what makes this
+        // survive a later hover.
+        when ( IsChecked ) { PART_Selected.Fill = @SurfaceSelected; }
+        when ( IsMouseOver ) { PART_Chip.Fill = @Bg2; }
+        when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
+        when ( IsEnabled = false ) { PART_Chip.Opacity = @OpacityDisabled; }
     }
-    Style [TargetType = Chip] {
+    Style [TargetType = Chip]
+    {
         Template = @DefaultChip;
-        Foreground = @OnSurface;
-        // Full Label Large atom set (§ 18.13 — was Font/Weight/Size only,
-        // so LineHeight/Tracking silently fell back to the ambient default).
-        // Chip is the styled control (not a TextBlock), so these ride into
-        // the label via inheritance rather than a `Style = @LabelLarge`.
-        FontFamily = @LabelLargeFont;
-        FontWeight = @LabelLargeWeight;
-        FontSize = @LabelMediumSize;
-        LineHeight = @LabelLargeLineHeight;
-        LetterSpacing = @LabelLargeTracking;
-        // Size the pill to the label with the paint engine's own text layout,
-        // so the chip fits its label identically in a standalone browser and
-        // in Electron's Chromium (Canvas measureText and SVG <text> disagree
-        // by a sub-pixel that differs across builds). Inherits into the label
-        // TextBlock the consumer nests as content — see TextBlock.MeasurementFidelity.
+        Foreground = @Fg1;
+        FontFamily = @FontSans;
+        FontWeight = @UiLabelWeight;
+        FontSize = @UiLabelSize;
+        LineHeight = @UiLabelLineHeight;
+        LetterSpacing = @UiLabelTracking;
+        // Size the pill to the label with the paint engine's own text
+        // layout, so the chip fits its label identically in a standalone
+        // browser and in Electron's Chromium (Canvas measureText and SVG
+        // <text> disagree by a sub-pixel that differs across builds).
         MeasurementFidelity = Exact;
+        // Selected ink — set on the control's own inherited Foreground
+        // (2-segment self-property) rather than a ControlTemplate
+        // trigger, which can't reach PART_Selected.TextBlock.Foreground
+        // (a 3-segment attached-property path).
+        when ( IsChecked ) { Foreground = @BrandGreenInk; }
     }
 
-    // ── Divider: M3 1dp rule, horizontal or vertical ───────────────
-    // Two templates — one per Orientation — because mural's CornerRadius
-    // / BorderThickness DPs are uniform across the control instance, so
-    // a single template with a trigger that just flips Orientation
-    // would still produce a 1dp box around the rule rather than a 1dp
-    // line. The Style picks the matching template based on Orientation.
-    Template x:key="DefaultHorizontalDivider" [TargetType = Divider] {
-        Border x:name="PART_Rule"
-            [ Fill          = @OutlineVariant,
-              Height              = 1,
+    // ── Divider: 1dp rule, horizontal or vertical ───────────────────
+    // Two templates — one per Orientation, matching Material's own
+    // rationale (mural's CornerRadius / BorderThickness DPs are uniform
+    // across a control instance, so one template with an Orientation
+    // trigger would still box the rule rather than draw a 1dp line).
+    // Both stroke a `Line` in its oriented stretch-and-fill mode (see
+    // basic/shapes/line.ts) with the Pen form, so the rule renders as
+    // a `stroke="…"` attribute rather than a Fill rectangle.
+    Template x:key="DefaultHorizontalDivider" [TargetType = Divider]
+    {
+        Line x:name="PART_Rule"
+            [ Orientation         = Horizontal,
+              Stroke              = Pen [ Brush = @Border, Thickness = 1 ],
               HorizontalAlignment = Stretch ]
     }
-    Template x:key="DefaultVerticalDivider" [TargetType = Divider] {
-        Border x:name="PART_Rule"
-            [ Fill        = @OutlineVariant,
-              Width             = 1,
+    Template x:key="DefaultVerticalDivider" [TargetType = Divider]
+    {
+        Line x:name="PART_Rule"
+            [ Orientation       = Vertical,
+              Stroke            = Pen [ Brush = @Border, Thickness = 1 ],
               VerticalAlignment = Stretch ]
     }
-    Style [TargetType = Divider] {
+    Style [TargetType = Divider]
+    {
         Template = @DefaultHorizontalDivider;
         when ( Orientation = Vertical ) { Template = @DefaultVerticalDivider; }
     }
 
-    // ── Badge: M3 dot / numeric flag ───────────────────────────────
-    // Two templates — one per Variant. Variant=Dot ships a 6×6dp
-    // filled circle; Variant=Numeric ships a pill carrying Badge's
-    // own Count, relayed as a string via a $$-TemplateBinding to
-    // CountText (Badge.ts). Both use @Error / @OnError per the M3
-    // spec; consumers wanting a non-error tint re-template.
-    //
-    // Wave-1 follow-up (B): this used to read `Text = $Count` — a
-    // `$`-DataContextBinding, which reads the ambient DataContext's
-    // `Count` field rather than the templated Badge's own Count DP,
-    // AND handed a raw number into the string-typed Text DP, which
-    // crashed SvgDrawingContext.escapeXmlText. $$CountText fixes
-    // both: `$$` relays the templated parent's own property, and
-    // CountText is Badge's derived STRING mirror of Count.
-    Template x:key="DefaultDotBadge" [TargetType = Badge] {
+    // ── Badge: dot / numeric flag ────────────────────────────────────
+    // Two templates — one per Variant. Both use @StateDanger / @FgOnAccent
+    // per the brief (tone-driven variants are a later follow-up).
+    Template x:key="DefaultDotBadge" [TargetType = Badge]
+    {
         Border x:name="PART_Dot"
-            [ Fill      = @Error,
-              CornerRadius    = @ShapeFull,
+            [ Fill      = @StateDanger,
+              CornerRadius    = @RadiusPill,
               Width           = 6,
               Height          = 6 ]
     }
-    Template x:key="DefaultNumericBadge" [TargetType = Badge] {
+    Template x:key="DefaultNumericBadge" [TargetType = Badge]
+    {
         Border x:name="PART_Pill"
-            [ Fill      = @Error,
-              CornerRadius    = @ShapeFull,
-              Padding         = (@Spacing1,@Spacing0,@Spacing1,@Spacing0),
+            [ Fill      = @StateDanger,
+              CornerRadius    = @RadiusPill,
+              Padding         = (@Space1,0,@Space1,0),
               MinWidth        = 16,
-              Height          = 16 ] {
+              Height          = 16 ]
+        {
             TextBlock
+                // $$CountText — a TemplateBinding to the templated
+                // PARENT's own CountText DP (compiler: TemplateBinding(
+                // _templatedParent, "CountText")), relaying Badge's own
+                // Count rather than re-reading the ambient DataContext
+                // (Material's own markers.template.mu source used to read
+                // `Text = $Count` — a `$`-DataContextBinding pulling a
+                // `Count` field off the TextBlock's inherited DataContext
+                // instead of the templated Badge's own Count DP; wrong
+                // source for a standalone Badge with no bound view-model).
+                //
+                // CountText (Badge.ts) is a derived STRING mirror of
+                // Count, kept in lock-step via OnPropertyChanged — needed
+                // because TextBlock.Text is string-typed, Count is a
+                // number, and neither `$` nor `$$` supports a converter
+                // on a TemplateBinding today (only the `binding` — single
+                // `$` — grammar accepts a `<< converter` chain). Binding
+                // straight to the numeric Count crashed
+                // SvgDrawingContext.escapeXmlText (`s.replace` on a
+                // number) — confirmed this reproduced identically against
+                // Material's own DefaultNumericBadge under a headless
+                // render; Badge had zero test coverage before Wave-1.
+                // Fixed for both themes — see Wave-1 follow-up (B).
                 [ Text                = $$CountText,
-                  Foreground          = @OnError,
-                  Style               = @LabelSmall,
+                  Foreground          = @FgOnAccent,
+                  Style               = @UiCaption,
                   HorizontalAlignment = Center,
                   VerticalAlignment   = Center ]
         }
     }
-    Style [TargetType = Badge] {
+    Style [TargetType = Badge]
+    {
         Template = @DefaultNumericBadge;
         when ( Variant = Dot ) { Template = @DefaultDotBadge; }
     }

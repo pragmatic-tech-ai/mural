@@ -67,7 +67,7 @@ resources Diagrams {
         }
         // Drop-candidate affordance: tint the box while a drag hovers it as its
         // drop target (ContainerPlacement.highlightCandidate sets IsDropCandidate).
-        when ( IsDropCandidate ) { PART_Box.Fill = @SecondaryContainer; }
+        when ( IsDropCandidate ) { PART_Box.Fill = @SurfaceSelected; }
     }
     Style [ TargetType = ContainerFigure ] {
         Template = @DefaultContainerFigure;
@@ -90,7 +90,7 @@ resources Diagrams {
                       Width = $$Width, Height = $$Height, ClipToBounds = true ]
             }
         }
-        when ( IsDropCandidate ) { PART_Box.Fill = @SecondaryContainer; }
+        when ( IsDropCandidate ) { PART_Box.Fill = @SurfaceSelected; }
     }
     Style [ TargetType = ContentContainerFigure ] {
         Template = @DefaultContentContainerFigure;
@@ -224,7 +224,7 @@ resources Diagrams {
             PART_Text.Visibility     = Collapsed;
             PART_RichText.Visibility = Collapsed;
             PART_Edit.Visibility     = Visible;
-            PART_Bg.Stroke           = (@Primary, 0.5);
+            PART_Bg.Stroke           = (@ControlAccent, 0.5);
         }
     }
     Style [TargetType = ShapeText] {
@@ -241,7 +241,7 @@ resources Diagrams {
     //
     // Resting: transparent (zero-thickness border) so an unselected
     // group is invisible — the leaves underneath read uninterrupted.
-    // Selected: a 1-DIP @Primary outline rounds the bbox. Width /
+    // Selected: a 1-DIP @ControlAccent outline rounds the bbox. Width /
     // Height template-bind so the Border tracks the union-bbox extent
     // Group._recomputeBounds writes onto WidthKey / HeightKey.
     Template x:key="DefaultGroup" [TargetType = Group] {
@@ -257,7 +257,7 @@ resources Diagrams {
               Width            = $$Width,
               Height           = $$Height,
               IsHitTestVisible = false ]
-        when ( IsSelected ) { PART_Border.Stroke = (@Primary, 1); }
+        when ( IsSelected ) { PART_Border.Stroke = (@ControlAccent, 1); }
     }
     Style [TargetType = Group] {
         Template = @DefaultGroup;
@@ -270,7 +270,7 @@ resources Diagrams {
     // are overridable per-instance via Source/TargetCapTemplate. The
     // @FilledArrowCap template lives in the sibling Caps dictionary — both
     // are merged into MuralFramework, so the cross-dictionary @ref resolves
-    // at runtime the same way @Primary (a theme colour) does here.
+    // at runtime the same way @ControlAccent (a theme colour) does here.
     //
     // Default end size is 0.8× the cap template's authored size — a touch
     // sleeker than the full-size glyph. Both ends carry the default so a
@@ -332,9 +332,9 @@ resources Diagrams {
             // first, so it paints BEHIND the scroll viewport and fills the whole
             // viewport (not the zoomed content extent) — it neither zooms nor
             // scrolls. PART_Camera stays transparent so this shows through under
-            // the nodes. @DiagramCanvas re-paints on a light/dark scheme swap.
+            // the nodes. @CanvasBg re-paints on a light/dark scheme swap.
             Border x:name="PART_CanvasBg"
-                [ Grid.Row = 1, Grid.Column = 1, Fill = @DiagramCanvas ]
+                [ Grid.Row = 1, Grid.Column = 1, Fill = @CanvasBg ]
             // Zoom is a LayoutTransform Scale on PART_Camera (grows its measured
             // footprint), so the ScrollViewer sizes real scrollbars to the zoomed
             // content and pan IS the scroll offset. AdornerDecorator wraps
@@ -398,9 +398,9 @@ resources Diagrams {
         StackPanel [ Orientation = Horizontal ]
     }
     // Icon tab: a theme-tinted glyph in a rounded box (box fills
-    // @SecondaryContainer when selected — the screenshot's boxed icon). The
+    // @SurfaceSelected when selected — the screenshot's boxed icon). The
     // selected tab also draws a caret that makes the rail's bottom divider peak
-    // up beneath it (PART_NotchFill masks the straight line segment in @Surface;
+    // up beneath it (PART_NotchFill masks the straight line segment in @Bg1;
     // PART_Notch strokes the ^). Each item draws its own centered caret, so it
     // always lands under whichever icon is selected — no runtime bounds math.
     // Root is a VERTICAL StackPanel so the item sizes to CONTENT height — a Grid
@@ -413,32 +413,32 @@ resources Diagrams {
         StackPanel [ Orientation = Vertical, HorizontalAlignment = Center, VerticalAlignment = Top ] {
             Border x:name="PART_Box"
                 [ Fill                = #00000000,
-                  CornerRadius        = @ShapeSmall,
+                  CornerRadius        = @RadiusMd,
                   Padding             = (10,6,10,6),
                   Margin              = (4,8,4,3),
                   HorizontalAlignment = Center ] {
                 Shape x:name="PART_Icon"
                     [ Geometry = $Icon,
-                      Fill     = @OnSurfaceVariant,
+                      Fill     = @Fg2,
                       Width    = 20,
                       Height   = 20 ]
             }
-            // Filled @Surface triangle masks the straight divider segment; the
-            // @OutlineVariant stroke draws the ^ so the line peaks up here.
+            // Filled @Bg1 triangle masks the straight divider segment; the
+            // @Border stroke draws the ^ so the line peaks up here.
             Path x:name="PART_Notch"
                 [ Data                = "M -8,2 L 0,-6 L 8,2 Z",
-                  Fill                = @Surface,
-                  Stroke              = Pen [ Brush = @OutlineVariant ],
+                  Fill                = @Bg1,
+                  Stroke              = Pen [ Brush = @Border ],
                   Visibility          = Hidden,
                   HorizontalAlignment = Center,
                   Margin              = (0,0,0,-1) ]
         }
         when ( IsSelected ) {
-            PART_Box.Fill         = @SecondaryContainer;
-            PART_Icon.Fill        = @OnSecondaryContainer;
+            PART_Box.Fill         = @SurfaceSelected;
+            PART_Icon.Fill        = @BrandGreenInk;
             PART_Notch.Visibility = Visible;
         }
-        when ( IsMouseOver ) { PART_Icon.Fill = @OnSurface; }
+        when ( IsMouseOver ) { PART_Icon.Fill = @Fg1; }
     }
     Style x:key="InspectorRailItem" [ TargetType = NavigationItem ] {
         Template = @InspectorRailItemTemplate;
@@ -450,13 +450,13 @@ resources Diagrams {
     }
     Template x:key="InspectorRailTemplate" [ TargetType = NavigationRail ] {
         Border x:name="PART_Border"
-            [ Fill            = @Surface,
+            [ Fill            = @Bg1,
               Padding = (5) ] {
             DockPanel [ LastChildFill = true ] {
                 Line x:name="PART_Rule"
                     [ DockPanel.Dock = Bottom,
                       Orientation    = Horizontal,
-                      Stroke         = (@OutlineVariant, 1) ]
+                      Stroke         = (@Border, 1) ]
                 ItemsPresenter x:name="PART_ItemsPresenter"
             }
         }
@@ -526,47 +526,47 @@ resources Diagrams {
     // selected ($$HasTarget).
     Template x:key="DefaultSizePositionControl" [ TargetType = SizePositionControl ] {
         StackPanel [ Orientation = Vertical, IsEnabled = $$HasTarget ] {
-            TextBlock [ Style = @TitleSmall, Text = "Size", Margin = (0,0,0,8) ]
+            TextBlock [ Style = @UiLabel, Text = "Size", Margin = (0,0,0,8) ]
             DockPanel [ LastChildFill = true, Margin = (0,0,0,6) ] {
-                TextBlock [ DockPanel.Dock = Left, Text = "Height", Style = @BodySmall, Width = 110, VerticalAlignment = Center ]
+                TextBlock [ DockPanel.Dock = Left, Text = "Height", Style = @BodySm, Width = 110, VerticalAlignment = Center ]
                 SpinEdit  [ Value = $$HeightValue, Minimum = 1, DecimalPlaces = 0 ]
             }
             DockPanel [ LastChildFill = true, Margin = (0,0,0,6) ] {
-                TextBlock [ DockPanel.Dock = Left, Text = "Width", Style = @BodySmall, Width = 110, VerticalAlignment = Center ]
+                TextBlock [ DockPanel.Dock = Left, Text = "Width", Style = @BodySm, Width = 110, VerticalAlignment = Center ]
                 SpinEdit  [ Value = $$WidthValue, Minimum = 1, DecimalPlaces = 0 ]
             }
             DockPanel [ LastChildFill = true, Margin = (0,0,0,6) ] {
-                TextBlock [ DockPanel.Dock = Left, Text = "Rotation", Style = @BodySmall, Width = 110, VerticalAlignment = Center ]
+                TextBlock [ DockPanel.Dock = Left, Text = "Rotation", Style = @BodySm, Width = 110, VerticalAlignment = Center ]
                 SpinEdit  [ Value = $$Rotation, Minimum = -360, Maximum = 360, DecimalPlaces = 0 ]
             }
             DockPanel [ LastChildFill = true, Margin = (0,0,0,6) ] {
-                TextBlock [ DockPanel.Dock = Left, Text = "Scale Height", Style = @BodySmall, Width = 110, VerticalAlignment = Center ]
+                TextBlock [ DockPanel.Dock = Left, Text = "Scale Height", Style = @BodySm, Width = 110, VerticalAlignment = Center ]
                 SpinEdit  [ Value = $$ScaleHeight, Minimum = 1, DecimalPlaces = 0 ]
             }
             DockPanel [ LastChildFill = true, Margin = (0,0,0,6) ] {
-                TextBlock [ DockPanel.Dock = Left, Text = "Scale Width", Style = @BodySmall, Width = 110, VerticalAlignment = Center ]
+                TextBlock [ DockPanel.Dock = Left, Text = "Scale Width", Style = @BodySm, Width = 110, VerticalAlignment = Center ]
                 SpinEdit  [ Value = $$ScaleWidth, Minimum = 1, DecimalPlaces = 0 ]
             }
             DockPanel [ LastChildFill = false, Margin = (0,2,0,6) ] {
                 Switch    [ DockPanel.Dock = Right, IsChecked = $$LockAspectRatio ]
-                TextBlock [ Text = "Lock aspect ratio", Style = @BodySmall, VerticalAlignment = Center ]
+                TextBlock [ Text = "Lock aspect ratio", Style = @BodySm, VerticalAlignment = Center ]
             }
 
-            TextBlock [ Style = @TitleSmall, Text = "Position", Margin = (0,12,0,8) ]
+            TextBlock [ Style = @UiLabel, Text = "Position", Margin = (0,12,0,8) ]
             DockPanel [ LastChildFill = true, Margin = (0,0,0,6) ] {
-                TextBlock [ DockPanel.Dock = Left, Text = "Horizontal", Style = @BodySmall, Width = 110, VerticalAlignment = Center ]
+                TextBlock [ DockPanel.Dock = Left, Text = "Horizontal", Style = @BodySm, Width = 110, VerticalAlignment = Center ]
                 SpinEdit  [ Value = $$HorizontalPosition, DecimalPlaces = 0 ]
             }
             DockPanel [ LastChildFill = true, Margin = (0,0,0,6) ] {
-                TextBlock [ DockPanel.Dock = Left, Text = "From", Style = @BodySmall, Width = 110, VerticalAlignment = Center ]
+                TextBlock [ DockPanel.Dock = Left, Text = "From", Style = @BodySm, Width = 110, VerticalAlignment = Center ]
                 ComboBox  [ ItemsSource = $$FromLabels, SelectedItem = $$SelectedFromLabel ]
             }
             DockPanel [ LastChildFill = true, Margin = (0,0,0,6) ] {
-                TextBlock [ DockPanel.Dock = Left, Text = "Vertical", Style = @BodySmall, Width = 110, VerticalAlignment = Center ]
+                TextBlock [ DockPanel.Dock = Left, Text = "Vertical", Style = @BodySm, Width = 110, VerticalAlignment = Center ]
                 SpinEdit  [ Value = $$VerticalPosition, DecimalPlaces = 0 ]
             }
             DockPanel [ LastChildFill = true, Margin = (0,0,0,6) ] {
-                TextBlock [ DockPanel.Dock = Left, Text = "From", Style = @BodySmall, Width = 110, VerticalAlignment = Center ]
+                TextBlock [ DockPanel.Dock = Left, Text = "From", Style = @BodySm, Width = 110, VerticalAlignment = Center ]
                 ComboBox  [ ItemsSource = $$FromLabels, SelectedItem = $$SelectedFromLabel ]
             }
         }
