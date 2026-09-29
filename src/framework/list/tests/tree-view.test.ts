@@ -3,7 +3,7 @@ import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { initTestApp } from '../../../basic/tests/test-app.js';
 
-import { Application, NoModifiers, ObservableCollection, PointerButton, Rect, Size, type PointerEventInit, type ModifierKeys } from '../../../runtime/index.js';
+import { Application, NoModifiers, ObservableCollection, PointerButton, Rect, Size, Visual, type PointerEventInit, type ModifierKeys } from '../../../runtime/index.js';
 import { InputManager } from '../../../framework/index.js';;
 import { HeadlessTarget } from '../../../visual-engine/index.js';
 import { ItemsPresenter } from '../../../basic/templates/items-presenter.js';
@@ -55,22 +55,20 @@ function rowOf(item: TreeViewItem)
     return outerStack.visualChildren[0]!;
 }
 
-// The chevron sits inside the row inner StackPanel as the second
-// child (after the indent spacer).
+// The chevron is the ChevronTarget PART_Chevron inside the row's inner
+// DockPanel. The Pragmatic tree-view template nests an extra PART_Selected
+// Border between PART_Row and PART_RowInner, so index-walking is fragile —
+// resolve the part by name through the item's own template instead.
 function chevronOf(item: TreeViewItem)
 {
-    const row = rowOf(item);
-    const inner = row.visualChildren[0]!;
-    return inner.visualChildren[1]!;
+    return (item as unknown as { GetTemplateChild(name: string): Visual }).GetTemplateChild('PART_Chevron');
 }
 
-// Spacer = first child of the row's inner horizontal stack — its
-// Width DP is how much horizontal indent the row applies.
+// Spacer = PART_Spacer, the DockPanel.Dock=Left indent Border — its Width DP
+// is how much horizontal indent the row applies (depth × TreeView.Indent).
 function spacerOf(item: TreeViewItem)
 {
-    const row = rowOf(item);
-    const inner = row.visualChildren[0]!;
-    return inner.visualChildren[0]!;
+    return (item as unknown as { GetTemplateChild(name: string): Visual }).GetTemplateChild('PART_Spacer');
 }
 
 describe('TreeView — composed-markup tree shape', () => {

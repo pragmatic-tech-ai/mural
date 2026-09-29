@@ -44,7 +44,7 @@ describe('FloatingActionButton — default template', () => {
 
     test('Default size: 56dp × 56dp minimum container with ElevationLevel3 Effect', () => {
         const fab = new FloatingActionButton();
-        const root = fab.visualChildren[0] as Border;
+        const root = (fab.visualChildren[0] as Border).child as Border;  // PART_Root (inside PART_FocusRing)
         // Width / Height are unset (auto) so the chrome can grow past
         // the M3 baseline when a consumer slots an oversized glyph;
         // MinWidth / MinHeight pin the 56dp baseline at the lower bound.
@@ -53,7 +53,7 @@ describe('FloatingActionButton — default template', () => {
         assert.ok(Number.isNaN(root.Width),  'Default FAB Width should be auto');
         assert.ok(Number.isNaN(root.Height), 'Default FAB Height should be auto');
         assert.ok(root.Effect !== undefined,
-            'Default FAB carries an Effect (the M3 ElevationLevel3 dual-shadow ramp)');
+            'Default FAB carries an Effect (the @ShadowMd elevation)');
     });
 
     test('Content set on FAB slots into the templated ContentPresenter', () => {
@@ -73,7 +73,7 @@ describe('FloatingActionButton — size variants', () => {
     test('Small size installs the 40dp template', () => {
         const fab = new FloatingActionButton();
         fab.Size = FabSize.Small;
-        const root = fab.visualChildren[0] as Border;
+        const root = (fab.visualChildren[0] as Border).child as Border;  // PART_Root (inside PART_FocusRing)
         assert.equal(root.MinWidth,  40, 'Small FAB MinWidth should be 40');
         assert.equal(root.MinHeight, 40, 'Small FAB MinHeight should be 40');
         assert.ok(Number.isNaN(root.Width),  'Small FAB Width should be auto');
@@ -83,7 +83,7 @@ describe('FloatingActionButton — size variants', () => {
     test('Large size installs the 96dp template', () => {
         const fab = new FloatingActionButton();
         fab.Size = FabSize.Large;
-        const root = fab.visualChildren[0] as Border;
+        const root = (fab.visualChildren[0] as Border).child as Border;  // PART_Root (inside PART_FocusRing)
         assert.equal(root.MinWidth,  96, 'Large FAB MinWidth should be 96');
         assert.equal(root.MinHeight, 96, 'Large FAB MinHeight should be 96');
         assert.ok(Number.isNaN(root.Width),  'Large FAB Width should be auto');
@@ -93,7 +93,7 @@ describe('FloatingActionButton — size variants', () => {
     test('Extended size installs the 56dp-tall, auto-width template', () => {
         const fab = new FloatingActionButton();
         fab.Size = FabSize.Extended;
-        const root = fab.visualChildren[0] as Border;
+        const root = (fab.visualChildren[0] as Border).child as Border;  // PART_Root (inside PART_FocusRing)
         assert.equal(root.MinHeight, 56,
             'Extended FAB MinHeight should be 56');
         assert.ok(Number.isNaN(root.Height),

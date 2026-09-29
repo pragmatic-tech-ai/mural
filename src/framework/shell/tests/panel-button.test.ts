@@ -12,7 +12,7 @@ import { ButtonVariant } from '../../buttons/button.js';
 // PanelButton is the shell panel-header icon button (pop-out / collapse /
 // add). It extends IconButton for the Click / Command machinery, but its
 // default Style (shell.template.mu) pins the Standard chrome-less fill and
-// a small @ShapeSmall (8dp) corner instead of IconButton's @ShapeFull
+// a small @RadiusSm (6dp) corner instead of IconButton's @ShapeFull
 // circle — the rounded-rectangle look. These tests pin that chrome.
 
 describe('PanelButton — default chrome', () => {
@@ -33,13 +33,13 @@ describe('PanelButton — default chrome', () => {
         assert.ok(presenter instanceof ContentPresenter, 'PART_StateLayer child is the glyph slot');
     });
 
-    test('corner is @ShapeSmall (8dp) — a rounded rectangle, not the IconButton circle', () => {
+    test('corner is @RadiusSm (6dp) — a rounded rectangle, not the IconButton circle', () => {
         const btn = new PanelButton();
         const border = btn.visualChildren[0] as Border;
         const stateLayer = border.child as Border;
-        assert.equal(border.CornerRadius, 8,
-            'PART_Border rides $$CornerRadius = @ShapeSmall from the PanelButton Style');
-        assert.equal(stateLayer.CornerRadius, 8,
+        assert.equal(border.CornerRadius, 6,
+            'PART_Border rides $$CornerRadius = @RadiusSm from the PanelButton Style');
+        assert.equal(stateLayer.CornerRadius, 6,
             'PART_StateLayer overlay tracks the same corner');
     });
 

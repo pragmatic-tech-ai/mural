@@ -85,11 +85,18 @@ describe('Slider — defaults', () => {
 describe('Slider — horizontal thumb geometry', () => {
     beforeEach(() => { initTestApp(); });
 
+    // Pragmatic nests PART_Thumb (fixed 4×16) INSIDE PART_FocusRing (8×20).
+    // The element that RIDES THE TRACK is PART_FocusRing; PART_Thumb sits
+    // centred inside it at a constant LOCAL x=2. So the VISIBLE thumb's
+    // absolute track position = focusRing.ArrangedRect.X + Thumb.ArrangedRect.X
+    // — which equals the old Material leading-edge values exactly. The thumb's
+    // own geometry (4×16) is still read off sl.Thumb directly.
     test('Value=Min → thumb at the left edge of the track', () => {
         const { sl } = horizontalAt200();
         sl.Value = 0;
         sl.Arrange(new Rect(0, 0, 200, 16));
-        assert.equal(sl.Thumb.ArrangedRect.X,      0);
+        const ring = (sl as unknown as { GetTemplateChild(name: string): { ArrangedRect: Rect } }).GetTemplateChild('PART_FocusRing');
+        assert.equal(ring.ArrangedRect.X + sl.Thumb.ArrangedRect.X, 0);
         assert.equal(sl.Thumb.ArrangedRect.Width,  4);
         assert.equal(sl.Thumb.ArrangedRect.Height, 16);
     });
@@ -99,7 +106,8 @@ describe('Slider — horizontal thumb geometry', () => {
         sl.Value = 100;
         sl.Arrange(new Rect(0, 0, 200, 16));
         // travel = 200 - 4 = 196 → leading edge X=196.
-        assert.equal(sl.Thumb.ArrangedRect.X, 196);
+        const ring = (sl as unknown as { GetTemplateChild(name: string): { ArrangedRect: Rect } }).GetTemplateChild('PART_FocusRing');
+        assert.equal(ring.ArrangedRect.X + sl.Thumb.ArrangedRect.X, 196);
     });
 
     test('Value=mid-range → thumb position scales proportionally', () => {
@@ -107,7 +115,8 @@ describe('Slider — horizontal thumb geometry', () => {
         sl.Value = 50;
         sl.Arrange(new Rect(0, 0, 200, 16));
         // 50/100 × 196 = 98.
-        assert.equal(sl.Thumb.ArrangedRect.X, 98);
+        const ring = (sl as unknown as { GetTemplateChild(name: string): { ArrangedRect: Rect } }).GetTemplateChild('PART_FocusRing');
+        assert.equal(ring.ArrangedRect.X + sl.Thumb.ArrangedRect.X, 98);
     });
 
     test('Fill width spans from track left edge to the thumb centre', () => {
@@ -143,14 +152,17 @@ describe('Slider — vertical thumb geometry (Min at bottom)', () => {
         const sl = verticalAt200();
         sl.Value = 0;
         sl.Arrange(new Rect(0, 0, 16, 200));
-        assert.equal(sl.Thumb.ArrangedRect.Y, 196);
+        // Absolute = PART_FocusRing.Y + PART_Thumb local Y (see horizontal note).
+        const ring = (sl as unknown as { GetTemplateChild(name: string): { ArrangedRect: Rect } }).GetTemplateChild('PART_FocusRing');
+        assert.equal(ring.ArrangedRect.Y + sl.Thumb.ArrangedRect.Y, 196);
     });
 
     test('Value=Max → thumb at the TOP (Y = 0)', () => {
         const sl = verticalAt200();
         sl.Value = 100;
         sl.Arrange(new Rect(0, 0, 16, 200));
-        assert.equal(sl.Thumb.ArrangedRect.Y, 0);
+        const ring = (sl as unknown as { GetTemplateChild(name: string): { ArrangedRect: Rect } }).GetTemplateChild('PART_FocusRing');
+        assert.equal(ring.ArrangedRect.Y + sl.Thumb.ArrangedRect.Y, 0);
     });
 });
 
@@ -165,14 +177,16 @@ describe('Slider — clamping', () => {
         // wins" convention).
         assert.equal(sl.Value, 9999);
         // Painted thumb is at the Max position (X = 196).
-        assert.equal(sl.Thumb.ArrangedRect.X, 196);
+        const ring = (sl as unknown as { GetTemplateChild(name: string): { ArrangedRect: Rect } }).GetTemplateChild('PART_FocusRing');
+        assert.equal(ring.ArrangedRect.X + sl.Thumb.ArrangedRect.X, 196);
     });
 
     test('Negative Value writes paint clamped at the Min position', () => {
         const { sl } = horizontalAt200();
         sl.Value = -50;
         sl.Arrange(new Rect(0, 0, 200, 16));
-        assert.equal(sl.Thumb.ArrangedRect.X, 0);
+        const ring = (sl as unknown as { GetTemplateChild(name: string): { ArrangedRect: Rect } }).GetTemplateChild('PART_FocusRing');
+        assert.equal(ring.ArrangedRect.X + sl.Thumb.ArrangedRect.X, 0);
     });
 
     test('range = 0 (Min == Max) parks the thumb at the Min position', () => {
@@ -182,7 +196,8 @@ describe('Slider — clamping', () => {
         sl.Value   = 5;
         sl.Measure(new Size(200, 16));
         sl.Arrange(new Rect(0, 0, 200, 16));
-        assert.equal(sl.Thumb.ArrangedRect.X, 0);
+        const ring = (sl as unknown as { GetTemplateChild(name: string): { ArrangedRect: Rect } }).GetTemplateChild('PART_FocusRing');
+        assert.equal(ring.ArrangedRect.X + sl.Thumb.ArrangedRect.X, 0);
     });
 });
 

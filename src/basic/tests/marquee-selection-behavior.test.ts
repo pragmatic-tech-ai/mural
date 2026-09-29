@@ -150,11 +150,12 @@ describe('MarqueeSelectionBehavior — Intersect policy (default)', () => {
         const { lb, a, b, c, panel } = buildFixture();
         lb.AllowMarqueeSelection = true;
         const im = new InputManager();
-        // Drag from (10,30) to (40,34) — grazes the bottom of a and the
-        // top of b. Both should be Intersect-selected.
-        im.InjectPointerDown(panel, pointer({ HostX: 10, HostY: 30 }));
-        im.InjectPointerMove(panel, pointer({ HostX: 40, HostY: 34 }));
-        im.InjectPointerUp  (panel, pointer({ HostX: 40, HostY: 34 }));
+        // Pragmatic rows are 36px tall: a=0..36, b=36..72, c=72..108.
+        // Drag from (10,34) to (40,38) — grazes the bottom of a and the
+        // top of b (straddling the y=36 seam). Both should be Intersect-selected.
+        im.InjectPointerDown(panel, pointer({ HostX: 10, HostY: 34 }));
+        im.InjectPointerMove(panel, pointer({ HostX: 40, HostY: 38 }));
+        im.InjectPointerUp  (panel, pointer({ HostX: 40, HostY: 38 }));
         assert.equal(a.IsSelected, true);
         assert.equal(b.IsSelected, true);
         assert.equal(c.IsSelected, false);
@@ -183,11 +184,12 @@ describe('MarqueeSelectionBehavior — Contained policy', () => {
         lb.AllowMarqueeSelection = true;
         lb.MarqueeBoundsPolicy = MarqueeBoundsPolicy.Contained;
         const im = new InputManager();
-        // 200px wide ListBox; drag from (-10,-4) to (210,68) fully
-        // encloses rows a (0-32) and b (32-64).
+        // 200px wide ListBox; Pragmatic rows are 36px tall. Drag from
+        // (-10,-4) to (210,74) fully encloses rows a (0-36) and b (36-72)
+        // without reaching the full height of c (72-108).
         im.InjectPointerDown(panel, pointer({ HostX: -10, HostY: -4 }));
-        im.InjectPointerMove(panel, pointer({ HostX: 210, HostY: 68 }));
-        im.InjectPointerUp  (panel, pointer({ HostX: 210, HostY: 68 }));
+        im.InjectPointerMove(panel, pointer({ HostX: 210, HostY: 74 }));
+        im.InjectPointerUp  (panel, pointer({ HostX: 210, HostY: 74 }));
         assert.equal(a.IsSelected, true);
         assert.equal(b.IsSelected, true);
         assert.equal(c.IsSelected, false);
