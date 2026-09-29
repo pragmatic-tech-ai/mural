@@ -4,7 +4,7 @@ import { ServiceProvider, ServiceKey } from '../../../runtime/index.js';
 import {
     HierarchyModel, HierarchyContributorRegistry, HierarchyContributorDefinition,
     NodeContribution, ProviderContribution, ChildAdded, ChildUpdated, ChildRemoved,
-    NodeSeverity, HierarchyItemId,
+    NodeSeverity, HierarchyItemId, HierarchyPropertyId,
     type IHierarchyContributor, type IHierarchyProvider, type HierarchyNode, type HierarchyChange,
 } from '../index.js';
 
@@ -125,4 +125,58 @@ test('unsubscribe stops emissions', () =>
     off();
     fake.Sink!(new ChildAdded(HierarchyItemId.Mint(), node('file', {})));
     assert.equal(seen.length, 0);
+});
+
+test('GetProperty reads keyed node facts and falls back to registry for IsExpandable', () =>
+{
+    const provider = new ServiceProvider();
+    const files = new ServiceKey<IHierarchyContributor>('files');
+    provider.registerInstance(files, { ParentKeys: ['project'], Order: 0,
+        Contribute: () => new NodeContribution([]) } as IHierarchyContributor);
+    const registry = reg(provider);
+    registerContributor(registry, files, ['project']);
+    const model = new HierarchyModel(registry);
+    const root = model.SeedRoot(node('project', { id: 'p' }, 'Proj'));
+
+    assert.equal(model.GetProperty(root, HierarchyPropertyId.Caption), 'Proj');
+    // IsExpandable falls back to "has a contributor for this Key" (files registered for 'project').
+    assert.equal(model.GetProperty(root, HierarchyPropertyId.IsExpandable), true);
+});
+
+test('nested provider realize: expanding a folder subscribes the provider for THAT node', () =>
+{
+    // A provider that yields a folder at the top level, and the folder's own children on demand.
+    const provider = new ServiceProvider();
+    const sinks = new Map<HierarchyItemId, (c: HierarchyChange) => void>();
+    const folderId = HierarchyItemId.Mint();
+    const fake: IHierarchyProvider = {
+        ProviderId: 'nested',
+        ObserveChildren(nodeId, sink)
+        {
+            sinks.set(nodeId, sink);
+            return () => { sinks.delete(nodeId); };
+        },
+        GetProperty: () => undefined,
+        GetCanonicalName: () => '',
+        ParseCanonicalName: () => HierarchyItemId.Nil,
+        CanAccept: () => false,
+    };
+    const tok = new ServiceKey<IHierarchyContributor>('files');
+    provider.registerInstance(tok, { ParentKeys: ['project'], Order: 0,
+        Contribute: () => new ProviderContribution(fake) } as IHierarchyContributor);
+    const registry = reg(provider);
+    registerContributor(registry, tok, ['project']);
+    const model = new HierarchyModel(registry);
+    const root = model.SeedRoot(node('project', {}));
+    model.RealizeChildren(root);                          // subscribes provider at the boundary (root)
+    sinks.get(root)!(new ChildAdded(folderId, node('folder', { id: 'd' })));
+    assert.equal(model.ChildrenOf(root)[0], folderId);
+
+    // Expanding the folder must subscribe the provider for the folder id (nested realize).
+    assert.equal(sinks.has(folderId), false);
+    model.RealizeChildren(folderId);
+    assert.equal(sinks.has(folderId), true);
+    const fileId = HierarchyItemId.Mint();
+    sinks.get(folderId)!(new ChildAdded(fileId, node('file', { id: 'f' })));
+    assert.equal(model.ChildrenOf(folderId)[0], fileId);
 });

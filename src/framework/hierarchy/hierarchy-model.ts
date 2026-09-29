@@ -1,6 +1,6 @@
 import type { HierarchyContributorRegistry } from './hierarchy-contributor-registry.js';
 import {
-    HierarchyItemId, NodeContribution, ProviderContribution,
+    HierarchyItemId, NodeContribution, ProviderContribution, HierarchyPropertyId,
     ChildAdded, ChildRemoved, ChildUpdated,
     type HierarchyNode, type HierarchyChange, type IHierarchyProvider,
 } from './hierarchy-node.js';
@@ -21,6 +21,10 @@ interface Entry
     provider?: IHierarchyProvider;
     dispose?: () => void;
     realized?: boolean;   // RealizeChildren has run on this node (gates reRealizeKeyed)
+    // The provider that owns this node's SUBTREE, when the node sits below a provider
+    // boundary. Set on every node a provider's deltas add; drives GetProperty delegation
+    // and nested realize (RealizeChildren subscribes owner.ObserveChildren for this node).
+    owner?: IHierarchyProvider;
 }
 
 // The keyed-regime walker (design §3,§5,§6). Owns keyed-node identity + interning,
@@ -118,6 +122,30 @@ export class HierarchyModel
         return this.entry(id).node;
     }
 
+    // Read one display property of a node. Facts come from the node's stored HierarchyNode —
+    // a provider fills them in the ChildAdded it emits, so keyed and provider nodes read the
+    // same way. Only IsExpandable needs help when the node didn't declare it: a provider-owned
+    // node asks its provider; a keyed node falls back to "a contributor is registered for its
+    // Key".
+    public GetProperty(id: HierarchyItemId, prop: HierarchyPropertyId): unknown
+    {
+        const entry = this.entry(id);
+        const node = entry.node;
+        switch (prop)
+        {
+            case HierarchyPropertyId.Caption:       return node.Caption;
+            case HierarchyPropertyId.IconKey:       return node.IconKey;
+            case HierarchyPropertyId.ExtObject:     return node.ExtObject;
+            case HierarchyPropertyId.Severity:      return node.Severity;
+            case HierarchyPropertyId.CanonicalName: return node.Key;
+            case HierarchyPropertyId.IsExpandable:
+                if (node.IsExpandable !== undefined) return node.IsExpandable;
+                if (entry.owner !== undefined) return entry.owner.GetProperty(id, HierarchyPropertyId.IsExpandable) === true;
+                return this.registry.For(node.Key).length > 0;
+            default:                                return undefined;
+        }
+    }
+
     public ChildrenOf(id: HierarchyItemId): readonly HierarchyItemId[]
     {
         return this.entry(id).children;
@@ -131,6 +159,17 @@ export class HierarchyModel
     {
         const entry = this.entry(id);
         entry.realized = true;
+        // Below a provider boundary: the registry is not consulted — the owning provider
+        // enumerates this node's children (realize = subscribe), so nested folders expand.
+        if (entry.owner !== undefined)
+        {
+            if (entry.provider === undefined)
+            {
+                entry.provider = entry.owner;
+                entry.dispose = entry.owner.ObserveChildren(id, (c) => this.patch(id, entry, c));
+            }
+            return;
+        }
         const contributed = new Set<unknown>();
         for (const contributor of this.registry.For(entry.node.Key))
         {
@@ -196,7 +235,10 @@ export class HierarchyModel
         if (entry.dispose === undefined) return;   // collapsed — ignore late deltas
         if (change instanceof ChildAdded)
         {
-            this.entries.set(change.Id, { node: change.Node, children: [] });
+            // Every node a provider adds is owned by that same provider — so its own
+            // children realize through the provider too (nested folders), and GetProperty
+            // delegates to it.
+            this.entries.set(change.Id, { node: change.Node, children: [], owner: entry.provider });
             entry.children.push(change.Id);
         }
         else if (change instanceof ChildUpdated)

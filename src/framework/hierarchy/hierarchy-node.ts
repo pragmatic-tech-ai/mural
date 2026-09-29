@@ -23,6 +23,11 @@ export interface HierarchyNode
     readonly ExtObject: unknown;
     readonly Severity: NodeSeverity;
     readonly Error?: string;
+    // Optional display fact: whether the row should offer an expand affordance before its
+    // children are loaded. A keyed contributor sets it (a resolved member → true, a leaf →
+    // false); when absent the model falls back to "has a contributor for this Key". Provider
+    // nodes answer via the provider's GetProperty(IsExpandable) instead.
+    readonly IsExpandable?: boolean;
 }
 
 // One channel for async initial load AND external edits.
