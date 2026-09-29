@@ -13,6 +13,7 @@ node-key ownership (two owners of one key throw).
 | `project` | mural/framework (`NodeKey.Project`) | coarse family; the project TYPE lives on the instance, never the key |
 | `connections` | mural/framework (`NodeKey.Connections`) | P5 |
 | `references` | mural/framework (`NodeKey.References`) | P5 |
+| `folder` / `file` / `diagram` / `todl` | TODL (`ContentNodeKey`, `solution-services/project-services/content`) | P1 content-node presentation families; provider-scoped (below the provider boundary — never contributor-matched); not in mural's `NodeKey` |
 
 ## Other string-key domains (existing)
 

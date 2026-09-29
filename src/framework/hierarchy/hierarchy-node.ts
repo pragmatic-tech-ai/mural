@@ -6,6 +6,9 @@ export abstract class HierarchyItemId
     protected constructor() {}
     public static readonly Root: HierarchyItemId = new (class extends HierarchyItemId {})();
     public static readonly Nil:  HierarchyItemId = new (class extends HierarchyItemId {})();
+    // A fresh, unique handle a provider mints for one of its opaque-branch nodes.
+    // Identity is object identity — the provider caches and reuses the instance.
+    public static Mint(): HierarchyItemId { return new (class extends HierarchyItemId {})(); }
 }
 
 export enum NodeSeverity { Ok, Warning, Error }
@@ -27,7 +30,7 @@ export abstract class HierarchyChange {}
 
 export class ChildAdded extends HierarchyChange
 {
-    constructor(public readonly Node: HierarchyNode) { super(); }
+    constructor(public readonly Id: HierarchyItemId, public readonly Node: HierarchyNode) { super(); }
 }
 
 export class ChildRemoved extends HierarchyChange
@@ -37,7 +40,8 @@ export class ChildRemoved extends HierarchyChange
 
 export class ChildUpdated extends HierarchyChange
 {
-    constructor(public readonly Id: HierarchyItemId) { super(); }
+    // Carries fresh node data so a caption/icon refresh is an in-place swap (id unchanged).
+    constructor(public readonly Id: HierarchyItemId, public readonly Node: HierarchyNode) { super(); }
 }
 
 export enum HierarchyPropertyId { Caption, IconKey, IsExpandable, CanonicalName, ExtObject, Severity }

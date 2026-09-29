@@ -54,9 +54,9 @@ test('realize = subscribe: initial ChildAdded and a later ChildAdded patch the s
     const root = model.SeedRoot(node('project', { id: 'p' }));
     model.RealizeChildren(root);
     assert.equal(model.ChildrenOf(root).length, 0);            // nothing yet — subscribed, no deltas
-    fake.Sink!(new ChildAdded(node('file', { id: 'f1' })));    // initial load
+    fake.Sink!(new ChildAdded(HierarchyItemId.Mint(), node('file', { id: 'f1' })));    // initial load
     assert.equal(model.ChildrenOf(root).length, 1);
-    fake.Sink!(new ChildAdded(node('file', { id: 'f2' })));    // later external add — SAME channel
+    fake.Sink!(new ChildAdded(HierarchyItemId.Mint(), node('file', { id: 'f2' })));    // later external add — SAME channel
     assert.equal(model.ChildrenOf(root).length, 2);
 });
 
@@ -70,10 +70,11 @@ test('ChildUpdated keeps the same id (selection survives); ChildRemoved drops it
     const model = new HierarchyModel(registryWith(provider, [{ token: tok, parents: ['project'] }]));
     const root = model.SeedRoot(node('project', {}));
     model.RealizeChildren(root);
-    fake.Sink!(new ChildAdded(node('file', { id: 'f1' }, 'old')));
+    fake.Sink!(new ChildAdded(HierarchyItemId.Mint(), node('file', { id: 'f1' }, 'old')));
     const id = model.ChildrenOf(root)[0];
-    fake.Sink!(new ChildUpdated(id));
+    fake.Sink!(new ChildUpdated(id, node('file', { id: 'f1' }, 'renamed')));
     assert.equal(model.ChildrenOf(root)[0], id);               // same identity
+    assert.equal(model.NodeAt(id).Caption, 'renamed');         // refreshed in place
     fake.Sink!(new ChildRemoved(id));
     assert.equal(model.ChildrenOf(root).length, 0);
 });
@@ -117,8 +118,32 @@ test('collapse disposes the provider subscription; later deltas are ignored', ()
     model.RealizeChildren(root);
     model.Collapse(root);
     assert.equal(fake.Disposed, true);
-    fake.Sink!(new ChildAdded(node('file', {})));
+    fake.Sink!(new ChildAdded(HierarchyItemId.Mint(), node('file', {})));
     assert.equal(model.ChildrenOf(root).length, 0);
+});
+
+test('provider-supplied id: ChildAdded carries the id; ChildUpdated(id, node) refreshes in place', () =>
+{
+    const provider = new ServiceProvider();
+    const fake = new FakeProvider();
+    const tok = new ServiceKey<IHierarchyContributor>('files');
+    provider.registerInstance(tok, { ParentKeys: ['project'], Order: 0,
+        Contribute: () => new ProviderContribution(fake) } as IHierarchyContributor);
+    const model = new HierarchyModel(registryWith(provider, [{ token: tok, parents: ['project'] }]));
+    const root = model.SeedRoot(node('project', {}));
+    model.RealizeChildren(root);
+
+    const id = HierarchyItemId.Mint();
+    fake.Sink!(new ChildAdded(id, node('file', { id: 'f1' }, 'old')));
+    assert.equal(model.ChildrenOf(root)[0], id);                       // the SAME id instance is stored
+    assert.equal(model.NodeAt(id).Caption, 'old');
+
+    fake.Sink!(new ChildUpdated(id, node('file', { id: 'f1' }, 'new')));
+    assert.equal(model.ChildrenOf(root)[0], id);                       // identity preserved
+    assert.equal(model.NodeAt(id).Caption, 'new');                     // caption refreshed in place
+
+    fake.Sink!(new ChildRemoved(id));
+    assert.equal(model.ChildrenOf(root).length, 0);                    // same id instance removes
 });
 
 test('stable identity: same (parent,key,ExtObject) re-realized keeps the id', () =>

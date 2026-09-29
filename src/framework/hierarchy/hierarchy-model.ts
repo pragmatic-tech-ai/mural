@@ -157,14 +157,13 @@ export class HierarchyModel
         if (entry.dispose === undefined) return;   // collapsed — ignore late deltas
         if (change instanceof ChildAdded)
         {
-            const childId = new MintedItemId(change.Node.Key, change.Node.ExtObject);
-            this.entries.set(childId, { node: change.Node, children: [] });
-            entry.children.push(childId);
+            this.entries.set(change.Id, { node: change.Node, children: [] });
+            entry.children.push(change.Id);
         }
         else if (change instanceof ChildUpdated)
         {
-            // Identity preserved; a node-data refresh (caption/icon) lands here. No
-            // structural change — the id stays, so selection/expansion survive.
+            const e = this.entries.get(change.Id);
+            if (e !== undefined) e.node = change.Node;   // refresh in place; id preserved
         }
         else if (change instanceof ChildRemoved)
         {

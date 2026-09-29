@@ -34,6 +34,13 @@
         "default": "./dist/framework/index.js"
       }
     },
+    "./framework/hierarchy": {
+      "types": "./dist/framework/hierarchy/index.d.ts",
+      "import": {
+        "development": "./src/framework/hierarchy/index.ts",
+        "default": "./dist/framework/hierarchy/index.js"
+      }
+    },
     "./framework/surface.js": {
       "types": "./dist/framework/surface.d.ts",
       "import": {

@@ -28,8 +28,10 @@ test('contribution classes carry their payload and are instanceof HierarchyContr
 
 test('change deltas carry node / id', () =>
 {
-    const add = new ChildAdded(node('a', 1));
+    const add = new ChildAdded(HierarchyItemId.Nil, node('a', 1));
     assert.equal(add.Node.Key, 'a');
+    assert.equal(add.Id, HierarchyItemId.Nil);
     assert.equal(new ChildRemoved(HierarchyItemId.Nil).Id, HierarchyItemId.Nil);
-    assert.equal(new ChildUpdated(HierarchyItemId.Nil).Id, HierarchyItemId.Nil);
+    assert.equal(new ChildUpdated(HierarchyItemId.Nil, node('a', 1)).Id, HierarchyItemId.Nil);
+    assert.equal(new ChildUpdated(HierarchyItemId.Nil, node('a', 1)).Node.Key, 'a');
 });
