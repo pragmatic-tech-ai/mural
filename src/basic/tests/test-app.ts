@@ -30,15 +30,23 @@ let _sharedApp: Application | undefined;
 
 export function initTestApp(): Application
 {
-    if (_sharedApp === undefined)
+    // Idempotent re-registration: after a prior test built a fresh
+    // Application via `ThemeManager._resetForTesting()` the theme
+    // registry is empty, so re-register before (re)building the app.
+    if (ThemeManager.GetTheme(Pragmatic.instance.name) === undefined)
     {
-        // Idempotent re-registration in case some prior test reset
-        // ThemeManager via `_resetForTesting()`.
-        if (ThemeManager.GetTheme(Pragmatic.instance.name) === undefined)
-        {
-            ThemeManager.RegisterTheme(Pragmatic.instance);
-        }
-        Application.RegisterDefaultTheme(Pragmatic);
+        ThemeManager.RegisterTheme(Pragmatic.instance);
+    }
+    Application.RegisterDefaultTheme(Pragmatic);
+
+    // Build the shared Application on first use, and rebuild it when a
+    // prior test reset the ThemeManager — that leaves the cached app
+    // with a dead theme (`_initialized` stays true, so `initialize()`
+    // no longer re-activates). On the normal path — app built, Pragmatic
+    // active — the single shared instance is reused untouched, so the
+    // suites that share it are unaffected.
+    if (_sharedApp === undefined || ThemeManager.ActiveTheme === undefined)
+    {
         _sharedApp = new Application();
         _sharedApp.initialize({ theme: Pragmatic, scheme: PragmaticLight });
     }

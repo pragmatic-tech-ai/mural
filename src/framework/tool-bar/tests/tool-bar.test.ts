@@ -409,11 +409,11 @@ describe('ToolBar — split-button group chrome', () => {
         assert.ok(w.Height > 0, `divider stretches to the button height (got ${w.Height})`);
     });
 
-    // Group-end rounding is the split button's @RadiusSm (6dp) capsule, NOT
+    // Group-end rounding is the split button's @RadiusMd (6dp) capsule, NOT
     // the former full-pill (CornerRadius.Full, infinite radius). First rounds
     // its outer-left corners only, Last its outer-right only, interior square.
-    // (Material's @ShapeSmall was 8dp; the Pragmatic equivalent @RadiusSm is 6dp.)
-    test('group ends round to @RadiusSm (6dp), not the full pill', () => {
+    // (Material's @ShapeSmall was 8dp; the Pragmatic equivalent @RadiusMd is 6dp.)
+    test('group ends round to @RadiusMd (6dp), not the full pill', () => {
         const tb = threeButtonBar();
         const target = new HeadlessTarget(600, 80, tb);
         target.Flush();
@@ -423,21 +423,21 @@ describe('ToolBar — split-button group chrome', () => {
         const middle = radiusOf(buttons[1]!);
         const last = radiusOf(buttons[2]!) as CornerRadius;
 
-        assert.equal(first.TopLeft, 6,     'first: outer-left rounded to @RadiusSm');
-        assert.equal(first.BottomLeft, 6,  'first: outer-left rounded to @RadiusSm');
+        assert.equal(first.TopLeft, 6,     'first: outer-left rounded to @RadiusMd');
+        assert.equal(first.BottomLeft, 6,  'first: outer-left rounded to @RadiusMd');
         assert.equal(first.TopRight, 0,    'first: inner-right square (flush with next)');
         assert.equal(Number.isFinite(first.TopLeft), true, 'no longer the infinite full-pill radius');
 
         // Interior button: uniform 0 (a plain number, square all round).
         assert.equal(middle, 0, 'middle button is square');
 
-        assert.equal(last.TopRight, 6,     'last: outer-right rounded to @RadiusSm');
-        assert.equal(last.BottomRight, 6,  'last: outer-right rounded to @RadiusSm');
+        assert.equal(last.TopRight, 6,     'last: outer-right rounded to @RadiusMd');
+        assert.equal(last.BottomRight, 6,  'last: outer-right rounded to @RadiusMd');
         assert.equal(last.TopLeft, 0,      'last: inner-left square (flush with previous)');
     });
 
     // A lone button in its own ToolBar is Position=Only → all four corners
-    // @RadiusSm, no divider (nothing precedes it).
+    // @RadiusMd, no divider (nothing precedes it).
     test('a solo button rounds all four corners and shows no divider', () => {
         const tb = new ToolBar();
         tb.ItemTemplate = new DataTemplate(() => {
@@ -453,7 +453,7 @@ describe('ToolBar — split-button group chrome', () => {
 
         const button = collect(tb, 'ToolBarButton')[0]!;
         assert.equal(button.constructor.name, 'ToolBarButton');
-        assert.equal(radiusOf(button), 6, 'solo button: uniform @RadiusSm on every corner');
+        assert.equal(radiusOf(button), 6, 'solo button: uniform @RadiusMd on every corner');
         assert.equal(dividerVisible(button), false, 'solo button: no leading divider');
     });
 
