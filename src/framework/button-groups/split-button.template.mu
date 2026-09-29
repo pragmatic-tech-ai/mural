@@ -9,8 +9,9 @@
 // popover. Disabled dims BOTH halves.
 //
 // SegmentedButton is forked separately (segmented-button.template.mu).
-// Pragmatic tokens only (+ shared geometry @ChevronDown). Merged via
-// PragmaticControls.
+// Pragmatic tokens only (+ shared geometry @ChevronDown). This IS the
+// framework's default template, composed into MuralFramework via
+// framework.resources.mu.
 
 resources SplitButtons
 {

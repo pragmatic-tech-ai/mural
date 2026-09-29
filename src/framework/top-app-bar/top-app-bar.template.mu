@@ -2,7 +2,8 @@
 // 4 variants (Small / CenterAligned / Medium / Large). @Bg1 chrome; scroll
 // tint steps @Bg1 -> @Bg2 (IsScrolled); title ink @Fg1; per-variant title type
 // @H4 / @H3 / @H2. PART names + IsScrolled/EffectiveVariant triggers preserved.
-// Pragmatic tokens only. Merged via PragmaticControls (after MuralFramework).
+// Pragmatic tokens only. This IS the framework's default template,
+// composed into MuralFramework via framework.resources.mu.
 resources TopAppBars
 {
     Template x:key="DefaultSmallTopAppBar" [TargetType = TopAppBar]

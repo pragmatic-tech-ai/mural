@@ -49,6 +49,16 @@ function horizontalAt200(): { sl: Slider; track: ReturnType<Slider['Track' & key
     return { sl, track: sl.Track, thumb: sl.Thumb };
 }
 
+const PartFocusRing = 'PART_FocusRing';
+
+// Pragmatic nests PART_Thumb inside PART_FocusRing (see the horizontal
+// thumb-geometry note below) — the element that RIDES THE TRACK is
+// PART_FocusRing, so tests reach it by name through the template.
+function focusRingOf(sl: Slider): { ArrangedRect: Rect }
+{
+    return (sl as unknown as { GetTemplateChild(name: string): { ArrangedRect: Rect } }).GetTemplateChild(PartFocusRing);
+}
+
 describe('Slider — defaults', () => {
     beforeEach(() => { initTestApp(); });
 
@@ -95,7 +105,7 @@ describe('Slider — horizontal thumb geometry', () => {
         const { sl } = horizontalAt200();
         sl.Value = 0;
         sl.Arrange(new Rect(0, 0, 200, 16));
-        const ring = (sl as unknown as { GetTemplateChild(name: string): { ArrangedRect: Rect } }).GetTemplateChild('PART_FocusRing');
+        const ring = focusRingOf(sl);
         assert.equal(ring.ArrangedRect.X + sl.Thumb.ArrangedRect.X, 0);
         assert.equal(sl.Thumb.ArrangedRect.Width,  4);
         assert.equal(sl.Thumb.ArrangedRect.Height, 16);
@@ -106,7 +116,7 @@ describe('Slider — horizontal thumb geometry', () => {
         sl.Value = 100;
         sl.Arrange(new Rect(0, 0, 200, 16));
         // travel = 200 - 4 = 196 → leading edge X=196.
-        const ring = (sl as unknown as { GetTemplateChild(name: string): { ArrangedRect: Rect } }).GetTemplateChild('PART_FocusRing');
+        const ring = focusRingOf(sl);
         assert.equal(ring.ArrangedRect.X + sl.Thumb.ArrangedRect.X, 196);
     });
 
@@ -115,7 +125,7 @@ describe('Slider — horizontal thumb geometry', () => {
         sl.Value = 50;
         sl.Arrange(new Rect(0, 0, 200, 16));
         // 50/100 × 196 = 98.
-        const ring = (sl as unknown as { GetTemplateChild(name: string): { ArrangedRect: Rect } }).GetTemplateChild('PART_FocusRing');
+        const ring = focusRingOf(sl);
         assert.equal(ring.ArrangedRect.X + sl.Thumb.ArrangedRect.X, 98);
     });
 
@@ -153,7 +163,7 @@ describe('Slider — vertical thumb geometry (Min at bottom)', () => {
         sl.Value = 0;
         sl.Arrange(new Rect(0, 0, 16, 200));
         // Absolute = PART_FocusRing.Y + PART_Thumb local Y (see horizontal note).
-        const ring = (sl as unknown as { GetTemplateChild(name: string): { ArrangedRect: Rect } }).GetTemplateChild('PART_FocusRing');
+        const ring = focusRingOf(sl);
         assert.equal(ring.ArrangedRect.Y + sl.Thumb.ArrangedRect.Y, 196);
     });
 
@@ -161,7 +171,7 @@ describe('Slider — vertical thumb geometry (Min at bottom)', () => {
         const sl = verticalAt200();
         sl.Value = 100;
         sl.Arrange(new Rect(0, 0, 16, 200));
-        const ring = (sl as unknown as { GetTemplateChild(name: string): { ArrangedRect: Rect } }).GetTemplateChild('PART_FocusRing');
+        const ring = focusRingOf(sl);
         assert.equal(ring.ArrangedRect.Y + sl.Thumb.ArrangedRect.Y, 0);
     });
 });
@@ -177,7 +187,7 @@ describe('Slider — clamping', () => {
         // wins" convention).
         assert.equal(sl.Value, 9999);
         // Painted thumb is at the Max position (X = 196).
-        const ring = (sl as unknown as { GetTemplateChild(name: string): { ArrangedRect: Rect } }).GetTemplateChild('PART_FocusRing');
+        const ring = focusRingOf(sl);
         assert.equal(ring.ArrangedRect.X + sl.Thumb.ArrangedRect.X, 196);
     });
 
@@ -185,7 +195,7 @@ describe('Slider — clamping', () => {
         const { sl } = horizontalAt200();
         sl.Value = -50;
         sl.Arrange(new Rect(0, 0, 200, 16));
-        const ring = (sl as unknown as { GetTemplateChild(name: string): { ArrangedRect: Rect } }).GetTemplateChild('PART_FocusRing');
+        const ring = focusRingOf(sl);
         assert.equal(ring.ArrangedRect.X + sl.Thumb.ArrangedRect.X, 0);
     });
 
@@ -196,7 +206,7 @@ describe('Slider — clamping', () => {
         sl.Value   = 5;
         sl.Measure(new Size(200, 16));
         sl.Arrange(new Rect(0, 0, 200, 16));
-        const ring = (sl as unknown as { GetTemplateChild(name: string): { ArrangedRect: Rect } }).GetTemplateChild('PART_FocusRing');
+        const ring = focusRingOf(sl);
         assert.equal(ring.ArrangedRect.X + sl.Thumb.ArrangedRect.X, 0);
     });
 });

@@ -41,8 +41,8 @@
 // @CommandMenuRowTemplate, @CommandGridButtonTemplate,
 // @DocumentTabHeaderTemplate, @DockTabHeader, @CompactHeaderIconButton,
 // @CompactHeaderMenuButton, @DefaultShellSideContentPane,
-// @DefaultEditorShell, @DefaultViewerShell are (re)defined here, same keys
-// as Material, so last-merged-wins under this dictionary.
+// @DefaultEditorShell, @DefaultViewerShell are defined here as the
+// framework's only definitions of these keys under this dictionary.
 //
 // Only Pragmatic tokens are used in every changed line — no M3 (@Surface /
 // @SurfaceContainer / @OnSurfaceVariant* / @OutlineVariant / @TitleSmall /

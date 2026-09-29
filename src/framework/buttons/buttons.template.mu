@@ -21,9 +21,9 @@
 // inset stays an inline (16,8,16,8) layout tuple, matching every Material
 // button template (Material never tokenises its content paddings).
 //
-// Merged into the theme via PragmaticControls (controls.resources.mu),
-// listed AFTER MuralFramework so this key-less Style[TargetType=Button]
-// shadows Material's (last-merged-wins on the runtime class key).
+// This key-less Style[TargetType=Button] IS the framework's default
+// template, composed into MuralFramework via framework.resources.mu —
+// there is no override layer and no Material to shadow.
 
 resources Buttons
 {

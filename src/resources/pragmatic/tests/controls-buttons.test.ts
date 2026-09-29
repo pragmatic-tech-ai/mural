@@ -11,7 +11,7 @@ describe('Pragmatic Button', () =>
     {
         const { control } = ControlHarness.Render(() => new Button(), { scheme: PragmaticLight });
         // The Pragmatic primary template fills with @ActionPrimary; the
-        // resolved implicit style is the PragmaticControls one (identity).
+        // resolved implicit style is the Pragmatic one (identity).
         assert.ok(ControlHarness.IsPragmaticStyle(control), 'Button uses the Pragmatic override style');
         ControlHarness.Reset();
     });

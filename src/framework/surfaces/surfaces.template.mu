@@ -14,7 +14,8 @@
 //
 // Pragmatic tokens only — no M3 (@Surface* / @On* / @Outline* / @Shape* /
 // @Elevation* / @State*Overlay / @Spacing* / @DisabledContentOpacity) token.
-// Merged via PragmaticControls (controls.resources.mu), after MuralFramework.
+// These ARE the framework's default templates, composed into
+// MuralFramework via framework.resources.mu.
 
 resources Surfaces
 {

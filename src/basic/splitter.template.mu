@@ -3,17 +3,18 @@
 // These extend Thumb, which paints a hardcoded inline Border (not a
 // ControlTemplate), so the rest/hover/drag COLOURS come from TS
 // (splitter.ts / thumb.ts) resolving the theme-agnostic @ControlTrack /
-// @ControlActive alias keys — Material and Pragmatic each define them, so
-// Material stays byte-identical. The only thing these Styles must override
-// for Pragmatic is PreviewBrush: Material's Style defaults it to @Primary
-// (a DynamicResource), which does not exist under Pragmatic, so the
-// drag-preview adorner would resolve nothing. Point it at @ControlActive.
+// @ControlActive alias keys. The only thing these Styles must set is
+// PreviewBrush: it has no built-in default, and @Primary (an M3 token)
+// does not exist under Pragmatic, so the drag-preview adorner would
+// resolve nothing without an explicit assignment here. Point it at
+// @ControlActive.
 //
 // The templates are near-inert (Thumb renders its inline _border and
-// ignores this PART_Border) — defined only so the Pragmatic Styles are
-// self-contained rather than referencing Material's template keys. Thumb
-// itself is not forked: its inline border already resolves @ControlTrack
-// via TS, and Material's Thumb Style is a harmless no-colour fallback.
+// ignores this PART_Border) — defined only so these Styles are
+// self-contained rather than referencing template keys defined
+// elsewhere. Thumb itself is not forked: its inline border already
+// resolves @ControlTrack via TS, and Thumb's base Style (basic.resources.mu)
+// is a harmless no-colour fallback.
 //
 // Only Pragmatic tokens — no M3 (@OutlineVariant / @Primary) token.
 

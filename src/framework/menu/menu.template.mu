@@ -10,8 +10,9 @@
 // deferred wave-wide. Every PART name is preserved (MenuItem's ctor fishes
 // PART_Icon/PART_Label/PART_Gesture/PART_Chevron out by name).
 //
-// Pragmatic tokens only (+ shared geometry @ChevronRight). Merged via
-// PragmaticControls.
+// Pragmatic tokens only (+ shared geometry @ChevronRight). This IS the
+// framework's default template, composed into MuralFramework via
+// framework.resources.mu.
 
 resources Menus
 {

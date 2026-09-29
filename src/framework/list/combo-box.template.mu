@@ -4,8 +4,9 @@
 // KEY_POPUP, combo-box.ts) — they can't both ride one TargetType Style —
 // so this fork registers both keys plus the ComboBoxItem Style. Keys are
 // verbatim ("DefaultComboBoxSelection" / "DefaultComboBoxPopup") so the
-// class's resolveTemplate() finds the Pragmatic override (last-merged-wins
-// over Material's Lists dict).
+// class's resolveTemplate() finds these default templates — the
+// framework's only ComboBox templates, composed into MuralFramework via
+// framework.resources.mu.
 //
 // Selection box = Pragmatic Outlined-input chrome (mirrors the Wave-1
 // TextBox Outlined look): @Bg1 fill, @BorderStrong 1dp outline, @RadiusMd,

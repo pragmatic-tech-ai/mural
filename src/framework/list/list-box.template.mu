@@ -31,9 +31,9 @@
 // Only Pragmatic tokens — no raw hex, no M3 (@OnSurface / @Surface* /
 // @Outline* / @Shape* / @State*Overlay / @SecondaryContainer) token.
 //
-// Merged via PragmaticControls (controls.resources.mu), listed AFTER
-// MuralFramework so these key-less Styles shadow Material's on the
-// runtime class key (last-merged-wins).
+// These key-less Styles ARE the framework's default templates,
+// composed into MuralFramework via framework.resources.mu — there is
+// no override layer and no Material to shadow.
 
 resources ListBoxes
 {

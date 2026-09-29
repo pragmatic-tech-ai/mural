@@ -32,9 +32,9 @@
 // no attachment point here; selected text keeps the ordinary @Fg0
 // Foreground.
 //
-// Merged into the theme via PragmaticControls (controls.resources.mu),
-// listed AFTER MuralFramework so this key-less Style[TargetType=TextBox]
-// shadows Material's (last-merged-wins on the runtime class key).
+// This key-less Style[TargetType=TextBox] IS the framework's default
+// template, composed into MuralBasic via basic.resources.mu — there is
+// no override layer and no Material to shadow.
 //
 // GOTCHA (compiler): a `(brush, width)` TUPLE assigned to a Pen-typed
 // property (Border.Stroke / Line.Stroke, both inherited from

@@ -30,10 +30,10 @@
 // stay at or below @RadiusXl except the pill corners on the icon
 // buttons (@RadiusPill).
 //
-// Merged into the theme via PragmaticControls (controls.resources.mu),
-// listed AFTER MuralFramework so these key-less Style[TargetType=X]
-// entries shadow Material's (last-merged-wins on the runtime class
-// key).
+// These key-less Style[TargetType=X] entries ARE the framework's
+// default templates, composed into MuralFramework via
+// framework.resources.mu — there is no override layer and no Material
+// to shadow.
 
 resources IconButtons
 {

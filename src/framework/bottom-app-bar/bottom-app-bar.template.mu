@@ -1,8 +1,9 @@
 // Pragmatic theme — BottomAppBar.
 // @Bg2 chrome; @ShadowMd resting elevation. PART_Border/PART_ActionsStack/
 // PART_FabSlot + density/coarse-pointer triggers preserved verbatim from
-// the Material fork. Pragmatic tokens only. Merged via PragmaticControls
-// (after MuralFramework).
+// the original Material fork. Pragmatic tokens only. This IS the
+// framework's default template, composed into MuralFramework via
+// framework.resources.mu.
 resources BottomAppBars
 {
     Template x:key="DefaultBottomAppBar" [TargetType = BottomAppBar]

@@ -5,7 +5,8 @@
 // (progress-indicator.ts sweeps PART_Fill's EndAngle; loading-indicator.ts
 // spins a RotateTransform onto PART_Fill), so PART names + Arc/Border types
 // are preserved verbatim. Banner + Snackbar are appended in later Wave-3
-// tasks. Pragmatic tokens only. Merged via PragmaticControls.
+// tasks. Pragmatic tokens only. This IS the framework's default
+// template, composed into MuralFramework via framework.resources.mu.
 
 resources Notifications
 {

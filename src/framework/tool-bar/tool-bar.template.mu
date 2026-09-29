@@ -15,7 +15,8 @@
 // (@Bg1 + @Border 1dp + @RadiusLg + @ShadowMd, same as the menu / ComboBox
 // popups) with the PrefersContrast triggers dropped. Press is deferred.
 //
-// Pragmatic tokens only. Merged via PragmaticControls (after MuralFramework).
+// Pragmatic tokens only. This IS the framework's default template,
+// composed into MuralFramework via framework.resources.mu.
 resources ToolBars
 {
     // ── ToolBarButton: flat connected-bar chrome ───────────────────

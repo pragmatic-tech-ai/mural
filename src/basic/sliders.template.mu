@@ -88,10 +88,10 @@
 // slider shape / mural-specific spinner geometry, not general spacing
 // tokens.
 //
-// Merged into the theme via PragmaticControls (controls.resources.mu),
-// listed AFTER MuralFramework so these key-less
-// Style[TargetType=Slider|SpinEdit] entries shadow Material's
-// (last-merged-wins on the runtime class key).
+// These key-less Style[TargetType=Slider|SpinEdit] entries ARE the
+// framework's default templates, composed into MuralBasic via
+// basic.resources.mu — there is no override layer and no Material to
+// shadow.
 
 resources Sliders
 {

@@ -20,9 +20,10 @@ theme Pragmatic
     import PragmaticTypography from "./typography.mu.js"
     schemes: [PragmaticLight, PragmaticDark]
     defaultScheme: PragmaticLight
-    // MuralFramework carries the Pragmatic control chrome (SP2 collapse);
-    // Style[TargetType=X] overrides shadow Material's) and BEFORE
-    // PragmaticTypography — implicit-style resolution is last-merged-wins.
+    // MuralBasic + MuralFramework carry the framework's default control
+    // chrome, listed BEFORE PragmaticTypography — implicit-style
+    // resolution is last-merged-wins, so typography styles compose over
+    // the control templates.
     dictionaries: [MuralBasic, MuralFramework, PragmaticTypography]
 
     tokens

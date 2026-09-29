@@ -55,10 +55,10 @@
 // @RadiusPill (the Chip / Badge pill shape), the one Pragmatic radius
 // above @RadiusXl the brief explicitly calls out as exempt from the cap.
 //
-// Merged into the theme via PragmaticControls (controls.resources.mu),
-// listed AFTER MuralFramework so these key-less
-// Style[TargetType=Chip|Divider|Badge] entries shadow Material's
-// (last-merged-wins on the runtime class key).
+// These key-less Style[TargetType=Chip|Divider|Badge] entries ARE the
+// framework's default templates, composed into MuralFramework via
+// framework.resources.mu — there is no override layer and no Material
+// to shadow.
 
 resources Markers
 {

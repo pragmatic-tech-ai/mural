@@ -7,7 +7,8 @@
 // an unstyled TextBlock by ContentPresenter) renders legibly at tooltip
 // metrics. A CommandBase Content resolves the rich template below.
 //
-// Pragmatic tokens only. Merged via PragmaticControls (after MuralFramework).
+// Pragmatic tokens only. This IS the framework's default template,
+// composed into MuralFramework via framework.resources.mu.
 
 resources Tooltips
 {

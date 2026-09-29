@@ -4,8 +4,9 @@
 // substitutions only: strip Fill @Surface -> @Bg1, top-rule and
 // separator @OutlineVariant -> @Border. $$Fill template-binding,
 // DockPanel/ItemsPresenter, PART-less item Border, and separator
-// Width/MinHeight preserved verbatim. Pragmatic tokens only. Merged via
-// PragmaticControls (after MuralFramework).
+// Width/MinHeight preserved verbatim. Pragmatic tokens only. This IS
+// the framework's default template, composed into MuralFramework via
+// framework.resources.mu.
 resources StatusBars
 {
     Template x:key="DefaultStatusBar" [TargetType = StatusBar]

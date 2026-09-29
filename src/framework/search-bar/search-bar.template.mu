@@ -22,9 +22,9 @@
 // Pen. Every Stroke assignment here uses the working
 // `Pen [ Brush = @Token, Thickness = N ]` form instead.
 //
-// Merged into the theme via PragmaticControls (controls.resources.mu),
-// listed AFTER MuralFramework so this key-less Style[TargetType=SearchBar]
-// shadows Material's (last-merged-wins on the runtime class key).
+// This key-less Style[TargetType=SearchBar] IS the framework's default
+// template, composed into MuralFramework via framework.resources.mu —
+// there is no override layer and no Material to shadow.
 
 resources SearchBars
 {

@@ -69,10 +69,10 @@
 // @Shape* / @Elevation* / @*Layer). Radii stay at @RadiusXs / @RadiusPill,
 // both well under the @RadiusXl cap.
 //
-// Merged into the theme via PragmaticControls (controls.resources.mu),
-// listed AFTER MuralFramework so these key-less
-// Style[TargetType=Checkbox|RadioButton|Switch] entries shadow
-// Material's (last-merged-wins on the runtime class key).
+// These key-less Style[TargetType=Checkbox|RadioButton|Switch] entries
+// ARE the framework's default templates, composed into MuralFramework
+// via framework.resources.mu — there is no override layer and no
+// Material to shadow.
 
 resources Toggles
 {
