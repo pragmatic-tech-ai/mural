@@ -82,6 +82,15 @@ export class HierarchyItemVM extends Observable
         return this.model.GetProperty(this.Id, HierarchyPropertyId.ExtObject);
     }
 
+    // The node's coarse family Key (NodeKey.* / a provider's content key). Read from the
+    // stored HierarchyNode, so it is available for keyed and provider nodes alike — the
+    // action registry looks up contributors by this Key.
+    public get Key(): string
+    {
+        if (this.placeholderText !== undefined) return '';
+        return this.model.NodeAt(this.Id).Key;
+    }
+
     // TreeView calls this on the first expand (ExpandableTreeData.OnExpand). Idempotent:
     // drop the sentinel, subscribe BEFORE realizing so a keyed regime's synchronous
     // ChildAdded deltas land, then realize.

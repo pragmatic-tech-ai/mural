@@ -132,6 +132,13 @@ test('OnActivate relays this VM through the host', () =>
     assert.equal(activated, vm);
 });
 
+test('Key exposes the node family key from the model', () =>
+{
+    const { model, root } = fileModel();
+    const vm = new HierarchyItemVM(model, root, undefined, fakeHost());
+    assert.equal(vm.Key, 'project');
+});
+
 test('BeginEdit enters edit mode seeded with the caption; CommitEdit relays and exits', () =>
 {
     const { model, root } = fileModel();
