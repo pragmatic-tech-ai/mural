@@ -1,6 +1,6 @@
 import { ApplicationService, ServiceBase, ServiceKey, type IServiceProvider } from '../../runtime/index.js';
 import { ShellModule } from '../shell/module.js';
-import type { HierarchyContributorDefinition } from './hierarchy-contributor-definition.js';
+import { HierarchyContributorDefinition } from './hierarchy-contributor-definition.js';
 import type { IHierarchyContributor } from './hierarchy-node.js';
 
 // Aggregates every composed module's declared HierarchyContributorDefinitions and
@@ -64,6 +64,25 @@ export class HierarchyContributorRegistry extends ServiceBase
     public NotifyContributionsChanged(): void
     {
         this.raiseChanged();
+    }
+
+    // Register an already-constructed contributor instance (a per-session/per-solution one
+    // that isn't a global ServiceToken). A synthetic definition carries its ParentKeys/Order
+    // and is pre-seeded into the resolved cache, so For() returns the instance without token
+    // resolution. Returns a remover that unregisters it, mirroring Register.
+    public RegisterInstance(contributor: IHierarchyContributor): () => void
+    {
+        const def = new HierarchyContributorDefinition();
+        def.ParentKeys = [...contributor.ParentKeys];
+        def.Order = contributor.Order;
+        this.add(def);
+        this.resolved.set(def, contributor);
+        this.raiseChanged();
+        return () =>
+        {
+            this.remove(def);
+            this.raiseChanged();
+        };
     }
 
     // Contributors registered for `parentKey`, ordered by Order (ascending). Tokens are

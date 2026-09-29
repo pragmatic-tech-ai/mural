@@ -78,3 +78,25 @@ test('NotifyContributionsChanged re-contributes a realized root live', () =>
     registry.NotifyContributionsChanged();
     assert.equal(model.ChildrenOf(root).length, 1);
 });
+
+test('RegisterInstance exposes a per-instance contributor via For + re-contributes; remover unregisters', () =>
+{
+    const provider = new ServiceProvider();
+    const registry = new HierarchyContributorRegistry(provider);
+    const model = new HierarchyModel(registry);
+    const root = model.SeedRoot(pnode('solution', {}));
+    model.RealizeChildren(root);
+    assert.equal(model.ChildrenOf(root).length, 0);
+
+    const contributor: IHierarchyContributor = {
+        ParentKeys: ['solution'], Order: 0,
+        Contribute: () => new NodeContribution([pnode('project', { id: 'p' })]),
+    };
+    const off = registry.RegisterInstance(contributor);          // Changed -> re-contribute root
+    assert.equal(registry.For('solution').length, 1);
+    assert.equal(model.ChildrenOf(root).length, 1);
+
+    off();
+    assert.equal(registry.For('solution').length, 0);
+    assert.equal(model.ChildrenOf(root).length, 0);
+});
