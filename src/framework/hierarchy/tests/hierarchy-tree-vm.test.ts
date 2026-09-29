@@ -85,6 +85,19 @@ test('SelectSingle replaces the set + sets the anchor; Toggle adds/removes', () 
     assert.deepEqual(tree.Selection.ToArray(), [a]);
 });
 
+test('SyncSelection replaces the whole selection + anchor', () =>
+{
+    const { tree } = makeTreeWithRoots(3);
+    const [a, b, c] = [tree.Roots.Get(0)!, tree.Roots.Get(1)!, tree.Roots.Get(2)!];
+    tree.SelectSingle(a);
+    tree.SyncSelection([b, c], c);
+    assert.deepEqual(tree.Selection.ToArray(), [b, c]);
+    assert.equal(tree.Anchor, c);
+    tree.SyncSelection([], undefined);
+    assert.equal(tree.Selection.Count, 0);
+    assert.equal(tree.Anchor, undefined);
+});
+
 test('a removed root is pruned from the selection', () =>
 {
     const { tree, removeRoot } = makeTreeWithRoots(2);

@@ -54,6 +54,15 @@ export class HierarchyTreeVM extends Observable
 
     public ClearSelection(): void { this.Selection.Clear(); this._anchor = undefined; }
 
+    // Replace the whole selection + anchor in one shot — how a view's multi-select
+    // control (a Selector) pushes its SelectedItems/SelectedItem into the VM surface.
+    public SyncSelection(items: readonly HierarchyItemVM[], anchor: HierarchyItemVM | undefined): void
+    {
+        this.Selection.Clear();
+        for (const item of items) this.Selection.Add(item);
+        this._anchor = anchor;
+    }
+
     private patch(change: HierarchyChange): void
     {
         if (change instanceof ChildAdded)
