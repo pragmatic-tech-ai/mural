@@ -88,6 +88,24 @@ export class HierarchyItemVM extends Observable
         this.model.RealizeChildren(this.Id);
     }
 
+    // TreeView calls this on collapse. Release the loaded subtree: drop this row's
+    // child-delta subscription, tell the model to collapse (which disposes a provider
+    // boundary's subscription — the last observer of a mounted store, so its file
+    // watcher is released), discard the child VMs, and restore the Loading… sentinel so
+    // the row stays expandable and reloads fresh on the next expand.
+    public OnCollapse(): void
+    {
+        if (this.placeholderText !== undefined || !this.expanded) return;
+        this.expanded = false;
+        this.off?.();
+        this.off = undefined;
+        this.model.Collapse(this.Id);
+        for (const child of this.Children.ToArray()) child.dispose();
+        this.Children.Clear();
+        this.childById.clear();
+        if (this.IsExpandable) this.seedPlaceholder();
+    }
+
     // TreeView calls this on activation (double-click / Enter). Relay to the host.
     public OnActivate(): void
     {

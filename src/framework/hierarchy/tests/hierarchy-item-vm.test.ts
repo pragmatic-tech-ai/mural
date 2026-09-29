@@ -90,6 +90,28 @@ test('ChildRemoved drops the child VM', () =>
     assert.equal(vm.Children.Count, 0);
 });
 
+// Collapsing an expanded row must release its provider subscription — that is what
+// drops the mounted ProjectContentStore's file watcher (last observer unsubscribes) —
+// and restore the Loading… sentinel so the row stays expandable and reloads on the
+// next expand. Without this, watchers accumulate until solution swap.
+test('OnCollapse releases the provider subscription and restores the sentinel', () =>
+{
+    const { model, root, fake } = fileModel();
+    const vm = new HierarchyItemVM(model, root, undefined, () => {});
+    vm.OnExpand();
+    assert.ok(fake.Sink !== undefined);                 // provider subscribed on expand
+    fake.Sink!(new ChildAdded(HierarchyItemId.Mint(), node('file', { id: 'f1' }, 'a')));
+    assert.equal(vm.Children.Count, 1);
+
+    vm.OnCollapse();
+    assert.equal(fake.Sink, undefined);                 // provider unsubscribed → watcher released
+    assert.equal(vm.Children.Count, 1);                 // sentinel restored (row stays expandable)
+    assert.equal(vm.Children.Get(0)!.Caption, 'Loading…');
+
+    vm.OnExpand();                                      // re-expands: re-subscribes the provider
+    assert.ok(fake.Sink !== undefined);
+});
+
 test('OnActivate relays this VM to the injected callback', () =>
 {
     const { model, root } = fileModel();

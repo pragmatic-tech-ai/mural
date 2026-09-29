@@ -745,6 +745,36 @@ describe('TreeViewItem — OnExpand data hook', () => {
         assert.doesNotThrow(() => { root.IsExpanded = true; });
     });
 
+    test('collapsing a data-bound row invokes the data item OnCollapse()', () => {
+        const tree = new TreeView();
+        let collapsed = 0;
+        const data = { Name: 'root', children: [{ Name: 'child' }], OnCollapse() { collapsed++; } };
+        tree.ItemTemplate = new HierarchicalDataTemplate(
+            (d) => new TextBlock((d as { Name: string }).Name),
+            (d) => (d as { children?: unknown[] }).children,
+        );
+        tree.ItemsSource = [data];
+
+        const root = tree.RootItems[0]!;
+        root.IsExpanded = true;
+        assert.equal(collapsed, 0);
+        root.IsExpanded = false;
+        assert.equal(collapsed, 1, 'OnCollapse fires when the row collapses');
+    });
+
+    test('a data item without OnCollapse collapses without throwing', () => {
+        const tree = new TreeView();
+        tree.ItemTemplate = new HierarchicalDataTemplate(
+            (d) => new TextBlock((d as { Name: string }).Name),
+            (d) => (d as { children?: unknown[] }).children,
+        );
+        tree.ItemsSource = [{ Name: 'root', children: [{ Name: 'c' }] }];
+
+        const root = tree.RootItems[0]!;
+        root.IsExpanded = true;
+        assert.doesNotThrow(() => { root.IsExpanded = false; });
+    });
+
     test('composed-markup rows (no bound data) expand without throwing', () => {
         const item = new TreeViewItem();
         item.AddChild(new TreeViewItem());

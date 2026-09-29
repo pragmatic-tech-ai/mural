@@ -909,10 +909,10 @@ export class TreeViewItem extends HeaderedItemsControl
                 this._childWrap?.SetCollapsed(!(newValue as boolean));
                 this._childVsp?.SetCollapsed(!(newValue as boolean));
                 this.InvalidateMeasure();
-                if (newValue === true)
                 {
                     const data = dataOf(this) as ExpandableTreeData | undefined;
-                    data?.OnExpand?.();
+                    if (newValue === true) data?.OnExpand?.();
+                    else data?.OnCollapse?.();
                 }
                 return;
             case 'Header':
@@ -1132,9 +1132,10 @@ function headerFor(item: unknown, tmpl: DataTemplate | undefined): Visual | stri
 }
 
 // A data item that wants tree-row lifecycle callbacks — the framework calls
-// OnExpand() on each transition to expanded (lazy-load hook) and OnActivate()
-// on a row double-click. Idempotency is the data item's responsibility.
-interface ExpandableTreeData { OnExpand?(): void; OnActivate?(): void }
+// OnExpand() on each transition to expanded (lazy-load hook), OnCollapse() on each
+// transition to collapsed (release the loaded subtree), and OnActivate() on a row
+// double-click. Idempotency is the data item's responsibility.
+interface ExpandableTreeData { OnExpand?(): void; OnCollapse?(): void; OnActivate?(): void }
 
 // Read the data item stamped on a container by
 // ItemsControl.PrepareContainerForItemOverride. Type-erased because
