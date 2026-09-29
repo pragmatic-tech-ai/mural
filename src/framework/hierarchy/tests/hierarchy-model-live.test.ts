@@ -29,5 +29,7 @@ test('a runtime Register keyed to an already-realized node re-contributes live',
     const off = reg.Register(d);                       // Changed -> model re-contributes root
 
     assert.equal(model.ChildrenOf(root).length, 1);
-    off();
+
+    off();                                             // Changed -> re-contribute -> stale keyed child pruned
+    assert.equal(model.ChildrenOf(root).length, 0);   // the disposer removes what it added (spec §9)
 });

@@ -94,6 +94,7 @@ export class HierarchyModel
     public RealizeChildren(id: HierarchyItemId): void
     {
         const entry = this.entry(id);
+        const contributed = new Set<unknown>();
         for (const contributor of this.registry.For(entry.node.Key))
         {
             const contribution = contributor.Contribute(entry.node);
@@ -104,8 +105,32 @@ export class HierarchyModel
             }
             if (contribution instanceof NodeContribution)
             {
-                for (const childNode of contribution.Nodes) this.internKeyed(id, entry, childNode);
+                for (const childNode of contribution.Nodes)
+                {
+                    contributed.add(childNode.ExtObject);
+                    this.internKeyed(id, entry, childNode);
+                }
             }
+        }
+        this.pruneKeyed(id, entry, contributed);
+    }
+
+    // Drop keyed children no longer contributed — a contributor was unregistered (its
+    // disposer fires Changed -> reRealizeKeyed -> here) or now yields fewer Nodes.
+    // Interning keeps survivors' ids; only the absent identities are removed. Never runs
+    // for a provider-owned node (RealizeChildren returns before this on a Provider
+    // contribution) — a provider prunes its own subtree via ChildRemoved.
+    private pruneKeyed(parentId: HierarchyItemId, parent: Entry, contributed: Set<unknown>): void
+    {
+        const map = this.keyedChildren.get(parentId);
+        if (map === undefined) return;
+        for (const [identity, childId] of [...map])
+        {
+            if (contributed.has(identity)) continue;
+            map.delete(identity);
+            this.entries.delete(childId);
+            const i = parent.children.indexOf(childId);
+            if (i >= 0) parent.children.splice(i, 1);
         }
     }
 
@@ -152,7 +177,11 @@ export class HierarchyModel
     private internKeyed(parentId: HierarchyItemId, parent: Entry, childNode: HierarchyNode): void
     {
         let map = this.keyedChildren.get(parentId);
-        if (map === undefined) { map = new Map(); this.keyedChildren.set(parentId, map); }
+        if (map === undefined)
+        {
+            map = new Map();
+            this.keyedChildren.set(parentId, map);
+        }
         const identity = childNode.ExtObject;
         let childId = map.get(identity);
         if (childId === undefined)
