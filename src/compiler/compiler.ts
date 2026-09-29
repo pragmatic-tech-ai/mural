@@ -3873,6 +3873,7 @@ export class Compiler
                          : block.name === 'documents'             ? 'Documents'
                          : block.name === 'commands'              ? 'Commands'
                          : block.name === 'hierarchyContributors' ? 'HierarchyContributors'
+                         : block.name === 'hierarchyActions'      ? 'HierarchyActions'
                          : block.name;
         const accessor = `${parentVar}.${memberName}`;
         if (this.isDictionaryMemberBody(block.body))
