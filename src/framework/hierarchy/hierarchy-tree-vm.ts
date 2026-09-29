@@ -15,6 +15,13 @@ export class HierarchyTreeVM extends Observable
     private readonly rootById = new Map<HierarchyItemId, HierarchyItemVM>();
     private off: (() => void) | undefined;
 
+    // The global selection surface (design §11). Delta-safe: a renamed node keeps its VM
+    // (stays selected via ChildUpdated); a ChildRemoved/dispose prunes it (Deselect). Anchor
+    // is what a HierarchyActionContext reports.
+    public readonly Selection = new ObservableCollection<HierarchyItemVM>();
+    private _anchor: HierarchyItemVM | undefined;
+    public get Anchor(): HierarchyItemVM | undefined { return this._anchor; }
+
     constructor(
         private readonly model: HierarchyModel,
         private readonly root: HierarchyItemId,
@@ -25,6 +32,27 @@ export class HierarchyTreeVM extends Observable
         this.off = this.model.ObserveChildren(this.root, (c) => this.patch(c));
         this.model.RealizeChildren(this.root);
     }
+
+    public SelectSingle(vm: HierarchyItemVM): void
+    {
+        this.Selection.Clear();
+        this.Selection.Add(vm);
+        this._anchor = vm;
+    }
+
+    public Toggle(vm: HierarchyItemVM): void
+    {
+        if (this.Selection.IndexOf(vm) >= 0) { this.Selection.Remove(vm); if (this._anchor === vm) this._anchor = undefined; }
+        else { this.Selection.Add(vm); this._anchor = vm; }
+    }
+
+    public Deselect(vm: HierarchyItemVM): void
+    {
+        this.Selection.Remove(vm);
+        if (this._anchor === vm) this._anchor = undefined;
+    }
+
+    public ClearSelection(): void { this.Selection.Clear(); this._anchor = undefined; }
 
     private patch(change: HierarchyChange): void
     {
@@ -46,6 +74,7 @@ export class HierarchyTreeVM extends Observable
             if (vm !== undefined)
             {
                 this.rootById.delete(change.Id);
+                this.Deselect(vm);
                 this.Roots.Remove(vm);
                 vm.dispose();
             }
