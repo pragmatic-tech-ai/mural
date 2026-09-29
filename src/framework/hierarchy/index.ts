@@ -6,6 +6,8 @@ export * from './hierarchy-contributor-registry.js';
 export * from './hierarchy-action.js';
 export * from './hierarchy-action-contributor.js';
 export * from './hierarchy-action-contributor-registry.js';
+export * from './hierarchy-host.js';
+export * from './hierarchy-drop.js';
 export * from './hierarchy-model.js';
 export * from './hierarchy-item-vm.js';
 export * from './hierarchy-tree-vm.js';

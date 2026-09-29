@@ -1,5 +1,6 @@
 import { Observable, ObservableCollection } from '../../runtime/index.js';
 import type { HierarchyModel } from './hierarchy-model.js';
+import type { HierarchyHost } from './hierarchy-host.js';
 import {
     HierarchyItemId, HierarchyPropertyId, NodeSeverity,
     ChildAdded, ChildRemoved, ChildUpdated, type HierarchyChange,
@@ -31,7 +32,7 @@ export class HierarchyItemVM extends Observable
         private readonly model: HierarchyModel,
         public readonly Id: HierarchyItemId,
         public readonly Parent: HierarchyItemVM | undefined,
-        private readonly onActivate: (vm: HierarchyItemVM) => void,
+        private readonly host: HierarchyHost,
         // A placeholder (sentinel) row holds fixed text and never touches the model.
         private readonly placeholderText: string | undefined = undefined,
     )
@@ -110,7 +111,7 @@ export class HierarchyItemVM extends Observable
     public OnActivate(): void
     {
         if (this.placeholderText !== undefined) return;
-        this.onActivate(this);
+        this.host.Activate(this);
     }
 
     // Re-notify bindings that this row's rendered facts may have changed (id preserved).
@@ -141,7 +142,7 @@ export class HierarchyItemVM extends Observable
 
     private seedPlaceholder(): void
     {
-        this.placeholder = new HierarchyItemVM(this.model, HierarchyItemId.Nil, this, this.onActivate, HierarchyItemVM.LoadingText);
+        this.placeholder = new HierarchyItemVM(this.model, HierarchyItemId.Nil, this, this.host, HierarchyItemVM.LoadingText);
         this.Children.Add(this.placeholder);
     }
 
@@ -158,7 +159,7 @@ export class HierarchyItemVM extends Observable
     {
         if (change instanceof ChildAdded)
         {
-            const vm = new HierarchyItemVM(this.model, change.Id, this, this.onActivate);
+            const vm = new HierarchyItemVM(this.model, change.Id, this, this.host);
             this.childById.set(change.Id, vm);
             const index = this.model.ChildrenOf(this.Id).indexOf(change.Id);
             if (index >= 0 && index <= this.Children.Count) this.Children.Insert(index, vm);

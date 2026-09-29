@@ -6,7 +6,18 @@ import {
     NodeContribution, ProviderContribution, ChildAdded, ChildUpdated, ChildRemoved, NodeSeverity, HierarchyItemId,
     HierarchyItemVM,
     type IHierarchyContributor, type IHierarchyProvider, type HierarchyNode, type HierarchyChange,
+    type HierarchyHost,
 } from '../index.js';
+
+// A HierarchyHost stub for the generic VM tests — every method a no-op unless overridden.
+function fakeHost(over: Partial<HierarchyHost> = {}): HierarchyHost
+{
+    return {
+        Activate: () => {}, CommitRename: () => {}, Delete: () => {}, ActionsFor: () => [],
+        CanDrop: () => false, Drop: () => {}, OnItemRemoved: () => {},
+        ...over,
+    };
+}
 
 function node(key: string, ext: unknown, caption = key, sev = NodeSeverity.Ok): HierarchyNode
 {
@@ -46,7 +57,7 @@ function fileModel(): { model: HierarchyModel; root: HierarchyItemId; fake: Fake
 test('reads node props from the model', () =>
 {
     const { model, root } = fileModel();
-    const vm = new HierarchyItemVM(model, root, undefined, () => {});
+    const vm = new HierarchyItemVM(model, root, undefined, fakeHost());
     assert.equal(vm.Caption, 'Proj');
     assert.equal(vm.IconKey, 'project');
     assert.equal(vm.Severity, NodeSeverity.Ok);
@@ -55,7 +66,7 @@ test('reads node props from the model', () =>
 test('OnExpand realizes + subscribes; ChildAdded inserts a child VM at the model index', () =>
 {
     const { model, root, fake } = fileModel();
-    const vm = new HierarchyItemVM(model, root, undefined, () => {});
+    const vm = new HierarchyItemVM(model, root, undefined, fakeHost());
     vm.OnExpand();
     assert.equal(vm.Children.Count, 0);
     fake.Sink!(new ChildAdded(HierarchyItemId.Mint(), node('file', { id: 'f1' }, 'a')));
@@ -66,7 +77,7 @@ test('OnExpand realizes + subscribes; ChildAdded inserts a child VM at the model
 test('ChildUpdated refreshes the same child VM in place (no remove/re-add)', () =>
 {
     const { model, root, fake } = fileModel();
-    const vm = new HierarchyItemVM(model, root, undefined, () => {});
+    const vm = new HierarchyItemVM(model, root, undefined, fakeHost());
     vm.OnExpand();
     const id = HierarchyItemId.Mint();
     fake.Sink!(new ChildAdded(id, node('file', { id: 'f1' }, 'old')));
@@ -82,7 +93,7 @@ test('ChildUpdated refreshes the same child VM in place (no remove/re-add)', () 
 test('ChildRemoved drops the child VM', () =>
 {
     const { model, root, fake } = fileModel();
-    const vm = new HierarchyItemVM(model, root, undefined, () => {});
+    const vm = new HierarchyItemVM(model, root, undefined, fakeHost());
     vm.OnExpand();
     const id = HierarchyItemId.Mint();
     fake.Sink!(new ChildAdded(id, node('file', {}, 'a')));
@@ -97,7 +108,7 @@ test('ChildRemoved drops the child VM', () =>
 test('OnCollapse releases the provider subscription and restores the sentinel', () =>
 {
     const { model, root, fake } = fileModel();
-    const vm = new HierarchyItemVM(model, root, undefined, () => {});
+    const vm = new HierarchyItemVM(model, root, undefined, fakeHost());
     vm.OnExpand();
     assert.ok(fake.Sink !== undefined);                 // provider subscribed on expand
     fake.Sink!(new ChildAdded(HierarchyItemId.Mint(), node('file', { id: 'f1' }, 'a')));
@@ -112,11 +123,11 @@ test('OnCollapse releases the provider subscription and restores the sentinel', 
     assert.ok(fake.Sink !== undefined);
 });
 
-test('OnActivate relays this VM to the injected callback', () =>
+test('OnActivate relays this VM through the host', () =>
 {
     const { model, root } = fileModel();
     let activated: HierarchyItemVM | undefined;
-    const vm = new HierarchyItemVM(model, root, undefined, (v) => { activated = v; });
+    const vm = new HierarchyItemVM(model, root, undefined, fakeHost({ Activate: (v) => { activated = v; } }));
     vm.OnActivate();
     assert.equal(activated, vm);
 });
@@ -124,7 +135,7 @@ test('OnActivate relays this VM to the injected callback', () =>
 test('child VMs carry Parent and Data', () =>
 {
     const { model, root, fake } = fileModel();
-    const vm = new HierarchyItemVM(model, root, undefined, () => {});
+    const vm = new HierarchyItemVM(model, root, undefined, fakeHost());
     vm.OnExpand();
     const ext = { id: 'f1' };
     fake.Sink!(new ChildAdded(HierarchyItemId.Mint(), node('file', ext, 'a')));
@@ -156,7 +167,7 @@ test('a row that becomes expandable after creation gains a chevron (Unopened→R
     registry.RegisterInstance(contributor);
     const model = new HierarchyModel(registry);
     const root = model.SeedRoot(node('root', { id: 'r' }, 'Root'));
-    const vm = new HierarchyItemVM(model, root, undefined, () => {});
+    const vm = new HierarchyItemVM(model, root, undefined, fakeHost());
     vm.OnExpand();
 
     const memberRow = vm.Children.Get(0)!;

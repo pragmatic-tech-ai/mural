@@ -1,5 +1,6 @@
 import { Observable, ObservableCollection } from '../../runtime/index.js';
 import type { HierarchyModel } from './hierarchy-model.js';
+import type { HierarchyHost } from './hierarchy-host.js';
 import { HierarchyItemVM } from './hierarchy-item-vm.js';
 import {
     HierarchyItemId, ChildAdded, ChildRemoved, ChildUpdated, type HierarchyChange,
@@ -17,7 +18,7 @@ export class HierarchyTreeVM extends Observable
     constructor(
         private readonly model: HierarchyModel,
         private readonly root: HierarchyItemId,
-        private readonly onActivate: (vm: HierarchyItemVM) => void,
+        private readonly host: HierarchyHost,
     )
     {
         super();
@@ -29,7 +30,7 @@ export class HierarchyTreeVM extends Observable
     {
         if (change instanceof ChildAdded)
         {
-            const vm = new HierarchyItemVM(this.model, change.Id, undefined, this.onActivate);
+            const vm = new HierarchyItemVM(this.model, change.Id, undefined, this.host);
             this.rootById.set(change.Id, vm);
             const index = this.model.ChildrenOf(this.root).indexOf(change.Id);
             if (index >= 0 && index <= this.Roots.Count) this.Roots.Insert(index, vm);

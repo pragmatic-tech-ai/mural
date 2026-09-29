@@ -4,8 +4,18 @@ import { ServiceProvider, ServiceKey } from '../../../runtime/index.js';
 import {
     HierarchyModel, HierarchyContributorRegistry, HierarchyContributorDefinition,
     NodeContribution, NodeSeverity, HierarchyTreeVM,
-    type IHierarchyContributor, type HierarchyNode,
+    type IHierarchyContributor, type HierarchyNode, type HierarchyHost,
 } from '../index.js';
+
+// A HierarchyHost stub for the tree-VM tests — every method a no-op unless overridden.
+function fakeHost(over: Partial<HierarchyHost> = {}): HierarchyHost
+{
+    return {
+        Activate: () => {}, CommitRename: () => {}, Delete: () => {}, ActionsFor: () => [],
+        CanDrop: () => false, Drop: () => {}, OnItemRemoved: () => {},
+        ...over,
+    };
+}
 
 function node(key: string, ext: unknown, caption = key): HierarchyNode
 {
@@ -26,7 +36,7 @@ test('Roots realizes the seeded root children at construction and patches on re-
     const model = new HierarchyModel(registry);
     const root = model.SeedRoot(node('solution', {}));
 
-    const tree = new HierarchyTreeVM(model, root, () => {});
+    const tree = new HierarchyTreeVM(model, root, fakeHost());
     assert.equal(tree.Roots.Count, 1);
     assert.equal(tree.Roots.Get(0)!.Caption, 'A');
 
@@ -42,7 +52,7 @@ test('dispose tears down the root subscription', () =>
     const registry = new HierarchyContributorRegistry(provider);
     const model = new HierarchyModel(registry);
     const root = model.SeedRoot(node('solution', {}));
-    const tree = new HierarchyTreeVM(model, root, () => {});
+    const tree = new HierarchyTreeVM(model, root, fakeHost());
     tree.dispose();
     assert.equal(tree.Roots.Count, 0);
 });
