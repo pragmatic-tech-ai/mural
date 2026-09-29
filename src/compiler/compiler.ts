@@ -3869,9 +3869,10 @@ export class Compiler
         // generic member-block otherwise uses its name verbatim as the accessor,
         // so remap these to the PascalCase property the module exposes → the emit
         // is `module.Settings.Add(def)` / `.Documents.Add(def)` / `.Commands.Add(def)`.
-        const memberName = block.name === 'settings'         ? 'Settings'
-                         : block.name === 'documents'        ? 'Documents'
-                         : block.name === 'commands'         ? 'Commands'
+        const memberName = block.name === 'settings'              ? 'Settings'
+                         : block.name === 'documents'             ? 'Documents'
+                         : block.name === 'commands'              ? 'Commands'
+                         : block.name === 'hierarchyContributors' ? 'HierarchyContributors'
                          : block.name;
         const accessor = `${parentVar}.${memberName}`;
         if (this.isDictionaryMemberBody(block.body))

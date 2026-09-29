@@ -81,6 +81,7 @@ import {
 import type { Geometry } from '../../visual-engine/index.js';
 import { SettingDefinition } from './settings/setting-definition.js';
 import { DocumentDefinition } from './documents/document-definition.js';
+import { HierarchyContributorDefinition } from '../hierarchy/hierarchy-contributor-definition.js';
 import { CommandDefinition } from './commands/command-definition.js';
 import { ShellControlDefinition } from './commands/shell-control-definition.js';
 
@@ -187,6 +188,17 @@ export class ShellModule extends MuralBase implements IShellModule
     // renders the ones whose Context the active document activates.
     public readonly Commands: ObservableCollection<CommandDefinition> =
         new ObservableCollection<CommandDefinition>();
+
+    // Declared hierarchy contributors — HierarchyContributorDefinitions this module
+    // contributes to the HierarchyContributorRegistry. Authored as a
+    // `.hierarchyContributors: { HierarchyContributorDefinition … }` block: a generic
+    // member-block, so each entry lowers to `module.HierarchyContributors.Add(def)`
+    // (the compiler remaps the lowercase section to this PascalCase collection, exactly
+    // as `.documents:` → `Documents`). HierarchyContributorRegistry aggregates these
+    // across every composed module. ObservableCollection for the same reactive-
+    // composition reason as Capabilities / Documents / Commands.
+    public readonly HierarchyContributors: ObservableCollection<HierarchyContributorDefinition> =
+        new ObservableCollection<HierarchyContributorDefinition>();
 
     // Declared shell CONTROLS — non-command editor contributions (font pickers, a
     // status-bar mode indicator, …) the shell hosts in a region (command bar or
