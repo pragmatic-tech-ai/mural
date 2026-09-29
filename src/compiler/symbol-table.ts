@@ -128,6 +128,7 @@ const ENTRIES: ReadonlyArray<readonly [string, string]> = [
     ['DocumentDefinition',      '@pragmatic-tech-ai/mural/framework/shell/documents/document-definition.js'],
     ['DocumentTypeRegistry',    '@pragmatic-tech-ai/mural/framework/shell/documents/document-type-registry.js'],
     ['CommandDefinition',       '@pragmatic-tech-ai/mural/framework/shell/commands/command-definition.js'],
+    ['HierarchyContributorDefinition', '@pragmatic-tech-ai/mural/framework/hierarchy/hierarchy-contributor-definition.js'],
     ['CommandGroupPresentation', '@pragmatic-tech-ai/mural/framework/shell/commands/command-definition.js'],
     ['CommandRegistry',         '@pragmatic-tech-ai/mural/framework/shell/commands/command-registry.js'],
     ['CommandViewModel',        '@pragmatic-tech-ai/mural/framework/shell/commands/command-view-model.js'],
