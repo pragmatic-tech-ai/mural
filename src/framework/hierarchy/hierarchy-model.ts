@@ -20,6 +20,7 @@ interface Entry
     children: HierarchyItemId[];
     provider?: IHierarchyProvider;
     dispose?: () => void;
+    realized?: boolean;   // RealizeChildren has run on this node (gates reRealizeKeyed)
 }
 
 // The keyed-regime walker (design §3,§5,§6). Owns keyed-node identity + interning,
@@ -31,6 +32,8 @@ export class HierarchyModel
     private readonly entries = new Map<HierarchyItemId, Entry>();
     // keyed-child interning: parentId -> extIdentity -> id.
     private readonly keyedChildren = new Map<HierarchyItemId, Map<unknown, MintedItemId>>();
+    // per-node child-delta subscribers (realize = subscribe reaches the presentation layer).
+    private readonly childSinks = new Map<HierarchyItemId, Set<(c: HierarchyChange) => void>>();
 
     constructor(private readonly registry: HierarchyContributorRegistry)
     {
@@ -48,8 +51,41 @@ export class HierarchyModel
         for (const id of [...this.entries.keys()])
         {
             const entry = this.entries.get(id);
-            if (entry !== undefined && entry.provider === undefined) this.RealizeChildren(id);
+            if (entry !== undefined && entry.realized === true && entry.provider === undefined)
+            {
+                this.RealizeChildren(id);
+            }
         }
+    }
+
+    // Subscribe to a node's child deltas. The model emits ChildAdded/ChildUpdated/ChildRemoved
+    // as `id`'s children set mutates — from the keyed regime (internKeyed/pruneKeyed) and from
+    // provider deltas (patch) alike, so a consumer never sees the keyed/provider boundary.
+    public ObserveChildren(id: HierarchyItemId, sink: (c: HierarchyChange) => void): () => void
+    {
+        let set = this.childSinks.get(id);
+        if (set === undefined)
+        {
+            set = new Set();
+            this.childSinks.set(id, set);
+        }
+        set.add(sink);
+        return () =>
+        {
+            const s = this.childSinks.get(id);
+            if (s !== undefined)
+            {
+                s.delete(sink);
+                if (s.size === 0) this.childSinks.delete(id);
+            }
+        };
+    }
+
+    private emit(parentId: HierarchyItemId, change: HierarchyChange): void
+    {
+        const set = this.childSinks.get(parentId);
+        if (set === undefined) return;
+        for (const sink of [...set]) sink(change);
     }
 
     // Canonical name for a keyed node — its own family segment for P0. Full ancestor-path
@@ -94,6 +130,7 @@ export class HierarchyModel
     public RealizeChildren(id: HierarchyItemId): void
     {
         const entry = this.entry(id);
+        entry.realized = true;
         const contributed = new Set<unknown>();
         for (const contributor of this.registry.For(entry.node.Key))
         {
@@ -131,6 +168,7 @@ export class HierarchyModel
             this.entries.delete(childId);
             const i = parent.children.indexOf(childId);
             if (i >= 0) parent.children.splice(i, 1);
+            this.emit(parentId, new ChildRemoved(childId));
         }
     }
 
@@ -143,16 +181,17 @@ export class HierarchyModel
             entry.dispose = undefined;
             entry.provider = undefined;
         }
+        entry.realized = false;   // a collapsed node re-realizes on next expand, not via reRealizeKeyed
     }
 
     private attachProvider(id: HierarchyItemId, entry: Entry, provider: IHierarchyProvider): void
     {
         if (entry.provider === provider) return;   // already subscribed
         entry.provider = provider;
-        entry.dispose = provider.ObserveChildren(id, (c) => this.patch(entry, c));
+        entry.dispose = provider.ObserveChildren(id, (c) => this.patch(id, entry, c));
     }
 
-    private patch(entry: Entry, change: HierarchyChange): void
+    private patch(parentId: HierarchyItemId, entry: Entry, change: HierarchyChange): void
     {
         if (entry.dispose === undefined) return;   // collapsed — ignore late deltas
         if (change instanceof ChildAdded)
@@ -171,6 +210,7 @@ export class HierarchyModel
             if (i >= 0) entry.children.splice(i, 1);
             this.entries.delete(change.Id);
         }
+        this.emit(parentId, change);
     }
 
     private internKeyed(parentId: HierarchyItemId, parent: Entry, childNode: HierarchyNode): void
@@ -189,11 +229,25 @@ export class HierarchyModel
             map.set(identity, childId);
             this.entries.set(childId, { node: childNode, children: [] });
             parent.children.push(childId);
+            this.emit(parentId, new ChildAdded(childId, childNode));
         }
         else
         {
-            this.entry(childId).node = childNode;   // refresh survivor's node data in place
+            const existing = this.entry(childId);
+            if (HierarchyModel.displayDiffers(existing.node, childNode))
+            {
+                existing.node = childNode;   // refresh survivor's node data in place
+                this.emit(parentId, new ChildUpdated(childId, childNode));
+            }
         }
+    }
+
+    // Only a change to a rendered fact is worth a ChildUpdated — avoids churn when an
+    // unchanged node is re-contributed (reRealizeKeyed re-runs the whole keyed regime).
+    private static displayDiffers(a: HierarchyNode, b: HierarchyNode): boolean
+    {
+        return a.Caption !== b.Caption || a.IconKey !== b.IconKey
+            || a.Severity !== b.Severity || a.Error !== b.Error || a.Key !== b.Key;
     }
 
     private entry(id: HierarchyItemId): Entry
