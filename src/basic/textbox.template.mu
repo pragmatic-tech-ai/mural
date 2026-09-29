@@ -51,7 +51,7 @@
 // or `Pen [ Brush = @Token, Thickness = 2 ]` — verified against the
 // compiled emit (`new Pen()` with a DynamicResource-bound Brush).
 
-resources PragmaticInputs
+resources TextBoxes
 {
     // ── Outlined — the baseline. @Bg1 surface, @BorderStrong 1dp
     // outline, @RadiusMd corners. Focus re-tints the SAME border to

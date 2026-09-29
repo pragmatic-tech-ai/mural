@@ -42,4 +42,8 @@ resources MuralFramework {
     import Tooltips from "../framework/tooltips/tooltips.template.mu.js"
     import TopAppBars from "../framework/top-app-bar/top-app-bar.template.mu.js"
     import BottomAppBars from "../framework/bottom-app-bar/bottom-app-bar.template.mu.js"
+    import TextBoxes from "../basic/textbox.template.mu.js"
+    import Sliders from "../basic/sliders.template.mu.js"
+    import ScrollBars from "../basic/scroll/scroll-bar.template.mu.js"
+    import Splitters from "../basic/splitter.template.mu.js"
 }

@@ -18,7 +18,7 @@
 // Only Pragmatic tokens — no M3 (@SurfaceContainerLow / @OutlineVariant /
 // @Outline / @OnSurfaceVariant / @Shape*) token.
 
-resources PragmaticScrollBar
+resources ScrollBars
 {
     Template x:key="DefaultScrollBar" [TargetType = ScrollBar]
     {

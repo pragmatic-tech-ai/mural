@@ -93,7 +93,7 @@
 // Style[TargetType=Slider|SpinEdit] entries shadow Material's
 // (last-merged-wins on the runtime class key).
 
-resources PragmaticSliders
+resources Sliders
 {
     // ── Slider ──────────────────────────────────────────────────────
     Template x:key="DefaultSlider" [TargetType = Slider]

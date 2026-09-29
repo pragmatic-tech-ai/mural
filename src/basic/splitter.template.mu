@@ -17,7 +17,7 @@
 //
 // Only Pragmatic tokens — no M3 (@OutlineVariant / @Primary) token.
 
-resources PragmaticSplitter
+resources Splitters
 {
     Template x:key="DefaultSplitter" [TargetType = Splitter]
     {

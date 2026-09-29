@@ -12,10 +12,6 @@
 
 resources PragmaticControls
 {
-    import PragmaticInputs from "../../framework/pragmatic/inputs/textbox.template.mu.js"
     import PragmaticToggles from "../../framework/pragmatic/toggles/toggles.template.mu.js"
-    import PragmaticSliders from "../../framework/pragmatic/sliders/sliders.template.mu.js"
     import PragmaticText from "../../framework/pragmatic/text/text.template.mu.js"
-    import PragmaticScrollBar from "../../framework/pragmatic/scroll/scroll-bar.template.mu.js"
-    import PragmaticSplitter from "../../framework/pragmatic/scroll/splitter.template.mu.js"
 }
