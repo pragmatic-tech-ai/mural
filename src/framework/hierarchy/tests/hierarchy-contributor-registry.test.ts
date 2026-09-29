@@ -3,8 +3,14 @@ import assert from 'node:assert/strict';
 import { ServiceProvider, ServiceKey } from '../../../runtime/index.js';
 import {
     HierarchyContributorRegistry, HierarchyContributorDefinition, NodeContribution,
+    HierarchyModel, NodeSeverity,
     type IHierarchyContributor, type HierarchyNode,
 } from '../index.js';
+
+function pnode(key: string, ext: unknown, caption = key): HierarchyNode
+{
+    return { Key: key, Caption: caption, IconKey: '', ExtObject: ext, Severity: NodeSeverity.Ok };
+}
 
 class FakeContributor implements IHierarchyContributor
 {
@@ -50,4 +56,25 @@ test('Changed fires on register and on remove', () =>
     const off = reg.Register(defFor(k, ['solution'], 0));
     off();
     assert.equal(fired, 2);
+});
+
+test('NotifyContributionsChanged re-contributes a realized root live', () =>
+{
+    const provider = new ServiceProvider();
+    let count = 0;
+    const listing = new ServiceKey<IHierarchyContributor>('listing');
+    provider.registerInstance(listing, { ParentKeys: ['solution'], Order: 0,
+        Contribute: () => new NodeContribution(count === 0 ? [] : [pnode('project', { id: 'p' })]) } as IHierarchyContributor);
+    const registry = new HierarchyContributorRegistry(provider);
+    const d = new HierarchyContributorDefinition();
+    d.ParentKeys = ['solution']; d.Contributor = listing; d.Order = 0;
+    registry.Register(d);
+    const model = new HierarchyModel(registry);
+    const root = model.SeedRoot(pnode('solution', {}));
+    model.RealizeChildren(root);
+    assert.equal(model.ChildrenOf(root).length, 0);
+
+    count = 1;
+    registry.NotifyContributionsChanged();
+    assert.equal(model.ChildrenOf(root).length, 1);
 });

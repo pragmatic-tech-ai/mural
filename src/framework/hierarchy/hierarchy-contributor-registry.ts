@@ -58,6 +58,14 @@ export class HierarchyContributorRegistry extends ServiceBase
         };
     }
 
+    // Signal that a live contributor's OUTPUT changed (its data, not its registration) so a
+    // subscribed HierarchyModel re-contributes realized keyed nodes. The register/unregister
+    // paths raise the same notification internally; this exposes it to contributors.
+    public NotifyContributionsChanged(): void
+    {
+        this.raiseChanged();
+    }
+
     // Contributors registered for `parentKey`, ordered by Order (ascending). Tokens are
     // resolved + cached on first read.
     public For(parentKey: string): readonly IHierarchyContributor[]
