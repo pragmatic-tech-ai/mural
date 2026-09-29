@@ -7,9 +7,9 @@ import type { Visual } from '../visual-engine/visual.js';
 
 /** Theme class accepted by Application.initialize. Any subclass of
  *  `Theme` with the static `Activate(scheme?)` method satisfies this
- *  — the compiler-emitted `.mu` theme class implements it, as does
- *  the hand-written `Material` class. Kept as a structural type so
- *  consumers can author themes that don't share a base import. */
+ *  — the compiler-emitted `.mu` theme class (e.g. Pragmatic) implements
+ *  it. Kept as a structural type so consumers can author themes that
+ *  don't share a base import. */
 export interface ActivatableTheme extends Function
 {
     Activate(scheme?: Function): void;
@@ -18,7 +18,7 @@ export interface ActivatableTheme extends Function
 // Options for Application.initialize. Optional — when omitted, the
 // theme registered via `Application.RegisterDefaultTheme(...)` is
 // activated with its default scheme. Pass class references
-// (`Material`, `MaterialLight`), never strings — the no-string-type-
+// (`Pragmatic`, `PragmaticLight`), never strings — the no-string-type-
 // proxies rule applies here too.
 export interface ApplicationInitOptions
 {

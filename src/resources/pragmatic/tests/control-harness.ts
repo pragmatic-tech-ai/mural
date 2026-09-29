@@ -42,7 +42,7 @@ export class ControlHarness
     private static readonly SurfaceWidth  = 240;
     private static readonly SurfaceHeight = 96;
 
-    // Register both themes (idempotently), root a fresh Application, and
+    // Register the Pragmatic theme (idempotently), root a fresh Application, and
     // activate `scheme` on it. Returns the Application. Use directly for
     // resolution-only checks that must not paint (e.g. asserting an
     // control resolves its base style); Render builds
