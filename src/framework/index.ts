@@ -361,3 +361,7 @@ export { PropertyItem, PropertyCategory } from './property-grid/property-item.js
 // MapPropertyBag, IPropertyBag, the accessor types — now lives in
 // @pragmatic-tech-ai/todl-runtime, imported directly from there.
 export { DpPropertyBag } from './property-grid/property-bag.js';
+
+// Solution Hierarchy framework (P0): node/provider/contributor contracts, HierarchyModel,
+// the contributor registry + .hierarchyContributors: DSL, and NodeKey governance.
+export * from './hierarchy/index.js';
