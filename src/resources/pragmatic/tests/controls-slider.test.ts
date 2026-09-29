@@ -8,7 +8,6 @@ import { SpinEdit } from '../../../basic/spin-edit.js';
 import { TextBox } from '../../../basic/text-box.js';
 import { Orientation } from '../../../basic/panels/orientation.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 // Minimal PointerEventInit builder — mirrors src/basic/tests/slider.test.ts's
@@ -97,13 +96,6 @@ describe('Pragmatic Slider', () =>
     {
         const { control } = ControlHarness.Render(() => new Slider(), { scheme: PragmaticLight });
         assert.ok(ControlHarness.IsPragmaticStyle(control), 'Slider uses the Pragmatic override style');
-        ControlHarness.Reset();
-    });
-
-    test('Material is unaffected — a Slider under Material keeps the Material style', () =>
-    {
-        const { control } = ControlHarness.Render(() => new Slider(), { scheme: MaterialLight });
-        assert.ok(!ControlHarness.IsPragmaticStyle(control), 'Material Slider does NOT resolve the Pragmatic style');
         ControlHarness.Reset();
     });
 
@@ -272,13 +264,6 @@ describe('Pragmatic SpinEdit', () =>
     {
         const { control } = ControlHarness.Render(() => new SpinEdit(), { scheme: PragmaticLight });
         assert.ok(ControlHarness.IsPragmaticStyle(control), 'SpinEdit uses the Pragmatic override style');
-        ControlHarness.Reset();
-    });
-
-    test('Material is unaffected — a SpinEdit under Material keeps the Material style', () =>
-    {
-        const { control } = ControlHarness.Render(() => new SpinEdit(), { scheme: MaterialLight });
-        assert.ok(!ControlHarness.IsPragmaticStyle(control), 'Material SpinEdit does NOT resolve the Pragmatic style');
         ControlHarness.Reset();
     });
 

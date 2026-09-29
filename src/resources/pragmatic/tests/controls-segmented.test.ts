@@ -2,7 +2,6 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { SegmentedButton, SegmentedItem } from '../../../framework/button-groups/segmented-button.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 describe('Pragmatic SegmentedButton', () =>
@@ -11,13 +10,6 @@ describe('Pragmatic SegmentedButton', () =>
     {
         const { control } = ControlHarness.Render(() => new SegmentedButton(), { scheme: PragmaticLight });
         assert.ok(ControlHarness.IsPragmaticStyle(control), 'SegmentedButton uses the Pragmatic override style');
-        ControlHarness.Reset();
-    });
-
-    test('Material is unaffected', () =>
-    {
-        const { control } = ControlHarness.Render(() => new SegmentedButton(), { scheme: MaterialLight });
-        assert.ok(!ControlHarness.IsPragmaticStyle(control), 'Material SegmentedButton keeps the Material style');
         ControlHarness.Reset();
     });
 

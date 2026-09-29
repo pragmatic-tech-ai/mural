@@ -4,7 +4,6 @@ import { Checkbox } from '../../../framework/toggles/checkbox.js';
 import { RadioButton } from '../../../framework/toggles/radio-button.js';
 import { Switch } from '../../../framework/toggles/switch.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 describe('Pragmatic Checkbox', () =>
@@ -13,13 +12,6 @@ describe('Pragmatic Checkbox', () =>
     {
         const { control } = ControlHarness.Render(() => new Checkbox(), { scheme: PragmaticLight });
         assert.ok(ControlHarness.IsPragmaticStyle(control), 'Checkbox uses the Pragmatic override style');
-        ControlHarness.Reset();
-    });
-
-    test('Material is unaffected — a Checkbox under Material keeps the Material style', () =>
-    {
-        const { control } = ControlHarness.Render(() => new Checkbox(), { scheme: MaterialLight });
-        assert.ok(!ControlHarness.IsPragmaticStyle(control), 'Material Checkbox does NOT resolve the Pragmatic style');
         ControlHarness.Reset();
     });
 
@@ -147,13 +139,6 @@ describe('Pragmatic RadioButton', () =>
         ControlHarness.Reset();
     });
 
-    test('Material is unaffected — a RadioButton under Material keeps the Material style', () =>
-    {
-        const { control } = ControlHarness.Render(() => new RadioButton(), { scheme: MaterialLight });
-        assert.ok(!ControlHarness.IsPragmaticStyle(control), 'Material RadioButton does NOT resolve the Pragmatic style');
-        ControlHarness.Reset();
-    });
-
     test('unchecked ring paints the @BorderStrong outline stroke', () =>
     {
         const { svg } = ControlHarness.Render(() => new RadioButton(), { scheme: PragmaticLight });
@@ -248,13 +233,6 @@ describe('Pragmatic Switch', () =>
     {
         const { control } = ControlHarness.Render(() => new Switch(), { scheme: PragmaticLight });
         assert.ok(ControlHarness.IsPragmaticStyle(control), 'Switch uses the Pragmatic override style');
-        ControlHarness.Reset();
-    });
-
-    test('Material is unaffected — a Switch under Material keeps the Material style', () =>
-    {
-        const { control } = ControlHarness.Render(() => new Switch(), { scheme: MaterialLight });
-        assert.ok(!ControlHarness.IsPragmaticStyle(control), 'Material Switch does NOT resolve the Pragmatic style');
         ControlHarness.Reset();
     });
 

@@ -5,18 +5,14 @@ import { Border } from '../../../basic/border.js';
 import { BottomSheet } from '../../../framework/surfaces/bottom-sheet.js';
 import { SideSheet } from '../../../framework/surfaces/side-sheet.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 describe('Pragmatic BottomSheet', () =>
 {
-    test('resolves the Pragmatic style under Pragmatic; Material unaffected', () =>
+    test('resolves the Pragmatic style under Pragmatic', () =>
     {
         ControlHarness.Activate(PragmaticLight);
         assert.ok(ControlHarness.IsPragmaticStyle(new BottomSheet()), 'BottomSheet uses the Pragmatic style');
-        ControlHarness.Reset();
-        ControlHarness.Activate(MaterialLight);
-        assert.ok(!ControlHarness.IsPragmaticStyle(new BottomSheet()), 'Material BottomSheet keeps the Material style');
         ControlHarness.Reset();
     });
 
@@ -39,13 +35,10 @@ describe('Pragmatic BottomSheet', () =>
 
 describe('Pragmatic SideSheet', () =>
 {
-    test('resolves the Pragmatic style under Pragmatic; Material unaffected', () =>
+    test('resolves the Pragmatic style under Pragmatic', () =>
     {
         ControlHarness.Activate(PragmaticLight);
         assert.ok(ControlHarness.IsPragmaticStyle(new SideSheet()), 'SideSheet uses the Pragmatic style');
-        ControlHarness.Reset();
-        ControlHarness.Activate(MaterialLight);
-        assert.ok(!ControlHarness.IsPragmaticStyle(new SideSheet()), 'Material SideSheet keeps the Material style');
         ControlHarness.Reset();
     });
 

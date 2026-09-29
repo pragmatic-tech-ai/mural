@@ -4,7 +4,6 @@ import { SolidColorBrush } from '../../../visual-engine/index.js';
 import { Border } from '../../../basic/border.js';
 import { Card, CardVariant } from '../../../framework/surfaces/card.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 describe('Pragmatic Card', () =>
@@ -14,14 +13,6 @@ describe('Pragmatic Card', () =>
         ControlHarness.Activate(PragmaticLight);
         const c = new Card();
         assert.ok(ControlHarness.IsPragmaticStyle(c), 'Card uses the Pragmatic override style');
-        ControlHarness.Reset();
-    });
-
-    test('Material is unaffected', () =>
-    {
-        ControlHarness.Activate(MaterialLight);
-        const c = new Card();
-        assert.ok(!ControlHarness.IsPragmaticStyle(c), 'Material Card keeps the Material style');
         ControlHarness.Reset();
     });
 

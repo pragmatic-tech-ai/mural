@@ -44,12 +44,9 @@ describe('Pragmatic SearchBar', () =>
         ControlHarness.Reset();
     });
 
-    // Delta beyond a plain token swap: Material's SearchBar has no focus
-    // ring at all (rest Stroke is transparent, and neither `when` clause
-    // touches it). The Pragmatic fork adds one — rest @BorderStrong 1dp,
-    // focus @BorderFocus 2dp — the same pattern Wave 1 established for
-    // TextBox (framework/pragmatic/inputs/textbox.template.mu).
-    test('focus paints the @BorderFocus ring (delta: Material has none here)', () =>
+    // Rest @BorderStrong 1dp, focus @BorderFocus 2dp — the same pattern
+    // Wave 1 established for TextBox (framework/pragmatic/inputs/textbox.template.mu).
+    test('focus paints the @BorderFocus ring', () =>
     {
         ControlHarness.Activate(PragmaticLight);
         const sb = new SearchBar();

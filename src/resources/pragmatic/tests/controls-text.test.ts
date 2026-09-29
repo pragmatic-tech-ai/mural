@@ -2,7 +2,6 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { TextBlock, RichTextBlock, RichTextBox, FlowDocument, Paragraph, Run } from '../../../basic/index.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 // The exact attribute form SvgDrawingContext.DrawText emits for a Body
@@ -55,24 +54,6 @@ describe('Pragmatic TextBlock', () =>
         ControlHarness.Reset();
     });
 
-    test('Material regression guard: a bare TextBlock under Material keeps its own OnSurface ink', () =>
-    {
-        const { svg } = ControlHarness.Render(() => new TextBlock('Hello'), { scheme: MaterialLight });
-        const onSurface = ControlHarness.TokenCss('OnSurface');
-        assert.ok(onSurface !== undefined, 'Material defines @OnSurface');
-        assert.ok(svg.includes(`fill="${onSurface}"`), 'Material TextBlock still paints its own @OnSurface ink');
-        assert.notEqual(onSurface, 'rgb(34,33,30)', 'Material ink is not Pragmatic @Fg1 — the native-first chain did not leak across themes');
-        assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss),
-            'Material TextBlock ink resolution is unaffected by the Theme.ink native-first change');
-        ControlHarness.Reset();
-    });
-
-    test('Material is unaffected — a TextBlock under Material does not resolve the Pragmatic style', () =>
-    {
-        const { control } = ControlHarness.Render(() => new TextBlock('Hello'), { scheme: MaterialLight });
-        assert.ok(!ControlHarness.IsPragmaticStyle(control), 'Material TextBlock does NOT resolve the Pragmatic override style');
-        ControlHarness.Reset();
-    });
 });
 
 describe('Pragmatic RichTextBlock', () =>

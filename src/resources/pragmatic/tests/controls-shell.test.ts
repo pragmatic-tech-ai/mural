@@ -7,7 +7,6 @@ import { Line } from '../../../basic/shapes/line.js';
 import type { Visual } from '../../../runtime/index.js';
 import { EditorShell, ViewerShell, ShellSideContentPane, PanelButton } from '../../../framework/index.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 // The shell family (EditorShell / ViewerShell / ShellSideContentPane /
@@ -48,7 +47,7 @@ describe('Pragmatic Shell family', () =>
     // framework's own shell tests hit the same shape and flush it the same
     // way (src/framework/tests/shell.test.ts: `await Promise.resolve();
     // await Promise.resolve();` right after construction, before any Reset).
-    test('resolves the Pragmatic style under light + dark; Material unaffected', async () =>
+    test('resolves the Pragmatic style under light + dark', async () =>
     {
         ControlHarness.Activate(PragmaticLight);
         assert.ok(ControlHarness.IsPragmaticStyle(new EditorShell()), 'EditorShell Pragmatic (light)');
@@ -63,14 +62,6 @@ describe('Pragmatic Shell family', () =>
         assert.ok(ControlHarness.IsPragmaticStyle(new ViewerShell()), 'ViewerShell Pragmatic (dark)');
         assert.ok(ControlHarness.IsPragmaticStyle(new ShellSideContentPane()), 'ShellSideContentPane Pragmatic (dark)');
         assert.ok(ControlHarness.IsPragmaticStyle(new PanelButton()), 'PanelButton Pragmatic (dark)');
-        await Promise.resolve(); await Promise.resolve();
-        ControlHarness.Reset();
-
-        ControlHarness.Activate(MaterialLight);
-        assert.ok(!ControlHarness.IsPragmaticStyle(new EditorShell()), 'Material EditorShell unchanged');
-        assert.ok(!ControlHarness.IsPragmaticStyle(new ViewerShell()), 'Material ViewerShell unchanged');
-        assert.ok(!ControlHarness.IsPragmaticStyle(new ShellSideContentPane()), 'Material ShellSideContentPane unchanged');
-        assert.ok(!ControlHarness.IsPragmaticStyle(new PanelButton()), 'Material PanelButton unchanged');
         await Promise.resolve(); await Promise.resolve();
         ControlHarness.Reset();
     });
@@ -142,12 +133,12 @@ describe('Pragmatic Shell family', () =>
         ControlHarness.Reset();
     });
 
-    test('PanelButton — CornerRadius resolves @RadiusMd (6) on the Pragmatic template root (Review Focus: not the Material shape)', () =>
+    test('PanelButton — CornerRadius resolves @RadiusMd (6) on the Pragmatic template root', () =>
     {
         ControlHarness.Activate(PragmaticLight);
         const btn = new PanelButton();
         const root = btn.GetTemplateChild('PART_Root') as Border;
-        assert.ok(root instanceof Border, 'Pragmatic @DefaultIconButton names its surface PART_Root (not Material\'s PART_Border)');
+        assert.ok(root instanceof Border, 'Pragmatic @DefaultIconButton names its surface PART_Root');
         assert.equal(root.CornerRadius, ControlsShellTestHelper.RadiusMd, 'PART_Root rides $$CornerRadius = @RadiusMd from the PanelButton Style delta');
         ControlHarness.Reset();
     });

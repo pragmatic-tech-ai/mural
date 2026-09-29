@@ -3,7 +3,6 @@ import assert from 'node:assert/strict';
 import { SolidColorBrush } from '../../../visual-engine/index.js';
 import { StatusBar, StatusBarItem, StatusBarSeparator } from '../../../framework/status-bar/status-bar.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 // StatusBar / StatusBarItem are ItemsControl / ContentControl subclasses
@@ -17,18 +16,12 @@ import { ControlHarness } from './control-harness.js';
 // resolves the same way but is included here for parity across the family.
 describe('Pragmatic StatusBar family', () =>
 {
-    test('resolves the Pragmatic style; Material unaffected', () =>
+    test('resolves the Pragmatic style', () =>
     {
         ControlHarness.Activate(PragmaticLight);
         assert.ok(ControlHarness.IsPragmaticStyle(new StatusBar()), 'StatusBar uses the Pragmatic style');
         assert.ok(ControlHarness.IsPragmaticStyle(new StatusBarItem()), 'StatusBarItem uses the Pragmatic style');
         assert.ok(ControlHarness.IsPragmaticStyle(new StatusBarSeparator()), 'StatusBarSeparator uses the Pragmatic style');
-        ControlHarness.Reset();
-
-        ControlHarness.Activate(MaterialLight);
-        assert.ok(!ControlHarness.IsPragmaticStyle(new StatusBar()), 'Material StatusBar keeps the Material style');
-        assert.ok(!ControlHarness.IsPragmaticStyle(new StatusBarItem()), 'Material StatusBarItem keeps the Material style');
-        assert.ok(!ControlHarness.IsPragmaticStyle(new StatusBarSeparator()), 'Material StatusBarSeparator keeps the Material style');
         ControlHarness.Reset();
     });
 

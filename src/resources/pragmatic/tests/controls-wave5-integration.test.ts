@@ -22,13 +22,12 @@ import { SizePositionControl } from '../../../framework/diagram/size-position-co
 import { PropertyGrid } from '../../../framework/property-grid/property-grid.js';
 import { Gallery } from '../../../framework/gallery/gallery.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 // Wave 5 Task 12 — integration sweep. Every Complex & app-specific control the
-// wave forks resolves the Pragmatic override under light + dark and keeps the
-// Material style under Material. OOP: the table is a class-held static array,
-// not a module-level array of free constructors.
+// wave forks resolves the Pragmatic override under light + dark. OOP: the
+// table is a class-held static array, not a module-level array of free
+// constructors.
 class Wave5Controls
 {
     public static readonly All: ReadonlyArray<{ readonly Name: string; readonly Make: () => object }> =
@@ -59,11 +58,11 @@ class Wave5Controls
     ];
 }
 
-describe('Wave 5 integration — every complex/app-specific fork resolves, Material byte-identical', () =>
+describe('Wave 5 integration — every complex/app-specific fork resolves', () =>
 {
     for (const entry of Wave5Controls.All)
     {
-        test(`${entry.Name}: Pragmatic (light + dark) yes, Material no`, () =>
+        test(`${entry.Name}: Pragmatic (light + dark)`, () =>
         {
             ControlHarness.Activate(PragmaticLight);
             assert.ok(ControlHarness.IsPragmaticStyle(entry.Make()), `${entry.Name} resolves the Pragmatic style under light`);
@@ -72,10 +71,6 @@ describe('Wave 5 integration — every complex/app-specific fork resolves, Mater
             ControlHarness.Activate(PragmaticDark);
             assert.ok(ControlHarness.IsPragmaticStyle(entry.Make()), `${entry.Name} resolves the Pragmatic style under dark`);
             ControlHarness.Reset();
-
-            ControlHarness.Activate(MaterialLight);
-            assert.ok(!ControlHarness.IsPragmaticStyle(entry.Make()), `${entry.Name} keeps the Material style under Material`);
-            ControlHarness.Reset();
         });
     }
 });
@@ -83,18 +78,15 @@ describe('Wave 5 integration — every complex/app-specific fork resolves, Mater
 // Task 11 — PropertyGrid and Gallery need NO fork: property-grid.template.mu is
 // token-clean (zero @ refs) and Gallery has no template (it renders through its
 // MenuItem/Button item containers, already forked). Verify both construct under
-// Pragmatic and Material without error (no M3 leakage to retint).
+// Pragmatic without error.
 describe('Wave 5 — token-clean families need no fork', () =>
 {
     for (const entry of [{ Name: 'PropertyGrid', Make: () => new PropertyGrid() }, { Name: 'Gallery', Make: () => new Gallery() }])
     {
-        test(`${entry.Name} constructs under Pragmatic and Material without error`, () =>
+        test(`${entry.Name} constructs under Pragmatic without error`, () =>
         {
             ControlHarness.Activate(PragmaticLight);
             assert.doesNotThrow(() => entry.Make(), `${entry.Name} constructs under Pragmatic`);
-            ControlHarness.Reset();
-            ControlHarness.Activate(MaterialLight);
-            assert.doesNotThrow(() => entry.Make(), `${entry.Name} constructs under Material`);
             ControlHarness.Reset();
         });
     }

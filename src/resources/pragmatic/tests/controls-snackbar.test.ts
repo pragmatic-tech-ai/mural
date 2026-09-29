@@ -2,7 +2,6 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { Snackbar } from '../../../framework/notifications/snackbar.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 // Snackbar is a bare ContentControl shown via a service; it never applies its
@@ -11,13 +10,10 @@ import { ControlHarness } from './control-harness.js';
 // proxies (Review Focus: legibility) — the Wave-2 fallback (Ruling in ledger).
 describe('Pragmatic Snackbar', () =>
 {
-    test('resolves the Pragmatic style; Material unaffected', () =>
+    test('resolves the Pragmatic style', () =>
     {
         ControlHarness.Activate(PragmaticLight);
         assert.ok(ControlHarness.IsPragmaticStyle(new Snackbar()), 'Snackbar uses the Pragmatic style');
-        ControlHarness.Reset();
-        ControlHarness.Activate(MaterialLight);
-        assert.ok(!ControlHarness.IsPragmaticStyle(new Snackbar()), 'Material Snackbar keeps the Material style');
         ControlHarness.Reset();
     });
 

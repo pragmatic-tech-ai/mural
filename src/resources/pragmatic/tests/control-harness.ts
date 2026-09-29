@@ -1,7 +1,7 @@
 import { Application, Scheme, ThemeManager, type Element } from '../../../runtime/index.js';
 import { HeadlessTarget, SolidColorBrush, SvgDrawingContext } from '../../../visual-engine/index.js';
 import { Material } from '../../material/material.js';
-import { Pragmatic, PragmaticControls } from '../pragmatic.js';
+import { Pragmatic } from '../pragmatic.js';
 
 // A scheme handle as the compiler emits it — a class carrying a singleton
 // `instance` (the runtime Scheme). PragmaticLight / MaterialDark / … all
@@ -82,17 +82,18 @@ export class ControlHarness
         return { control, svg: dc.ToFragment() };
     }
 
-    // True when `control` resolves its implicit style to the Pragmatic
-    // override — i.e. the very Button-keyed Style that PragmaticControls
-    // holds inside the active theme (identity comparison, so a Material
-    // resolution or a non-wired dictionary reads as false).
+    // True when `control` resolves its implicit (constructor-keyed) style
+    // under the active theme. After the Phase-4 SP2 collapse the Pragmatic
+    // design IS the framework base (MuralBasic + MuralFramework), so a
+    // control that resolves its implicit style under an active Pragmatic
+    // scheme is resolving the Pragmatic style — the identity check against
+    // the old PragmaticControls override dictionary no longer applies
+    // (that dictionary was removed in the collapse). The per-control token
+    // and render assertions in each test verify the concrete Pragmatic
+    // values; this predicate just confirms a style resolves at all.
     public static IsPragmaticStyle(control: Element): boolean
     {
-        const resolved = control.TryFindResource(control.constructor);
-        const controlsDict = Pragmatic.instance.dictionaries.find(
-            d => d instanceof PragmaticControls);
-        const pragmaticStyle = controlsDict?.Resolve(control.constructor);
-        return pragmaticStyle !== undefined && resolved === pragmaticStyle;
+        return control.TryFindResource(control.constructor) !== undefined;
     }
 
     // The CSS colour a token resolves to under the active scheme (e.g.

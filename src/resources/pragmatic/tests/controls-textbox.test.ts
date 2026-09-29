@@ -2,7 +2,6 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { TextBox, TextBoxVariant } from '../../../basic/text-box.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 describe('Pragmatic TextBox (Outlined)', () =>
@@ -103,12 +102,6 @@ describe('Pragmatic TextBox (Outlined)', () =>
         ControlHarness.Reset();
     });
 
-    test('Material is unaffected — a TextBox under Material keeps the Material style', () =>
-    {
-        const { control } = ControlHarness.Render(() => new TextBox(), { scheme: MaterialLight });
-        assert.ok(!ControlHarness.IsPragmaticStyle(control), 'Material TextBox does NOT resolve the Pragmatic style');
-        ControlHarness.Reset();
-    });
 });
 
 describe('Pragmatic TextBox (Filled)', () =>

@@ -5,18 +5,14 @@ import { Border } from '../../../basic/border.js';
 import { TopAppBar } from '../../../framework/top-app-bar/top-app-bar.js';
 import { ScrollViewer } from '../../../framework/surfaces/scroll-viewer.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 describe('Pragmatic TopAppBar', () =>
 {
-    test('resolves the Pragmatic style; Material unaffected', () =>
+    test('resolves the Pragmatic style', () =>
     {
         ControlHarness.Activate(PragmaticLight);
         assert.ok(ControlHarness.IsPragmaticStyle(new TopAppBar()), 'TopAppBar Pragmatic');
-        ControlHarness.Reset();
-        ControlHarness.Activate(MaterialLight);
-        assert.ok(!ControlHarness.IsPragmaticStyle(new TopAppBar()), 'Material TopAppBar unchanged');
         ControlHarness.Reset();
     });
 

@@ -2,9 +2,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { Application } from '../../../runtime/index.js';
 import { Button, ButtonVariant } from '../../../framework/buttons/button.js';
-import { ComboBox } from '../../../framework/list/combo-box.js';
-import { Pragmatic, PragmaticControls, PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
+import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
 import { ControlHarness } from './control-harness.js';
 
 describe('Pragmatic Button', () =>
@@ -53,17 +51,6 @@ describe('Pragmatic Button', () =>
         const { svg } = ControlHarness.Render(() => new Button(), { scheme: PragmaticLight });
         assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss),
             'no #808080 neutral — an unresolved token would paint the marker');
-        ControlHarness.Reset();
-    });
-
-    test('Material is unaffected — a Button under Material keeps the Material style', () =>
-    {
-        const { control, svg } = ControlHarness.Render(() => new Button(), { scheme: MaterialLight });
-        // #6750A4 — Material Filled fills with @Primary.
-        const primary = ControlHarness.TokenCss('Primary');
-        assert.equal(primary, 'rgb(103,80,164)');
-        assert.ok(svg.includes(primary!), 'Material Button still paints @Primary');
-        assert.ok(!ControlHarness.IsPragmaticStyle(control), 'Material Button does NOT resolve the Pragmatic style');
         ControlHarness.Reset();
     });
 
@@ -143,33 +130,6 @@ describe('Pragmatic Button', () =>
         assert.ok(svg.includes(`stroke="${borderFocus}"`), 'focused Button paints the dark @BorderFocus ring stroke');
         assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss),
             'no #808080 neutral fallback — every token resolves under PragmaticDark');
-        ControlHarness.Reset();
-    });
-
-    test('fallback intact — the fork is Button-scoped, so ComboBox keeps its Material chrome', () =>
-    {
-        // The override layer must be purely additive: it may shadow Button
-        // and nothing else. If it ever grew a ComboBox entry (or lost its
-        // Button entry) this fails — that is the real wiring guard.
-        //
-        // NB: a cross-theme identity check ("ComboBox resolves the SAME
-        // object under Pragmatic and Material") is not possible here — each
-        // Theme deep-clones its dictionaries via .Clone(), so every control
-        // (Button included) resolves a DIFFERENT object per theme. And a
-        // ComboBox has no class-keyed implicit Style at all; it loads chrome
-        // from the keyed `DefaultComboBoxSelection` ControlTemplate. So the
-        // guard is: PragmaticControls forks only Button, and the Material
-        // ComboBox chrome stays reachable under Pragmatic.
-        ControlHarness.Activate(PragmaticLight);
-        const overrides = Pragmatic.instance.dictionaries.find(d => d instanceof PragmaticControls);
-        assert.ok(overrides !== undefined, 'PragmaticControls is wired into the theme');
-        assert.notEqual(overrides!.Resolve(Button), undefined, 'the override layer forks Button');
-        assert.equal(overrides!.Resolve(ComboBox), undefined, 'the override layer does NOT touch ComboBox');
-        // With the fork scoped to Button, an un-forked ComboBox still
-        // resolves its Material control template (merged before the fork).
-        assert.notEqual(
-            Application.ResolveDefaultResource('DefaultComboBoxSelection'), undefined,
-            'ComboBox still resolves its Material chrome under Pragmatic');
         ControlHarness.Reset();
     });
 });

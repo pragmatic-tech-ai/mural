@@ -5,18 +5,14 @@ import { Border } from '../../../basic/border.js';
 import { ProgressIndicator, ProgressIndicatorVariant } from '../../../framework/notifications/progress-indicator.js';
 import { LoadingIndicator } from '../../../framework/notifications/loading-indicator.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 describe('Pragmatic ProgressIndicator', () =>
 {
-    test('resolves the Pragmatic style; Material unaffected', () =>
+    test('resolves the Pragmatic style', () =>
     {
         ControlHarness.Activate(PragmaticLight);
         assert.ok(ControlHarness.IsPragmaticStyle(new ProgressIndicator()), 'ProgressIndicator uses the Pragmatic style');
-        ControlHarness.Reset();
-        ControlHarness.Activate(MaterialLight);
-        assert.ok(!ControlHarness.IsPragmaticStyle(new ProgressIndicator()), 'Material ProgressIndicator keeps the Material style');
         ControlHarness.Reset();
     });
 

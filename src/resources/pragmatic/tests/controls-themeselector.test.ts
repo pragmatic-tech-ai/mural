@@ -2,7 +2,6 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { ThemeSelector } from '../../../framework/theme-selector/theme-selector.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 // Wave 5 Task 5 — ThemeSelector fork (resources PragmaticThemeSelectors).
@@ -13,16 +12,13 @@ import { ControlHarness } from './control-harness.js';
 // schemes only — see framework/theme-selector/tests/theme-selector.test.ts).
 describe('Pragmatic ThemeSelector', () =>
 {
-    test('resolves the Pragmatic style; Material unaffected', () =>
+    test('resolves the Pragmatic style', () =>
     {
         ControlHarness.Activate(PragmaticLight);
         assert.ok(ControlHarness.IsPragmaticStyle(new ThemeSelector()), 'ThemeSelector Pragmatic light');
         ControlHarness.Reset();
         ControlHarness.Activate(PragmaticDark);
         assert.ok(ControlHarness.IsPragmaticStyle(new ThemeSelector()), 'ThemeSelector Pragmatic dark');
-        ControlHarness.Reset();
-        ControlHarness.Activate(MaterialLight);
-        assert.ok(!ControlHarness.IsPragmaticStyle(new ThemeSelector()), 'ThemeSelector Material');
         ControlHarness.Reset();
     });
 

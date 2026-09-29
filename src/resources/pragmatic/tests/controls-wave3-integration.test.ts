@@ -14,7 +14,6 @@ import { MenuItem, MenuStrip, MenuButton } from '../../../framework/menu/menu-st
 import { ContextMenu } from '../../../framework/menu/context-menu.js';
 import { SplitButton } from '../../../framework/button-groups/split-button.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 // Every control the Wave-3 overlay/surface forks cover. Wrapped as static
@@ -42,11 +41,11 @@ class Wave3Controls
     ];
 }
 
-describe('Wave 3 integration — every overlay/surface fork resolves, Material byte-identical', () =>
+describe('Wave 3 integration — every overlay/surface fork resolves', () =>
 {
     for (const entry of Wave3Controls.All)
     {
-        test(`${entry.Name}: Pragmatic (light + dark) yes, Material no`, () =>
+        test(`${entry.Name}: Pragmatic (light + dark)`, () =>
         {
             ControlHarness.Activate(PragmaticLight);
             assert.ok(ControlHarness.IsPragmaticStyle(entry.Make()), `${entry.Name} resolves the Pragmatic style under light`);
@@ -54,10 +53,6 @@ describe('Wave 3 integration — every overlay/surface fork resolves, Material b
 
             ControlHarness.Activate(PragmaticDark);
             assert.ok(ControlHarness.IsPragmaticStyle(entry.Make()), `${entry.Name} resolves the Pragmatic style under dark`);
-            ControlHarness.Reset();
-
-            ControlHarness.Activate(MaterialLight);
-            assert.ok(!ControlHarness.IsPragmaticStyle(entry.Make()), `${entry.Name} keeps the Material style under Material`);
             ControlHarness.Reset();
         });
     }

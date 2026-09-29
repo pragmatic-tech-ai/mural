@@ -5,7 +5,6 @@ import { Visibility } from '../../../runtime/index.js';
 import { TextBlock } from '../../../basic/text-block.js';
 import { Tooltip } from '../../../framework/tooltips/tooltip.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 describe('Pragmatic Tooltip', () =>
@@ -15,14 +14,6 @@ describe('Pragmatic Tooltip', () =>
         ControlHarness.Activate(PragmaticLight);
         const t = new Tooltip();
         assert.ok(ControlHarness.IsPragmaticStyle(t), 'Tooltip uses the Pragmatic override style');
-        ControlHarness.Reset();
-    });
-
-    test('Material is unaffected', () =>
-    {
-        ControlHarness.Activate(MaterialLight);
-        const t = new Tooltip();
-        assert.ok(!ControlHarness.IsPragmaticStyle(t), 'Material Tooltip keeps the Material style');
         ControlHarness.Reset();
     });
 

@@ -13,7 +13,6 @@ import
     EditorShell, ViewerShell, ShellSideContentPane, PanelButton,
 } from '../../../framework/index.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 // Every control the Wave-4 shell/app-frame forks cover. Wrapped as static
@@ -64,11 +63,11 @@ class Wave4Controls
     }
 }
 
-describe('Wave 4 integration — every shell/app-frame fork resolves, Material byte-identical', () =>
+describe('Wave 4 integration — every shell/app-frame fork resolves', () =>
 {
     for (const entry of Wave4Controls.All)
     {
-        test(`${entry.Name}: Pragmatic (light + dark) yes, Material no`, async () =>
+        test(`${entry.Name}: Pragmatic (light + dark)`, async () =>
         {
             ControlHarness.Activate(PragmaticLight);
             assert.ok(ControlHarness.IsPragmaticStyle(entry.Make()), `${entry.Name} resolves the Pragmatic style under light`);
@@ -77,11 +76,6 @@ describe('Wave 4 integration — every shell/app-frame fork resolves, Material b
 
             ControlHarness.Activate(PragmaticDark);
             assert.ok(ControlHarness.IsPragmaticStyle(entry.Make()), `${entry.Name} resolves the Pragmatic style under dark`);
-            await Wave4Controls.FlushPendingMicrotasks();
-            ControlHarness.Reset();
-
-            ControlHarness.Activate(MaterialLight);
-            assert.ok(!ControlHarness.IsPragmaticStyle(entry.Make()), `${entry.Name} keeps the Material style under Material`);
             await Wave4Controls.FlushPendingMicrotasks();
             ControlHarness.Reset();
         });

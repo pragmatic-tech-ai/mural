@@ -6,7 +6,6 @@ import { ToolBar } from '../../../framework/tool-bar/tool-bar.js';
 import { ToolBarButton, ToolBarToggleButton, ToolBarSeparator } from '../../../framework/tool-bar/tool-bar-items.js';
 import { ToolBarSplitButton } from '../../../framework/tool-bar/tool-bar-split-button.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 // ToolBarSplitButton's visible chrome (PART_Primary / PART_Arrow) is applied
@@ -20,7 +19,7 @@ import { ControlHarness } from './control-harness.js';
 // IsPragmaticStyle only; per-part token assertions are out of reach headless.
 describe('Pragmatic ToolBar family', () =>
 {
-    test('resolves the Pragmatic style; Material unaffected', () =>
+    test('resolves the Pragmatic style', () =>
     {
         ControlHarness.Activate(PragmaticLight);
         assert.ok(ControlHarness.IsPragmaticStyle(new ToolBarButton()), 'ToolBarButton Pragmatic');
@@ -28,14 +27,6 @@ describe('Pragmatic ToolBar family', () =>
         assert.ok(ControlHarness.IsPragmaticStyle(new ToolBarSplitButton()), 'ToolBarSplitButton Pragmatic');
         assert.ok(ControlHarness.IsPragmaticStyle(new ToolBarSeparator()), 'ToolBarSeparator Pragmatic');
         assert.ok(ControlHarness.IsPragmaticStyle(new ToolBar()), 'ToolBar Pragmatic');
-        ControlHarness.Reset();
-
-        ControlHarness.Activate(MaterialLight);
-        assert.ok(!ControlHarness.IsPragmaticStyle(new ToolBarButton()), 'Material ToolBarButton unchanged');
-        assert.ok(!ControlHarness.IsPragmaticStyle(new ToolBarToggleButton()), 'Material ToolBarToggleButton unchanged');
-        assert.ok(!ControlHarness.IsPragmaticStyle(new ToolBarSplitButton()), 'Material ToolBarSplitButton unchanged');
-        assert.ok(!ControlHarness.IsPragmaticStyle(new ToolBarSeparator()), 'Material ToolBarSeparator unchanged');
-        assert.ok(!ControlHarness.IsPragmaticStyle(new ToolBar()), 'Material ToolBar unchanged');
         ControlHarness.Reset();
     });
 
