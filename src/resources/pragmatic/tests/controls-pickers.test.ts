@@ -5,7 +5,6 @@ import { Border } from '../../../basic/border.js';
 import { DatePicker } from '../../../framework/pickers/date-picker.js';
 import { TimePicker } from '../../../framework/pickers/time-picker.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 // Wave 5 Task 3 — DatePicker / TimePicker fork. Both apply their template
@@ -17,16 +16,13 @@ describe('Pragmatic Pickers — resolution', () =>
 {
     for (const entry of [{ Name: 'DatePicker', Make: () => new DatePicker() }, { Name: 'TimePicker', Make: () => new TimePicker() }])
     {
-        test(`${entry.Name}: Pragmatic (light + dark) yes, Material no`, () =>
+        test(`${entry.Name}: Pragmatic (light + dark)`, () =>
         {
             ControlHarness.Activate(PragmaticLight);
             assert.ok(ControlHarness.IsPragmaticStyle(entry.Make()), `${entry.Name} Pragmatic light`);
             ControlHarness.Reset();
             ControlHarness.Activate(PragmaticDark);
             assert.ok(ControlHarness.IsPragmaticStyle(entry.Make()), `${entry.Name} Pragmatic dark`);
-            ControlHarness.Reset();
-            ControlHarness.Activate(MaterialLight);
-            assert.ok(!ControlHarness.IsPragmaticStyle(entry.Make()), `${entry.Name} Material`);
             ControlHarness.Reset();
         });
     }

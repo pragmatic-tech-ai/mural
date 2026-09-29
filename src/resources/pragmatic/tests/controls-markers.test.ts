@@ -7,7 +7,6 @@ import { Orientation } from '../../../basic/panels/orientation.js';
 import { Border } from '../../../basic/border.js';
 import { SolidColorBrush } from '../../../visual-engine/index.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 describe('Pragmatic Chip', () =>
@@ -16,13 +15,6 @@ describe('Pragmatic Chip', () =>
     {
         const { control } = ControlHarness.Render(() => new Chip(), { scheme: PragmaticLight });
         assert.ok(ControlHarness.IsPragmaticStyle(control), 'Chip uses the Pragmatic override style');
-        ControlHarness.Reset();
-    });
-
-    test('Material is unaffected — a Chip under Material keeps the Material style', () =>
-    {
-        const { control } = ControlHarness.Render(() => new Chip(), { scheme: MaterialLight });
-        assert.ok(!ControlHarness.IsPragmaticStyle(control), 'Material Chip does NOT resolve the Pragmatic style');
         ControlHarness.Reset();
     });
 
@@ -135,18 +127,6 @@ describe('Pragmatic Badge', () =>
         ControlHarness.Reset();
     });
 
-    test('Material is unaffected — a Badge under Material keeps the Material style', () =>
-    {
-        const { control } = ControlHarness.Render(() =>
-        {
-            const b = new Badge();
-            b.Variant = BadgeVariant.Dot;
-            return b;
-        }, { scheme: MaterialLight });
-        assert.ok(!ControlHarness.IsPragmaticStyle(control), 'Material Badge does NOT resolve the Pragmatic style');
-        ControlHarness.Reset();
-    });
-
     test('numeric badge fills @StateDanger', () =>
     {
         // Resolution-only (no render — see the describe-level note above):
@@ -196,13 +176,6 @@ describe('Pragmatic Divider', () =>
     {
         const { control } = ControlHarness.Render(() => new Divider(), { scheme: PragmaticLight });
         assert.ok(ControlHarness.IsPragmaticStyle(control), 'Divider uses the Pragmatic override style');
-        ControlHarness.Reset();
-    });
-
-    test('Material is unaffected — a Divider under Material keeps the Material style', () =>
-    {
-        const { control } = ControlHarness.Render(() => new Divider(), { scheme: MaterialLight });
-        assert.ok(!ControlHarness.IsPragmaticStyle(control), 'Material Divider does NOT resolve the Pragmatic style');
         ControlHarness.Reset();
     });
 

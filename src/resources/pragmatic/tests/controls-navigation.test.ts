@@ -5,7 +5,6 @@ import { Border } from '../../../basic/border.js';
 import { TextBlock } from '../../../basic/text-block.js';
 import { NavigationItem, NavigationRail, NavigationBar } from '../../../framework/index.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 import { Style } from '../../../runtime/index.js';
 import { Shape } from '../../../basic/shapes/shape.js';
@@ -17,14 +16,6 @@ describe('Pragmatic NavigationItem', () =>
         ControlHarness.Activate(PragmaticLight);
         const item = new NavigationItem();
         assert.ok(ControlHarness.IsPragmaticStyle(item), 'NavigationItem uses the Pragmatic override style');
-        ControlHarness.Reset();
-    });
-
-    test('Material is unaffected', () =>
-    {
-        ControlHarness.Activate(MaterialLight);
-        const item = new NavigationItem();
-        assert.ok(!ControlHarness.IsPragmaticStyle(item), 'Material NavigationItem keeps the Material style');
         ControlHarness.Reset();
     });
 
@@ -105,7 +96,7 @@ describe('Pragmatic NavigationItem', () =>
 
 describe('Pragmatic NavigationRail', () =>
 {
-    test('resolves the Pragmatic style under Pragmatic (light + dark), Material unaffected', () =>
+    test('resolves the Pragmatic style under Pragmatic (light + dark)', () =>
     {
         ControlHarness.Activate(PragmaticLight);
         assert.ok(ControlHarness.IsPragmaticStyle(new NavigationRail()), 'NavigationRail resolves Pragmatic under light');
@@ -113,10 +104,6 @@ describe('Pragmatic NavigationRail', () =>
 
         ControlHarness.Activate(PragmaticDark);
         assert.ok(ControlHarness.IsPragmaticStyle(new NavigationRail()), 'NavigationRail resolves Pragmatic under dark');
-        ControlHarness.Reset();
-
-        ControlHarness.Activate(MaterialLight);
-        assert.ok(!ControlHarness.IsPragmaticStyle(new NavigationRail()), 'Material NavigationRail keeps the Material style');
         ControlHarness.Reset();
     });
 
@@ -139,7 +126,7 @@ describe('Pragmatic NavigationRail', () =>
 
 describe('Pragmatic NavigationBar', () =>
 {
-    test('resolves the Pragmatic style under Pragmatic (light + dark), Material unaffected', () =>
+    test('resolves the Pragmatic style under Pragmatic (light + dark)', () =>
     {
         ControlHarness.Activate(PragmaticLight);
         assert.ok(ControlHarness.IsPragmaticStyle(new NavigationBar()), 'NavigationBar resolves Pragmatic under light');
@@ -147,10 +134,6 @@ describe('Pragmatic NavigationBar', () =>
 
         ControlHarness.Activate(PragmaticDark);
         assert.ok(ControlHarness.IsPragmaticStyle(new NavigationBar()), 'NavigationBar resolves Pragmatic under dark');
-        ControlHarness.Reset();
-
-        ControlHarness.Activate(MaterialLight);
-        assert.ok(!ControlHarness.IsPragmaticStyle(new NavigationBar()), 'Material NavigationBar keeps the Material style');
         ControlHarness.Reset();
     });
 
@@ -201,23 +184,15 @@ class ActivityBarItemFixture
 
 describe('Pragmatic ActivityBarItem (keyed rail variant)', () =>
 {
-    test('the keyed ActivityBarItem style is the Pragmatic override under Pragmatic, a distinct style under Material', () =>
+    test('the keyed ActivityBarItem style resolves under Pragmatic', () =>
     {
-        // Both themes key an ActivityBarItem (the Pragmatic fork overrides
-        // Material's by key, last-merged-wins), so the discriminator is
-        // identity, not presence. Compare with assert.ok on booleans — never
-        // assert.equal against the resolved Style object, whose deep template
-        // graph blows up node:test's failure formatter (array-buffer OOM).
+        // Compare with assert.ok on booleans — never assert.equal against the
+        // resolved Style object, whose deep template graph blows up
+        // node:test's failure formatter (array-buffer OOM).
         ControlHarness.Activate(PragmaticLight);
         const pragmaticStyle = new NavigationItem().TryFindResource('ActivityBarItem');
         assert.ok(pragmaticStyle !== undefined, 'Pragmatic resolves the keyed ActivityBarItem style');
         ControlHarness.Reset();
-
-        ControlHarness.Activate(MaterialLight);
-        const materialStyle = new NavigationItem().TryFindResource('ActivityBarItem');
-        ControlHarness.Reset();
-
-        assert.ok(pragmaticStyle !== materialStyle, 'the Pragmatic ActivityBarItem is a distinct override, not the Material style');
     });
 
     test('rest — accent bar transparent, icon dimmed to @Fg2 @ 0.55', () =>

@@ -4,7 +4,6 @@ import { SolidColorBrush } from '../../../visual-engine/index.js';
 import { Border } from '../../../basic/border.js';
 import { Dialog } from '../../../framework/surfaces/dialog.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 describe('Pragmatic Dialog', () =>
@@ -14,14 +13,6 @@ describe('Pragmatic Dialog', () =>
         ControlHarness.Activate(PragmaticLight);
         const d = new Dialog();
         assert.ok(ControlHarness.IsPragmaticStyle(d), 'Dialog uses the Pragmatic override style');
-        ControlHarness.Reset();
-    });
-
-    test('Material is unaffected', () =>
-    {
-        ControlHarness.Activate(MaterialLight);
-        const d = new Dialog();
-        assert.ok(!ControlHarness.IsPragmaticStyle(d), 'Material Dialog keeps the Material style');
         ControlHarness.Reset();
     });
 

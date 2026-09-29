@@ -2,7 +2,6 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { ListBox, ListBoxItem } from '../../../framework/list/list-box.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 describe('Pragmatic ListBox', () =>
@@ -11,13 +10,6 @@ describe('Pragmatic ListBox', () =>
     {
         const { control } = ControlHarness.Render(() => new ListBox(), { scheme: PragmaticLight });
         assert.ok(ControlHarness.IsPragmaticStyle(control), 'ListBox uses the Pragmatic override style');
-        ControlHarness.Reset();
-    });
-
-    test('Material is unaffected — a ListBox under Material keeps the Material style', () =>
-    {
-        const { control } = ControlHarness.Render(() => new ListBox(), { scheme: MaterialLight });
-        assert.ok(!ControlHarness.IsPragmaticStyle(control), 'Material ListBox does NOT resolve the Pragmatic style');
         ControlHarness.Reset();
     });
 });

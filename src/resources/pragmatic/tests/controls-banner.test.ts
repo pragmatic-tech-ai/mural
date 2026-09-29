@@ -2,7 +2,6 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { Banner } from '../../../framework/notifications/banner.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 // Banner is a bare ContentControl shown via a service; it never applies its
@@ -12,13 +11,10 @@ import { ControlHarness } from './control-harness.js';
 // token proxies — the Wave-2 ComboBox/GridSplitter fallback (Ruling in ledger).
 describe('Pragmatic Banner', () =>
 {
-    test('resolves the Pragmatic style; Material unaffected', () =>
+    test('resolves the Pragmatic style', () =>
     {
         ControlHarness.Activate(PragmaticLight);
         assert.ok(ControlHarness.IsPragmaticStyle(new Banner()), 'Banner uses the Pragmatic style');
-        ControlHarness.Reset();
-        ControlHarness.Activate(MaterialLight);
-        assert.ok(!ControlHarness.IsPragmaticStyle(new Banner()), 'Material Banner keeps the Material style');
         ControlHarness.Reset();
     });
 

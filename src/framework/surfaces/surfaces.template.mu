@@ -229,4 +229,23 @@ resources Surfaces
     {
         Template = @DefaultSideSheet;
     }
+
+    // ── ScrollViewer: layout host + SCP + two ScrollBars ─────────────
+    // Theme-neutral structural template (recovered in the SP2 collapse —
+    // it lived in Material's surfaces base, which the Pragmatic surfaces
+    // fork did not re-declare). No tokens: chrome comes from the ScrollBar
+    // template and the content.
+    Template x:key="DefaultScrollViewer" [TargetType = ScrollViewer]
+    {
+        ScrollViewerLayout x:name="PART_Layout"
+        {
+            ScrollContentPresenter x:name="PART_ContentSite"
+            ScrollBar x:name="PART_VerticalScrollBar"
+            ScrollBar x:name="PART_HorizontalScrollBar"
+        }
+    }
+    Style [TargetType = ScrollViewer]
+    {
+        Template = @DefaultScrollViewer;
+    }
 }

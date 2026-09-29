@@ -4,18 +4,14 @@ import { SolidColorBrush } from '../../../visual-engine/index.js';
 import { Border } from '../../../basic/border.js';
 import { BottomAppBar } from '../../../framework/bottom-app-bar/bottom-app-bar.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 describe('Pragmatic BottomAppBar', () =>
 {
-    test('resolves the Pragmatic style; Material unaffected', () =>
+    test('resolves the Pragmatic style', () =>
     {
         ControlHarness.Activate(PragmaticLight);
         assert.ok(ControlHarness.IsPragmaticStyle(new BottomAppBar()), 'BottomAppBar Pragmatic');
-        ControlHarness.Reset();
-        ControlHarness.Activate(MaterialLight);
-        assert.ok(!ControlHarness.IsPragmaticStyle(new BottomAppBar()), 'Material BottomAppBar unchanged');
         ControlHarness.Reset();
     });
 

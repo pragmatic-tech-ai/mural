@@ -4,7 +4,6 @@ import { SolidColorBrush } from '../../../visual-engine/index.js';
 import { Border } from '../../../basic/border.js';
 import { Carousel } from '../../../framework/carousel/carousel.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 // Wave 5 Task 4 — Carousel fork (resources PragmaticCarousels). Applies its
@@ -12,16 +11,13 @@ import { ControlHarness } from './control-harness.js';
 // PART_Root @Surface->@Bg1, chevrons @OnSurfaceVariant->@Fg2.
 describe('Pragmatic Carousel', () =>
 {
-    test('resolves the Pragmatic style; Material unaffected', () =>
+    test('resolves the Pragmatic style', () =>
     {
         ControlHarness.Activate(PragmaticLight);
         assert.ok(ControlHarness.IsPragmaticStyle(new Carousel()), 'Carousel Pragmatic light');
         ControlHarness.Reset();
         ControlHarness.Activate(PragmaticDark);
         assert.ok(ControlHarness.IsPragmaticStyle(new Carousel()), 'Carousel Pragmatic dark');
-        ControlHarness.Reset();
-        ControlHarness.Activate(MaterialLight);
-        assert.ok(!ControlHarness.IsPragmaticStyle(new Carousel()), 'Carousel Material');
         ControlHarness.Reset();
     });
 

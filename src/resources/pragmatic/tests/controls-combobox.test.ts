@@ -6,7 +6,6 @@ import { HeadlessTarget, SolidColorBrush, Pen } from '../../../visual-engine/ind
 import { Border } from '../../../basic/border.js';
 import { ComboBox, ComboBoxItem } from '../../../framework/list/combo-box.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness, type SchemeHandle } from './control-harness.js';
 
 // A bare panel root to host the ComboBox in a PresentationTarget so the
@@ -57,13 +56,6 @@ describe('Pragmatic ComboBox — selection box', () =>
         assert.equal(strong, 'rgb(214,213,208)');
         assert.ok(svg.includes(`stroke="${strong}"`), 'rest ComboBox selection box strokes @BorderStrong');
         assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss), 'no #808080 — every token resolves');
-        ControlHarness.Reset();
-    });
-
-    test('Material is unaffected — selection box does not stroke Pragmatic @BorderStrong', () =>
-    {
-        const { svg } = ControlHarness.Render(() => new ComboBox(), { scheme: MaterialLight });
-        assert.ok(!svg.includes('rgb(214,213,208)'), 'Material ComboBox uses @Outline, not Pragmatic @BorderStrong');
         ControlHarness.Reset();
     });
 
@@ -137,14 +129,6 @@ describe('Pragmatic ComboBoxItem (via an open popup)', () =>
         assert.equal(selected, 'rgb(15,42,26)');
         const row = popup.rows[1] as ComboBoxItem;
         assert.equal((row.Fill as SolidColorBrush).Color.ToCss(), selected, 'dark selected ComboBoxItem fill');
-        ControlHarness.Reset();
-    });
-
-    test('Material is unaffected — a realized Material row does not resolve the Pragmatic style', () =>
-    {
-        const popup = ComboPopup.Open(MaterialLight, ['Apple', 'Pear']);
-        const row = popup.rows[0] as ComboBoxItem;
-        assert.ok(!ControlHarness.IsPragmaticStyle(row), 'Material ComboBoxItem does NOT resolve the Pragmatic style');
         ControlHarness.Reset();
     });
 });

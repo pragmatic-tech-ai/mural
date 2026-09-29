@@ -4,12 +4,11 @@ import { SolidColorBrush, Pen } from '../../../visual-engine/index.js';
 import { Border } from '../../../basic/border.js';
 import { SearchBar } from '../../../framework/search-bar/search-bar.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 describe('Pragmatic SearchBar', () =>
 {
-    test('resolves the Pragmatic style under Pragmatic (Light + Dark); Material unaffected', () =>
+    test('resolves the Pragmatic style under Pragmatic (Light + Dark)', () =>
     {
         ControlHarness.Activate(PragmaticLight);
         assert.ok(ControlHarness.IsPragmaticStyle(new SearchBar()), 'SearchBar resolves under PragmaticLight');
@@ -17,10 +16,6 @@ describe('Pragmatic SearchBar', () =>
 
         ControlHarness.Activate(PragmaticDark);
         assert.ok(ControlHarness.IsPragmaticStyle(new SearchBar()), 'SearchBar resolves under PragmaticDark');
-        ControlHarness.Reset();
-
-        ControlHarness.Activate(MaterialLight);
-        assert.ok(!ControlHarness.IsPragmaticStyle(new SearchBar()), 'Material SearchBar does NOT resolve the Pragmatic style');
         ControlHarness.Reset();
     });
 

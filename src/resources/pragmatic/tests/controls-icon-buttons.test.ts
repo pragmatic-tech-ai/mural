@@ -4,7 +4,6 @@ import { IconButton } from '../../../framework/buttons/icon-button.js';
 import { IconButtonToggle } from '../../../framework/buttons/icon-button-toggle.js';
 import { FloatingActionButton, FabSize } from '../../../framework/buttons/fab.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 describe('Pragmatic IconButton', () =>
@@ -21,13 +20,6 @@ describe('Pragmatic IconButton', () =>
         const { svg } = ControlHarness.Render(() => new IconButton(), { scheme: PragmaticLight });
         assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss),
             'no #808080 neutral — an unresolved token would paint the marker');
-        ControlHarness.Reset();
-    });
-
-    test('Material is unaffected — an IconButton under Material keeps the Material style', () =>
-    {
-        const { control } = ControlHarness.Render(() => new IconButton(), { scheme: MaterialLight });
-        assert.ok(!ControlHarness.IsPragmaticStyle(control), 'Material IconButton does NOT resolve the Pragmatic style');
         ControlHarness.Reset();
     });
 

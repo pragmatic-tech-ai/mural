@@ -9,7 +9,6 @@ import { RibbonButton, RibbonToggleButton } from '../../../framework/ribbon/ribb
 import { RibbonDropDownButton, RibbonSplitButton } from '../../../framework/ribbon/ribbon-popup-buttons.js';
 import { RibbonGallery } from '../../../framework/ribbon/ribbon-gallery.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 // Wave 5 Task 2 — Ribbon family fork. Every ribbon control that carries
@@ -36,7 +35,7 @@ describe('Pragmatic Ribbon family — resolution', () =>
 {
     for (const entry of RibbonControls.All)
     {
-        test(`${entry.Name}: Pragmatic (light + dark) yes, Material no`, () =>
+        test(`${entry.Name}: Pragmatic (light + dark)`, () =>
         {
             ControlHarness.Activate(PragmaticLight);
             assert.ok(ControlHarness.IsPragmaticStyle(entry.Make()), `${entry.Name} resolves the Pragmatic style under light`);
@@ -44,10 +43,6 @@ describe('Pragmatic Ribbon family — resolution', () =>
 
             ControlHarness.Activate(PragmaticDark);
             assert.ok(ControlHarness.IsPragmaticStyle(entry.Make()), `${entry.Name} resolves the Pragmatic style under dark`);
-            ControlHarness.Reset();
-
-            ControlHarness.Activate(MaterialLight);
-            assert.ok(!ControlHarness.IsPragmaticStyle(entry.Make()), `${entry.Name} keeps the Material style under Material`);
             ControlHarness.Reset();
         });
     }

@@ -5,7 +5,6 @@ import { Border } from '../../../basic/border.js';
 import { MenuItem, MenuStrip, MenuButton } from '../../../framework/menu/menu-strip.js';
 import { ContextMenu } from '../../../framework/menu/context-menu.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 // The MenuItem row chrome is applied imperatively (RowTemplate -> _rowRoot),
@@ -22,16 +21,13 @@ class MenuRow
 
 describe('Pragmatic menu family', () =>
 {
-    test('MenuItem/MenuStrip/MenuButton/ContextMenu resolve the Pragmatic style; Material unaffected', () =>
+    test('MenuItem/MenuStrip/MenuButton/ContextMenu resolve the Pragmatic style', () =>
     {
         ControlHarness.Activate(PragmaticLight);
         assert.ok(ControlHarness.IsPragmaticStyle(new MenuItem()), 'MenuItem Pragmatic');
         assert.ok(ControlHarness.IsPragmaticStyle(new MenuStrip()), 'MenuStrip Pragmatic');
         assert.ok(ControlHarness.IsPragmaticStyle(new MenuButton()), 'MenuButton Pragmatic');
         assert.ok(ControlHarness.IsPragmaticStyle(new ContextMenu()), 'ContextMenu Pragmatic');
-        ControlHarness.Reset();
-        ControlHarness.Activate(MaterialLight);
-        assert.ok(!ControlHarness.IsPragmaticStyle(new MenuItem()), 'Material MenuItem unchanged');
         ControlHarness.Reset();
     });
 

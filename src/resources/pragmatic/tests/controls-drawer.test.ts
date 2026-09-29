@@ -4,7 +4,6 @@ import { SolidColorBrush } from '../../../visual-engine/index.js';
 import { Border } from '../../../basic/border.js';
 import { Drawer } from '../../../framework/surfaces/drawer.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 describe('Pragmatic Drawer', () =>
@@ -14,14 +13,6 @@ describe('Pragmatic Drawer', () =>
         ControlHarness.Activate(PragmaticLight);
         const d = new Drawer();
         assert.ok(ControlHarness.IsPragmaticStyle(d), 'Drawer uses the Pragmatic override style');
-        ControlHarness.Reset();
-    });
-
-    test('Material is unaffected', () =>
-    {
-        ControlHarness.Activate(MaterialLight);
-        const d = new Drawer();
-        assert.ok(!ControlHarness.IsPragmaticStyle(d), 'Material Drawer keeps the Material style');
         ControlHarness.Reset();
     });
 

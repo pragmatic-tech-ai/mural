@@ -8,7 +8,6 @@ import { FillEditor } from '../../../framework/formatting/fill-editor.js';
 import { PenEditor } from '../../../framework/formatting/pen-editor.js';
 import { ShapeFormatControl } from '../../../framework/formatting/shape-format-control.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 // Wave 5 Task 6 — formatting foundation. color-picker.ts resolved the swatch
@@ -24,15 +23,6 @@ describe('Pragmatic ColorPicker — code-level token resolution', () =>
         const cp = new ColorPicker();
         assert.equal((cp.TryFindResource('AccentInk') as SolidColorBrush).Color.ToCss(), ControlHarness.TokenCss('ControlAccent'), 'swatch ring accent tracks @ControlAccent');
         assert.equal((cp.TryFindResource('RowHoverFill') as SolidColorBrush).Color.ToCss(), ControlHarness.TokenCss('Bg2'), 'scheme-row hover tracks @Bg2');
-        ControlHarness.Reset();
-    });
-
-    test('under Material: AccentInk = @Primary, RowHoverFill = @StateHoverOverlay (byte-identical)', () =>
-    {
-        ControlHarness.Activate(MaterialLight);
-        const cp = new ColorPicker();
-        assert.equal((cp.TryFindResource('AccentInk') as SolidColorBrush).Color.ToCss(), ControlHarness.TokenCss('Primary'), 'Material swatch ring keeps @Primary');
-        assert.equal((cp.TryFindResource('RowHoverFill') as SolidColorBrush).Color.ToCss(), ControlHarness.TokenCss('StateHoverOverlay'), 'Material scheme-row hover keeps @StateHoverOverlay');
         ControlHarness.Reset();
     });
 });
@@ -55,16 +45,13 @@ describe('Pragmatic Formatting editors — resolution', () =>
 {
     for (const entry of FormattingControls.All)
     {
-        test(`${entry.Name}: Pragmatic (light + dark) yes, Material no`, () =>
+        test(`${entry.Name}: Pragmatic (light + dark)`, () =>
         {
             ControlHarness.Activate(PragmaticLight);
             assert.ok(ControlHarness.IsPragmaticStyle(entry.Make()), `${entry.Name} Pragmatic light`);
             ControlHarness.Reset();
             ControlHarness.Activate(PragmaticDark);
             assert.ok(ControlHarness.IsPragmaticStyle(entry.Make()), `${entry.Name} Pragmatic dark`);
-            ControlHarness.Reset();
-            ControlHarness.Activate(MaterialLight);
-            assert.ok(!ControlHarness.IsPragmaticStyle(entry.Make()), `${entry.Name} Material`);
             ControlHarness.Reset();
         });
     }

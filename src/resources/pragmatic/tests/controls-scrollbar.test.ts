@@ -5,7 +5,6 @@ import { Border } from '../../../basic/border.js';
 import { ScrollBar } from '../../../basic/scroll/scroll-bar.js';
 import { ScrollViewer } from '../../../framework/index.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
-import { MaterialLight } from '../../material/material.js';
 import { ControlHarness } from './control-harness.js';
 
 describe('Pragmatic ScrollBar', () =>
@@ -15,14 +14,6 @@ describe('Pragmatic ScrollBar', () =>
         ControlHarness.Activate(PragmaticLight);
         const sb = new ScrollBar();
         assert.ok(ControlHarness.IsPragmaticStyle(sb), 'ScrollBar uses the Pragmatic override style');
-        ControlHarness.Reset();
-    });
-
-    test('Material is unaffected — a ScrollBar under Material keeps the Material style', () =>
-    {
-        ControlHarness.Activate(MaterialLight);
-        const sb = new ScrollBar();
-        assert.ok(!ControlHarness.IsPragmaticStyle(sb), 'Material ScrollBar does NOT resolve the Pragmatic style');
         ControlHarness.Reset();
     });
 
