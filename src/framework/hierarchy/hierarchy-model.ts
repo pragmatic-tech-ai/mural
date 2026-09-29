@@ -34,6 +34,40 @@ export class HierarchyModel
 
     constructor(private readonly registry: HierarchyContributorRegistry)
     {
+        // Re-contribute already-realized keyed nodes when the contributor set changes
+        // (a runtime Register/unregister). Provider-owned subtrees are unaffected — they
+        // self-drive via ObserveChildren.
+        this.registry.PropertyChanged('Contributors').subscribe(() => this.reRealizeKeyed());
+    }
+
+    // Re-run RealizeChildren for every realized node that is NOT provider-owned.
+    // Interning keeps survivors' ids stable; new contributions append. Snapshot the ids
+    // first — RealizeChildren mutates `entries` while we iterate.
+    private reRealizeKeyed(): void
+    {
+        for (const id of [...this.entries.keys()])
+        {
+            const entry = this.entries.get(id);
+            if (entry !== undefined && entry.provider === undefined) this.RealizeChildren(id);
+        }
+    }
+
+    // Canonical name for a keyed node — its own family segment for P0. Full ancestor-path
+    // canonical names + provider delegation across the boundary are P6.
+    public CanonicalNameOf(id: HierarchyItemId): string
+    {
+        return this.entry(id).node.Key;
+    }
+
+    // Resolve a canonical name back to a realized node id (Nil if none). Minimal P0
+    // lookup; the reactive-restore reveal path is P6.
+    public Reveal(canonicalName: string): HierarchyItemId
+    {
+        for (const [id, e] of this.entries)
+        {
+            if (e.node.Key === canonicalName) return id;
+        }
+        return HierarchyItemId.Nil;
     }
 
     public SeedRoot(node: HierarchyNode): HierarchyItemId
