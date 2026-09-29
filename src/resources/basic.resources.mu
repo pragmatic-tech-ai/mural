@@ -184,15 +184,15 @@ resources MuralBasic {
         DockPanel [ LastChildFill = true ] {
             TextBlock x:name="PART_Unit"
                 [ DockPanel.Dock    = Right,
-                  Foreground        = @OnSurfaceVariant,
+                  Foreground        = @Fg2,
                   VerticalAlignment = Center,
-                  Margin            = (@Spacing1,0,0,0) ]
+                  Margin            = (@Space1,0,0,0) ]
             SpinEdit x:name="PART_SpinEdit"
                 [ DockPanel.Dock = Right,
                   Width          = 72 ]
             Slider x:name="PART_Slider"
                 [ VerticalAlignment = Center,
-                  Margin            = (0,0,@Spacing3,0) ]
+                  Margin            = (0,0,@Space3,0) ]
         }
     }
     Style [TargetType = SliderSpinEdit] {

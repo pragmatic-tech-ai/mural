@@ -69,7 +69,7 @@ describe('ShapeFormatControl — shared-size 2-column layout', () => {
     // Infinity and arrange emitted NaN/Infinity rects — the editor
     // collapsed onto its label (the "everything overlaps" screenshot).
     // Every editor must land at a finite x/width inside the pane.
-    test('editor cells in Star columns get finite rects (no NaN/Infinity)', { skip: 'Phase-4 SP2: DefaultSliderSpinEdit (un-forked, src/resources/basic.resources.mu) still uses Material @Spacing*/@ShapeSmall which Pragmatic does not define -> NaN insets. Fix when SP2 forks/retokenizes it.' }, () => {
+    test('editor cells in Star columns get finite rects (no NaN/Infinity)', () => {
         initTestApp();
         const sfc = mountedPane();
 
