@@ -87,15 +87,20 @@ class BaseSchemeMembershipScan
         return hits;
     }
 
-    // The shared-base source roots: this repo's src/framework tree, plus the
-    // single basic-control dictionary. Resolved relative to this test file.
-    public static BaseRoots(fromUrl: string): { framework: string; basic: string }
+    // The shared-base source roots. Every template that composes the base
+    // dictionaries lives under one of these: the src/framework tree, the
+    // src/basic tree (basic controls — TextBox/Slider/ScrollBar/Splitter
+    // templates were relocated here in the SP2 collapse), and the single
+    // basic-control dictionary basic.resources.mu. Resolved relative to
+    // this test file.
+    public static BaseRoots(fromUrl: string): { framework: string; basic: string; basicResources: string }
     {
         const here = dirname(fileURLToPath(fromUrl));         // src/resources/pragmatic/tests
         const src = dirname(dirname(dirname(here)));           // src
         return {
             framework: join(src, 'framework'),
-            basic: join(src, 'resources', BaseSchemeMembershipScan.BasicResources),
+            basic: join(src, 'basic'),
+            basicResources: join(src, 'resources', BaseSchemeMembershipScan.BasicResources),
         };
     }
 
@@ -110,13 +115,21 @@ class BaseSchemeMembershipScan
         }
     }
 
-    public static Offenders(fromUrl: string, forbidden: ReadonlySet<string>): string[]
+    // Every .mu file that composes the shared base: the framework tree, the
+    // basic tree, and basic.resources.mu.
+    public static ScannedFiles(fromUrl: string): string[]
     {
         const roots = BaseSchemeMembershipScan.BaseRoots(fromUrl);
-        const files: string[] = [roots.basic];
+        const files: string[] = [roots.basicResources];
         BaseSchemeMembershipScan.Walk(roots.framework, files);
+        BaseSchemeMembershipScan.Walk(roots.basic, files);
+        return files;
+    }
+
+    public static Offenders(fromUrl: string, forbidden: ReadonlySet<string>): string[]
+    {
         const hits: string[] = [];
-        for (const file of files)
+        for (const file of BaseSchemeMembershipScan.ScannedFiles(fromUrl))
         {
             const text = readFileSync(file, 'utf8');
             hits.push(...BaseSchemeMembershipScan.ScanMu(file, text, forbidden));
@@ -140,6 +153,20 @@ test('MuRefs ignores tokens named inside a // comment', () =>
         'x.mu', 'a = @Bg1  // migrated from @OnSurface\nb = @OnSurface', forbidden);
     assert.equal(hits.length, 1, 'only the real reference on line 2 is flagged');
     assert.match(hits[0]!, /x\.mu:2 @OnSurface/);
+});
+
+test('the scan covers the basic-control templates relocated to src/basic', () =>
+{
+    // The SP2 collapse moved the TextBox / Slider / ScrollBar / Splitter
+    // forks into src/basic; they compose the base (imported by
+    // framework.resources.mu) so the gate must scan them too, or its
+    // "no Material token in the base" invariant is silently false there.
+    const scanned = BaseSchemeMembershipScan.ScannedFiles(import.meta.url).map(p => p.replace(/\\/g, '/'));
+    for (const rel of ['basic/textbox.template.mu', 'basic/sliders.template.mu',
+        'basic/splitter.template.mu', 'basic/scroll/scroll-bar.template.mu'])
+    {
+        assert.ok(scanned.some(p => p.endsWith(rel)), `scan must include ${rel}`);
+    }
 });
 
 test('no shared base template references a Material token Pragmatic lacks', () =>
