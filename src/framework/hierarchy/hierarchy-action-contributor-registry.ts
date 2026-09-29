@@ -1,4 +1,4 @@
-import { ApplicationService, ServiceBase, ServiceKey, type IServiceProvider } from '../../runtime/index.js';
+import { ApplicationService, ServiceBase, ServiceKey, ServiceProvider, type IServiceProvider } from '../../runtime/index.js';
 import { ShellModule } from '../shell/module.js';
 import { HierarchyActionDefinition } from './hierarchy-action-contributor.js';
 import type { IHierarchyActionContributor } from './hierarchy-action-contributor.js';
@@ -96,7 +96,11 @@ export class HierarchyActionContributorRegistry extends ServiceBase
         let hit = this.resolved.get(def);
         if (hit === undefined)
         {
-            hit = this.Provider.getRequired(def.Contributor!) as IHierarchyActionContributor;
+            // `.hierarchyActions:` stores the contributor CLASS in Contributor (like
+            // Capability.ServiceKey), but a bare `.services:` entry registers under
+            // tokenFor(class) === class.Key. Normalize so a class or a token both resolve.
+            const token = ServiceProvider.tokenFor(def.Contributor as unknown as Function);
+            hit = this.Provider.getRequired(token) as IHierarchyActionContributor;
             this.resolved.set(def, hit);
         }
         return hit;
