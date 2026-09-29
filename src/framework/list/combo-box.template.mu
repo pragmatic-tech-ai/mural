@@ -29,7 +29,7 @@
 // @OnSurface* / @Shape* / @Elevation* / @State*Overlay / @SecondaryContainer)
 // token.
 
-resources PragmaticComboBox
+resources ComboBoxes
 {
     Template x:key="DefaultComboBoxSelection" [TargetType = ComboBox]
     {

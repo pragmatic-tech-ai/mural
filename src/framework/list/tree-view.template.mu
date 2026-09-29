@@ -28,7 +28,7 @@
 // Only Pragmatic tokens — no M3 (@OnSurface / @OnSurfaceVariant /
 // @SecondaryContainer / @State*Overlay / @Body*) token.
 
-resources PragmaticTreeView
+resources TreeViews
 {
     Template x:key="DefaultTreeView" [TargetType = TreeView]
     {

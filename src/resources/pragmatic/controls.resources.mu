@@ -12,15 +12,10 @@
 
 resources PragmaticControls
 {
-    import PragmaticButtons from "../../framework/pragmatic/buttons/buttons.template.mu.js"
-    import PragmaticIconButtons from "../../framework/pragmatic/icon-buttons/icon-buttons.template.mu.js"
     import PragmaticInputs from "../../framework/pragmatic/inputs/textbox.template.mu.js"
     import PragmaticToggles from "../../framework/pragmatic/toggles/toggles.template.mu.js"
     import PragmaticSliders from "../../framework/pragmatic/sliders/sliders.template.mu.js"
     import PragmaticText from "../../framework/pragmatic/text/text.template.mu.js"
-    import PragmaticListBox from "../../framework/pragmatic/lists/list-box.template.mu.js"
-    import PragmaticTreeView from "../../framework/pragmatic/lists/tree-view.template.mu.js"
-    import PragmaticComboBox from "../../framework/pragmatic/lists/combo-box.template.mu.js"
     import PragmaticScrollBar from "../../framework/pragmatic/scroll/scroll-bar.template.mu.js"
     import PragmaticSplitter from "../../framework/pragmatic/scroll/splitter.template.mu.js"
 }

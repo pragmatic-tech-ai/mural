@@ -35,7 +35,7 @@
 // MuralFramework so these key-less Styles shadow Material's on the
 // runtime class key (last-merged-wins).
 
-resources PragmaticListBox
+resources ListBoxes
 {
     // ── ListBox shell — structural, matching Material: a ScrollViewer
     // over the ItemsPresenter, no forced surface (the rows carry the

@@ -35,7 +35,7 @@
 // entries shadow Material's (last-merged-wins on the runtime class
 // key).
 
-resources PragmaticIconButtons
+resources IconButtons
 {
     // ── IconButton: ghost-style square touch target ─────────────────
     // 40×40 base (48×48 on Coarse pointer), @RadiusPill corners so the
