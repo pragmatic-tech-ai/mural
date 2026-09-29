@@ -17,14 +17,13 @@ theme Pragmatic
     import PragmaticDark from "./dark.mu.js"
     import MuralBasic from "../basic.resources.mu.js"
     import MuralFramework from "../framework.resources.mu.js"
-    import PragmaticControls from "./controls.resources.mu.js"
     import PragmaticTypography from "./typography.mu.js"
     schemes: [PragmaticLight, PragmaticDark]
     defaultScheme: PragmaticLight
-    // PragmaticControls sits AFTER MuralFramework (so its key-less
+    // MuralFramework carries the Pragmatic control chrome (SP2 collapse);
     // Style[TargetType=X] overrides shadow Material's) and BEFORE
     // PragmaticTypography — implicit-style resolution is last-merged-wins.
-    dictionaries: [MuralBasic, MuralFramework, PragmaticControls, PragmaticTypography]
+    dictionaries: [MuralBasic, MuralFramework, PragmaticTypography]
 
     tokens
     {

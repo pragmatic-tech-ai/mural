@@ -71,7 +71,7 @@ resources MuralBasic {
     // ── TextBlock: default text contract ───────────────────────────
     // Binds FontFamily / FontSize / FontWeight / LineHeight to the M3
     // BodyMedium baseline (consumers opt into other type-scale tokens via
-    // Style=@TitleLarge etc. from the Typography dictionary).
+    // Style=@H3 etc. from the Typography dictionary).
     //
     // Foreground is DELIBERATELY NOT set here. A Style-tier Foreground
     // outranks the Inherited tier (precedence: … > Style > Inherited >
@@ -107,28 +107,28 @@ resources MuralBasic {
     // the one legitimate place the atoms are inlined — it's the source the
     // roles override from.
     Style [TargetType = TextBlock] {
-        FontFamily = @BodyMediumFont;
-        FontWeight = @BodyMediumWeight;
-        FontSize = @BodyMediumSize;
-        LineHeight = @BodyMediumLineHeight;
-        LetterSpacing = @BodyMediumTracking;
+        FontFamily = @FontSans;
+        FontWeight = @BodyWeight;
+        FontSize = @BodySize;
+        LineHeight = @BodyLineHeight;
+        LetterSpacing = @BodyTracking;
     }
 
     // Rich flow-content hosts share TextBlock's Body Medium baseline; the
     // per-paragraph LineHeight lives on each Block, not the host.
     Style [TargetType = RichTextBlock] {
-        FontFamily = @BodyMediumFont;
-        FontWeight = @BodyMediumWeight;
-        FontSize = @BodyMediumSize;
-        LineHeight = @BodyMediumLineHeight;
-        LetterSpacing = @BodyMediumTracking;
+        FontFamily = @FontSans;
+        FontWeight = @BodyWeight;
+        FontSize = @BodySize;
+        LineHeight = @BodyLineHeight;
+        LetterSpacing = @BodyTracking;
     }
     Style [TargetType = RichTextBox] {
-        FontFamily = @BodyMediumFont;
-        FontWeight = @BodyMediumWeight;
-        FontSize = @BodyMediumSize;
-        LineHeight = @BodyMediumLineHeight;
-        LetterSpacing = @BodyMediumTracking;
+        FontFamily = @FontSans;
+        FontWeight = @BodyWeight;
+        FontSize = @BodySize;
+        LineHeight = @BodyLineHeight;
+        LetterSpacing = @BodyTracking;
     }
 
     // ── Button ──────────────────────────────────────────────────────
@@ -150,13 +150,13 @@ resources MuralBasic {
             Border x:name="PART_Header" [ DockPanel.Dock = Top, Padding = (20,16,20,12) ] {
                 StackPanel x:name="PART_HeaderStack" [ Orientation = Vertical ] {
                     TextBlock x:name="PART_TitleText"
-                        [ Foreground = @OnSurface,
-                          Style      = @TitleLarge ]
+                        [ Foreground = @Fg1,
+                          Style      = @H3 ]
                 }
             }
             Border x:name="PART_Divider"
                 [ DockPanel.Dock  = Top,
-                  Fill      = @OutlineVariant,
+                  Fill      = @Border,
                   Height          = 1 ]
             Border x:name="PART_ContentHost" [ Padding = (0) ] {
                 ContentPresenter
@@ -209,10 +209,10 @@ resources MuralBasic {
     // MeasureOverride; this template just paints the parts.
     Template x:key="DefaultThumb" [TargetType = Thumb] {
         Border x:name="PART_Border"
-            [ Fill      = @OutlineVariant,
+            [ Fill      = @ControlTrack,
               CornerRadius    = 2 ]
-        when ( IsMouseOver ) { PART_Border.Fill = @Outline; }
-        when ( IsDragging ) { PART_Border.Fill = @OnSurfaceVariant; }
+        when ( IsMouseOver ) { PART_Border.Fill = @Fg3; }
+        when ( IsDragging ) { PART_Border.Fill = @Fg2; }
     }
     Style [TargetType = Thumb] {
         Template = @DefaultThumb;
