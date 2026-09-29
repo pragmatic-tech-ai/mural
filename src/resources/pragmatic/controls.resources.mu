@@ -12,6 +12,5 @@
 
 resources PragmaticControls
 {
-    import PragmaticToggles from "../../framework/pragmatic/toggles/toggles.template.mu.js"
     import PragmaticText from "../../framework/pragmatic/text/text.template.mu.js"
 }

@@ -1,315 +1,354 @@
-// Default theme entries for the toggles family — binary-state
-// controls (Switch / Checkbox / RadioButton). All three extend
-// ToggleButton (which lives in src/framework/toggle-button.ts) and
-// share the IsChecked click-flip protocol; the chrome below is what
-// makes each variant visually distinct.
+// Pragmatic theme — Checkbox / RadioButton / Switch chrome (Wave 1).
 //
-// Merged into the root MuralFramework dictionary via an `import`
-// clause in src/resources/framework.resources.mu; the compiler folds
-// every entry below into MuralFramework's keyed table at Clone() time.
+// Forked from Material's toggles.template.mu (DefaultSwitch,
+// DefaultCheckbox, DefaultRadioButton — the group/item row templates
+// for RadioButtonGroup / RadioButtonItem stay OUT of scope for this
+// fork; only the three binary-toggle controls named in the Wave 1 plan
+// are re-expressed here), using the same Pragmatic mechanics the
+// Button / IconButton / TextBox forks established
+// (framework/pragmatic/buttons/buttons.template.mu,
+// framework/pragmatic/icon-buttons/icon-buttons.template.mu):
+//
+//   * EVERY stroke uses the Pen form — `Stroke = Pen [ Brush = @Token,
+//     Thickness = n ]`. A `(brush, width)` tuple assigned to a Pen-typed
+//     property silently compiles to a Thickness instead (confirmed by
+//     the TextBox fork's GOTCHA comment); every outline / focus-ring
+//     stroke below uses the working Pen form.
+//   * Checked/selected fill rides a nested opaque PART_Selected layer,
+//     copied from icon-buttons.template.mu:97-134 — a ControlTemplate
+//     trigger stack resolves a shared-property tie by whichever
+//     condition's SetTriggerValue call happens LAST AT RUNTIME (a real
+//     IsChecked flip vs. a real PointerEnter), never by `when` clause
+//     declaration order, so a checked-fill and a hover-fill sharing one
+//     element's Fill can erase each other depending on event
+//     chronology. Checkbox's PART_Box and RadioButton's PART_Ring both
+//     hover-tint their OWN Fill, so their checked fill goes on a nested
+//     PART_Selected instead (opaque paint wins by z-order, not trigger
+//     timing). Switch's track carries the same PART_Selected treatment
+//     pre-emptively even though nothing today hover-tints the track
+//     Fill, per the Wave 1 controller note — so a later hover-on-track
+//     addition can't silently erase the "on" indication.
+//   * Focus rides a DEDICATED PART_FocusRing element, never a re-stroke
+//     of the checked-state element (PART_Box / PART_Ring / PART_Track).
+//     An earlier revision had `when(IsChecked)` and `when(IsFocused)`
+//     both write that element's OWN Stroke — the exact shared-property
+//     hazard the PART_Selected pattern above exists to avoid, just on
+//     Stroke instead of Fill. It only looked correct because
+//     @ControlAccent and @BorderFocus happen to share the same rgb()
+//     under PragmaticLight: a checked+focused control silently lost
+//     whichever cue's trigger fired first (SVG showed exactly ONE
+//     stroke, not two), and the two states would visibly diverge the
+//     moment either token's value changed. Fixed per the Button /
+//     IconButton exemplars' own PART_FocusRing wrapper (buttons.
+//     template.mu: a transparent outer Border, `Padding =
+//     (@FocusRingOffset)`, whose Stroke ONLY `when(IsFocused)` paints
+//     `Pen[Brush=@BorderFocus, Thickness=2]`) — here it wraps the fixed-
+//     size box/ring/track (inside PART_HitTarget, outside PART_Box /
+//     PART_Ring / PART_Track), so checked and focused now write
+//     entirely different elements' Stroke and can never collide.
+//
+// Design (per the Wave 1 task-4 brief):
+//   * Unchecked — box / ring: transparent fill, @BorderStrong 2dp Pen
+//     stroke. Switch track (off): @Bg3 fill, @BorderStrong 2dp stroke.
+//   * Checked — box / ring / track fill @ControlAccent (opaque,
+//     PART_Selected); mark / dot ink @FgOnAccent — same solid-fill
+//     language as the Checkbox glyph, so unlike Material's outline-ring
+//     RadioButton, the Pragmatic RadioButton fills solid like the
+//     Checkbox with a contrasting inner dot.
+//   * Focus — `when (IsFocused)` paints PART_FocusRing's own Stroke to
+//     @BorderFocus, offset from the box/ring/track by @FocusRingOffset;
+//     coexists with the checked state instead of overwriting it.
+//   * Hover — box / ring / thumb Fill tints one step (@Bg2); press tints
+//     a second step (@Bg3).
+//   * Touch target — control Width/Height grow to 48 on
+//     `when (ThemeManager.Pointer = Coarse)`, matching the brief (no
+//     Comfortable-density growth requested for this fork).
+//
+// Only Pragmatic tokens are used — no raw hex (except the `#00000000`
+// transparent convention), no M3 tokens (@Primary / @OnSurfaceVariant /
+// @Shape* / @Elevation* / @*Layer). Radii stay at @RadiusXs / @RadiusPill,
+// both well under the @RadiusXl cap.
+//
+// Merged into the theme via PragmaticControls (controls.resources.mu),
+// listed AFTER MuralFramework so these key-less
+// Style[TargetType=Checkbox|RadioButton|Switch] entries shadow
+// Material's (last-merged-wins on the runtime class key).
 
-resources Toggles {
-    // ── Switch: M3 binary toggle (track + sliding thumb) ───────────
-    // 52 × 32 dp pill track with a thumb that slides between the left
-    // and right edges as IsChecked flips. The Margin-based positioning
-    // hooks into Visual's implicit-transition engine — Thickness is one
-    // of the types the engine interpolates — so the off/on flip
-    // animates smoothly without a Storyboard.
-    //
-    // M3 spec colours:
-    //   * off — track @SurfaceContainerHighest, thumb @Outline (16dp).
-    //   * on  — track @Primary, thumb @OnPrimary (24dp). Thumb growth
-    //           reads as the M3 "selected handle" affordance.
-    //
-    // State-layer triggers tint the thumb on hover / focus / press,
-    // mirroring the Button family ladder. The press-state thumb size
-    // bumps to 28dp (M3 "pressed" handle) but that requires the same
-    // Margin trick as IsChecked — folded into the IsPressed trigger
-    // below.
-    Template x:key="DefaultSwitch" [TargetType = Switch] {
-        // PART_HitTarget — transparent fill wrapper (§18.6). Stretches to
-        // fill the control's bounds; the visible 36.4×22.4 track sits centred
-        // inside. The touch target grows by enlarging the CONTROL's own
-        // Height (Style triggers below) — the Switch pins its Width/Height
-        // defaults, so THAT is what the render size clamps to; this wrapper
-        // then spans the grown bounds while the track (and its margin-
-        // anchored thumb) stay centred and unclipped.
+resources Toggles
+{
+    // ── Switch: track + sliding thumb ───────────────────────────────
+    // Same 36.4 × 22.4 dp pill track / Margin-based thumb slide as the
+    // Material fork (Switch's own Width/Height defaults pin to this
+    // size — switch.ts) — only the palette and layering change.
+    Template x:key="DefaultSwitch" [TargetType = Switch]
+    {
         Border x:name="PART_HitTarget"
-            [ Fill          = #00000000,
+            [ Fill = #00000000,
               HorizontalAlignment = Stretch,
-              VerticalAlignment   = Stretch ] {
-            Border x:name="PART_Track"
-                [ Fill          = @SurfaceContainerHighest,
-                  Stroke         = Pen [ Brush = @Outline, Thickness = 2 ],
-                  CornerRadius        = @ShapeFull,
-                  Width               = 36.4,
-                  Height              = 22.4,
+              VerticalAlignment = Stretch ]
+        {
+            // PART_FocusRing — dedicated ring, own Stroke only under
+            // IsFocused. Never shares a property with the checked-state
+            // trigger below (see header comment).
+            Border x:name="PART_FocusRing"
+                [ Fill = #00000000,
+                  Padding = (@FocusRingOffset),
+                  CornerRadius = @RadiusPill,
                   HorizontalAlignment = Center,
-                  VerticalAlignment   = Center ] {
-                // Thumb is a circle (ShapeFull) inside the absolutely-sized
-                // track. Margin (Left, Top, Right, Bottom) anchors it to the
-                // left edge, vertically centred. All sizes here are the M3
-                // 52×32 switch scaled to 70% (30% smaller). The IsChecked
-                // trigger shifts to right-anchored + a larger thumb.
-                Border x:name="PART_Thumb"
-                    [ Fill          = @Outline,
-                      CornerRadius        = @ShapeFull,
-                      Width               = 11.2,
-                      Height              = 11.2,
-                      VerticalAlignment   = Center,
-                      HorizontalAlignment = Left,
-                      Margin              = (5.6,0,0,0) ]
+                  VerticalAlignment = Center ]
+            {
+                Border x:name="PART_Track"
+                    [ Fill = @Bg3,
+                      Stroke = Pen [ Brush = @BorderStrong, Thickness = 2 ],
+                      CornerRadius = @RadiusPill,
+                      Width = 36.4,
+                      Height = 22.4 ]
+                {
+                    // PART_Selected — opaque "on" layer, transparent at rest so
+                    // PART_Track's @Bg3 shows through; IsChecked paints it
+                    // @ControlAccent, covering PART_Track regardless of any
+                    // hover tint on the track underneath (see header comment).
+                    Border x:name="PART_Selected"
+                        [ Fill = #00000000,
+                          CornerRadius = @RadiusPill ]
+                    {
+                        Border x:name="PART_Thumb"
+                            [ Fill = @Bg1,
+                              CornerRadius = @RadiusPill,
+                              Width = 11.2,
+                              Height = 11.2,
+                              VerticalAlignment = Center,
+                              HorizontalAlignment = Left,
+                              Margin = (5.6,0,0,0) ]
+                    }
+                }
             }
         }
-        // IsChecked — track + thumb both flip palette; the thumb grows
-        // and re-anchors to the right edge.
-        when ( IsChecked ) {
-            PART_Track.Fill = @Primary;
-            PART_Track.Stroke = Pen [ Brush = @Primary, Thickness = 2 ];
-            PART_Thumb.Fill = @OnPrimary;
+        // IsChecked — track fills @ControlAccent via PART_Selected; the
+        // thumb grows and re-anchors to the right edge.
+        when ( IsChecked )
+        {
+            PART_Selected.Fill = @ControlAccent;
+            PART_Track.Stroke = Pen [ Brush = @ControlAccent, Thickness = 2 ];
             PART_Thumb.Width = 16.8;
             PART_Thumb.Height = 16.8;
             PART_Thumb.Margin = (16.8,0,0,0);
         }
-        // State-layer ladder. Hover / focus / press tint the thumb at
-        // the Primary state-layer opacities so the affordance reads
-        // even when the track is unchecked.
-        when ( IsMouseOver ) { PART_Thumb.Fill = @OnSurface; }
-        when ( IsFocused ) { PART_Thumb.Fill = @OnSurface; }
-        when ( IsPressed ) {
-            PART_Thumb.Width = 19.6;
-            PART_Thumb.Height = 19.6;
-        }
-        when ( IsEnabled = false ) { PART_Track.Opacity = @DisabledContentOpacity; }
+        // State-layer ladder — thumb Fill tints one step on hover, a
+        // second step on press (mirrors the Checkbox / RadioButton box
+        // ladder below).
+        when ( IsMouseOver ) { PART_Thumb.Fill = @Bg2; }
+        when ( IsPressed ) { PART_Thumb.Fill = @Bg3; }
+        when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
+        when ( IsEnabled = false ) { PART_Track.Opacity = @OpacityDisabled; }
     }
-    Style [TargetType = Switch] {
+    Style [TargetType = Switch]
+    {
         Template = @DefaultSwitch;
-        // Adaptive touch target — the Switch pins its own Width/Height
-        // (36.4×22.4), which the render size clamps to, so the hit target grows
-        // by enlarging the CONTROL's Width/Height here; PART_HitTarget then
-        // fills the grown bounds and the 36.4×22.4 track stays centred (no thumb
-        // clipping). Both dimensions grow now that the 30%-smaller track is
-        // below the 40/48 touch floor on each axis (same as Checkbox/Radio).
-        // Coarse declared last so it wins a coincident Comfortable+Coarse
-        // (a11y-favouring).
         when ( ThemeManager.Density = Comfortable ) { Width = 40; Height = 40; }
         when ( ThemeManager.Pointer = Coarse ) { Width = 48; Height = 48; }
     }
 
-    // ── Checkbox: M3 18 × 18 dp square toggle ──────────────────────
-    // Unchecked — empty box with @OnSurfaceVariant 2dp border. Checked
-    // — solid @Primary fill with an @OnPrimary checkmark glyph. The
-    // glyph is always present in the visual tree but its Opacity flips
-    // from 0 → 1 on the IsChecked trigger so the implicit-transition
-    // engine on Visual fades it in / out without a Storyboard (Opacity
-    // is a number — one of the types the engine knows how to
-    // interpolate).
-    //
-    // No tri-state (indeterminate) chrome — see Checkbox.ts for the
-    // why-deferred rationale.
-    Template x:key="DefaultCheckbox" [TargetType = Checkbox] {
-        // PART_HitTarget — transparent fill wrapper (§18.6). Stretches to
-        // fill the control; the 18×18 box centres inside. The touch target
-        // grows via the CONTROL's Width/Height (Style triggers below), not
-        // this wrapper — the Checkbox pins its 18×18 defaults, so that's what
-        // the render size clamps to. The box keeps its 2dp border unscaled.
+    // ── Checkbox: 18 × 18 dp square toggle ──────────────────────────
+    // Unchecked — transparent box, @BorderStrong 2dp Pen outline.
+    // Checked — PART_Selected opaquely fills @ControlAccent (covering
+    // any hover tint on PART_Box beneath it); the checkmark glyph
+    // (@IconCheck, ink @FgOnAccent) fades in via its own Opacity trigger
+    // — a plain trigger is fine here since the glyph's Opacity doesn't
+    // share a property with any hover/press trigger.
+    Template x:key="DefaultCheckbox" [TargetType = Checkbox]
+    {
         Border x:name="PART_HitTarget"
-            [ Fill          = #00000000,
+            [ Fill = #00000000,
               HorizontalAlignment = Stretch,
-              VerticalAlignment   = Stretch ] {
-            Border x:name="PART_Box"
-                [ Fill          = #00000000,
-                  Stroke         = Pen [ Brush = @OnSurfaceVariant, Thickness = 2 ],
-                  CornerRadius        = @ShapeExtraSmall,
-                  Width               = 18,
-                  Height              = 18,
+              VerticalAlignment = Stretch ]
+        {
+            // PART_FocusRing — dedicated ring, own Stroke only under
+            // IsFocused. Never shares a property with the checked-state
+            // trigger below (see header comment).
+            Border x:name="PART_FocusRing"
+                [ Fill = #00000000,
+                  Padding = (@FocusRingOffset),
+                  CornerRadius = @RadiusXs,
                   HorizontalAlignment = Center,
-                  VerticalAlignment   = Center ] {
-                Shape x:name="PART_Mark"
-                    [ Geometry            = @IconCheck,
-                      Fill                = @OnPrimary,
-                      Width               = 16,
-                      Height              = 16,
-                      HorizontalAlignment = Center,
-                      VerticalAlignment   = Center,
-                      Opacity             = 0 ]
+                  VerticalAlignment = Center ]
+            {
+                Border x:name="PART_Box"
+                    [ Fill = #00000000,
+                      Stroke = Pen [ Brush = @BorderStrong, Thickness = 2 ],
+                      CornerRadius = @RadiusXs,
+                      Width = 18,
+                      Height = 18 ]
+                {
+                    Border x:name="PART_Selected"
+                        [ Fill = #00000000,
+                          CornerRadius = @RadiusXs ]
+                    {
+                        Shape x:name="PART_Mark"
+                            [ Geometry = @IconCheck,
+                              Fill = @FgOnAccent,
+                              Width = 16,
+                              Height = 16,
+                              HorizontalAlignment = Center,
+                              VerticalAlignment = Center,
+                              Opacity = 0 ]
+                    }
+                }
             }
         }
-        // IsChecked — fill the box and reveal the glyph.
-        when ( IsChecked ) {
-            PART_Box.Fill = @Primary;
-            PART_Box.Stroke = Pen [ Brush = @Primary, Thickness = 2 ];
+        // IsChecked — fill the box (via PART_Selected) and reveal the glyph.
+        when ( IsChecked )
+        {
+            PART_Selected.Fill = @ControlAccent;
+            PART_Box.Stroke = Pen [ Brush = @ControlAccent, Thickness = 2 ];
             PART_Mark.Opacity = 1;
         }
-        // State-layer ladder. Hover / focus / press tint the box's
-        // border (unchecked path) or pump the fill toward a press
-        // tint (checked path). Disabled dims the whole control.
-        when ( IsMouseOver ) { PART_Box.Stroke = Pen [ Brush = @OnSurface, Thickness = 2 ]; }
-        when ( IsFocused ) { PART_Box.Stroke = Pen [ Brush = @Primary, Thickness = 2 ]; }
-        when ( IsPressed ) { PART_Box.Stroke = Pen [ Brush = @Primary, Thickness = 2 ]; }
-        when ( IsEnabled = false ) { PART_Box.Opacity = @DisabledContentOpacity; }
+        // State-layer ladder — box Fill tints one step on hover, a
+        // second step on press; PART_Selected stays opaque over it once
+        // checked, regardless of event order (see header comment).
+        when ( IsMouseOver ) { PART_Box.Fill = @Bg2; }
+        when ( IsPressed ) { PART_Box.Fill = @Bg3; }
+        when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
+        when ( IsEnabled = false ) { PART_Box.Opacity = @OpacityDisabled; }
     }
-    Style [TargetType = Checkbox] {
+    Style [TargetType = Checkbox]
+    {
         Template = @DefaultCheckbox;
-        // Adaptive touch target — grow the CONTROL's Width/Height so the
-        // 18×18 box (kept centred by PART_HitTarget) sits inside a larger
-        // tappable bound. Compact omitted (18dp is the a11y floor). Coarse
-        // last so it wins a coincident Comfortable+Coarse.
         when ( ThemeManager.Density = Comfortable ) { Width = 40; Height = 40; }
         when ( ThemeManager.Pointer = Coarse ) { Width = 48; Height = 48; }
     }
 
-    // ── RadioButton: M3 20 × 20 dp circular toggle ─────────────────
-    // Outer ring + inner dot. The dot is always present (a 10dp filled
-    // circle inset by 5dp) but its Opacity flips from 0 → 1 on
-    // IsChecked, so the implicit-transition engine fades it in / out
-    // without a Storyboard. The outer ring re-tints to @Primary when
-    // checked, matching the M3 affordance.
-    //
-    // Mutual exclusivity rides on the RadioButton class's
-    // OnPropertyChanged hook — set `GroupName=foo` on multiple radios
-    // and any sibling sharing that name in the same visual tree
-    // automatically clears when this one is checked. See radio-
-    // button.ts for the walker.
-    Template x:key="DefaultRadioButton" [TargetType = RadioButton] {
-        // PART_HitTarget — transparent fill wrapper (§18.6). Stretches to
-        // fill the control; the 20×20 ring centres inside. The touch target
-        // grows via the CONTROL's Width/Height (Style triggers below), not
-        // this wrapper — the ring's 2dp stroke stays unscaled.
+    // ── RadioButton: 20 × 20 dp circular toggle ─────────────────────
+    // Same solid-fill language as Checkbox rather than Material's
+    // outline-ring-plus-accent-dot look (per the brief: "Checked: fill
+    // @ControlAccent, mark/dot @FgOnAccent") — PART_Selected opaquely
+    // fills the ring @ControlAccent and the inner dot inks @FgOnAccent
+    // so it reads against the filled ring.
+    Template x:key="DefaultRadioButton" [TargetType = RadioButton]
+    {
         Border x:name="PART_HitTarget"
-            [ Fill          = #00000000,
+            [ Fill = #00000000,
               HorizontalAlignment = Stretch,
-              VerticalAlignment   = Stretch ] {
-            Border x:name="PART_Ring"
-                [ Fill          = #00000000,
-                  Stroke         = Pen [ Brush = @OnSurfaceVariant, Thickness = 2 ],
-                  CornerRadius        = @ShapeFull,
-                  Width               = 20,
-                  Height              = 20,
+              VerticalAlignment = Stretch ]
+        {
+            // PART_FocusRing — dedicated ring, own Stroke only under
+            // IsFocused. Never shares a property with the checked-state
+            // trigger below (see header comment).
+            Border x:name="PART_FocusRing"
+                [ Fill = #00000000,
+                  Padding = (@FocusRingOffset),
+                  CornerRadius = @RadiusPill,
                   HorizontalAlignment = Center,
-                  VerticalAlignment   = Center ] {
-                Border x:name="PART_Dot"
-                    [ Fill          = @Primary,
-                      CornerRadius        = @ShapeFull,
-                      Width               = 10,
-                      Height              = 10,
-                      HorizontalAlignment = Center,
-                      VerticalAlignment   = Center,
-                      Opacity             = 0 ]
+                  VerticalAlignment = Center ]
+            {
+                Border x:name="PART_Ring"
+                    [ Fill = #00000000,
+                      Stroke = Pen [ Brush = @BorderStrong, Thickness = 2 ],
+                      CornerRadius = @RadiusPill,
+                      Width = 20,
+                      Height = 20 ]
+                {
+                    Border x:name="PART_Selected"
+                        [ Fill = #00000000,
+                          CornerRadius = @RadiusPill ]
+                    {
+                        Border x:name="PART_Dot"
+                            [ Fill = @FgOnAccent,
+                              CornerRadius = @RadiusPill,
+                              Width = 8,
+                              Height = 8,
+                              HorizontalAlignment = Center,
+                              VerticalAlignment = Center,
+                              Opacity = 0 ]
+                    }
+                }
             }
         }
-        when ( IsChecked ) {
-            PART_Ring.Stroke = Pen [ Brush = @Primary, Thickness = 2 ];
+        when ( IsChecked )
+        {
+            PART_Selected.Fill = @ControlAccent;
+            PART_Ring.Stroke = Pen [ Brush = @ControlAccent, Thickness = 2 ];
             PART_Dot.Opacity = 1;
         }
-        when ( IsMouseOver ) { PART_Ring.Stroke = Pen [ Brush = @OnSurface, Thickness = 2 ]; }
-        when ( IsFocused ) { PART_Ring.Stroke = Pen [ Brush = @Primary, Thickness = 2 ]; }
-        when ( IsPressed ) { PART_Ring.Stroke = Pen [ Brush = @Primary, Thickness = 2 ]; }
-        when ( IsEnabled = false ) { PART_Ring.Opacity = @DisabledContentOpacity; }
+        when ( IsMouseOver ) { PART_Ring.Fill = @Bg2; }
+        when ( IsPressed ) { PART_Ring.Fill = @Bg3; }
+        when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
+        when ( IsEnabled = false ) { PART_Ring.Opacity = @OpacityDisabled; }
     }
-    Style [TargetType = RadioButton] {
+    Style [TargetType = RadioButton]
+    {
         Template = @DefaultRadioButton;
-        // Adaptive touch target — grow the CONTROL's Width/Height so the
-        // 20×20 ring (kept centred by PART_HitTarget) sits inside a larger
-        // tappable bound. Compact omitted (20dp is the a11y floor). Coarse
-        // last so it wins a coincident Comfortable+Coarse.
         when ( ThemeManager.Density = Comfortable ) { Width = 40; Height = 40; }
         when ( ThemeManager.Pointer = Coarse ) { Width = 48; Height = 48; }
     }
 
-    // ── RadioButtonGroup: single-select column of labelled radio rows ──
-    // A Selector shell (like SegmentedButton) — the per-row chrome lives
-    // on DefaultRadioButtonItem; the group just stacks its item containers
-    // vertically. Selection / exclusion is owned by the Selector, so the
-    // group needs no chrome of its own beyond the ItemsPresenter.
-    Template x:key="DefaultRadioButtonGroup" [TargetType = RadioButtonGroup] {
+    // ── RadioButtonGroup: vertical list of RadioButtonItem rows ──────
+    Template x:key="DefaultRadioButtonGroup" [TargetType = RadioButtonGroup]
+    {
         ItemsPresenter
     }
-    ItemsPanelTemplate x:key="DefaultRadioButtonGroupPanel" {
+    ItemsPanelTemplate x:key="DefaultRadioButtonGroupPanel"
+    {
         StackPanel [ Orientation = Vertical ]
     }
-    Style [TargetType = RadioButtonGroup] {
+    Style [TargetType = RadioButtonGroup]
+    {
         Template = @DefaultRadioButtonGroup;
         ItemsPanel = @DefaultRadioButtonGroupPanel;
     }
 
-    // ── RadioButtonItem: one "circle + label" row ──────────────────────
-    // Ring + dot on the left, label (ContentPresenter) on the right. The
-    // indicator is drawn here rather than by embedding a RadioButton —
-    // same self-drawn-chrome pattern as SegmentedItem — and tracks the
-    // row's IsSelected (which the owning Selector flips on click). The dot
-    // is always present at Opacity 0 so the implicit-transition engine
-    // fades it in / out on select without a Storyboard. The whole row is
-    // the hit target (PART_Row); its Fill carries the state-layer
-    // ladder so hover / focus / press read across the full row, not just
-    // the 20dp circle.
-    Template x:key="DefaultRadioButtonItem" [TargetType = RadioButtonItem] {
+    // ── RadioButtonItem: selectable radio + label row (RadioButtonGroup) ──
+    // Forked into Pragmatic tokens, mirroring the list-box item row
+    // (framework/list/list-box.template.mu): transparent rest, @Bg2 hover,
+    // @Bg3 press, @ControlAccent selected indicator, @Fg1 label that flips
+    // to @BrandGreenInk when selected. DockPanel/LastChildFill so a
+    // wrapping label measures against finite width instead of infinite.
+    Template x:key="DefaultRadioButtonItem" [TargetType = RadioButtonItem]
+    {
         Border x:name="PART_Row"
-            [ Fill      = #00000000,
-              CornerRadius    = @ShapeSmall,
-              Padding         = (@Spacing2,@Spacing1,@Spacing3,@Spacing1) ] {
-            // DockPanel (not a horizontal StackPanel): a horizontal StackPanel
-            // measures children with INFINITE width, so wrapping row content
-            // (a ContentPresenter hosting a multi-line label + description) never
-            // wraps — it runs full-length and gets clipped. Docking the ring Left
-            // and letting the ContentPresenter fill gives it a FINITE width, so
-            // TextWrapping engages and tall rows grow instead of overflowing.
-            DockPanel [ LastChildFill = true ] {
+            [ Fill = #00000000,
+              CornerRadius = @RadiusSm,
+              Padding = (@Space2,@Space1,@Space3,@Space1) ]
+        {
+            DockPanel [ LastChildFill = true ]
+            {
                 Border x:name="PART_Ring"
-                    [ DockPanel.Dock      = Left,
-                      Fill          = #00000000,
-                      Stroke         = Pen [ Brush = @OnSurfaceVariant, Thickness = 2 ],
-                      CornerRadius        = @ShapeFull,
-                      Width               = 20,
-                      Height              = 20,
-                      VerticalAlignment   = Center ] {
+                    [ DockPanel.Dock = Left,
+                      Fill = #00000000,
+                      Stroke = Pen [ Brush = @BorderStrong, Thickness = 2 ],
+                      CornerRadius = @RadiusPill,
+                      Width = 20, Height = 20,
+                      VerticalAlignment = Center ]
+                {
                     Border x:name="PART_Dot"
-                        [ Fill          = @Primary,
-                          CornerRadius        = @ShapeFull,
-                          Width               = 10,
-                          Height              = 10,
-                          HorizontalAlignment = Center,
-                          VerticalAlignment   = Center,
-                          Opacity             = 0 ]
+                        [ Fill = @ControlAccent,
+                          CornerRadius = @RadiusPill,
+                          Width = 10, Height = 10,
+                          HorizontalAlignment = Center, VerticalAlignment = Center,
+                          Opacity = 0 ]
                 }
                 ContentPresenter
                     [ VerticalAlignment = Center,
-                      Margin            = (@Spacing3,0,0,0) ]
+                      Margin = (@Space3,0,0,0) ]
             }
         }
-        // Selection — light the ring + dot at @Primary.
-        when ( IsSelected ) {
-            PART_Ring.Stroke = Pen [ Brush = @Primary, Thickness = 2 ];
+        when ( IsSelected )
+        {
+            PART_Ring.Stroke = Pen [ Brush = @ControlAccent, Thickness = 2 ];
             PART_Dot.Opacity = 1;
         }
-        // State-layer ladder — overlay the full row (ordered after Selected
-        // so the pressed/hover tint sits on top of the resting fill).
-        when ( IsMouseOver ) { PART_Row.Fill = @StateHoverOverlay; }
-        when ( IsFocused ) { PART_Row.Fill = @StateFocusOverlay; }
-        when ( IsPressed ) { PART_Row.Fill = @StatePressOverlay; }
-        when ( IsEnabled = false ) { PART_Row.Opacity = @DisabledContentOpacity; }
-
-        // Adaptive layout (§ 18.6) — the row is the hit target, so density /
-        // pointer retuning writes its Padding. Resting (8,4,12,4). Compact
-        // tightens, Comfortable / Coarse loosen the vertical touch band.
-        when ( ThemeManager.Density = Compact ) {
-            PART_Row.Padding = (@Spacing1,@Spacing1,@Spacing2,@Spacing1);
-        }
-        when ( ThemeManager.Density = Comfortable ) {
-            PART_Row.Padding = (@Spacing2,@Spacing2,@Spacing3,@Spacing2);
-        }
-        when ( ThemeManager.Pointer = Coarse ) {
-            PART_Row.Padding = (@Spacing2,@Spacing3,@Spacing3,@Spacing3);
-        }
+        when ( IsMouseOver ) { PART_Row.Fill = @Bg2; }
+        when ( IsFocused ) { PART_Row.Fill = @Bg2; }
+        when ( IsPressed ) { PART_Row.Fill = @Bg3; }
+        when ( IsEnabled = false ) { PART_Row.Opacity = @OpacityDisabled; }
+        when ( ThemeManager.Density = Compact ) { PART_Row.Padding = (@Space1,@Space1,@Space2,@Space1); }
+        when ( ThemeManager.Density = Comfortable ) { PART_Row.Padding = (@Space2,@Space2,@Space3,@Space2); }
+        when ( ThemeManager.Pointer = Coarse ) { PART_Row.Padding = (@Space2,@Space3,@Space3,@Space3); }
     }
-    Style [TargetType = RadioButtonItem] {
+    Style [TargetType = RadioButtonItem]
+    {
         Template = @DefaultRadioButtonItem;
-        Foreground = @OnSurface;
-        // Full Label Large atom set (matches SegmentedItem — § 18.13).
-        FontFamily = @LabelLargeFont;
-        FontWeight = @LabelLargeWeight;
-        FontSize = @LabelLargeSize;
-        LineHeight = @LabelLargeLineHeight;
-        LetterSpacing = @LabelLargeTracking;
+        Foreground = @Fg1;
+        when ( IsSelected ) { Foreground = @BrandGreenInk; }
     }
 }
