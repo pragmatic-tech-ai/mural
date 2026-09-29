@@ -180,3 +180,28 @@ test('nested provider realize: expanding a folder subscribes the provider for TH
     sinks.get(folderId)!(new ChildAdded(fileId, node('file', { id: 'f' })));
     assert.equal(model.ChildrenOf(folderId)[0], fileId);
 });
+
+// A HierarchyModel subscribes to the shared registry's Contributors signal in its
+// ctor. The registry is an app-singleton; a per-solution model is discarded on
+// solution swap. Without dispose() the discarded model stays referenced by the
+// signal forever and keeps re-realizing on every later NotifyContributionsChanged —
+// an unbounded leak + redundant work. dispose() must drop that subscription.
+test('dispose() unsubscribes from the registry so later contributor changes do not re-realize', () =>
+{
+    const provider = new ServiceProvider();
+    let calls = 0;
+    const listing = new ServiceKey<IHierarchyContributor>('count');
+    provider.registerInstance(listing, { ParentKeys: ['solution'], Order: 0,
+        Contribute: () => { calls++; return new NodeContribution([node('project', { id: 'p' })]); } } as IHierarchyContributor);
+    const registry = reg(provider);
+    registerContributor(registry, listing, ['solution']);
+    const model = new HierarchyModel(registry);
+    const root = model.SeedRoot(node('solution', {}));
+    model.RealizeChildren(root);                 // calls === 1 (realized)
+    const before = calls;
+
+    model.dispose();
+    registry.NotifyContributionsChanged();       // a disposed model must NOT re-realize
+
+    assert.equal(calls, before);
+});

@@ -38,13 +38,34 @@ export class HierarchyModel
     private readonly keyedChildren = new Map<HierarchyItemId, Map<unknown, MintedItemId>>();
     // per-node child-delta subscribers (realize = subscribe reaches the presentation layer).
     private readonly childSinks = new Map<HierarchyItemId, Set<(c: HierarchyChange) => void>>();
+    // Disposer for the registry Contributors subscription — dropped by dispose() so a
+    // per-solution model discarded on swap stops re-realizing off the app-singleton registry.
+    private readonly contributorsOff: { dispose(): void };
 
     constructor(private readonly registry: HierarchyContributorRegistry)
     {
         // Re-contribute already-realized keyed nodes when the contributor set changes
         // (a runtime Register/unregister). Provider-owned subtrees are unaffected — they
         // self-drive via ObserveChildren.
-        this.registry.PropertyChanged('Contributors').subscribe(() => this.reRealizeKeyed());
+        this.contributorsOff = this.registry.PropertyChanged('Contributors').subscribe(() => this.reRealizeKeyed());
+    }
+
+    // Tear the model down: drop the registry subscription (else the app-singleton registry
+    // keeps this discarded model alive and re-realizing on every later contributor change),
+    // dispose every provider-owned subtree's ObserveChildren, and drop all state. Called
+    // when the owner replaces the model (e.g. a solution close/swap).
+    public dispose(): void
+    {
+        this.contributorsOff.dispose();
+        for (const entry of this.entries.values())
+        {
+            entry.dispose?.();
+            entry.dispose = undefined;
+            entry.provider = undefined;
+        }
+        this.entries.clear();
+        this.keyedChildren.clear();
+        this.childSinks.clear();
     }
 
     // Re-run RealizeChildren for every realized node that is NOT provider-owned.
@@ -289,7 +310,8 @@ export class HierarchyModel
     private static displayDiffers(a: HierarchyNode, b: HierarchyNode): boolean
     {
         return a.Caption !== b.Caption || a.IconKey !== b.IconKey
-            || a.Severity !== b.Severity || a.Error !== b.Error || a.Key !== b.Key;
+            || a.Severity !== b.Severity || a.Error !== b.Error || a.Key !== b.Key
+            || a.IsExpandable !== b.IsExpandable;
     }
 
     private entry(id: HierarchyItemId): Entry

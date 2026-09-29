@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { ServiceProvider, ServiceKey } from '../../../runtime/index.js';
 import {
     HierarchyModel, HierarchyContributorRegistry, HierarchyContributorDefinition,
-    ProviderContribution, ChildAdded, ChildUpdated, ChildRemoved, NodeSeverity, HierarchyItemId,
+    NodeContribution, ProviderContribution, ChildAdded, ChildUpdated, ChildRemoved, NodeSeverity, HierarchyItemId,
     HierarchyItemVM,
     type IHierarchyContributor, type IHierarchyProvider, type HierarchyNode, type HierarchyChange,
 } from '../index.js';
@@ -109,4 +109,44 @@ test('child VMs carry Parent and Data', () =>
     const child = vm.Children.Get(0)!;
     assert.equal(child.Parent, vm);
     assert.equal(child.Data, ext);
+});
+
+// A member row created while its member is still Unopened (IsExpandable=false) must
+// gain an expand affordance once the member resolves — a re-contribute that changes
+// ONLY IsExpandable (Caption/IconKey/Severity unchanged) has to reach the row: the
+// model must emit ChildUpdated (displayDiffers includes IsExpandable) and the VM must
+// reconcile its Loading… placeholder + re-raise IsExpandable. Otherwise resolved
+// projects show no chevron and can never be expanded.
+test('a row that becomes expandable after creation gains a chevron (Unopened→Resolved)', () =>
+{
+    const provider = new ServiceProvider();
+    const registry = new HierarchyContributorRegistry(provider);
+    const ext = { id: 'm1' };
+    let expandable = false;
+    const contributor: IHierarchyContributor =
+    {
+        ParentKeys: ['root'],
+        Order: 0,
+        Contribute: (n: HierarchyNode) => n.Key === 'root'
+            ? new NodeContribution([{ Key: 'member', Caption: 'M', IconKey: 'member', ExtObject: ext, Severity: NodeSeverity.Ok, IsExpandable: expandable }])
+            : new NodeContribution([]),
+    };
+    registry.RegisterInstance(contributor);
+    const model = new HierarchyModel(registry);
+    const root = model.SeedRoot(node('root', { id: 'r' }, 'Root'));
+    const vm = new HierarchyItemVM(model, root, undefined, () => {});
+    vm.OnExpand();
+
+    const memberRow = vm.Children.Get(0)!;
+    assert.equal(memberRow.IsExpandable, false);
+    assert.equal(memberRow.Children.Count, 0);          // no placeholder → no chevron yet
+    let expandableRaised = 0;
+    memberRow.PropertyChanged('IsExpandable').subscribe(() => { expandableRaised++; });
+
+    expandable = true;                                  // the member resolves
+    registry.NotifyContributionsChanged();              // → re-contribute the same member
+
+    assert.equal(memberRow.IsExpandable, true);
+    assert.equal(memberRow.Children.Count, 1);          // Loading… sentinel seeded → chevron
+    assert.ok(expandableRaised > 0);
 });

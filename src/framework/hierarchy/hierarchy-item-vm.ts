@@ -18,6 +18,7 @@ export class HierarchyItemVM extends Observable
     private static readonly IconKeyProp = 'IconKey';
     private static readonly SeverityProp = 'Severity';
     private static readonly ErrorProp = 'Error';
+    private static readonly IsExpandableProp = 'IsExpandable';
     private static readonly LoadingText = 'Loading…';
 
     public readonly Children = new ObservableCollection<HierarchyItemVM>();
@@ -102,6 +103,22 @@ export class HierarchyItemVM extends Observable
         this.RaisePropertyChanged(HierarchyItemVM.IconKeyProp, undefined, undefined);
         this.RaisePropertyChanged(HierarchyItemVM.SeverityProp, undefined, undefined);
         this.RaisePropertyChanged(HierarchyItemVM.ErrorProp, undefined, undefined);
+        this.reconcileExpandability();
+    }
+
+    // Expandability can flip after the row exists (e.g. a member resolves Unopened→Resolved),
+    // arriving as a ChildUpdated → RefreshDisplay. Keep the Loading… sentinel — and thus the
+    // framework's children-count-based chevron — in step, and re-raise IsExpandable so the
+    // chevron binding re-reads. Leaves an already-expanded row alone (its real children govern)
+    // and never runs on a placeholder row.
+    private reconcileExpandability(): void
+    {
+        if (this.placeholderText === undefined && !this.expanded)
+        {
+            if (this.IsExpandable && this.placeholder === undefined) this.seedPlaceholder();
+            else if (!this.IsExpandable && this.placeholder !== undefined) this.clearPlaceholder();
+        }
+        this.RaisePropertyChanged(HierarchyItemVM.IsExpandableProp, undefined, undefined);
     }
 
     private seedPlaceholder(): void
