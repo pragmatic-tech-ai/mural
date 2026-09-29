@@ -1,10 +1,9 @@
 import { Application, Scheme, ThemeManager, type Element } from '../../../runtime/index.js';
 import { HeadlessTarget, SolidColorBrush, SvgDrawingContext } from '../../../visual-engine/index.js';
-import { Material } from '../../material/material.js';
 import { Pragmatic } from '../pragmatic.js';
 
 // A scheme handle as the compiler emits it — a class carrying a singleton
-// `instance` (the runtime Scheme). PragmaticLight / MaterialDark / … all
+// `instance` (the runtime Scheme). PragmaticLight / PragmaticDark / … all
 // match this shape, so the harness stays theme-agnostic: it activates
 // whatever scheme it is handed via the scheme's own `theme` name.
 export interface SchemeHandle
@@ -36,7 +35,6 @@ export interface RenderResult
 export class ControlHarness
 {
     private static readonly PragmaticThemeName = 'Pragmatic';
-    private static readonly MaterialThemeName  = 'Material';
     // The "missing theme" fallback ink the renderer paints when no palette
     // resolves a colour (theme.ts NEUTRAL). Its presence in a control's
     // SVG means a token failed to resolve — Wave 1 asserts its ABSENCE.
@@ -47,7 +45,7 @@ export class ControlHarness
     // Register both themes (idempotently), root a fresh Application, and
     // activate `scheme` on it. Returns the Application. Use directly for
     // resolution-only checks that must not paint (e.g. asserting an
-    // un-forked control still resolves its Material style); Render builds
+    // control resolves its base style); Render builds
     // on it for the paint path.
     public static Activate(scheme: SchemeHandle): Application
     {
@@ -113,10 +111,6 @@ export class ControlHarness
         if (!ThemeManager.RegisteredThemes.some(t => t.name === ControlHarness.PragmaticThemeName))
         {
             ThemeManager.RegisterTheme(Pragmatic.instance);
-        }
-        if (!ThemeManager.RegisteredThemes.some(t => t.name === ControlHarness.MaterialThemeName))
-        {
-            ThemeManager.RegisterTheme(Material.instance);
         }
     }
 }

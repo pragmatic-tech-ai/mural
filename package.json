@@ -41,13 +41,6 @@
         "default": "./dist/framework/surface.js"
       }
     },
-    "./resources/material": {
-      "types": "./dist/resources/material/index.d.ts",
-      "import": {
-        "development": "./src/resources/material/index.ts",
-        "default": "./dist/resources/material/index.js"
-      }
-    },
     "./resources/pragmatic": {
       "types": "./dist/resources/pragmatic/index.d.ts",
       "import": {

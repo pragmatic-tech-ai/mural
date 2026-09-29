@@ -296,9 +296,9 @@ export class Application extends ShellCompositionRoot
     // theme bundle so its module-load side effect performs the
     // registration:
     //
-    //   import '@pragmatic-tech-ai/mural/resources/material'; // registers Material
+    //   import '@pragmatic-tech-ai/mural/resources/pragmatic'; // registers Pragmatic
     //   const app = new Application();
-    //   app.initialize({ theme: 'material', scheme: 'light' });
+    //   app.initialize({ theme: 'pragmatic', scheme: 'light' });
     //   // …construct the visual tree…
     private _initialized = false;
 
@@ -309,8 +309,8 @@ export class Application extends ShellCompositionRoot
     // Theme bundles register themselves as default candidates at
     // module-load time. The FIRST class to call this wins; subsequent
     // registrations are ignored. Importing
-    // `mural/resources/material` enrols `Material`
-    // as the default — every demo that loads the Material bundle gets
+    // `mural/resources/pragmatic` enrols `Pragmatic`
+    // as the default — every app that loads the Pragmatic bundle gets
     // it for free.
     //
     // This is NOT a callback hook: Application doesn't store a thunk
