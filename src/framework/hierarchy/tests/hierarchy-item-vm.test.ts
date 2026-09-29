@@ -4,7 +4,7 @@ import { ServiceProvider, ServiceKey } from '../../../runtime/index.js';
 import {
     HierarchyModel, HierarchyContributorRegistry, HierarchyContributorDefinition,
     NodeContribution, ProviderContribution, ChildAdded, ChildUpdated, ChildRemoved, NodeSeverity, HierarchyItemId,
-    HierarchyItemVM,
+    HierarchyItemVM, HierarchyAction,
     type IHierarchyContributor, type IHierarchyProvider, type HierarchyNode, type HierarchyChange,
     type HierarchyHost,
 } from '../index.js';
@@ -130,6 +130,38 @@ test('OnActivate relays this VM through the host', () =>
     const vm = new HierarchyItemVM(model, root, undefined, fakeHost({ Activate: (v) => { activated = v; } }));
     vm.OnActivate();
     assert.equal(activated, vm);
+});
+
+test('BeginEdit enters edit mode seeded with the caption; CommitEdit relays and exits', () =>
+{
+    const { model, root } = fileModel();
+    let renamed: [HierarchyItemVM, string] | undefined;
+    const vm = new HierarchyItemVM(model, root, undefined, fakeHost({ CommitRename: (v, n) => { renamed = [v, n]; } }));
+    vm.BeginEdit();
+    assert.equal(vm.IsEditing, true);
+    assert.equal(vm.EditingName, vm.Caption);
+    vm.EditingName = 'renamed';
+    vm.CommitEdit();
+    assert.equal(vm.IsEditing, false);
+    assert.deepEqual(renamed, [vm, 'renamed']);
+});
+
+test('CancelEdit exits without relaying', () =>
+{
+    const { model, root } = fileModel();
+    let called = 0;
+    const vm = new HierarchyItemVM(model, root, undefined, fakeHost({ CommitRename: () => { called++; } }));
+    vm.BeginEdit(); vm.EditingName = 'x'; vm.CancelEdit();
+    assert.equal(vm.IsEditing, false);
+    assert.equal(called, 0);
+});
+
+test('ContextActions pulls from the host by this node', () =>
+{
+    const { model, root } = fileModel();
+    const marker = HierarchyAction.Command('M', () => {});
+    const vm = new HierarchyItemVM(model, root, undefined, fakeHost({ ActionsFor: () => [marker] }));
+    assert.deepEqual(vm.ContextActions, [marker]);
 });
 
 test('child VMs carry Parent and Data', () =>

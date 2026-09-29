@@ -1,6 +1,7 @@
 import { Observable, ObservableCollection } from '../../runtime/index.js';
 import type { HierarchyModel } from './hierarchy-model.js';
 import type { HierarchyHost } from './hierarchy-host.js';
+import type { HierarchyAction } from './hierarchy-action.js';
 import {
     HierarchyItemId, HierarchyPropertyId, NodeSeverity,
     ChildAdded, ChildRemoved, ChildUpdated, type HierarchyChange,
@@ -20,6 +21,8 @@ export class HierarchyItemVM extends Observable
     private static readonly SeverityProp = 'Severity';
     private static readonly ErrorProp = 'Error';
     private static readonly IsExpandableProp = 'IsExpandable';
+    private static readonly IsEditingProp = 'IsEditing';
+    private static readonly EditingNameProp = 'EditingName';
     private static readonly LoadingText = 'Loading…';
 
     public readonly Children = new ObservableCollection<HierarchyItemVM>();
@@ -27,6 +30,8 @@ export class HierarchyItemVM extends Observable
     private off: (() => void) | undefined;
     private expanded = false;
     private placeholder: HierarchyItemVM | undefined;
+    private _isEditing = false;
+    private _editingName = '';
 
     constructor(
         private readonly model: HierarchyModel,
@@ -114,6 +119,45 @@ export class HierarchyItemVM extends Observable
         this.host.Activate(this);
     }
 
+    // UI-only editing state (design §9.2). The rename is authoritative through the store:
+    // CommitEdit relays host.CommitRename and the row repaints when the ChildUpdated delta
+    // arrives, so the VM never optimistically mutates its caption.
+    public get IsEditing(): boolean { return this._isEditing; }
+
+    public get EditingName(): string { return this._editingName; }
+    public set EditingName(v: string)
+    {
+        const old = this._editingName;
+        this._editingName = v;
+        this.RaisePropertyChanged(HierarchyItemVM.EditingNameProp, old, v);
+    }
+
+    // Lazily resolved when the context menu opens (host reads the live selection/registry).
+    public get ContextActions(): readonly HierarchyAction[] { return this.host.ActionsFor(this); }
+
+    public BeginEdit(): void
+    {
+        if (this.placeholderText !== undefined || this._isEditing) return;
+        this.EditingName = this.Caption;
+        this.setEditing(true);
+    }
+
+    public CommitEdit(): void
+    {
+        if (!this._isEditing) return;
+        this.setEditing(false);
+        this.host.CommitRename(this, this._editingName);   // store delta repaints authoritatively
+    }
+
+    public CancelEdit(): void { this.setEditing(false); }
+
+    private setEditing(v: boolean): void
+    {
+        const old = this._isEditing;
+        this._isEditing = v;
+        this.RaisePropertyChanged(HierarchyItemVM.IsEditingProp, old, v);
+    }
+
     // Re-notify bindings that this row's rendered facts may have changed (id preserved).
     // Public so a parent's ChildUpdated for THIS row (keyed or provider) repaints it.
     public RefreshDisplay(): void
@@ -183,6 +227,7 @@ export class HierarchyItemVM extends Observable
 
     public dispose(): void
     {
+        if (this.placeholderText === undefined) this.host.OnItemRemoved(this);   // leave the tree's selection
         this.off?.();
         this.off = undefined;
         for (const child of this.Children.ToArray()) child.dispose();
