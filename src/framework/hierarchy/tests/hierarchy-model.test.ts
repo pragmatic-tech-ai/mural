@@ -187,13 +187,16 @@ class OneChildProvider implements IHierarchyProvider
     public CanAccept(): boolean { return false; }
 }
 
-// solution -> project (keyed, CanonicalSegment './p1') -> provider boundary.
-function canonicalModel(provider: OneChildProvider): { model: HierarchyModel; root: HierarchyItemId }
+// solution -> project (keyed, CanonicalSegment `segment`) -> provider boundary. The default
+// segment './p1' embeds the '/' separator (as real member paths can), which CanonicalNameOf
+// handles fine; Reveal, which PARSES names by splitting on '/', is best-effort and is exercised
+// with a separator-free segment.
+function canonicalModel(provider: OneChildProvider, segment = './p1'): { model: HierarchyModel; root: HierarchyItemId }
 {
     const sp = new ServiceProvider();
     const listing = new ServiceKey<IHierarchyContributor>('listing-c');
     sp.registerInstance(listing, { ParentKeys: ['solution'], Order: 0,
-        Contribute: () => new NodeContribution([{ Key: 'project', Caption: 'P', IconKey: '', ExtObject: {}, Severity: NodeSeverity.Ok, CanonicalSegment: './p1' }]) } as IHierarchyContributor);
+        Contribute: () => new NodeContribution([{ Key: 'project', Caption: 'P', IconKey: '', ExtObject: {}, Severity: NodeSeverity.Ok, CanonicalSegment: segment }]) } as IHierarchyContributor);
     const files = new ServiceKey<IHierarchyContributor>('files-c');
     sp.registerInstance(files, { ParentKeys: ['project'], Order: 0,
         Contribute: () => new ProviderContribution(provider) } as IHierarchyContributor);
@@ -225,4 +228,19 @@ test('CanonicalNameOf delegates the provider-owned suffix to the owner', () =>
     provider.Emit();                    // provider emits its child
     const fileId = model.ChildrenOf(projectId)[0]!;
     assert.equal(model.CanonicalNameOf(fileId), 'solution/./p1/src/app.ts');
+});
+
+test('Reveal descends and realizes a collapsed keyed target', () =>
+{
+    const { model } = canonicalModel(new OneChildProvider('src/app.ts'), 'p1');   // nothing realized yet
+    const projectId = model.Reveal('solution/p1');
+    assert.notEqual(projectId, HierarchyItemId.Nil);
+    assert.equal(model.CanonicalNameOf(projectId), 'solution/p1');
+});
+
+test('Reveal returns Nil for an unknown name and an unrealized provider target', () =>
+{
+    const { model } = canonicalModel(new OneChildProvider('src/app.ts'), 'p1');
+    assert.equal(model.Reveal('solution/nope'), HierarchyItemId.Nil);
+    assert.equal(model.Reveal('solution/p1/does/not/exist'), HierarchyItemId.Nil);
 });

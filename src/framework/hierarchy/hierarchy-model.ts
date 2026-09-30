@@ -159,15 +159,49 @@ export class HierarchyModel
         return undefined;
     }
 
-    // Resolve a canonical name back to a realized node id (Nil if none). Minimal P0
-    // lookup; the reactive-restore reveal path is P6.
+    // Resolve a canonical name to a live node id, realizing keyed levels on the way down.
+    // At a provider boundary the remaining suffix is handed to the provider's
+    // ParseCanonicalName (Nil if that subtree is not realized). Nil if any segment misses.
     public Reveal(canonicalName: string): HierarchyItemId
     {
-        for (const [id, e] of this.entries)
+        const rootId = this.rootId();
+        if (rootId === undefined) return HierarchyItemId.Nil;
+        const segments = canonicalName.split(HierarchyModel.PathSeparator);
+        const rootEntry = this.entry(rootId);
+        if ((rootEntry.node.CanonicalSegment ?? rootEntry.node.Key) !== segments[0]) return HierarchyItemId.Nil;
+        let cur = rootId;
+        for (let i = 1; i < segments.length; i++)
         {
-            if (e.node.Key === canonicalName) return id;
+            if (this.entry(cur).provider === undefined) this.RealizeChildren(cur);
+            const afterRealize = this.entry(cur);
+            if (afterRealize.provider !== undefined)
+            {
+                const rest = segments.slice(i).join(HierarchyModel.PathSeparator);
+                return afterRealize.provider.ParseCanonicalName(rest);
+            }
+            const next = this.childBySegment(cur, segments[i]!);
+            if (next === undefined) return HierarchyItemId.Nil;
+            cur = next;
         }
-        return HierarchyItemId.Nil;
+        return cur;
+    }
+
+    // The seeded root — the single entry with no parent.
+    private rootId(): HierarchyItemId | undefined
+    {
+        for (const [id, e] of this.entries) if (e.parent === undefined) return id;
+        return undefined;
+    }
+
+    // A realized keyed child of `id` whose own segment matches, or undefined.
+    private childBySegment(id: HierarchyItemId, segment: string): HierarchyItemId | undefined
+    {
+        for (const child of this.entry(id).children)
+        {
+            const e = this.entry(child);
+            if ((e.node.CanonicalSegment ?? e.node.Key) === segment) return child;
+        }
+        return undefined;
     }
 
     public SeedRoot(node: HierarchyNode): HierarchyItemId
