@@ -23,6 +23,7 @@ export class HierarchyItemVM extends Observable
     private static readonly IsExpandableProp = 'IsExpandable';
     private static readonly IsEditingProp = 'IsEditing';
     private static readonly EditingNameProp = 'EditingName';
+    private static readonly IsExpandedProp = 'IsExpanded';
     private static readonly LoadingText = 'Loading…';
 
     public readonly Children = new ObservableCollection<HierarchyItemVM>();
@@ -91,24 +92,46 @@ export class HierarchyItemVM extends Observable
         return this.model.NodeAt(this.Id).Key;
     }
 
+    // The expanded state, observable so a data->view binding (restore) can follow it.
+    public get IsExpanded(): boolean { return this.expanded; }
+
+    // The stable, full-path canonical name of this row (empty for a placeholder). Used by the
+    // tree-state service to persist + match expansion/selection.
+    public get CanonicalName(): string
+    {
+        if (this.placeholderText !== undefined) return '';
+        return this.model.CanonicalNameOf(this.Id);
+    }
+
+    // Programmatic expand/collapse (restore drives these). Identical to the framework's
+    // view->data OnExpand/OnCollapse hooks — all four share one core.
+    public Expand(): void { this.expandCore(); }
+
+    public Collapse(): void { this.collapseCore(); }
+
     // TreeView calls this on the first expand (ExpandableTreeData.OnExpand). Idempotent:
     // drop the sentinel, subscribe BEFORE realizing so a keyed regime's synchronous
     // ChildAdded deltas land, then realize.
-    public OnExpand(): void
-    {
-        if (this.placeholderText !== undefined || this.expanded) return;
-        this.expanded = true;
-        this.clearPlaceholder();
-        this.off = this.model.ObserveChildren(this.Id, (c) => this.patch(c));
-        this.model.RealizeChildren(this.Id);
-    }
+    public OnExpand(): void { this.expandCore(); }
 
     // TreeView calls this on collapse. Release the loaded subtree: drop this row's
     // child-delta subscription, tell the model to collapse (which disposes a provider
     // boundary's subscription — the last observer of a mounted store, so its file
     // watcher is released), discard the child VMs, and restore the Loading… sentinel so
     // the row stays expandable and reloads fresh on the next expand.
-    public OnCollapse(): void
+    public OnCollapse(): void { this.collapseCore(); }
+
+    private expandCore(): void
+    {
+        if (this.placeholderText !== undefined || this.expanded) return;
+        this.expanded = true;
+        this.clearPlaceholder();
+        this.off = this.model.ObserveChildren(this.Id, (c) => this.patch(c));
+        this.model.RealizeChildren(this.Id);
+        this.RaisePropertyChanged(HierarchyItemVM.IsExpandedProp, false, true);
+    }
+
+    private collapseCore(): void
     {
         if (this.placeholderText !== undefined || !this.expanded) return;
         this.expanded = false;
@@ -119,6 +142,7 @@ export class HierarchyItemVM extends Observable
         this.Children.Clear();
         this.childById.clear();
         if (this.IsExpandable) this.seedPlaceholder();
+        this.RaisePropertyChanged(HierarchyItemVM.IsExpandedProp, true, false);
     }
 
     // TreeView calls this on activation (double-click / Enter). Relay to the host.

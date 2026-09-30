@@ -222,3 +222,31 @@ test('a row that becomes expandable after creation gains a chevron (Unopened→R
     assert.equal(memberRow.Children.Count, 1);          // Loading… sentinel seeded → chevron
     assert.ok(expandableRaised > 0);
 });
+
+// ── P6b: programmatic expansion + canonical name ────────────────────────────
+
+test('Expand realizes children, flips IsExpanded, and raises PropertyChanged', () =>
+{
+    const { model, root, fake } = fileModel();
+    const vm = new HierarchyItemVM(model, root, undefined, fakeHost());
+    let raised = 0;
+    vm.PropertyChanged('IsExpanded').subscribe(() => { raised++; });
+
+    assert.equal(vm.IsExpanded, false);
+    vm.Expand();
+    fake.Sink!(new ChildAdded(HierarchyItemId.Mint(), node('file', { id: 'f1' }, 'a')));
+    assert.equal(vm.IsExpanded, true);
+    assert.ok(vm.Children.Count >= 1);
+    assert.equal(raised, 1);
+
+    vm.Collapse();
+    assert.equal(vm.IsExpanded, false);
+    assert.equal(raised, 2);
+});
+
+test('CanonicalName returns the model full path', () =>
+{
+    const { model, root } = fileModel();
+    const vm = new HierarchyItemVM(model, root, undefined, fakeHost());
+    assert.equal(vm.CanonicalName, 'project');
+});
