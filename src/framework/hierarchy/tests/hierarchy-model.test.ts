@@ -160,3 +160,69 @@ test('stable identity: same (parent,key,ExtObject) re-realized keeps the id', ()
     model.RealizeChildren(root);
     assert.equal(model.ChildrenOf(root)[0], first);
 });
+
+// ── P6b: full ancestor-path canonical names + Reveal ────────────────────────
+
+class OneChildProvider implements IHierarchyProvider
+{
+    public readonly ProviderId = 'fake-canonical';
+    public readonly Child = HierarchyItemId.Mint();
+    private sink: ((c: HierarchyChange) => void) | undefined;
+    constructor(private readonly relative: string) {}
+    // Store the sink; emit only via Emit() AFTER RealizeChildren returns — the model assigns
+    // entry.dispose from ObserveChildren's return, so a delta fired synchronously here would be
+    // dropped by patch's collapsed-guard. (Mirrors this file's FakeProvider.)
+    public ObserveChildren(_node: HierarchyItemId, sink: (c: HierarchyChange) => void): () => void
+    {
+        this.sink = sink;
+        return () => { this.sink = undefined; };
+    }
+    public Emit(): void
+    {
+        this.sink?.(new ChildAdded(this.Child, { Key: 'file', Caption: 'f', IconKey: '', ExtObject: {}, Severity: NodeSeverity.Ok }));
+    }
+    public GetProperty(): unknown { return undefined; }
+    public GetCanonicalName(id: HierarchyItemId): string { return id === this.Child ? this.relative : ''; }
+    public ParseCanonicalName(name: string): HierarchyItemId { return name === this.relative ? this.Child : HierarchyItemId.Nil; }
+    public CanAccept(): boolean { return false; }
+}
+
+// solution -> project (keyed, CanonicalSegment './p1') -> provider boundary.
+function canonicalModel(provider: OneChildProvider): { model: HierarchyModel; root: HierarchyItemId }
+{
+    const sp = new ServiceProvider();
+    const listing = new ServiceKey<IHierarchyContributor>('listing-c');
+    sp.registerInstance(listing, { ParentKeys: ['solution'], Order: 0,
+        Contribute: () => new NodeContribution([{ Key: 'project', Caption: 'P', IconKey: '', ExtObject: {}, Severity: NodeSeverity.Ok, CanonicalSegment: './p1' }]) } as IHierarchyContributor);
+    const files = new ServiceKey<IHierarchyContributor>('files-c');
+    sp.registerInstance(files, { ParentKeys: ['project'], Order: 0,
+        Contribute: () => new ProviderContribution(provider) } as IHierarchyContributor);
+    const registry = new HierarchyContributorRegistry(sp);
+    for (const [key, pk] of [[listing, 'solution'], [files, 'project']] as const)
+    {
+        const d = new HierarchyContributorDefinition(); d.ParentKeys = [pk]; d.Contributor = key; d.Order = 0; registry.Register(d);
+    }
+    const model = new HierarchyModel(registry);
+    const root = model.SeedRoot({ Key: 'solution', Caption: 'S', IconKey: '', ExtObject: {}, Severity: NodeSeverity.Ok });
+    return { model, root };
+}
+
+test('CanonicalNameOf composes the keyed ancestor path using CanonicalSegment', () =>
+{
+    const { model, root } = canonicalModel(new OneChildProvider('src/app.ts'));
+    model.RealizeChildren(root);
+    const projectId = model.ChildrenOf(root)[0]!;
+    assert.equal(model.CanonicalNameOf(projectId), 'solution/./p1');
+});
+
+test('CanonicalNameOf delegates the provider-owned suffix to the owner', () =>
+{
+    const provider = new OneChildProvider('src/app.ts');
+    const { model, root } = canonicalModel(provider);
+    model.RealizeChildren(root);
+    const projectId = model.ChildrenOf(root)[0]!;
+    model.RealizeChildren(projectId);   // subscribes the provider (dispose now assigned)
+    provider.Emit();                    // provider emits its child
+    const fileId = model.ChildrenOf(projectId)[0]!;
+    assert.equal(model.CanonicalNameOf(fileId), 'solution/./p1/src/app.ts');
+});

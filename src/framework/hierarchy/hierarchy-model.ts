@@ -25,6 +25,9 @@ interface Entry
     // boundary. Set on every node a provider's deltas add; drives GetProperty delegation
     // and nested realize (RealizeChildren subscribes owner.ObserveChildren for this node).
     owner?: IHierarchyProvider;
+    // The node's parent id (undefined for the seeded root). Drives CanonicalNameOf's
+    // ancestor walk; set wherever a child entry is created.
+    parent?: HierarchyItemId;
 }
 
 // The keyed-regime walker (design §3,§5,§6). Owns keyed-node identity + interning,
@@ -33,6 +36,8 @@ interface Entry
 // ProviderContribution.
 export class HierarchyModel
 {
+    private static readonly PathSeparator = '/';
+
     private readonly entries = new Map<HierarchyItemId, Entry>();
     // keyed-child interning: parentId -> extIdentity -> id.
     private readonly keyedChildren = new Map<HierarchyItemId, Map<unknown, MintedItemId>>();
@@ -113,11 +118,45 @@ export class HierarchyModel
         for (const sink of [...set]) sink(change);
     }
 
-    // Canonical name for a keyed node — its own family segment for P0. Full ancestor-path
-    // canonical names + provider delegation across the boundary are P6.
+    // Full ancestor-path canonical name, '/'-joined, absolute from the seeded root. A keyed
+    // node contributes CanonicalSegment ?? Key; a provider-owned node contributes its keyed
+    // boundary prefix plus the provider's own (possibly multi-segment) relative name.
     public CanonicalNameOf(id: HierarchyItemId): string
     {
-        return this.entry(id).node.Key;
+        const entry = this.entry(id);
+        if (entry.owner !== undefined)
+        {
+            const boundary = this.boundaryOf(entry);
+            const prefix = boundary === undefined ? '' : this.CanonicalNameOf(boundary);
+            const relative = entry.owner.GetCanonicalName(id);
+            if (prefix === '') return relative;
+            if (relative === '') return prefix;
+            return `${prefix}${HierarchyModel.PathSeparator}${relative}`;
+        }
+        const segments: string[] = [];
+        let cur: HierarchyItemId | undefined = id;
+        while (cur !== undefined)
+        {
+            const e = this.entry(cur);
+            if (e.owner !== undefined) break;
+            segments.unshift(e.node.CanonicalSegment ?? e.node.Key);
+            cur = e.parent;
+        }
+        return segments.join(HierarchyModel.PathSeparator);
+    }
+
+    // The keyed node a provider subtree hangs from: walk up from a provider-owned node to the
+    // first non-owned ancestor (the boundary the provider is attached to).
+    private boundaryOf(entry: Entry): HierarchyItemId | undefined
+    {
+        let cur: HierarchyItemId | undefined = entry.parent;
+        while (cur !== undefined)
+        {
+            const e = this.entry(cur);
+            if (e.owner === undefined) return cur;
+            cur = e.parent;
+        }
+        return undefined;
     }
 
     // Resolve a canonical name back to a realized node id (Nil if none). Minimal P0
@@ -134,7 +173,7 @@ export class HierarchyModel
     public SeedRoot(node: HierarchyNode): HierarchyItemId
     {
         const id = new MintedItemId(node.Key, node.ExtObject);
-        this.entries.set(id, { node, children: [] });
+        this.entries.set(id, { node, children: [], parent: undefined });
         return id;
     }
 
@@ -158,7 +197,7 @@ export class HierarchyModel
             case HierarchyPropertyId.IconKey:       return node.IconKey;
             case HierarchyPropertyId.ExtObject:     return node.ExtObject;
             case HierarchyPropertyId.Severity:      return node.Severity;
-            case HierarchyPropertyId.CanonicalName: return node.Key;
+            case HierarchyPropertyId.CanonicalName: return this.CanonicalNameOf(id);
             case HierarchyPropertyId.IsExpandable:
                 if (node.IsExpandable !== undefined) return node.IsExpandable;
                 if (entry.owner !== undefined) return entry.owner.GetProperty(id, HierarchyPropertyId.IsExpandable) === true;
@@ -259,7 +298,7 @@ export class HierarchyModel
             // Every node a provider adds is owned by that same provider — so its own
             // children realize through the provider too (nested folders), and GetProperty
             // delegates to it.
-            this.entries.set(change.Id, { node: change.Node, children: [], owner: entry.provider });
+            this.entries.set(change.Id, { node: change.Node, children: [], owner: entry.provider, parent: parentId });
             entry.children.push(change.Id);
         }
         else if (change instanceof ChildUpdated)
@@ -290,7 +329,7 @@ export class HierarchyModel
         {
             childId = new MintedItemId(childNode.Key, childNode.ExtObject);
             map.set(identity, childId);
-            this.entries.set(childId, { node: childNode, children: [] });
+            this.entries.set(childId, { node: childNode, children: [], parent: parentId });
             parent.children.push(childId);
             this.emit(parentId, new ChildAdded(childId, childNode));
         }

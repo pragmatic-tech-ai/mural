@@ -28,6 +28,10 @@ export interface HierarchyNode
     // false); when absent the model falls back to "has a contributor for this Key". Provider
     // nodes answer via the provider's GetProperty(IsExpandable) instead.
     readonly IsExpandable?: boolean;
+    // Optional stable, per-instance path segment for canonical names. A keyed contributor
+    // whose siblings share a Key (e.g. every member row is Key='project') sets a unique
+    // segment here (the member's folder path); absent, CanonicalNameOf falls back to Key.
+    readonly CanonicalSegment?: string;
 }
 
 // One channel for async initial load AND external edits.
