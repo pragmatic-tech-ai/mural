@@ -2,8 +2,7 @@ import { ApplicationService, ServiceBase, ServiceKey, ServiceProvider, type ISer
 import { ShellModule } from '../shell/module.js';
 import { HierarchyActionDefinition } from './hierarchy-action-contributor.js';
 import type { IHierarchyActionContributor } from './hierarchy-action-contributor.js';
-import type { HierarchyAction } from './hierarchy-action.js';
-import type { HierarchyItemVM } from './hierarchy-item-vm.js';
+import type { HierarchyAction, HierarchyActionContext } from './hierarchy-action.js';
 
 // Aggregates every composed module's HierarchyActionDefinitions and answers ordered
 // action lookups by NODE key. Sibling of HierarchyContributorRegistry (node children);
@@ -56,15 +55,16 @@ export class HierarchyActionContributorRegistry extends ServiceBase
         return () => this.remove(def);
     }
 
-    // Ordered actions contributed for a node of `nodeKey`. Tokens resolved + cached.
-    public ActionsFor(nodeKey: string, node: HierarchyItemVM): readonly HierarchyAction[]
+    // Ordered actions contributed for a node of `nodeKey`, built against the menu-open
+    // context (Anchor row + live Selection snapshot). Tokens resolved + cached.
+    public ActionsFor(nodeKey: string, context: HierarchyActionContext): readonly HierarchyAction[]
     {
         const defs = this.byKey.get(nodeKey);
         if (defs === undefined) return [];
         const out: HierarchyAction[] = [];
         for (const d of [...defs].sort((a, b) => a.Order - b.Order))
         {
-            for (const action of this.resolve(d).ActionsFor(node)) out.push(action);
+            for (const action of this.resolve(d).ActionsFor(context)) out.push(action);
         }
         return out;
     }

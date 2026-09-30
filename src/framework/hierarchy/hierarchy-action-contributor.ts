@@ -1,6 +1,5 @@
 import { MetaData, MuralBase, type ServiceToken } from '../../runtime/index.js';
-import type { HierarchyAction } from './hierarchy-action.js';
-import type { HierarchyItemVM } from './hierarchy-item-vm.js';
+import type { HierarchyAction, HierarchyActionContext } from './hierarchy-action.js';
 
 // Shared frozen default — DP defaults are shared across instances, so the empty list
 // must be immutable (markup replaces it with a fresh array).
@@ -14,7 +13,9 @@ const EMPTY_KEYS: readonly string[] = Object.freeze([]);
 export interface IHierarchyActionContributor
 {
     readonly ActionKeys: readonly string[];
-    ActionsFor(node: HierarchyItemVM): readonly HierarchyAction[];
+    // `context.Anchor` is the row the actions target; `context.Selection` is the live
+    // selection snapshot at menu-open, so an action can act on the whole selection.
+    ActionsFor(context: HierarchyActionContext): readonly HierarchyAction[];
 }
 
 // Registration schema for a `.hierarchyActions:` block entry. DP-backed MuralBase so it
