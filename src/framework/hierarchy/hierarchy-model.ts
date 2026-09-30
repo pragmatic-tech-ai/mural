@@ -130,7 +130,10 @@ export class HierarchyModel
             const prefix = boundary === undefined ? '' : this.CanonicalNameOf(boundary);
             const relative = entry.owner.GetCanonicalName(id);
             if (prefix === '') return relative;
-            if (relative === '') return prefix;
+            // An empty relative means the provider offers no distinct name for this node: it has
+            // no canonical identity, so it is unnamed. Returning the bare boundary prefix here
+            // would collide with the boundary row (and its siblings) and over-expand on restore.
+            if (relative === '') return '';
             return `${prefix}${HierarchyModel.PathSeparator}${relative}`;
         }
         const segments: string[] = [];

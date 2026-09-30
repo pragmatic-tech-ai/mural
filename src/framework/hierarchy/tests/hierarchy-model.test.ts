@@ -230,6 +230,20 @@ test('CanonicalNameOf delegates the provider-owned suffix to the owner', () =>
     assert.equal(model.CanonicalNameOf(fileId), 'solution/./p1/src/app.ts');
 });
 
+test('CanonicalNameOf yields empty (graceful loss) for a provider node with no relative name', () =>
+{
+    const provider = new OneChildProvider('');   // provider offers no canonical suffix for its child
+    const { model, root } = canonicalModel(provider);
+    model.RealizeChildren(root);
+    const projectId = model.ChildrenOf(root)[0]!;
+    model.RealizeChildren(projectId);
+    provider.Emit();
+    const fileId = model.ChildrenOf(projectId)[0]!;
+    // The node has no distinct canonical identity, so it is unnamed — NOT the bare boundary
+    // prefix, which would collide with the project row and over-expand on restore.
+    assert.equal(model.CanonicalNameOf(fileId), '');
+});
+
 test('Reveal descends and realizes a collapsed keyed target', () =>
 {
     const { model } = canonicalModel(new OneChildProvider('src/app.ts'), 'p1');   // nothing realized yet
