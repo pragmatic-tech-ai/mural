@@ -18,6 +18,14 @@ export enum ShellRegion
     // DocumentsContentHostService collects the CommandDefinitions tagged with
     // this region into its ExtendedCommands, dispatched to the active document.
     EditorActions = 'editor-actions',
+    // The persistent menu-bar (File/Edit/…). A CommandDefinition root tagged
+    // with this region is one of MainMenuService's bar roots rather than a
+    // toolbar button — it does NOT appear on the toolbar (ToolbarService's
+    // filter never matches it; ToolbarService only ever shows Toolbar-region
+    // commands). Its Children are the dropdown's menu rows, lazily realized on
+    // first open via CommandMenuBuilder (Task 1/3), exactly like a toolbar
+    // split-menu's children.
+    MainMenu = 'main-menu',
 }
 
 // Which edge of a region a control pins to. Markup-facing (`Alignment = End`),
