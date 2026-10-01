@@ -5,7 +5,7 @@
     ObservableCollection,
     type CollectionChange,
     type PropertyDescriptor,
-    type Disposable,
+    type IDisposable,
 } from '../../runtime/index.js';
 import { Canvas } from '../../basic/index.js';
 import { ContentControl } from '../base/content-control.js';
@@ -261,10 +261,10 @@ export class Group extends ContentControl
                 ? { l: Group.LeftKey, t: Group.TopKey, w: Group.WidthKey, h: Group.HeightKey }
                 : { l: Figure.LeftKey, t: Figure.TopKey, w: Figure.WidthKey, h: Figure.HeightKey };
         const handler = (): void => { if (this._shiftSuppressed) return; this._recomputeBounds(); };
-        const subL: Disposable = m.PropertyChanged(keys.l).subscribe(handler);
-        const subT: Disposable = m.PropertyChanged(keys.t).subscribe(handler);
-        const subW: Disposable = m.PropertyChanged(keys.w).subscribe(handler);
-        const subH: Disposable = m.PropertyChanged(keys.h).subscribe(handler);
+        const subL: IDisposable = m.PropertyChanged(keys.l).subscribe(handler);
+        const subT: IDisposable = m.PropertyChanged(keys.t).subscribe(handler);
+        const subW: IDisposable = m.PropertyChanged(keys.w).subscribe(handler);
+        const subH: IDisposable = m.PropertyChanged(keys.h).subscribe(handler);
         return (): void => {
             subL.dispose();
             subT.dispose();

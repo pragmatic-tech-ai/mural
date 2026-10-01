@@ -6,7 +6,7 @@
     Visibility,
     Element, Visual,
     type PropertyDescriptor,
-    type Disposable,
+    type IDisposable,
 } from '../../runtime/index.js';
 import { resolveKey } from '../../runtime/model-internals.js';
 import {
@@ -178,7 +178,7 @@ export class FillEditor extends TemplatedControl
     // Subscriptions for parts inside the swappable body. Drained on every
     // body re-apply so we don't leak handlers on the prior body's
     // ColorPickers / Sliders.
-    private _bodyListeners: Disposable[] = [];
+    private _bodyListeners: IDisposable[] = [];
     // Re-seed closures for the body's controls — one per part, each pushing the
     // current mirror-DP value into its control. Run at wire time AND after every
     // external Fill decompose (reseedBody) so the body reflects the CURRENT fill

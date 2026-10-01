@@ -4,7 +4,7 @@
     MuralBase,
     Visibility,
     Visual,
-    type Disposable,
+    type IDisposable,
 } from '../../runtime/index.js';
 
 // FocusOnVisibleBehavior — moves keyboard focus to its host the instant the
@@ -54,7 +54,7 @@ export class FocusOnVisibleBehavior extends Behavior
     public set SelectAll(v: boolean) { this.set_property_value(FocusOnVisibleBehavior.SelectAllKey, v); }
 
     private _visual:   Visual | undefined;
-    private _sub:      Disposable | undefined;
+    private _sub:      IDisposable | undefined;
     private _attached: (() => void) | undefined;
 
     public override OnAttached(visual: Visual): void

@@ -1,6 +1,6 @@
 ﻿import {
     type CollectionChange,
-    type Disposable,
+    type IDisposable,
     type ICommand,
     MetaData,
     MuralBase,
@@ -310,7 +310,7 @@ export class DiagramDocument extends MuralBase implements DiagramMutator, IDocum
     private _mirrorView: Diagram | undefined;
     // Signal subscriptions for the five mirrored view properties — disposed when
     // the view is swapped out in _rebindViewMirror.
-    private _mirrorViewSubs: Disposable[] = [];
+    private _mirrorViewSubs: IDisposable[] = [];
 
     // The view whose ContainerBound signal we're subscribed to (kept so we can
     // detach on ActiveView change). When a Figure container binds to a content

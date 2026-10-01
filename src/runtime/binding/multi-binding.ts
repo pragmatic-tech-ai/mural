@@ -3,7 +3,7 @@ import { MetaData } from '../metadata.js';
 import { MuralBase } from '../model.js';
 import type { PropertyKey } from '../model.js';
 import { resolveKey } from '../model-internals.js';
-import type { Disposable } from '@pragmatic-tech-ai/todl-runtime';
+import type { IDisposable } from '@pragmatic-tech-ai/todl-runtime';
 import type { Visual } from '../../visual-engine/visual.js';
 
 // Watcher MuralBase carrying the converter's combined output. Same pattern
@@ -42,14 +42,14 @@ class MultiBindingImpl extends Binding
     private readonly paths:     ReadonlyArray<string>;
     private readonly multiConverter: (...values: unknown[]) => unknown;
     private readonly dcCallback: () => void;
-    private dcSubscription:     Disposable | undefined;
+    private dcSubscription:     IDisposable | undefined;
     // Cached at construction — `'DataContext'` resolves on every Visual,
     // and the binding listens to it for its entire lifetime.
     private readonly dataContextKey: PropertyKey<unknown>;
 
     // Per-path first-segment change-channel subscriptions. Disposed on every
     // refresh so re-resolution is idempotent.
-    private sourceSubscriptions: (Disposable | undefined)[];
+    private sourceSubscriptions: (IDisposable | undefined)[];
 
     constructor(
         target:    Visual,

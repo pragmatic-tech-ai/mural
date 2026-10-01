@@ -2,7 +2,7 @@
 import { MetaData } from '../metadata.js';
 import { MuralBase } from '../model.js';
 import { resolveKey } from '../model-internals.js';
-import type { Disposable } from '@pragmatic-tech-ai/todl-runtime';
+import type { IDisposable } from '@pragmatic-tech-ai/todl-runtime';
 import type { Visual } from '../../visual-engine/visual.js';
 
 // Internal watcher MuralBase — same shape as AncestorWatcher: holds the
@@ -35,7 +35,7 @@ class SelfBindingImpl extends Binding
 {
     private readonly watcher:  SelfWatcher;
     private readonly callback: () => void;
-    private subscription:      Disposable | undefined;
+    private subscription:      IDisposable | undefined;
 
     constructor(target: Visual, ownerType: Function, property: string, converter?: ValueConverter)
     {

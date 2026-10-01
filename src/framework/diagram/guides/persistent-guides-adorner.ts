@@ -1,4 +1,4 @@
-import { Point, Rect, Size, AlignmentAxis, type Visual, type PersistentGuide, type Disposable } from '../../../runtime/index.js';
+import { Point, Rect, Size, AlignmentAxis, type Visual, type PersistentGuide, type IDisposable } from '../../../runtime/index.js';
 import { Adorner } from '../../../visual-engine/index.js';
 import { Border } from '../../../basic/index.js';
 import { Diagram } from '../diagram.js';
@@ -22,9 +22,9 @@ export class PersistentGuidesAdorner extends Adorner
     private readonly _pool:    Border[] = [];
     private readonly _preview: Border;
     private readonly _onChange: () => void;
-    private readonly _guidesSub:       Disposable;
-    private readonly _selectedGuideSub: Disposable;
-    private readonly _guidePreviewSub:  Disposable;
+    private readonly _guidesSub:       IDisposable;
+    private readonly _selectedGuideSub: IDisposable;
+    private readonly _guidePreviewSub:  IDisposable;
 
     constructor(adornedElement: Visual, diagram: Diagram)
     {

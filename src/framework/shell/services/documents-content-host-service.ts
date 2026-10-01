@@ -3,7 +3,7 @@
     MuralBase,
     ObservableCollection,
     RelayCommand,
-    type Disposable,
+    type IDisposable,
     type IServiceProvider,
 } from '../../../runtime/index.js';
 import { findDescriptor, resolveKey } from '../../../runtime/model-internals.js';
@@ -102,7 +102,7 @@ export class DocumentsContentHostService extends ContentHostService
 
     // Per-open-document IsDirty subscriptions, keyed by document, so the
     // aggregation reconciles as the open set changes.
-    private readonly dirtySubs = new Map<IDocument, Disposable>();
+    private readonly dirtySubs = new Map<IDocument, IDisposable>();
 
     constructor(provider: IServiceProvider)
     {

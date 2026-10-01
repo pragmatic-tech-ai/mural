@@ -4,7 +4,7 @@ import type { MuralBase } from '../model.js';
 import type { PropertyDescriptor, SettingValue } from '../property-descriptor.js';
 import { Validation } from './validation.js';
 import { Signal } from '@pragmatic-tech-ai/todl-runtime';
-import type { Disposable, PropertyChangedEventArgs } from '@pragmatic-tech-ai/todl-runtime';
+import type { IDisposable, PropertyChangedEventArgs } from '@pragmatic-tech-ai/todl-runtime';
 import { readServiceScope } from './service-scope.js';
 import { Application } from '../application.js';
 import { SettingSourceKey, SettingSourceAvailability, type ISettingSource, type ISettingReArmable } from '../services/setting-source.js';
@@ -111,7 +111,7 @@ export class EffectiveValueDescriptor implements ISettingReArmable
 
     private property_descriptor: PropertyDescriptor;
     // User-facing change channel: consumers subscribe via ChangedSignal() and
-    // own the returned Disposable. Held as a Signal so change notification
+    // own the returned IDisposable. Held as a Signal so change notification
     // rides the runtime's one subscribe/emit primitive.
     //
     // The signal's demand hooks drive the setting subscription (§ setting-backed
@@ -132,7 +132,7 @@ export class EffectiveValueDescriptor implements ISettingReArmable
 
     private owner: MuralBase;
     private source: PropertyValueSource = PropertyValueSource.Default;
-    private setting_subscription: Disposable | undefined;
+    private setting_subscription: IDisposable | undefined;
 
     constructor(propertyDescriptor: PropertyDescriptor, owner: MuralBase)
     {

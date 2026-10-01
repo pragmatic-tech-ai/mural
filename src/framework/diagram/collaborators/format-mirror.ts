@@ -1,4 +1,4 @@
-﻿import { MuralBase, type PropertyKey, type Disposable } from '../../../runtime/index.js';
+﻿import { MuralBase, type PropertyKey, type IDisposable } from '../../../runtime/index.js';
 import {
     Brush,
     Color,
@@ -83,7 +83,7 @@ export class FormatMirror
 
     // Per-pen-property subscriptions attached to the current FormatStroke
     // instance. Detach + reattach on every FormatStroke DP change.
-    private readonly _strokeListeners: Disposable[] = [];
+    private readonly _strokeListeners: IDisposable[] = [];
     private _attachedPen: Pen | undefined = undefined;
 
     private _seedingFormat = false;

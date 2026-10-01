@@ -3,7 +3,7 @@ import { MetaData } from '../metadata.js';
 import { MuralBase } from '../model.js';
 import type { PropertyKey } from '../model.js';
 import { resolveKey } from '../model-internals.js';
-import type { Disposable } from '@pragmatic-tech-ai/todl-runtime';
+import type { IDisposable } from '@pragmatic-tech-ai/todl-runtime';
 import type { Visual } from '../../visual-engine/visual.js';
 
 // Internal MuralBase that holds the converter's combined output. Same shape
@@ -50,7 +50,7 @@ class MultiTemplateBindingImpl extends Binding
     private readonly callback:        () => void;
     // One change-channel subscription per watched property; disposed on
     // teardown.
-    private readonly subscriptions:   Disposable[] = [];
+    private readonly subscriptions:   IDisposable[] = [];
     // Resolved per source property at construction; used to install the
     // per-property subscriptions and to re-read all N values on recompute.
     private readonly keys:            readonly PropertyKey<unknown>[];

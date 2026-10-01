@@ -4,7 +4,7 @@
     ObservableCollection,
     Element, Visual,
     type CollectionChange,
-    type Disposable,
+    type IDisposable,
     type PropertyDescriptor,
 } from '../../runtime/index.js';
 import { Border } from '../../basic/border.js';
@@ -126,7 +126,7 @@ export class TopAppBar extends TemplatedControl
     private _titleText:    TextBlock  | undefined;
     private _actionsStack: StackPanel | undefined;
     private _actionsSubscription:      (() => void) | undefined;
-    private _scrollSourceSubscription: Disposable   | undefined;
+    private _scrollSourceSubscription: IDisposable   | undefined;
 
     constructor()
     {

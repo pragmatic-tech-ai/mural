@@ -4,7 +4,7 @@
     Panel,
     Visibility,
     Element, type PropertyDescriptor,
-    type Disposable,
+    type IDisposable,
 } from '../../runtime/index.js';
 import { resolveKey } from '../../runtime/model-internals.js';
 import { Brush, Pen } from '../../visual-engine/index.js';
@@ -120,7 +120,7 @@ export class ShapeFormatControl extends TemplatedControl
     private _targetCapCombo: ComboBox   | undefined;
     private _sourceCapScale: SliderSpinEdit | undefined;
     private _targetCapScale: SliderSpinEdit | undefined;
-    private _partListeners: Disposable[] = [];
+    private _partListeners: IDisposable[] = [];
 
     constructor()
     {

@@ -7,7 +7,7 @@ import {
     Validation,
     Visual,
     type DrawingContext,
-    type Disposable,
+    type IDisposable,
 } from '../runtime/index.js';
 import { Pen, SolidColorBrush } from '../visual-engine/index.js';
 
@@ -35,7 +35,7 @@ const DEFAULT_ERROR_THICKNESS = 1.5;
 // tooltip-bubble below).
 export class ValidationErrorAdorner extends Adorner
 {
-    private _sub: Disposable | undefined;
+    private _sub: IDisposable | undefined;
     private _brush:     SolidColorBrush | undefined;
     private _thickness: number;
 
