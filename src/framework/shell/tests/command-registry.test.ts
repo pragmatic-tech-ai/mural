@@ -62,4 +62,25 @@ describe('CommandRegistry.PopulateFromModules', () => {
         const registry = app.Services.getRequired(CommandRegistry.Key);
         assert.deepEqual([...registry.Commands].map(c => c.Id), ['a.one']);
     });
+
+    test('GetById resolves a nested child command', () => {
+        const parent = command('build');
+        const child = command('build.default');
+        parent.AddChild(child);
+        const app = appWith(moduleWith(parent));
+        const registry = app.Services.getRequired(CommandRegistry.Key);
+        assert.equal(registry.GetById('build.default')?.Id, 'build.default');
+        assert.equal(registry.GetById('build')?.Id, 'build');
+    });
+
+    test('the flat Commands collection holds only roots, not nested children', () => {
+        const parent = command('build');
+        const child = command('build.default');
+        parent.AddChild(child);
+        const app = appWith(moduleWith(parent));
+        const registry = app.Services.getRequired(CommandRegistry.Key);
+        const ids = [...registry.Commands].map(c => c.Id);
+        assert.ok(ids.includes('build'));
+        assert.ok(!ids.includes('build.default'));
+    });
 });
