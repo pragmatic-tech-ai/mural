@@ -201,6 +201,33 @@ describe('Menu family renders a CommandViewModel tree via HierarchicalDataTempla
         assert.equal(toggleMi.IsChecked, true, 'IsChecked reflects the VM');
     });
 
+    test('ClearContainerForItemOverride nulls a generated MenuItem container state', () =>
+    {
+        const root = new Root();
+        const builder = new CommandMenuBuilder(new FakeDispatcher(), new FakeProvider(), new CommandContext());
+
+        const fileDef = def('file', 'File');
+        fileDef.AddChild(def('file.new', 'New'));
+        const fileVm = builder.Build(fileDef);
+
+        const cm = new ContextMenu();
+        cm.ItemTemplate = commandMenuItemTemplate();
+        cm.ItemsSource = [fileVm] as unknown as never;
+
+        openMenu(cm, root);
+
+        const gen = (cm as unknown as { Generator: { ContainerFromItem(i: unknown): Visual | undefined } }).Generator;
+        const topMi = gen.ContainerFromItem(fileVm) as MenuItem;
+        assert.equal(topMi.DataContext, fileVm, 'precondition: DataContext pinned to the VM');
+        assert.notEqual(topMi.ItemsSource, undefined, 'precondition: child ItemsSource wired');
+
+        // Clearing a container the factory generated must undo the DataContext +
+        // ItemsSource it set (so a long-lived VM doesn't leak through a recycled row).
+        cm.ClearContainerForItemOverride(topMi, fileVm);
+        assert.equal(topMi.DataContext, undefined, 'DataContext nulled on clear');
+        assert.equal(topMi.ItemsSource, undefined, 'ItemsSource nulled on clear');
+    });
+
     test('flipping the VM IsChecked updates the rendered MenuItem.IsChecked (Observable binding)', () =>
     {
         const root = new Root();

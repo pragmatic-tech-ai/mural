@@ -152,6 +152,14 @@ export class ContextMenu extends ItemsControl
         }
     }
 
+    // Undo the generated-container state the factory set before the base nulls
+    // `_itemsControlData` (the stamp the clear guard reads).
+    public override ClearContainerForItemOverride(container: Visual, item: unknown): void
+    {
+        MenuContainerFactory.ClearContainer(this, container);
+        super.ClearContainerForItemOverride(container, item);
+    }
+
     /** Open the context menu on the given PresentationTarget at the
      *  supplied (host-coordinate) point. Mounts ContextMenu (and via
      *  its template subtree, the popup chrome) on the target's

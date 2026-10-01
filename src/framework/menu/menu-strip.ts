@@ -114,6 +114,14 @@ export class MenuStrip extends ItemsControl
         }
     }
 
+    // Undo the generated-container state the factory set before the base nulls
+    // `_itemsControlData` (the stamp the clear guard reads).
+    public override ClearContainerForItemOverride(container: Visual, item: unknown): void
+    {
+        MenuContainerFactory.ClearContainer(this, container);
+        super.ClearContainerForItemOverride(container, item);
+    }
+
     protected override OnPropertyChanged(
         descriptor: PropertyDescriptor,
         oldValue: unknown,
@@ -393,6 +401,14 @@ export class MenuItem extends HeaderedItemsControl
         {
             super.RebindContainerForItemOverride(container, item);
         }
+    }
+
+    // Undo the generated-container state the factory set before the base nulls
+    // `_itemsControlData` (the stamp the clear guard reads).
+    public override ClearContainerForItemOverride(container: Visual, item: unknown): void
+    {
+        MenuContainerFactory.ClearContainer(this, container);
+        super.ClearContainerForItemOverride(container, item);
     }
 
     /** Public refresh for tests + DP-change forwarding. */

@@ -69,4 +69,30 @@ export class MenuContainerFactory
         HierarchicalItemsBinder.BindChildItems(owner, item, container);
         return true;
     }
+
+    // Undo the DataContext + ItemsSource that GetContainer / RebindContainer set
+    // on a GENERATED MenuItem container, so a long-lived data VM doesn't leak
+    // through a cleared/recycled row. Called from each control's
+    // ClearContainerForItemOverride before the base nulls `_itemsControlData`.
+    //
+    // Safe guard — only touch state WE set. A generated container is a MenuItem
+    // we created FOR a distinct data item, so the base `_itemsControlData` stamp
+    // names that item and is NOT the container itself. An authored own-container
+    // MenuItem (IsItemItsOwnContainerOverride → the item IS the container) has
+    // `_itemsControlData === container`; clearing its DataContext / ItemsSource
+    // would wipe author-set state, so we leave those untouched.
+    public static ClearContainer(_owner: ItemsControl, container: Visual): void
+    {
+        if (!(container instanceof MenuItem))
+        {
+            return;
+        }
+        const data = (container as unknown as { _itemsControlData?: unknown })._itemsControlData;
+        if (data === undefined || data === container)
+        {
+            return;
+        }
+        container.DataContext = undefined;
+        container.ItemsSource = undefined;
+    }
 }
