@@ -437,8 +437,7 @@ export class MenuItem extends HeaderedItemsControl
         // submenu chevron.
         if (this._chevron !== undefined)
         {
-            const hasSubmenu = this.itemCount() > 0;
-            this._chevron.Visibility = hasSubmenu ? Visibility.Visible : Visibility.Collapsed;
+            this._chevron.Visibility = this.hasSubmenu() ? Visibility.Visible : Visibility.Collapsed;
         }
         // Icon column — host the consumer's Icon, OR an inline check
         // glyph when IsCheckable + IsChecked, OR clear it.
@@ -464,6 +463,27 @@ export class MenuItem extends HeaderedItemsControl
         const items = this.Items;
         if (items === undefined) return 0;
         return Array.isArray(items) ? items.length : (items as { Count: number }).Count;
+    }
+
+    // Branch-vs-leaf for every real interaction path (click, hover dwell,
+    // keyboard). itemCount() alone undercounts a LAZY node: a HierarchicalData-
+    // Template-bound CommandViewModel sets ItemsSource = Definition.Children
+    // (MenuContainerFactory.GetContainer → HierarchicalItemsBinder.BindChildItems)
+    // at container-prepare time, but the VM's OWN Children collection stays
+    // empty until EnsureExpanded runs — which activate()/hover/keydown only ever
+    // trigger BY flipping IsSubmenuOpen, so gating on itemCount() alone is a
+    // chicken-and-egg: a never-yet-opened branch always reads as a leaf. Falling
+    // back to the bound data's own HasChildren (stamped as _itemsControlData by
+    // ItemsControl.PrepareContainerForItemOverride, read the same way
+    // OnPropertyChanged already reads it for the OnSubmenuOpen hook below) lets a
+    // still-unrealized CommandViewModel branch report itself correctly — mirrors
+    // TreeView's identical hasChildItems() falling back to the bound data where
+    // realized containers alone would undercount.
+    private hasSubmenu(): boolean
+    {
+        if (this.itemCount() > 0) return true;
+        const data = (this as unknown as { _itemsControlData?: unknown })._itemsControlData;
+        return (data as { HasChildren?: boolean } | undefined)?.HasChildren === true;
     }
 
     protected override OnPropertyChanged(
@@ -620,7 +640,7 @@ export class MenuItem extends HeaderedItemsControl
     // clicking or pressing Enter on a parent item toggles IsSubmenuOpen.
     private activate(): void
     {
-        if (this.itemCount() > 0)
+        if (this.hasSubmenu())
         {
             this.IsSubmenuOpen = !this.IsSubmenuOpen;
             return;
@@ -699,13 +719,13 @@ export class MenuItem extends HeaderedItemsControl
         // open. Then, if THIS item is itself a parent, arm a dwell timer to open
         // its own submenu (click still opens it immediately via activate()).
         this.closeSiblingSubmenus();
-        if (this.itemCount() > 0 && !this.IsSubmenuOpen)
+        if (this.hasSubmenu() && !this.IsSubmenuOpen)
         {
             this.clearHoverOpenTimer();
             this._hoverOpenTimer = setTimeout((): void =>
             {
                 this._hoverOpenTimer = undefined;
-                if (this.itemCount() > 0) this.IsSubmenuOpen = true;
+                if (this.hasSubmenu()) this.IsSubmenuOpen = true;
             }, MenuItem.HoverOpenDelayMs);
         }
     }
@@ -793,7 +813,7 @@ export class MenuItem extends HeaderedItemsControl
         {
             if (inStrip)
             {
-                if (this.itemCount() > 0)
+                if (this.hasSubmenu())
                 {
                     this.IsSubmenuOpen = true;
                     this.focusFirstSubmenuChild(args);
@@ -818,7 +838,7 @@ export class MenuItem extends HeaderedItemsControl
             {
                 this.focusSibling(args, +1);
             }
-            else if (this.itemCount() > 0)
+            else if (this.hasSubmenu())
             {
                 this.IsSubmenuOpen = true;
                 this.focusFirstSubmenuChild(args);

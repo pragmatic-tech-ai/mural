@@ -180,6 +180,42 @@ describe('Menu family renders a CommandViewModel tree via HierarchicalDataTempla
             `submenu rows realized, got ${JSON.stringify(realized)}`);
     });
 
+    test('a REAL click (activate()) opens an unrealized parent\'s submenu — not gated on the pre-expand empty itemCount()', () =>
+    {
+        // Regression: MenuItem.activate() / OnPointerEnter / OnKeyDown used to
+        // gate "is this a submenu parent" on itemCount() (this.Items.Count), but
+        // a HierarchicalDataTemplate-bound CommandViewModel's ItemsSource is set
+        // to its (still-empty, lazy) Children at container-prepare time —
+        // itemCount() reads 0 until EnsureExpanded has already run, and nothing
+        // but IsSubmenuOpen=true ever runs it. A real click could therefore never
+        // open a not-yet-expanded command submenu: activate() fell through to the
+        // leaf branch and executed/closed instead. The fix reads the bound data's
+        // own HasChildren (CommandViewModel.HasChildren) as a fallback.
+        const root = new Root();
+        const builder = new CommandMenuBuilder(new FakeDispatcher(), new FakeProvider(), new CommandContext());
+
+        const fileDef = def('file', 'File');
+        fileDef.AddChild(def('file.new', 'New'));
+        const fileVm = builder.Build(fileDef);
+
+        const cm = new ContextMenu();
+        cm.ItemTemplate = commandMenuItemTemplate();
+        cm.ItemsSource = [fileVm] as unknown as never;
+
+        openMenu(cm, root);
+
+        const gen = (cm as unknown as { Generator: { ContainerFromItem(i: unknown): Visual | undefined } }).Generator;
+        const topMi = gen.ContainerFromItem(fileVm) as MenuItem;
+
+        assert.equal(fileVm.Children.Count, 0, 'precondition: unrealized before any interaction');
+
+        (topMi as unknown as { activate(): void }).activate();
+
+        assert.equal(topMi.IsSubmenuOpen, true,
+            'activate() opened the submenu even though itemCount() was 0 pre-expand');
+        assert.equal(fileVm.Children.Count, 1, 'EnsureExpanded ran as a side effect of the real click');
+    });
+
     test('a toggle VM renders a checkable, checked MenuItem', () =>
     {
         const root = new Root();

@@ -1,7 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { RelayCommand, ServiceKey, type IServiceProvider } from '../../../runtime/index.js';
-import { CommandDefinition } from '../commands/command-definition.js';
+import { CheckableRelayCommand, RelayCommand, ServiceKey, type ICommand, type IServiceProvider } from '../../../runtime/index.js';
+import { CommandDefinition, CommandGroupPresentation } from '../commands/command-definition.js';
 import { CommandMenuBuilder } from '../commands/command-menu-builder.js';
 import { CommandContext } from '../commands/command-context.js';
 import type { ICommandDispatcher } from '../commands/command-dispatcher.js';
@@ -35,6 +35,78 @@ describe('CommandMenuBuilder.Build', () => {
         const vm = builder.Build(def('file'));
         assert.equal(vm.Definition.Id, 'file');
         assert.notEqual(vm.Command, undefined);
+    });
+
+    test('a plain (Flat) definition never builds a toggle VM', () => {
+        const builder = new CommandMenuBuilder(dispatcher, throwingProvider(), new CommandContext());
+        const vm = builder.Build(def('file'));
+        assert.equal(vm.IsToggle, false);
+    });
+
+    test('a Presentation=Toggles definition builds a toggle VM, seeded from the resolved ICheckableCommand', () => {
+        let checked = true;
+        const checkable = new CheckableRelayCommand(() => { checked = !checked; }, undefined, () => checked);
+        const toggleDispatcher: ICommandDispatcher = { Resolve: (): ICommand => checkable };
+
+        const toggleDef = def('view.showGrid');
+        toggleDef.Presentation = CommandGroupPresentation.Toggles;
+
+        const builder = new CommandMenuBuilder(toggleDispatcher, throwingProvider(), new CommandContext());
+        const vm = builder.Build(toggleDef);
+
+        assert.equal(vm.IsToggle, true, 'Presentation=Toggles drives CommandViewModel.IsToggle');
+        assert.equal(vm.IsChecked, true, 'IsChecked seeded from the resolved ICheckableCommand on Build');
+    });
+
+    test('a toggle VM tracks the command\'s IsChecked live, across CanExecuteChanged pulses', () => {
+        let checked = false;
+        const checkable = new CheckableRelayCommand(() => { /* no-op */ }, undefined, () => checked);
+        const toggleDispatcher: ICommandDispatcher = { Resolve: (): ICommand => checkable };
+
+        const toggleDef = def('view.snapToGrid');
+        toggleDef.Presentation = CommandGroupPresentation.Toggles;
+
+        const builder = new CommandMenuBuilder(toggleDispatcher, throwingProvider(), new CommandContext());
+        const vm = builder.Build(toggleDef);
+        assert.equal(vm.IsChecked, false, 'precondition');
+
+        // Flip the underlying state out-of-band (as the demo's Execute does) and
+        // pulse the same CanExecuteChanged channel ICheckableCommand documents —
+        // the VM must re-read IsChecked, not cache the Build-time snapshot.
+        checked = true;
+        checkable.RaiseCanExecuteChanged();
+        assert.equal(vm.IsChecked, true, 'IsChecked re-read on the CanExecuteChanged pulse');
+
+        checked = false;
+        checkable.RaiseCanExecuteChanged();
+        assert.equal(vm.IsChecked, false, 'IsChecked tracks back down too');
+    });
+
+    test('disposing a toggle VM detaches its CanExecuteChanged listener (no leak)', () => {
+        let checked = false;
+        let listenerCount = 0;
+        const checkable = new CheckableRelayCommand(() => { /* no-op */ }, undefined, () => checked);
+        const originalAdd = checkable.AddCanExecuteChangedListener.bind(checkable);
+        const originalRemove = checkable.RemoveCanExecuteChangedListener.bind(checkable);
+        checkable.AddCanExecuteChangedListener = (l) => { listenerCount++; originalAdd(l); };
+        checkable.RemoveCanExecuteChangedListener = (l) => { listenerCount--; originalRemove(l); };
+        const toggleDispatcher: ICommandDispatcher = { Resolve: (): ICommand => checkable };
+
+        const toggleDef = def('view.showRulers');
+        toggleDef.Presentation = CommandGroupPresentation.Toggles;
+
+        const builder = new CommandMenuBuilder(toggleDispatcher, throwingProvider(), new CommandContext());
+        const vm = builder.Build(toggleDef);
+        assert.equal(listenerCount, 1, 'Build registered exactly one live-sync listener');
+
+        vm.dispose();
+        assert.equal(listenerCount, 0, 'dispose() detached the listener');
+
+        // Flipping + pulsing after dispose must not throw and must not reach the
+        // (disposed) VM.
+        checked = true;
+        assert.doesNotThrow(() => checkable.RaiseCanExecuteChanged());
+        assert.equal(vm.IsChecked, false, 'disposed VM no longer tracks the command');
     });
 });
 

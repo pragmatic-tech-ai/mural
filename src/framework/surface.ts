@@ -41,6 +41,7 @@ export {
     ContextMenu,
     ContextMenuService,
 } from './menu/context-menu.js';
+export { CommandContextMenu } from './menu/command-context-menu.js';
 export {
     StatusBar,
     StatusBarItem,

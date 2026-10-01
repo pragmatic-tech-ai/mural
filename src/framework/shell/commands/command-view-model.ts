@@ -67,6 +67,16 @@ export class CommandViewModel extends Observable implements IDisposable, Expanda
         this.realizer = realizer;
     }
 
+    // Registers a teardown the builder wants run when THIS VM disposes — e.g.
+    // the live IsChecked-sync listener CommandMenuBuilder.Build attaches to a
+    // toggle's resolved ICheckableCommand. Released by dispose() below, so a
+    // menu rebuilt per-open (CommandContextMenu) or per-root (MainMenuService)
+    // never accumulates listeners on the underlying command.
+    public AddSubscription(subscription: IDisposable): void
+    {
+        this.subscriptions.add(subscription);
+    }
+
     // Populate Children on first call (menu submenu-open). Idempotent — a
     // second call is a no-op, which is why a self-referential
     // ChildrenContributor cannot loop (each level expands only when its own
