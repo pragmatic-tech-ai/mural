@@ -5,6 +5,7 @@
     RelayCommand,
     ServiceBase,
     ServiceKey,
+    isCheckableCommand,
     type IServiceProvider,
     type ServiceToken,
 } from '../../../runtime/index.js';
@@ -31,15 +32,18 @@ import {
 } from './toolbar-group-view-model.js';
 import { ShellModule } from '../module.js';
 import { type ICommandTarget, isCommandTarget } from './command-target.js';
+import { type ICommandDispatcher, isCommandDispatcher } from './command-dispatcher.js';
+import { CommandContext } from './command-context.js';
 
 // Turns declared CommandDefinitions into the toolbar the shell shows for the
 // ACTIVE document. It:
 //   • filters the CommandRegistry by the active document's live CommandContexts
 //     (a command is visible iff its Context is one the document activates),
 //   • orders the survivors by Group then Order,
-//   • wraps each in a CommandViewModel whose RelayCommand dispatches to the
-//     active document — `activeDocument.Execute(definition)` — with CanExecute
-//     gated by `activeDocument.CanExecute(definition)`.
+//   • wraps each in a CommandViewModel whose RelayCommand dispatches through the
+//     active document's ICommandDispatcher — `activeDocument.Resolve(id,
+//     context)?.Execute()` — with CanExecute gated by the resolved command's
+//     own CanExecute.
 //
 // There is no command routing: the handler is unambiguous (the active document),
 // so the RelayCommand closes over THIS service and re-reads the active document
@@ -169,6 +173,24 @@ export class ToolbarService extends ServiceBase
     {
         const doc = this._host?.ActiveDocument;
         return isCommandTarget(doc) ? doc : undefined;
+    }
+
+    // The active document, if it resolves commands. undefined when nothing is
+    // active or the active document isn't a command dispatcher. Replaces
+    // ActiveTarget for dispatch (Execute/CanExecute/checked-state); ActiveTarget
+    // itself stays in use by the context filter (CommandContexts) until Task 6
+    // migrates it away.
+    private ActiveDispatcher(): ICommandDispatcher | undefined
+    {
+        const doc = this._host?.ActiveDocument;
+        return isCommandDispatcher(doc) ? doc : undefined;
+    }
+
+    // The dispatch context handed to Resolve. The toolbar's context is the
+    // active document; the base context suffices until Milestone B enriches it.
+    private Context(): CommandContext
+    {
+        return new CommandContext();
     }
 
     // Recompute VisibleCommands: the registry filtered by the active target's
@@ -479,10 +501,12 @@ export class ToolbarService extends ServiceBase
     // change) so a Toggles button's checked state tracks the live selection.
     private RefreshActiveStates(): void
     {
-        const target = this.ActiveTarget();
+        const dispatcher = this.ActiveDispatcher();
+        const ctx = this.Context();
         for (const vm of this._vmById.values())
         {
-            vm.IsActive = target?.IsActive?.(vm.Definition) ?? false;
+            const resolved = dispatcher?.Resolve(vm.Definition.Id, ctx);
+            vm.IsActive = resolved !== undefined && isCheckableCommand(resolved) ? resolved.IsChecked : false;
         }
     }
 
@@ -496,8 +520,8 @@ export class ToolbarService extends ServiceBase
         if (vm === undefined)
         {
             const command = new RelayCommand(
-                () => this.Invoke(def),
-                () => this.CanInvoke(def),
+                () => this.ActiveDispatcher()?.Resolve(def.Id, this.Context())?.Execute(),
+                () => this.ActiveDispatcher()?.Resolve(def.Id, this.Context())?.CanExecute() ?? false,
                 { Text: def.Title });
             vm = isToggle
                 ? new CommandToggleViewModel(def, command)
@@ -505,16 +529,6 @@ export class ToolbarService extends ServiceBase
             this._vmById.set(def.Id, vm);
         }
         return vm;
-    }
-
-    private Invoke(def: CommandDefinition): void
-    {
-        this.ActiveTarget()?.Execute(def);
-    }
-
-    private CanInvoke(def: CommandDefinition): boolean
-    {
-        return this.ActiveTarget()?.CanExecute(def) ?? false;
     }
 
     // Re-query every built VM command — the button command-sources re-read

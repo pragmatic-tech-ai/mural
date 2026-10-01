@@ -10,9 +10,9 @@ import { findDescriptor, resolveKey } from '../../../runtime/model-internals.js'
 import { ContentHostService } from './content-host-service.js';
 import { CommandRegistry } from '../commands/command-registry.js';
 import { CommandViewModel } from '../commands/command-view-model.js';
-import type { CommandDefinition } from '../commands/command-definition.js';
 import { ShellRegion } from '../commands/shell-control-definition.js';
-import { isCommandTarget } from '../commands/command-target.js';
+import { type ICommandDispatcher, isCommandDispatcher } from '../commands/command-dispatcher.js';
+import { CommandContext } from '../commands/command-context.js';
 import { TabMenuAction, TabMenuSeparator, TabMenuDocument } from './tab-menu-item.js';
 
 // A document the DocumentsContentHostService manages. The host owns the
@@ -77,8 +77,8 @@ export class DocumentsContentHostService extends ContentHostService
     // Module-contributed action buttons for the editor tab-strip (the ExtendedTabControl
     // renders these beside the tabs). Collected from the CommandRegistry: every
     // CommandDefinition whose Region is ShellRegion.EditorActions, adapted into a
-    // button-bindable CommandViewModel whose command dispatches to the ACTIVE
-    // document (an ICommandTarget), exactly like the toolbar. Empty when no
+    // button-bindable CommandViewModel whose command resolves against the ACTIVE
+    // document's ICommandDispatcher, exactly like the toolbar. Empty when no
     // CommandRegistry is registered (a bare host). A stable per-instance collection.
     private readonly _extendedCommands = new ObservableCollection<CommandViewModel>();
 
@@ -155,9 +155,9 @@ export class DocumentsContentHostService extends ContentHostService
     }
 
     // (Re)project the EditorActions-region CommandDefinitions into ExtendedCommands.
-    // Each VM's command dispatches to the ACTIVE document when it is an
-    // ICommandTarget (read live at invoke time, so no rebuild is needed on a tab
-    // switch — only a CanExecute requery, see OnPropertyChanged).
+    // Each VM's command resolves against the ACTIVE document's ICommandDispatcher
+    // (read live at invoke time, so no rebuild is needed on a tab switch — only a
+    // CanExecute requery, see OnPropertyChanged).
     private rebuildExtendedCommands(registry: CommandRegistry): void
     {
         const list = this.ExtendedCommands;
@@ -166,19 +166,19 @@ export class DocumentsContentHostService extends ContentHostService
         {
             if (def.Region !== ShellRegion.EditorActions) continue;
             const command = new RelayCommand(
-                () => this.commandTarget()?.Execute(def),
-                () => this.commandTarget()?.CanExecute(def) ?? false,
+                () => this.activeDispatcher()?.Resolve(def.Id, new CommandContext())?.Execute(),
+                () => this.activeDispatcher()?.Resolve(def.Id, new CommandContext())?.CanExecute() ?? false,
                 { Text: def.Title });
             list.Add(new CommandViewModel(def, command));
         }
     }
 
-    // The active document as a command target, or undefined when nothing is active
-    // (or the active document doesn't handle commands).
-    private commandTarget(): { Execute(d: CommandDefinition): void; CanExecute(d: CommandDefinition): boolean } | undefined
+    // The active document as a command dispatcher, or undefined when nothing is
+    // active (or the active document doesn't resolve commands).
+    private activeDispatcher(): ICommandDispatcher | undefined
     {
         const doc = this.ActiveDocument;
-        return doc !== undefined && isCommandTarget(doc) ? doc : undefined;
+        return doc !== undefined && isCommandDispatcher(doc) ? doc : undefined;
     }
 
     public get CloseDocumentCommand(): ICommand { return this._closeDocumentCommand; }

@@ -9,3 +9,10 @@ export interface ICommandDispatcher
 {
     Resolve(commandId: string, context: CommandContext): ICommand | undefined;
 }
+
+// Duck-type guard — mirrors isCommandTarget in command-target.ts. An active
+// document is a command dispatcher when it exposes a Resolve method.
+export function isCommandDispatcher(value: unknown): value is ICommandDispatcher
+{
+    return typeof (value as Partial<ICommandDispatcher>)?.Resolve === 'function';
+}
