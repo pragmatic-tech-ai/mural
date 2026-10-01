@@ -1,17 +1,25 @@
 import MenuVM from "./menu-vm.mjs"
 
-// menu.mu — MenuButton + MenuItem showcase. A single hamburger button
-// opens a vertical column of menu rows:
-//   * File group   — New, Open, Save, Save As, Close
-//   * Edit group   — Undo, Redo
-//   * View group   — Show Grid (checkable), Snap to Grid (checkable)
+// menu.mu — MenuButton showcase, now rendered through the COMMAND-DRIVEN
+// menu machinery. A single hamburger button opens a vertical column of
+// menu rows — New, Open, Save, Save As, Close, Undo, Redo, then the two
+// checkable rows (Show Grid, Snap to Grid) — bound as
+// `ItemsSource = $Roots, ItemTemplate = @CommandMenuItemTemplate` against
+// the CommandViewModel tree MenuVM builds (via CommandMenuBuilder) rather
+// than a hand-authored `MenuItem { ... }` body.
 //
 // What's exercised:
-//   * Header           — row text in the second column.
-//   * InputGestureText — display-only chord ("Ctrl+S", "Del", …).
-//   * Command          — invoked on click.
-//   * IsCheckable + IsChecked — ✓ glyph in the icon column when set.
-//   * MenuSeparator    — horizontal divider between groups.
+//   * $Title (→ Header)           — row text in the second column.
+//   * $Command                    — invoked on click, resolved per-row
+//                                    through the VM's DemoCommandDispatcher.
+//   * $IsToggle / $IsChecked      — ✓ glyph in the icon column for the two
+//                                    Presentation=Toggles rows.
+//
+// (The old demo also showcased InputGestureText and MenuSeparator — the
+// shipped @CommandMenuItemTemplate renders a plain recursive MenuItem row
+// with no slot for either, so this migrated demo no longer displays
+// shortcut-chord text or group dividers. Functionality — click dispatch,
+// checkable state — is unchanged.)
 
 resources MenuDemo {
     DataTemplate [DataType = MenuVM] {
@@ -34,50 +42,10 @@ resources MenuDemo {
                           Foreground = @OnSurfaceVariant,
                           Margin     = (0,0,0,8) ]
 
-                    MenuButton [ Header = "☰  File" ] {
-                        MenuItem
-                            [ Header           = "New",
-                              InputGestureText = "Ctrl+N",
-                              Command          = $NewCommand ]
-                        MenuItem
-                            [ Header           = "Open…",
-                              InputGestureText = "Ctrl+O",
-                              Command          = $OpenCommand ]
-                        MenuSeparator
-                        MenuItem
-                            [ Header           = "Save",
-                              InputGestureText = "Ctrl+S",
-                              Command          = $SaveCommand ]
-                        MenuItem
-                            [ Header           = "Save As…",
-                              InputGestureText = "Ctrl+Shift+S",
-                              Command          = $SaveAsCommand ]
-                        MenuSeparator
-                        MenuItem
-                            [ Header           = "Close",
-                              InputGestureText = "Ctrl+F4",
-                              Command          = $CloseCommand ]
-                        MenuSeparator
-                        MenuItem
-                            [ Header           = "Undo",
-                              InputGestureText = "Ctrl+Z",
-                              Command          = $UndoCommand ]
-                        MenuItem
-                            [ Header           = "Redo",
-                              InputGestureText = "Ctrl+Y",
-                              Command          = $RedoCommand ]
-                        MenuSeparator
-                        MenuItem
-                            [ Header      = "Show Grid",
-                              IsCheckable = true,
-                              IsChecked   = $ShowGrid,
-                              Command     = $ShowGridCommand ]
-                        MenuItem
-                            [ Header      = "Snap to Grid",
-                              IsCheckable = true,
-                              IsChecked   = $SnapToGrid,
-                              Command     = $SnapToGridCommand ]
-                    }
+                    MenuButton
+                        [ Header       = "☰  File",
+                          ItemsSource  = $Roots,
+                          ItemTemplate = @CommandMenuItemTemplate ]
 
                     TextBlock
                         [ Text       = $Status,

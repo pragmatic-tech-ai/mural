@@ -1,15 +1,38 @@
-﻿// MenuVM — command catalogue + status mirror for the menu demo. The
-// MenuButton hosts a vertical column of MenuItems; click an item to
-// run its command. Status reflects the latest invocation.
+// MenuVM — command catalogue + status mirror for the menu demo, now
+// rendered through the command-driven menu machinery. The MenuButton's
+// fly-out is no longer a hand-authored `MenuItem { ... }` body: it binds
+// `ItemsSource = $Roots` + `ItemTemplate = @CommandMenuItemTemplate`
+// against a CommandViewModel tree this VM builds (via CommandMenuBuilder)
+// from a flat CommandDefinition list, resolved through a
+// DemoCommandDispatcher over this VM's own command catalogue.
 //
-// Two checkable items (ShowGrid / SnapToGrid) demonstrate IsCheckable
-// + IsChecked. Their Command callbacks read IsChecked through the
-// MenuItem's CommandParameter (the markup passes `$self.IsChecked`).
+// Two checkable items (ShowGrid / SnapToGrid) demonstrate the checkable
+// menu row: their CommandDefinition.Presentation = Toggles, which drives
+// CommandMenuBuilder.Build to produce a toggle CommandViewModel
+// (IsToggle=true) seeded from — and kept live-synced with — a
+// CheckableRelayCommand.
+//
+// The roots are built ONCE (in the constructor), not rebuilt per open —
+// this MenuButton has no ChildrenContributor-backed submenu, so there is
+// no dynamic content that would go stale between opens (contrast
+// CommandContextMenu, which rebuilds fresh every open specifically to
+// re-evaluate a contributor; mirrors MainMenuService's LAZY-ONCE roots).
 import {
+    Application,
     MetaData,
     MuralBase,
+    CheckableRelayCommand,
     RelayCommand,
+    type ICommand,
 } from '@pragmatic-tech-ai/mural/runtime';
+import {
+    CommandContext,
+    CommandDefinition,
+    CommandGroupPresentation,
+    CommandMenuBuilder,
+    CommandViewModel,
+} from '@pragmatic-tech-ai/mural/framework';
+import { DemoCommandDispatcher } from '../_shared/demo-command-dispatcher.mjs';
 
 export class MenuVM extends MuralBase
 {
@@ -17,39 +40,41 @@ export class MenuVM extends MuralBase
     static ShowGridKey    = MuralBase.RegisterProperty<boolean>(MenuVM, 'ShowGrid',    true,     MetaData.None);
     static SnapToGridKey  = MuralBase.RegisterProperty<boolean>(MenuVM, 'SnapToGrid',  false,    MetaData.None);
 
-    // Command catalogue exposed as plain fields the menu markup binds to.
-    readonly NewCommand:        RelayCommand;
-    readonly OpenCommand:       RelayCommand;
-    readonly SaveCommand:       RelayCommand;
-    readonly SaveAsCommand:     RelayCommand;
-    readonly CloseCommand:      RelayCommand;
-    readonly UndoCommand:       RelayCommand;
-    readonly RedoCommand:       RelayCommand;
-    readonly ShowGridCommand:   RelayCommand;
-    readonly SnapToGridCommand: RelayCommand;
+    private static readonly NewId      = 'menu.new';      private static readonly NewTitle      = 'New';
+    private static readonly OpenId     = 'menu.open';     private static readonly OpenTitle     = 'Open…';
+    private static readonly SaveId     = 'menu.save';     private static readonly SaveTitle     = 'Save';
+    private static readonly SaveAsId   = 'menu.saveAs';   private static readonly SaveAsTitle   = 'Save As…';
+    private static readonly CloseId    = 'menu.close';    private static readonly CloseTitle    = 'Close';
+    private static readonly UndoId     = 'menu.undo';     private static readonly UndoTitle     = 'Undo';
+    private static readonly RedoId     = 'menu.redo';     private static readonly RedoTitle     = 'Redo';
+    private static readonly ShowGridId   = 'menu.showGrid';   private static readonly ShowGridTitle   = 'Show Grid';
+    private static readonly SnapToGridId = 'menu.snapToGrid'; private static readonly SnapToGridTitle = 'Snap to Grid';
+
+    // id → live ICommand, resolved by the Dispatcher on every click.
+    private readonly commandsById = new Map<string, ICommand>();
+
+    public readonly Dispatcher: DemoCommandDispatcher;
+    public readonly Roots: readonly CommandViewModel[];
 
     constructor()
     {
         super();
-        const setStatus = (msg: string): void => this.set_property_value(MenuVM.StatusKey, msg);
-        this.NewCommand    = new RelayCommand(() => setStatus('New — empty document.'));
-        this.OpenCommand   = new RelayCommand(() => setStatus('Open — read from disk.'));
-        this.SaveCommand   = new RelayCommand(() => setStatus('Save — written to disk.'));
-        this.SaveAsCommand = new RelayCommand(() => setStatus('Save As… — file dialog opened.'));
-        this.CloseCommand  = new RelayCommand(() => setStatus('Close — document closed.'));
-        this.UndoCommand   = new RelayCommand(() => setStatus('Undo.'));
-        this.RedoCommand   = new RelayCommand(() => setStatus('Redo.'));
-        // Toggle commands — the MenuItem's IsCheckable+IsChecked DPs
-        // flip first (Button.OnPreClick fires in the click protocol),
-        // then the Command runs and reads the post-flip state.
-        this.ShowGridCommand = new RelayCommand(() => {
-            this.ShowGrid = !this.ShowGrid;
-            setStatus(`Show Grid → ${this.ShowGrid ? 'on' : 'off'}.`);
-        });
-        this.SnapToGridCommand = new RelayCommand(() => {
-            this.SnapToGrid = !this.SnapToGrid;
-            setStatus(`Snap to Grid → ${this.SnapToGrid ? 'on' : 'off'}.`);
-        });
+
+        const defs = [
+            this.MakeLeaf(MenuVM.NewId,    MenuVM.NewTitle,    'New — empty document.'),
+            this.MakeLeaf(MenuVM.OpenId,   MenuVM.OpenTitle,   'Open — read from disk.'),
+            this.MakeLeaf(MenuVM.SaveId,   MenuVM.SaveTitle,   'Save — written to disk.'),
+            this.MakeLeaf(MenuVM.SaveAsId, MenuVM.SaveAsTitle, 'Save As… — file dialog opened.'),
+            this.MakeLeaf(MenuVM.CloseId,  MenuVM.CloseTitle,  'Close — document closed.'),
+            this.MakeLeaf(MenuVM.UndoId,   MenuVM.UndoTitle,   'Undo.'),
+            this.MakeLeaf(MenuVM.RedoId,   MenuVM.RedoTitle,   'Redo.'),
+            this.MakeToggle(MenuVM.ShowGridId,   MenuVM.ShowGridTitle,   () => this.ShowGrid,   (v) => { this.ShowGrid = v; }),
+            this.MakeToggle(MenuVM.SnapToGridId, MenuVM.SnapToGridTitle, () => this.SnapToGrid, (v) => { this.SnapToGrid = v; }),
+        ];
+
+        this.Dispatcher = new DemoCommandDispatcher(this.commandsById);
+        const builder = new CommandMenuBuilder(this.Dispatcher, Application.current!.Services, new CommandContext());
+        this.Roots = defs.map((def) => builder.Build(def));
     }
 
     get Status():       string  { return this.get_property_value(MenuVM.StatusKey); }
@@ -58,4 +83,42 @@ export class MenuVM extends MuralBase
     set ShowGrid(v:     boolean) { this.set_property_value(MenuVM.ShowGridKey, v); }
     get SnapToGrid():   boolean { return this.get_property_value(MenuVM.SnapToGridKey); }
     set SnapToGrid(v:   boolean) { this.set_property_value(MenuVM.SnapToGridKey, v); }
+
+    private MakeLeaf(id: string, title: string, narration: string): CommandDefinition
+    {
+        this.commandsById.set(id, new RelayCommand(() => { this.Status = narration; }));
+        return MenuVM.MakeDef(id, title);
+    }
+
+    // A checkable row: Presentation=Toggles + a CheckableRelayCommand whose
+    // `isChecked` pull reads the VM's own backing DP (`get`) and whose
+    // execute flips it (`set`) then re-pulses CanExecuteChanged so
+    // CommandMenuBuilder's live-sync listener (command-menu-builder.ts)
+    // updates CommandViewModel.IsChecked, which the shipped
+    // @CommandMenuItemTemplate's `IsChecked = $IsChecked` binding renders.
+    private MakeToggle(id: string, title: string, get: () => boolean, set: (v: boolean) => void): CommandDefinition
+    {
+        const command: CheckableRelayCommand = new CheckableRelayCommand(
+            () =>
+            {
+                set(!get());
+                this.Status = `${title} → ${get() ? 'on' : 'off'}.`;
+                command.RaiseCanExecuteChanged();
+            },
+            undefined,
+            get,
+        );
+        this.commandsById.set(id, command);
+        const def = MenuVM.MakeDef(id, title);
+        def.Presentation = CommandGroupPresentation.Toggles;
+        return def;
+    }
+
+    private static MakeDef(id: string, title: string): CommandDefinition
+    {
+        const def = new CommandDefinition();
+        def.Id    = id;
+        def.Title = title;
+        return def;
+    }
 }
