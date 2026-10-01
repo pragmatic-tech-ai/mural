@@ -129,8 +129,11 @@ export { type ISettingSource, type ISettingReArmable, SettingSourceKey, SettingS
 export {
     CommandBase,
     RelayCommand,
+    CheckableRelayCommand,
+    isCheckableCommand,
     type CommandMetadataInit,
     type ICommand,
+    type ICheckableCommand,
 } from './command.js';
 export {
     EventTrigger,

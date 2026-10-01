@@ -2,6 +2,7 @@
     type CollectionChange,
     type IDisposable,
     type ICommand,
+    CheckableRelayCommand,
     MetaData,
     MuralBase,
     ObservableCollection,
@@ -44,6 +45,8 @@ import { PortSide } from './port.js';
 import type { IDocument } from '../shell/services/documents-content-host-service.js';
 import type { ICommandTarget } from '../shell/commands/command-target.js';
 import type { CommandDefinition } from '../shell/commands/command-definition.js';
+import type { CommandContext } from '../shell/commands/command-context.js';
+import type { ICommandDispatcher } from '../shell/commands/command-dispatcher.js';
 import { DiagramEditingContext, DiagramCommandId } from './diagram-command-contexts.js';
 import { DiagramInspector } from './diagram-inspector.js';
 import type { IFontFormatSink } from './font-format-sink.js';
@@ -206,7 +209,7 @@ let _diagramDocSeq = 0;
 // Customise by subclassing (override CreateNode for custom Figure
 // shapes, etc.) or by composing — the Document doesn't lock methods
 // down.
-export class DiagramDocument extends MuralBase implements DiagramMutator, IDocument, ICommandTarget, IFontFormatSink
+export class DiagramDocument extends MuralBase implements DiagramMutator, IDocument, ICommandTarget, ICommandDispatcher, IFontFormatSink
 {
     // ── IDocument surface — lets a DocumentsContentHostService host this
     // document (open-set dedupe, tab title, dirty indicator, Save). ──
@@ -636,6 +639,28 @@ export class DiagramDocument extends MuralBase implements DiagramMutator, IDocum
         const view = this.ActiveView;
         if (view === undefined) return undefined;
         return DIAGRAM_COMMAND_GETTERS.get(id)?.(view);
+    }
+
+    // ── ICommandDispatcher surface — the surface-agnostic replacement for
+    // ICommandTarget. Resolve reuses the same getter/active maps Execute/
+    // CanExecute/IsActive read above: the executor command for a known id,
+    // wrapped as a CheckableRelayCommand when the id is a toggle (present in
+    // DIAGRAM_COMMAND_ACTIVE) so IsChecked reads the predicate. `_context` is
+    // unused for now — a diagram document has no use for the dispatch context
+    // yet; kept on the signature so every ICommandDispatcher implementation
+    // agrees on shape.
+    public Resolve(commandId: string, _context: CommandContext): ICommand | undefined
+    {
+        const view = this.ActiveView;
+        if (view === undefined) return undefined;
+        const base = DIAGRAM_COMMAND_GETTERS.get(commandId)?.(view);
+        if (base === undefined) return undefined;
+        const active = DIAGRAM_COMMAND_ACTIVE.get(commandId);
+        if (active === undefined) return base;
+        return new CheckableRelayCommand(
+            (p) => base.Execute(p),
+            (p) => base.CanExecute(p),
+            () => active(view));
     }
 
     // ── IFontFormatSink accessors ──────────────────────────────────────────
