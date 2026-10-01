@@ -54,6 +54,17 @@ describe('CommandViewModel', () => {
         assert.equal(vm.HasChildren, true);
     });
 
+    test('HasChildren is true for a definition with declared Children before EnsureExpanded', () => {
+        // Lazy model: the VM's own Children stays empty until EnsureExpanded()
+        // realizes it, so the expand affordance must be driven off the
+        // DEFINITION's declared Children, not the (still-empty) VM Children.
+        const d = def();
+        d.AddChild(def('child'));
+        const vm = new CommandViewModel(d, command());
+        assert.equal(vm.Children.Count, 0, 'sanity: not yet expanded');
+        assert.equal(vm.HasChildren, true);
+    });
+
     test('HasChildren is true when the Definition names a ChildrenContributor', () => {
         const d = def();
         d.ChildrenContributor = new ServiceKey<ICommandContributor>('test.contributor');

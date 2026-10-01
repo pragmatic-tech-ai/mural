@@ -4,7 +4,7 @@ import type { CommandContext } from './command-context.js';
 import type { ICommandContributor } from './command-contributor.js';
 import type { ICommandChildRealizer } from './command-child-realizer.js';
 import { CommandDefinition } from './command-definition.js';
-import { CommandToggleViewModel, CommandViewModel } from './command-view-model.js';
+import { CommandViewModel } from './command-view-model.js';
 
 // Builds a CommandViewModel tree from CommandDefinition roots for a menu surface:
 // resolves each command through the active ICommandDispatcher (so the rendered
@@ -14,10 +14,10 @@ import { CommandToggleViewModel, CommandViewModel } from './command-view-model.j
 // instance per menu-open; disposing the root VM tears the whole tree down.
 //
 // RULING (R-isToggle): a plain menu node is never a toggle — Build always
-// constructs a plain CommandViewModel (isToggle = false). Toggle STATE still
-// rides CommandViewModel.IsChecked; IsToggle=true is reserved for the toolbar's
-// Toggles presentation. Reading a menu node's group presentation to flip this is
-// deferred to the checkable-menu-item task, which will force the right answer.
+// constructs a plain CommandViewModel. Toggle STATE still rides
+// CommandViewModel.IsChecked; the CommandToggleViewModel path is reintroduced in
+// the checkable-menu-item task once a real condition (the menu node's group
+// presentation) drives it — no dead branch kept here in the meantime.
 export class CommandMenuBuilder implements ICommandChildRealizer
 {
     constructor(
@@ -32,13 +32,7 @@ export class CommandMenuBuilder implements ICommandChildRealizer
     public Build(definition: CommandDefinition): CommandViewModel
     {
         const command = this.dispatcher.Resolve(definition.Id, this.context) as ICommand;
-        // A plain menu node is never a toggle (R-isToggle) — the branch stays
-        // available for the checkable-menu-item task, which will decide how to
-        // read a menu node's group presentation; until then this is always false.
-        const isToggle = false;
-        const vm = isToggle
-            ? new CommandToggleViewModel(definition, command, true)
-            : new CommandViewModel(definition, command, false);
+        const vm = new CommandViewModel(definition, command, false);
         if (definition.Children.Count > 0 || definition.ChildrenContributor !== undefined)
         {
             vm.SetChildRealizer(this);

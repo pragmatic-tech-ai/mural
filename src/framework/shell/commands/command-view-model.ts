@@ -39,7 +39,12 @@ export class CommandViewModel extends Observable implements IDisposable
     public get Title(): string { return this.Definition.Title; }
     public get Icon(): Geometry | undefined { return this.Definition.Icon; }
     public get SeparatorBefore(): boolean { return this.Definition.SeparatorBefore; }
-    public get HasChildren(): boolean { return this.Children.Count > 0 || this.Definition.ChildrenContributor !== undefined; }
+    public get HasChildren(): boolean
+    {
+        return this.Children.Count > 0
+            || this.Definition.Children.Count > 0
+            || this.Definition.ChildrenContributor !== undefined;
+    }
 
     public get IsChecked(): boolean { return this.checked; }
     public set IsChecked(v: boolean)
