@@ -94,8 +94,21 @@ resources Menus
     }
 
     // ── MenuItem: row (hover surface + dedicated selected layer) ──────
+    // Wrapped in a vertical StackPanel so a leading divider (PART_
+    // SeparatorBefore, default Collapsed — MenuItem.SeparatorBefore's
+    // intrinsic equivalent of a declarative sibling MenuSeparator) can sit
+    // ABOVE the row without changing what the row's own Border/DockPanel
+    // chrome looks like. This exists because a HierarchicalDataTemplate's
+    // generated container must stay a single MenuItem (MenuContainerFactory.
+    // GetContainer only recurses a submenu when `tmpl.Apply(item) instanceof
+    // MenuItem`), so a data-bound row has no way to place a sibling
+    // MenuSeparator the way declaratively-nested `MenuItem { MenuSeparator;
+    // MenuItem }` markup can — the divider has to be INTRINSIC to the row.
     Template x:key="DefaultMenuItemRow" [TargetType = MenuItem]
     {
+        StackPanel [ Orientation = Vertical ]
+        {
+        MenuSeparator x:name="PART_SeparatorBefore" [ Visibility = Collapsed ]
         Border x:name="PART_Row" [ Fill = #00000000, CornerRadius = @RadiusMd ]
         {
             // PART_Selected carries the row padding so its @SurfaceSelected
@@ -132,6 +145,7 @@ resources Menus
                           Style = @UiLabel ]
                 }
             }
+        }
         }
         when ( IsMouseOver ) { PART_Row.Fill = @Bg2; }
         when ( IsFocused ) { PART_Row.Fill = @Bg2; }

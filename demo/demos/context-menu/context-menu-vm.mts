@@ -206,16 +206,21 @@ export class ContextMenuVM extends MuralBase
             this.MakeLeaf(ContextMenuVM.RedFlipHorizontalId, ContextMenuVM.RedFlipHorizontalTitle, ContextMenuVM.EditPrefix),
             this.MakeLeaf(ContextMenuVM.RedFlipVerticalId,   ContextMenuVM.RedFlipVerticalTitle,   ContextMenuVM.EditPrefix),
         ]);
+        // Disabled: nothing to delete until something is selected — a
+        // CanExecute=false leaf, same functional gate the old hand-authored
+        // `IsEnabled=false` MenuItem enforced (MenuItem has no CanExecute→
+        // IsEnabled visual wiring today, so this item no longer renders
+        // greyed-out; it still refuses to execute on click).
+        const deleteLeaf = this.MakeDisabledLeaf(ContextMenuVM.RedDeleteId, ContextMenuVM.RedDeleteTitle);
+        // Restore the two dividers the pre-migration MenuSeparators drew:
+        // one before Delete (after Paste), one before Transform (after Delete).
+        deleteLeaf.SeparatorBefore = true;
+        transform.SeparatorBefore = true;
         return [
             this.MakeLeaf(ContextMenuVM.RedCutId,   ContextMenuVM.RedCutTitle,   ContextMenuVM.EditPrefix),
             this.MakeLeaf(ContextMenuVM.RedCopyId,  ContextMenuVM.RedCopyTitle,  ContextMenuVM.EditPrefix),
             this.MakeLeaf(ContextMenuVM.RedPasteId, ContextMenuVM.RedPasteTitle, ContextMenuVM.EditPrefix),
-            // Disabled: nothing to delete until something is selected — a
-            // CanExecute=false leaf, same functional gate the old hand-authored
-            // `IsEnabled=false` MenuItem enforced (MenuItem has no CanExecute→
-            // IsEnabled visual wiring today, so this item no longer renders
-            // greyed-out; it still refuses to execute on click).
-            this.MakeDisabledLeaf(ContextMenuVM.RedDeleteId, ContextMenuVM.RedDeleteTitle),
+            deleteLeaf,
             transform,
         ];
     }
@@ -223,12 +228,17 @@ export class ContextMenuVM extends MuralBase
     // ── Green (View) ──────────────────────────────────────────────────────
     private BuildGreenMenu(): readonly CommandDefinition[]
     {
+        // Restore the pre-migration divider before "Fit to Window" (after 200%).
+        const fitToWindow = this.MakeLeaf(ContextMenuVM.GreenFitToWindowId, ContextMenuVM.GreenFitToWindowTitle, ContextMenuVM.ViewPrefix);
+        fitToWindow.SeparatorBefore = true;
         const zoom = this.MakeParent(ContextMenuVM.GreenZoomId, ContextMenuVM.GreenZoomTitle, [
             this.MakeLeaf(ContextMenuVM.GreenZoom50Id,      ContextMenuVM.GreenZoom50Title,      ContextMenuVM.ViewPrefix),
             this.MakeLeaf(ContextMenuVM.GreenZoom100Id,     ContextMenuVM.GreenZoom100Title,     ContextMenuVM.ViewPrefix),
             this.MakeLeaf(ContextMenuVM.GreenZoom200Id,     ContextMenuVM.GreenZoom200Title,     ContextMenuVM.ViewPrefix),
-            this.MakeLeaf(ContextMenuVM.GreenFitToWindowId, ContextMenuVM.GreenFitToWindowTitle, ContextMenuVM.ViewPrefix),
+            fitToWindow,
         ]);
+        // Restore the pre-migration divider before "Zoom" (after Show Rulers).
+        zoom.SeparatorBefore = true;
         return [
             this.MakeToggle(
                 ContextMenuVM.GreenToggleId(ContextMenuVM.GreenShowGridTitle), ContextMenuVM.GreenShowGridTitle, ContextMenuVM.ViewPrefix,
@@ -251,11 +261,15 @@ export class ContextMenuVM extends MuralBase
             this.MakeLeaf(ContextMenuVM.BlueExportSvgId, ContextMenuVM.BlueExportSvgTitle, ContextMenuVM.FilePrefix),
             this.MakeLeaf(ContextMenuVM.BlueExportPdfId, ContextMenuVM.BlueExportPdfTitle, ContextMenuVM.FilePrefix),
         ]);
+        // Restore the pre-migration divider before "Export as" (after Email).
+        exportAs.SeparatorBefore = true;
         const share = this.MakeParent(ContextMenuVM.BlueShareId, ContextMenuVM.BlueShareTitle, [
             this.MakeLeaf(ContextMenuVM.BlueCopyLinkId, ContextMenuVM.BlueCopyLinkTitle, ContextMenuVM.FilePrefix),
             this.MakeLeaf(ContextMenuVM.BlueEmailId,    ContextMenuVM.BlueEmailTitle,    ContextMenuVM.FilePrefix),
             exportAs,
         ]);
+        // Restore the pre-migration divider before "Share" (after Save).
+        share.SeparatorBefore = true;
         // The dynamic submenu — no static Children, its rows come ENTIRELY
         // from RecentCommandContributor.Contribute (resolved via the
         // ChildrenContributor token) each time this node's submenu opens.
@@ -264,14 +278,17 @@ export class ContextMenuVM extends MuralBase
         {
             this.commandsById.set(id, new RelayCommand(() => this.SetStatus(`${ContextMenuVM.FilePrefix} ▸ Recent ▸ opened.`)));
         }
+        // Restore the pre-migration divider before "Bookmark" (after Share).
+        const bookmark = this.MakeToggle(
+            `${ContextMenuVM.BlueMenuId}.bookmark`, ContextMenuVM.BlueBookmarkTitle, ContextMenuVM.FilePrefix,
+            () => this.Bookmarked, (v) => { this.Bookmarked = v; });
+        bookmark.SeparatorBefore = true;
         return [
             this.MakeLeaf(ContextMenuVM.BlueOpenId, ContextMenuVM.BlueOpenTitle, ContextMenuVM.FilePrefix),
             this.MakeLeaf(ContextMenuVM.BlueSaveId, ContextMenuVM.BlueSaveTitle, ContextMenuVM.FilePrefix),
             recent,
             share,
-            this.MakeToggle(
-                `${ContextMenuVM.BlueMenuId}.bookmark`, ContextMenuVM.BlueBookmarkTitle, ContextMenuVM.FilePrefix,
-                () => this.Bookmarked, (v) => { this.Bookmarked = v; }),
+            bookmark,
         ];
     }
 

@@ -313,11 +313,12 @@ resources Shells {
     // button at :265) — a menu opts in by `ItemTemplate = @CommandMenuItemTemplate`.
     HierarchicalDataTemplate x:key="CommandMenuItemTemplate" [DataType = CommandViewModel, itemsselector = Children] {
         MenuItem
-            [ Header      = $Title,
-              Icon        = Shape [ Geometry = $Icon, Width = 16, Height = 16 ],
-              Command     = $Command,
-              IsCheckable = $IsToggle,
-              IsChecked   = $IsChecked ]
+            [ Header          = $Title,
+              Icon            = Shape [ Geometry = $Icon, Width = 16, Height = 16 ],
+              Command         = $Command,
+              IsCheckable     = $IsToggle,
+              IsChecked       = $IsChecked,
+              SeparatorBefore = $SeparatorBefore ]
     }
 
     // ── Per-group presentation templates ────────────────────────────────

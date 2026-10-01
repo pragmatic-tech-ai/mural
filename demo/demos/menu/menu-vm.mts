@@ -60,15 +60,27 @@ export class MenuVM extends MuralBase
     {
         super();
 
+        // Restore the pre-migration dividers: before Save (after Open), before
+        // Close (after Save As), before Undo (after Close), before Show Grid
+        // (after Redo) — the four MenuSeparators the old hand-authored body had.
+        const save     = this.MakeLeaf(MenuVM.SaveId,  MenuVM.SaveTitle,  'Save — written to disk.');
+        const close    = this.MakeLeaf(MenuVM.CloseId, MenuVM.CloseTitle, 'Close — document closed.');
+        const undo     = this.MakeLeaf(MenuVM.UndoId,  MenuVM.UndoTitle,  'Undo.');
+        const showGrid = this.MakeToggle(MenuVM.ShowGridId, MenuVM.ShowGridTitle, () => this.ShowGrid, (v) => { this.ShowGrid = v; });
+        save.SeparatorBefore     = true;
+        close.SeparatorBefore    = true;
+        undo.SeparatorBefore     = true;
+        showGrid.SeparatorBefore = true;
+
         const defs = [
             this.MakeLeaf(MenuVM.NewId,    MenuVM.NewTitle,    'New — empty document.'),
             this.MakeLeaf(MenuVM.OpenId,   MenuVM.OpenTitle,   'Open — read from disk.'),
-            this.MakeLeaf(MenuVM.SaveId,   MenuVM.SaveTitle,   'Save — written to disk.'),
+            save,
             this.MakeLeaf(MenuVM.SaveAsId, MenuVM.SaveAsTitle, 'Save As… — file dialog opened.'),
-            this.MakeLeaf(MenuVM.CloseId,  MenuVM.CloseTitle,  'Close — document closed.'),
-            this.MakeLeaf(MenuVM.UndoId,   MenuVM.UndoTitle,   'Undo.'),
+            close,
+            undo,
             this.MakeLeaf(MenuVM.RedoId,   MenuVM.RedoTitle,   'Redo.'),
-            this.MakeToggle(MenuVM.ShowGridId,   MenuVM.ShowGridTitle,   () => this.ShowGrid,   (v) => { this.ShowGrid = v; }),
+            showGrid,
             this.MakeToggle(MenuVM.SnapToGridId, MenuVM.SnapToGridTitle, () => this.SnapToGrid, (v) => { this.SnapToGrid = v; }),
         ];
 

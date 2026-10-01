@@ -75,6 +75,25 @@ describe('MenuStrip / MenuItem / MenuSeparator', () => {
         assert.equal(chevron(), Visibility.Collapsed);
     });
 
+    test('SeparatorBefore defaults false (divider Collapsed); true shows it; EXISTING rows are unaffected', () => {
+        // PART_SeparatorBefore is a MenuSeparator row part, Visibility-toggled
+        // the same way PART_Chevron is — default Collapsed so every row that
+        // never touches SeparatorBefore (every row that existed before this
+        // property did) renders exactly as before.
+        interface RowInternals { _separatorBefore?: { Visibility: Visibility } }
+        const mi = new MenuItem();
+        const separator = (): Visibility | undefined => (mi as unknown as RowInternals)._separatorBefore?.Visibility;
+
+        assert.equal(mi.SeparatorBefore, false, 'DP default is false');
+        assert.equal(separator(), Visibility.Collapsed, 'divider Collapsed by default — no regression to any existing row');
+
+        mi.SeparatorBefore = true;
+        assert.equal(separator(), Visibility.Visible, 'divider shown once SeparatorBefore is set');
+
+        mi.SeparatorBefore = false;
+        assert.equal(separator(), Visibility.Collapsed, 'and hides again when cleared');
+    });
+
     test('hover over a parent item arms a submenu-open timer, cancelled on leave', () => {
         // A parent item (has a submenu) arms a dwell timer on pointer-enter and
         // clears it on leave; a leaf item never arms one. The actual open fires

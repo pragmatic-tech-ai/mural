@@ -327,16 +327,19 @@ export class CommandsVM extends DiagramDocument
 
         const provider = Application.current!.Services;
         const builder   = new CommandMenuBuilder(this.Dispatcher, provider, new CommandContext());
+        // Dividers restored to match the pre-migration MenuSeparators: before
+        // Cut (after Load), before Duplicate (after Delete), before Undo
+        // (after Select All).
         this.Roots = [
             CommandsVM.MakeDef(CommandsVM.SaveId,      CommandsVM.SaveTitle),
             CommandsVM.MakeDef(CommandsVM.LoadId,      CommandsVM.LoadTitle),
-            CommandsVM.MakeDef(CommandsVM.CutId,       CommandsVM.CutTitle),
+            CommandsVM.MakeDef(CommandsVM.CutId,       CommandsVM.CutTitle,  true),
             CommandsVM.MakeDef(CommandsVM.CopyId,      CommandsVM.CopyTitle),
             CommandsVM.MakeDef(CommandsVM.PasteId,     CommandsVM.PasteTitle),
             CommandsVM.MakeDef(CommandsVM.DeleteId,    CommandsVM.DeleteTitle),
-            CommandsVM.MakeDef(CommandsVM.DuplicateId, CommandsVM.DuplicateTitle),
+            CommandsVM.MakeDef(CommandsVM.DuplicateId, CommandsVM.DuplicateTitle, true),
             CommandsVM.MakeDef(CommandsVM.SelectAllId, CommandsVM.SelectAllTitle),
-            CommandsVM.MakeDef(CommandsVM.UndoId,      CommandsVM.UndoTitle),
+            CommandsVM.MakeDef(CommandsVM.UndoId,      CommandsVM.UndoTitle, true),
             CommandsVM.MakeDef(CommandsVM.RedoId,      CommandsVM.RedoTitle),
         ].map((def) => builder.Build(def));
 
@@ -346,19 +349,22 @@ export class CommandsVM extends DiagramDocument
         // Style[TargetType=...] { ContextMenuService.ContextMenu = @NodeContextMenu }
         // attachment (one shared menu instance, many attached nodes — only
         // one can be open at a time).
+        // Divider restored to match the pre-migration MenuSeparator: before
+        // Delete (after Duplicate).
         this.NodeContextMenu = new CommandContextMenu([
             CommandsVM.MakeDef(CommandsVM.CutId,       CommandsVM.CutTitle),
             CommandsVM.MakeDef(CommandsVM.CopyId,      CommandsVM.CopyTitle),
             CommandsVM.MakeDef(CommandsVM.DuplicateId, CommandsVM.DuplicateTitle),
-            CommandsVM.MakeDef(CommandsVM.DeleteId,    CommandsVM.DeleteTitle),
+            CommandsVM.MakeDef(CommandsVM.DeleteId,    CommandsVM.DeleteTitle, true),
         ], this.Dispatcher, provider);
     }
 
-    private static MakeDef(id: string, title: string): CommandDefinition
+    private static MakeDef(id: string, title: string, separatorBefore = false): CommandDefinition
     {
         const def = new CommandDefinition();
-        def.Id    = id;
-        def.Title = title;
+        def.Id              = id;
+        def.Title           = title;
+        def.SeparatorBefore = separatorBefore;
         return def;
     }
 

@@ -7,6 +7,7 @@ import {
     Panel,
     PointerButton,
     RelayCommand,
+    Visibility,
     type ICommand,
     type IServiceProvider,
     type PointerEventInit,
@@ -167,6 +168,41 @@ describe('CommandContextMenu — per-open build / dispose-on-close', () =>
         const rendered = findMenuItems(cm).map(m => m.Header);
         assert.ok(rendered.includes('File') && rendered.includes('Edit'),
             `expected File + Edit among rendered rows, got ${JSON.stringify(rendered)}`);
+    });
+
+    test('CommandDefinition.SeparatorBefore renders a divider through the REAL @CommandMenuItemTemplate', () =>
+    {
+        // A1/A2 shipped CommandDefinition.SeparatorBefore for the flat
+        // @CommandMenuRowTemplate (toolbar split-button dropdown); the
+        // hierarchical @CommandMenuItemTemplate (what CommandContextMenu /
+        // MenuButton / the migrated demos actually render through) now binds
+        // it too — this proves the wire end-to-end through the SAME template
+        // CommandContextMenu.BuildTree resolves via FindResource, not a
+        // hand-rolled stand-in.
+        const target = new HeadlessTarget(400, 300);
+        const root = new Root();
+        target.Content = root;
+
+        const plain = def('plain', 'Plain');
+        const divided = def('divided', 'Divided');
+        divided.SeparatorBefore = true;
+        const cm = new CommandContextMenu([plain, divided], new StableDispatcher(), new FakeProvider());
+        root.ContextMenu = cm;
+
+        const im = new InputManager();
+        openMenu(root, im, target);
+
+        const internals = cm as unknown as ContextMenuInternals;
+        const plainMi    = internals.Generator.ContainerFromItem(internals.built[0]!) as MenuItem;
+        const dividedMi  = internals.Generator.ContainerFromItem(internals.built[1]!) as MenuItem;
+
+        assert.equal(plainMi.SeparatorBefore, false, 'SeparatorBefore=false (default) resolved through the real template');
+        assert.equal(dividedMi.SeparatorBefore, true, 'SeparatorBefore=true resolved through the real template');
+
+        const dividerOf = (mi: MenuItem): Visibility | undefined =>
+            (mi as unknown as { _separatorBefore?: { Visibility: Visibility } })._separatorBefore?.Visibility;
+        assert.equal(dividerOf(plainMi), Visibility.Collapsed, 'no divider on the plain row');
+        assert.equal(dividerOf(dividedMi), Visibility.Visible, 'divider rendered on the row with SeparatorBefore=true');
     });
 
     test('close disposes every built VM and clears ItemsSource', () =>
