@@ -234,6 +234,12 @@ export class MenuItem extends HeaderedItemsControl
 
     // Row template parts — cached after the row template Apply.
     private _rowRoot:          Visual         | undefined;
+    // The visible row within _rowRoot. DefaultMenuItemRow wraps the row in a
+    // StackPanel { PART_SeparatorBefore, PART_Row }, so _rowRoot is the wrapper
+    // and the fly-out must anchor at PART_Row (see anchorElement / mountSubmenu).
+    // Row templates with no PART_Row (e.g. DefaultMenuStripItemRow) leave this
+    // undefined and anchoring falls back to _rowRoot.
+    private _partRow:          Visual         | undefined;
     private _iconHost:         Border         | undefined;
     private _rowLabel:         TextBlock      | undefined;
     private _gestureLabel:     TextBlock      | undefined;
@@ -320,6 +326,7 @@ export class MenuItem extends HeaderedItemsControl
         {
             this.DetachVisual(this._rowRoot);
             this._rowRoot         = undefined;
+            this._partRow         = undefined;
             this._iconHost        = undefined;
             this._rowLabel        = undefined;
             this._gestureLabel    = undefined;
@@ -346,11 +353,13 @@ export class MenuItem extends HeaderedItemsControl
         const gesture   = this._rowRoot.FindName('PART_Gesture');
         const chevron   = this._rowRoot.FindName('PART_Chevron');
         const separator = this._rowRoot.FindName('PART_SeparatorBefore');
+        const rowBody   = this._rowRoot.FindName('PART_Row');
         if (icon instanceof Border)             this._iconHost        = icon;
         if (label instanceof TextBlock)         this._rowLabel        = label;
         if (gesture instanceof TextBlock)       this._gestureLabel    = gesture;
         if (chevron instanceof Shape)           this._chevron         = chevron;
         if (separator instanceof MenuSeparator) this._separatorBefore = separator;
+        if (rowBody instanceof Visual)          this._partRow         = rowBody;
     }
 
     public override get visualChildren(): readonly Visual[]
@@ -611,7 +620,8 @@ export class MenuItem extends HeaderedItemsControl
         // (ContextMenu, MenuButton, MenuItem, anonymous wrappers) →
         // vertical context.
         const topLevel = this.isTopLevelInMenuStrip();
-        if (this._rowRoot !== undefined) this._popupHost.anchor = this._rowRoot;
+        const anchor   = this.anchorElement();
+        if (anchor !== undefined) this._popupHost.anchor = anchor;
         this._popupHost.anchorSide = topLevel ? MenuAnchorSide.Below : MenuAnchorSide.Right;
         // A NESTED submenu must not lay a hit-testable scrim over the rest of
         // the menu chain. The scrim fills the whole surface, so if it caught
@@ -636,6 +646,19 @@ export class MenuItem extends HeaderedItemsControl
     {
         const parent = this.GetLogicalParent();
         return parent instanceof MenuStrip;
+    }
+
+    // The element the submenu fly-out anchors to. PopupHost derives the
+    // fly-out origin from absoluteOriginOf(anchor) (summing ArrangedRect.Y up
+    // the tree), so for the default DefaultMenuItemRow — a StackPanel wrapping
+    // PART_SeparatorBefore above PART_Row — we must anchor at PART_Row, not the
+    // StackPanel (_rowRoot): a visible SeparatorBefore divider would otherwise
+    // lift a nested (anchorSide=Right) fly-out by the divider's height. Row
+    // templates without a PART_Row (e.g. the MenuStrip top-level row) fall back
+    // to _rowRoot, where wrapper and visible row coincide.
+    private anchorElement(): Visual | undefined
+    {
+        return this._partRow ?? this._rowRoot;
     }
 
     private unmountSubmenu(): void

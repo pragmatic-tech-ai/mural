@@ -235,6 +235,33 @@ describe('MenuStrip / MenuItem / MenuSeparator', () => {
         assert.equal(sep.ArrangedRect.Width, 100);
         assert.equal(sep.ArrangedRect.Height, 9);
     });
+
+    test('submenu fly-out anchors at PART_Row, not the StackPanel wrapper — SeparatorBefore must not push the fly-out up', () => {
+        // The default DefaultMenuItemRow is `StackPanel { PART_SeparatorBefore, PART_Row }`,
+        // so _rowRoot is now the wrapper, not the visible row. mountSubmenu() must anchor
+        // the fly-out at PART_Row: PopupHost derives the fly-out origin from
+        // absoluteOriginOf(anchor) (sums ArrangedRect.Y up-tree), so anchoring at the
+        // StackPanel top (Y above the divider) would open a nested fly-out ~9px high.
+        interface RowInternals { _rowRoot?: { ArrangedRect: Rect }; anchorElement(): { ArrangedRect: Rect } | undefined }
+        const root = new Root();
+        const parent = new MenuItem();
+        parent.Header = 'Export';
+        parent.SeparatorBefore = true;              // divider visible above the row
+        const child = new MenuItem(); child.Header = 'SVG';
+        parent.AddChild(child);                     // makes it a submenu parent
+        root.AddChild(parent);
+
+        // Lay the row out so PART_Row sits below the visible divider.
+        parent.Measure(new Size(500, 500));
+        parent.Arrange(new Rect(0, 0, parent.DesiredSize.Width, parent.DesiredSize.Height));
+
+        const internals = parent as unknown as RowInternals;
+        const anchor = internals.anchorElement();
+        assert.ok(anchor !== undefined, 'anchor element resolved');
+        assert.notEqual(anchor, internals._rowRoot, 'anchor is PART_Row, not the StackPanel wrapper');
+        assert.ok(anchor.ArrangedRect.Y > 0,
+            'PART_Row is offset below the visible SeparatorBefore divider, so the fly-out opens at the row top');
+    });
 });
 
 describe('MenuButton', () => {

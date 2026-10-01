@@ -108,44 +108,44 @@ resources Menus
     {
         StackPanel [ Orientation = Vertical ]
         {
-        MenuSeparator x:name="PART_SeparatorBefore" [ Visibility = Collapsed ]
-        Border x:name="PART_Row" [ Fill = #00000000, CornerRadius = @RadiusMd ]
-        {
-            // PART_Selected carries the row padding so its @SurfaceSelected
-            // fill spans the full row and survives a concurrent @Bg2 hover.
-            Border x:name="PART_Selected"
-                [ Fill = #00000000,
-                  CornerRadius = @RadiusMd,
-                  Padding = (@Space3,@Space2,@Space3,@Space2) ]
+            MenuSeparator x:name="PART_SeparatorBefore" [ Visibility = Collapsed ]
+            Border x:name="PART_Row" [ Fill = #00000000, CornerRadius = @RadiusMd ]
             {
-                DockPanel [ LastChildFill = true ]
+                // PART_Selected carries the row padding so its @SurfaceSelected
+                // fill spans the full row and survives a concurrent @Bg2 hover.
+                Border x:name="PART_Selected"
+                    [ Fill = #00000000,
+                      CornerRadius = @RadiusMd,
+                      Padding = (@Space3,@Space2,@Space3,@Space2) ]
                 {
-                    Border x:name="PART_Icon"
-                        [ DockPanel.Dock = Left,
-                          Width = 24,
-                          MinWidth = 24,
-                          TextBlock.Foreground = @Fg2 ]
-                    Shape x:name="PART_Chevron"
-                        [ DockPanel.Dock = Right,
-                          Geometry = @ChevronRight,
-                          Fill = @Fg2,
-                          Width = 5,
-                          Height = 10,
-                          VerticalAlignment = Center,
-                          Visibility = Collapsed ]
-                    TextBlock x:name="PART_Gesture"
-                        [ DockPanel.Dock = Right,
-                          Margin = (@Space4,0,@Space4,0),
-                          Foreground = @Fg2,
-                          Style = @UiCaption ]
-                    TextBlock x:name="PART_Label"
-                        [ Margin = (@Space2,0,@Space4,0),
-                          MinWidth = 80,
-                          Foreground = @Fg1,
-                          Style = @UiLabel ]
+                    DockPanel [ LastChildFill = true ]
+                    {
+                        Border x:name="PART_Icon"
+                            [ DockPanel.Dock = Left,
+                              Width = 24,
+                              MinWidth = 24,
+                              TextBlock.Foreground = @Fg2 ]
+                        Shape x:name="PART_Chevron"
+                            [ DockPanel.Dock = Right,
+                              Geometry = @ChevronRight,
+                              Fill = @Fg2,
+                              Width = 5,
+                              Height = 10,
+                              VerticalAlignment = Center,
+                              Visibility = Collapsed ]
+                        TextBlock x:name="PART_Gesture"
+                            [ DockPanel.Dock = Right,
+                              Margin = (@Space4,0,@Space4,0),
+                              Foreground = @Fg2,
+                              Style = @UiCaption ]
+                        TextBlock x:name="PART_Label"
+                            [ Margin = (@Space2,0,@Space4,0),
+                              MinWidth = 80,
+                              Foreground = @Fg1,
+                              Style = @UiLabel ]
+                    }
                 }
             }
-        }
         }
         when ( IsMouseOver ) { PART_Row.Fill = @Bg2; }
         when ( IsFocused ) { PART_Row.Fill = @Bg2; }
