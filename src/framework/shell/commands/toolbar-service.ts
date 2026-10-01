@@ -496,9 +496,11 @@ export class ToolbarService extends ServiceBase
         }
     }
 
-    // Sync every built VM's IsActive from the active target's optional IsActive
-    // query. Called whenever CanExecute is re-queried (requery pulse / active-doc
-    // change) so a Toggles button's checked state tracks the live selection.
+    // Sync every built VM's IsActive by resolving its command through the active
+    // dispatcher and reading ICheckableCommand.IsChecked (false when the resolved
+    // command isn't checkable). Called whenever CanExecute is re-queried (requery
+    // pulse / active-doc change) so a Toggles button's checked state tracks the
+    // live selection.
     private RefreshActiveStates(): void
     {
         const dispatcher = this.ActiveDispatcher();

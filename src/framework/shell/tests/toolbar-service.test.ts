@@ -49,8 +49,6 @@ function command(id: string, context: ServiceToken<unknown>, order = 0): Command
 }
 
 // A document that is BOTH an IDocument (so the host can open it) and an
-// ICommandTarget (so the toolbar dispatches to it).
-// A document that is BOTH an IDocument (so the host can open it) and an
 // ICommandTarget (so the toolbar's context filter still reads CommandContexts —
 // R1: the filter dispatches via ActiveTarget/isCommandTarget, untouched by this
 // migration) AND an ICommandDispatcher (so the toolbar's EXECUTION path, which
