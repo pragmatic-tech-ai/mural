@@ -32,3 +32,29 @@ describe('compile — nested CommandDefinition bodies (Children)', () => {
         assert.match(js, /_shellModule\d+\.Commands\.Add\(_commandDefinition\d+\);/);
     });
 });
+
+describe('compile — CommandDefinition.Region = MainMenu (ShellRegion)', () => {
+    test('a `.commands:` root declaring Region = MainMenu resolves to the ShellRegion enum member', () => {
+        // Region = MainMenu authors a main-menu-bar root (MainMenuService, A2
+        // Task 5) exactly as Region = StatusBar authors a status-bar control —
+        // resolved via PROPERTY_TO_ENUM['Region'] = ['ShellRegion'], so it must
+        // be registered in ENUM_MEMBERS['ShellRegion'] for a bare `MainMenu`
+        // identifier to resolve here.
+        const js = emitted(`
+            shell module DiagramModule {
+                .commands: {
+                    CommandDefinition[Id="file", Title="File", Region=MainMenu]
+                }
+            }
+        `);
+        assert.match(
+            js,
+            /import \{ ShellRegion \} from "@pragmatic-tech-ai\/mural\/framework\/shell\/commands\/shell-control-definition\.js";/,
+        );
+        assert.match(
+            js,
+            /_commandDefinition\d+\.set_property_value\(CommandDefinition\.RegionKey, ShellRegion\.MainMenu\);/,
+        );
+        assert.match(js, /_shellModule\d+\.Commands\.Add\(_commandDefinition\d+\);/);
+    });
+});

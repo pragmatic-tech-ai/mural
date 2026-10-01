@@ -617,7 +617,7 @@ export const ENUM_MEMBERS: ReadonlyMap<string, ReadonlySet<string>> = new Map<st
     // Resolved via PROPERTY_TO_ENUM under the `Presentation` property.
     ['CommandGroupPresentation', new Set(['Flat', 'SplitMenu', 'SplitGrid', 'Toggles'])],
     // Shell-control host region — `ShellControlDefinition [ Region = StatusBar ]`.
-    ['ShellRegion', new Set(['Toolbar', 'StatusBar', 'EditorActions'])],
+    ['ShellRegion', new Set(['Toolbar', 'StatusBar', 'EditorActions', 'MainMenu'])],
 ]);
 
 // Type → set of valid static-member names exposed for use in DOTTED
