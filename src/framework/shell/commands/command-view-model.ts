@@ -7,6 +7,7 @@ import {
 } from '../../../runtime/index.js';
 import type { Geometry } from '../../../visual-engine/index.js';
 import type { CommandDefinition } from './command-definition.js';
+import type { ICommandChildRealizer } from './command-child-realizer.js';
 
 // One bindable command view-model for every surface (toolbar button, menu row).
 // Observable (not MuralBase) — a menu rebuilds this per open and a tree can be
@@ -17,6 +18,12 @@ export class CommandViewModel extends Observable implements IDisposable
 
     private readonly subscriptions = new CompositeDisposable();
     private checked = false;
+
+    // The strategy that populates Children on first expand (set by whatever
+    // builder constructed this VM for a menu surface — a flat toolbar VM never
+    // gets one). Realized at most once; see EnsureExpanded.
+    private realizer: ICommandChildRealizer | undefined;
+    private realized = false;
 
     public readonly Children: ObservableCollection<CommandViewModel> = new ObservableCollection<CommandViewModel>();
 
@@ -44,6 +51,28 @@ export class CommandViewModel extends Observable implements IDisposable
         const old = this.checked;
         this.checked = v;
         this.RaisePropertyChanged(CommandViewModel.IsCheckedPropertyName, old, v);
+    }
+
+    // Registers the strategy EnsureExpanded delegates to. Set by the builder
+    // that constructed this VM (a menu node whose definition has static
+    // children or a ChildrenContributor); left unset for a flat toolbar VM.
+    public SetChildRealizer(realizer: ICommandChildRealizer): void
+    {
+        this.realizer = realizer;
+    }
+
+    // Populate Children on first call (menu submenu-open). Idempotent — a
+    // second call is a no-op, which is why a self-referential
+    // ChildrenContributor cannot loop (each level expands only when its own
+    // submenu opens). No realizer, or already realized, → nothing to do.
+    public EnsureExpanded(): void
+    {
+        if (this.realized)
+        {
+            return;
+        }
+        this.realized = true;
+        this.realizer?.RealizeChildren(this);
     }
 
     public dispose(): void
