@@ -1,9 +1,11 @@
 ﻿import {
     MetaData,
     MuralBase,
+    ObservableCollection,
     type ServiceToken,
 } from '../../../runtime/index.js';
 import type { Geometry } from '../../../visual-engine/index.js';
+import type { ICommandContributor } from './command-contributor.js';
 import { ShellRegion } from './shell-control-definition.js';
 
 // How a command GROUP is presented on the toolbar. A group's presentation is
@@ -162,4 +164,27 @@ export class CommandDefinition extends MuralBase
 
     public get SeparatorBefore(): boolean  { return this.get_property_value(CommandDefinition.SeparatorBeforeKey); }
     public set SeparatorBefore(v: boolean) { this.set_property_value(CommandDefinition.SeparatorBeforeKey, v); }
+
+    // Nested child commands — a menu/submenu tree. Populated from a `.commands:` or
+    // Hierarchy-DSL body (the markup content collection) and merged at build time with
+    // any ChildrenContributor output. Orthogonal to Group/Presentation (responsive
+    // toolbar layout); these are structural submenu children.
+    public readonly Children: ObservableCollection<CommandDefinition> =
+        new ObservableCollection<CommandDefinition>();
+
+    // The markup content collection: a `CommandDefinition { … }` body lowers to
+    // AddChild per nested element (see DEFAULT_SLOT_INFO['CommandDefinition']).
+    public AddChild(child: CommandDefinition): void
+    {
+        this.Children.Add(child);
+    }
+
+    // Names an ICommandContributor that supplies this command's children at build
+    // time (merged after Children). A ServiceToken DP — same precedent as
+    // HierarchyContributorDefinition.Contributor; resolved lazily on submenu expand.
+    public static readonly ChildrenContributorKey = MuralBase.RegisterProperty<ServiceToken<ICommandContributor> | undefined>(
+        CommandDefinition, 'ChildrenContributor', undefined, MetaData.None);
+
+    public get ChildrenContributor(): ServiceToken<ICommandContributor> | undefined  { return this.get_property_value(CommandDefinition.ChildrenContributorKey); }
+    public set ChildrenContributor(v: ServiceToken<ICommandContributor> | undefined) { this.set_property_value(CommandDefinition.ChildrenContributorKey, v); }
 }

@@ -885,6 +885,11 @@ export const DEFAULT_SLOT_INFO: ReadonlyMap<string, SlotInfo> = new Map<string, 
     ['MenuItem',                { name: 'Items',    kind: 'list'   }],
     // MenuSeparator: no body
     ['ContextMenu',             { name: 'Items',    kind: 'list'   }],
+    // A nested `CommandDefinition { CommandDefinition […] … }` body lowers
+    // to `parent.AddChild(child)` per child — the submenu tree (Children),
+    // orthogonal to the `.commands:` member-block (→ Commands.Add) that
+    // appends top-level definitions to a module.
+    ['CommandDefinition',       { name: 'Children', kind: 'list'   }],
     // MenuPopupHost: Panel-shaped, takes Scrim + popup-container as
     // children declaratively from the default ControlTemplates in
     // framework.resources.mu.
