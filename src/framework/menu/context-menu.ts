@@ -9,6 +9,7 @@ import { PresentationTarget } from '../../visual-engine/index.js';
 import { ItemsControl } from '../base/items-control.js';
 import { Border } from '../../basic/border.js';
 import { MenuItem, MenuPopupHost } from './menu-strip.js';
+import { MenuContainerFactory } from './menu-container-factory.js';
 import { ClickAwayScrim } from '../tool-bar/tool-bar.js';
 
 // ContextMenu — pops up at a host-coordinate point in response to a
@@ -132,6 +133,22 @@ export class ContextMenu extends ItemsControl
         if (container instanceof MenuItem)
         {
             container._onActivated = (): void => { this.IsOpen = false; };
+        }
+    }
+
+    // A CommandViewModel (or any non-Visual data item) resolved through a
+    // HierarchicalDataTemplate becomes a MenuItem container so the menu recurses;
+    // everything else falls to the base ContentPresenter path (unchanged).
+    public override GetContainerForItemOverride(item: unknown): Visual
+    {
+        return MenuContainerFactory.GetContainer(this, item) ?? super.GetContainerForItemOverride(item);
+    }
+
+    public override RebindContainerForItemOverride(container: Visual, item: unknown): void
+    {
+        if (!MenuContainerFactory.RebindContainer(this, container, item))
+        {
+            super.RebindContainerForItemOverride(container, item);
         }
     }
 

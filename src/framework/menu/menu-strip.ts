@@ -28,6 +28,8 @@ import { Brush, Visibility } from '../../visual-engine/index.js';
 import { ClickAwayScrim } from '../tool-bar/tool-bar.js';
 import { Button } from '../buttons/button.js';
 import type { ICommand } from '../../runtime/command.js';
+import { MenuContainerFactory } from './menu-container-factory.js';
+import type { ExpandableMenuData } from './expandable-menu-data.js';
 
 // ─────────────────────────────────────────────────────────────────────
 // MenuStrip — horizontal main-menu bar. Holds top-level MenuItems whose
@@ -93,6 +95,22 @@ export class MenuStrip extends ItemsControl
         if (container instanceof MenuItem)
         {
             container._onActivated = (): void => { container.IsSubmenuOpen = false; };
+        }
+    }
+
+    // A CommandViewModel (or any non-Visual data item) resolved through a
+    // HierarchicalDataTemplate becomes a MenuItem container so top-level strip
+    // items recurse into submenus; everything else falls to the base path.
+    public override GetContainerForItemOverride(item: unknown): Visual
+    {
+        return MenuContainerFactory.GetContainer(this, item) ?? super.GetContainerForItemOverride(item);
+    }
+
+    public override RebindContainerForItemOverride(container: Visual, item: unknown): void
+    {
+        if (!MenuContainerFactory.RebindContainer(this, container, item))
+        {
+            super.RebindContainerForItemOverride(container, item);
         }
     }
 
@@ -361,6 +379,22 @@ export class MenuItem extends HeaderedItemsControl
         }
     }
 
+    // A non-Visual submenu data item resolved through a HierarchicalDataTemplate
+    // becomes a MenuItem container so the submenu recurses; a flat/plain template
+    // or an own-container Visual falls to the base ContentPresenter path.
+    public override GetContainerForItemOverride(item: unknown): Visual
+    {
+        return MenuContainerFactory.GetContainer(this, item) ?? super.GetContainerForItemOverride(item);
+    }
+
+    public override RebindContainerForItemOverride(container: Visual, item: unknown): void
+    {
+        if (!MenuContainerFactory.RebindContainer(this, container, item))
+        {
+            super.RebindContainerForItemOverride(container, item);
+        }
+    }
+
     /** Public refresh for tests + DP-change forwarding. */
     public refreshRow(): void
     {
@@ -443,8 +477,21 @@ export class MenuItem extends HeaderedItemsControl
         }
         if (name === 'IsSubmenuOpen' && this._popupHost !== undefined)
         {
-            if (newValue === true) this.mountSubmenu();
-            else                   this.unmountSubmenu();
+            if (newValue === true)
+            {
+                // Lazy submenu population — the bound data (a CommandViewModel)
+                // gets a first-open callback so a ChildrenContributor realizes its
+                // children BEFORE the popup mounts, mirroring TreeView's dataOf()
+                // ExpandableTreeData hook (tree-view.ts:1136). The data is the item
+                // stamped on us in PrepareContainerForItemOverride.
+                const data = (this as unknown as { _itemsControlData?: unknown })._itemsControlData;
+                (data as ExpandableMenuData | undefined)?.OnSubmenuOpen?.();
+                this.mountSubmenu();
+            }
+            else
+            {
+                this.unmountSubmenu();
+            }
         }
         if (
             name === 'Header' || name === 'Icon' || name === 'InputGestureText' ||

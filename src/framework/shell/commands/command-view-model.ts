@@ -8,11 +8,12 @@ import {
 import type { Geometry } from '../../../visual-engine/index.js';
 import type { CommandDefinition } from './command-definition.js';
 import type { ICommandChildRealizer } from './command-child-realizer.js';
+import type { ExpandableMenuData } from '../../menu/expandable-menu-data.js';
 
 // One bindable command view-model for every surface (toolbar button, menu row).
 // Observable (not MuralBase) — a menu rebuilds this per open and a tree can be
 // deep. Children is empty for a flat toolbar item, populated for a menu node.
-export class CommandViewModel extends Observable implements IDisposable
+export class CommandViewModel extends Observable implements IDisposable, ExpandableMenuData
 {
     private static readonly IsCheckedPropertyName = 'IsChecked';
 
@@ -78,6 +79,14 @@ export class CommandViewModel extends Observable implements IDisposable
         }
         this.realized = true;
         this.realizer?.RealizeChildren(this);
+    }
+
+    // ExpandableMenuData — the Menu family calls this the first time this node's
+    // submenu opens. Idempotent via EnsureExpanded, so re-opens are cheap and a
+    // ChildrenContributor's rows populate exactly once.
+    public OnSubmenuOpen(): void
+    {
+        this.EnsureExpanded();
     }
 
     public dispose(): void

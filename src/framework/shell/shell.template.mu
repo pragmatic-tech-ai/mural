@@ -304,6 +304,21 @@ resources Shells {
             Shape [ Geometry = $Definition.Icon, Fill = @Fg2, Width = 16, Height = 16, Margin = (2) ]
         }
     }
+    // Recursive command-menu row — the Menu family (MenuItem / MenuStrip /
+    // ContextMenu) sets this as its ItemTemplate to render a CommandViewModel tree:
+    // each node is a MenuItem, and `itemsselector = Children` recurses into the
+    // node's live submenu children (populated lazily on submenu-open via
+    // CommandViewModel.OnSubmenuOpen → EnsureExpanded). KEYED (not implicit) so it
+    // does NOT shadow the implicit DataTemplate[CommandViewModel] (the toolbar
+    // button at :265) — a menu opts in by `ItemTemplate = @CommandMenuItemTemplate`.
+    HierarchicalDataTemplate x:key="CommandMenuItemTemplate" [DataType = CommandViewModel, itemsselector = Children] {
+        MenuItem
+            [ Header      = $Title,
+              Icon        = Shape [ Geometry = $Icon, Width = 16, Height = 16 ],
+              Command     = $Command,
+              IsCheckable = $IsToggle,
+              IsChecked   = $IsChecked ]
+    }
 
     // ── Per-group presentation templates ────────────────────────────────
     // Flat / Toggles groups are EXPANDED into their individual command VMs in the
