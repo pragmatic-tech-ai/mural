@@ -130,8 +130,9 @@ export class FormatMirror
         diagram.PropertyChanged(Diagram.SelectionStrikethroughKey).subscribe( () => this._broadcast((t, d) => t.ApplyStrikethrough(d.SelectionStrikethrough)));
 
         // Keep the toolbar's Toggles-presentation buttons in sync with the
-        // selection's text state. Their IsChecked is `= $IsActive`, which the
-        // ToolbarService only re-reads (via DiagramDocument.IsActive → these DPs)
+        // selection's text state. Their IsChecked is `= $IsChecked` on the command
+        // VM, which ToolbarService.RefreshActiveStates only re-reads (via
+        // DiagramDocument.Resolve → ICheckableCommand.IsChecked → these DPs)
         // on a global requery PULSE. Selection CHANGES already pulse (the command
         // collaborator's _raiseCanExecuteAll), but a command-driven format change
         // (clicking an align/decoration button) mutates the DP WITHOUT changing

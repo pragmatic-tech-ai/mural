@@ -17,7 +17,6 @@ import {
 import { CommandRegistry } from '../commands/command-registry.js';
 import { CommandDefinition } from '../commands/command-definition.js';
 import { ShellRegion } from '../commands/shell-control-definition.js';
-import type { ICommandTarget } from '../commands/command-target.js';
 import { CommandContext } from '../commands/command-context.js';
 
 // A test document that records Save() calls and can be marked dirty.
@@ -56,21 +55,19 @@ class PlainFieldDoc extends MuralBase implements IDocument
 function provider(): IServiceProvider { return new Application().Services; }
 
 // A document that also handles commands — so ExtendedCommands dispatch can be
-// observed. Implements ICommandTarget (kept for parity with the toolbar's
-// fakes; nothing here still reads it, but it mirrors the real shape) AND
-// ICommandDispatcher — rebuildExtendedCommands now dispatches via Resolve.
-class CommandDoc implements IDocument, ICommandTarget
+// observed. Exposes CommandContexts (kept for parity with the toolbar's fakes
+// and the context filter's duck-typing) AND ICommandDispatcher —
+// rebuildExtendedCommands dispatches via Resolve.
+class CommandDoc implements IDocument
 {
     public readonly Title = 'doc';
     public readonly IsDirty = false;
-    public readonly CommandContexts: readonly never[] = [];   // no contexts; still a target
+    public readonly CommandContexts: readonly never[] = [];   // no contexts; still a context source
     // Holds the command IDS Resolve's returned command was invoked with.
     public readonly executed: string[] = [];
     public canRun = true;
     constructor(public readonly Id: string) {}
     public Save(): void { /* no-op */ }
-    public Execute(_def: CommandDefinition): void { /* no-op: see Resolve() */ }
-    public CanExecute(): boolean { return this.canRun; }
 
     public Resolve(commandId: string, _context: CommandContext): ICommand | undefined
     {

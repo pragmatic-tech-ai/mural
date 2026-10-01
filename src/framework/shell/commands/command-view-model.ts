@@ -1,59 +1,66 @@
-﻿import {
+import {
+    Observable,
+    type IDisposable,
+    CompositeDisposable,
+    ObservableCollection,
     type ICommand,
-    MetaData,
-    MuralBase,
 } from '../../../runtime/index.js';
-import { CommandDefinition } from './command-definition.js';
+import type { Geometry } from '../../../visual-engine/index.js';
+import type { CommandDefinition } from './command-definition.js';
 
-// The button-bindable adapter the ToolbarService builds for one CommandDefinition.
-// A pure holder: `Definition` supplies the chrome (a toolbar template binds
-// `$Definition.Icon` / `$Definition.Title`); `Command` is the RelayCommand the
-// ToolbarService wired to dispatch to the active document. The VM has NO logic —
-// dispatch and CanExecute live in the ToolbarService (which the RelayCommand
-// closes over), so the VM stays a dumb, cacheable view-model.
-//
-// Both are DPs so a `DataTemplate[DataType=CommandViewModel]` can bind them
-// (`Command = $Command`, `Content = Shape[Geometry=$Definition.Icon]`) — a
-// `$path` binding's first segment must be a DP.
-export class CommandViewModel extends MuralBase
+// One bindable command view-model for every surface (toolbar button, menu row).
+// Observable (not MuralBase) — a menu rebuilds this per open and a tree can be
+// deep. Children is empty for a flat toolbar item, populated for a menu node.
+export class CommandViewModel extends Observable implements IDisposable
 {
-    public static readonly DefinitionKey = MuralBase.RegisterProperty<CommandDefinition>(
-        CommandViewModel, 'Definition',
-        undefined as unknown as CommandDefinition, MetaData.None);
+    private static readonly IsCheckedPropertyName = 'IsChecked';
 
-    public static readonly CommandKey = MuralBase.RegisterProperty<ICommand>(
-        CommandViewModel, 'Command',
-        undefined as unknown as ICommand, MetaData.None);
+    private readonly subscriptions = new CompositeDisposable();
+    private checked = false;
 
-    // The command's active / checked state — a Toggles-presentation button binds
-    // `IsChecked = $IsActive`. Kept in sync by the ToolbarService, which reads the
-    // active document's IsActive(definition) on every requery pulse. A plain DP
-    // (default false) so it's bindable; irrelevant for non-toggle presentations.
-    public static readonly IsActiveKey = MuralBase.RegisterProperty<boolean>(
-        CommandViewModel, 'IsActive', false, MetaData.None);
+    public readonly Children: ObservableCollection<CommandViewModel> = new ObservableCollection<CommandViewModel>();
 
-    constructor(definition: CommandDefinition, command: ICommand)
+    constructor(
+        public readonly Definition: CommandDefinition,
+        public readonly Command: ICommand,
+        public readonly IsToggle: boolean = false,
+    )
     {
         super();
-        this.set_property_value(CommandViewModel.DefinitionKey, definition);
-        this.set_property_value(CommandViewModel.CommandKey, command);
     }
 
-    public get Definition(): CommandDefinition { return this.get_property_value(CommandViewModel.DefinitionKey); }
-    public get Command(): ICommand { return this.get_property_value(CommandViewModel.CommandKey); }
+    public get Title(): string { return this.Definition.Title; }
+    public get Icon(): Geometry | undefined { return this.Definition.Icon; }
+    public get SeparatorBefore(): boolean { return this.Definition.SeparatorBefore; }
+    public get HasChildren(): boolean { return this.Children.Count > 0 || this.Definition.ChildrenContributor !== undefined; }
 
-    public get IsActive(): boolean { return this.get_property_value(CommandViewModel.IsActiveKey); }
-    public set IsActive(v: boolean) { this.set_property_value(CommandViewModel.IsActiveKey, v); }
+    public get IsChecked(): boolean { return this.checked; }
+    public set IsChecked(v: boolean)
+    {
+        if (this.checked === v)
+        {
+            return;
+        }
+        const old = this.checked;
+        this.checked = v;
+        this.RaisePropertyChanged(CommandViewModel.IsCheckedPropertyName, old, v);
+    }
+
+    public dispose(): void
+    {
+        for (const child of this.Children)
+        {
+            child.dispose();
+        }
+        this.Children.Clear();
+        this.subscriptions.dispose();
+    }
 }
 
-// A toggle-presentation command VM — identical data to CommandViewModel, a
-// distinct TYPE only. The command bar renders its FLAT item stream by implicit
-// DataTemplate-by-type (no ItemTemplate → one ContentPresenter per item), so a
-// Toggles-group member needs its own class to resolve
-// `DataTemplate[CommandToggleViewModel]` (a ToolBarToggleButton, IsChecked =
-// $IsActive) instead of the plain `DataTemplate[CommandViewModel]` button. This
-// mirrors the "a type per presentation" rule the group VMs use. Because
-// findDataTemplateForType walks the prototype chain, a CommandToggleViewModel
-// with no own template would fall back to CommandViewModel's button template —
-// so the shell registers a template for it explicitly.
+// RULING (kept deliberately — the shell renders the flat toolbar stream by
+// implicit DataTemplate-by-TYPE, so a toggle button needs its OWN type to
+// resolve DataTemplate[CommandToggleViewModel] instead of the plain
+// DataTemplate[CommandViewModel]; findDataTemplateForType walks the prototype
+// chain, so without a distinct type it would fall back to the plain button.
+// Carries no logic — toggle STATE lives in CommandViewModel.IsChecked.)
 export class CommandToggleViewModel extends CommandViewModel { }

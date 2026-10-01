@@ -104,7 +104,6 @@ export {
 export { CommandRegistry } from './shell/commands/command-registry.js';
 export { CommandViewModel } from './shell/commands/command-view-model.js';
 export { ToolbarService } from './shell/commands/toolbar-service.js';
-export { type ICommandTarget, isCommandTarget } from './shell/commands/command-target.js';
 export {
     SettingsLauncherService,
     SettingsContributionKey,

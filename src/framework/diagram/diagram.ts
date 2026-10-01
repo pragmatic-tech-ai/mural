@@ -354,8 +354,8 @@ export class Diagram extends Selector implements RigidConnectorDragHost
     // Text-format commands — the command surface behind the two label toolbars
     // (paragraph alignment WITHIN the label; label placement WITHIN the shape).
     // Same RelayCommand-DP shape as the align/combine commands, so a data-driven
-    // toolbar / ICommandTarget consumer (e.g. Plexus) binds them exactly the same
-    // way. DiagramCommands installs the defaults; each Execute force-applies its
+    // toolbar / ICommandDispatcher consumer (e.g. Plexus) binds them exactly the
+    // same way. DiagramCommands installs the defaults; each Execute force-applies its
     // value to every selected shape's label (via ApplySelectionText*), and each
     // CanExecute requires ≥ 1 selected shape that carries a label. The demo's
     // active-state toggles bind BOTH Command (the write) and IsChecked (the

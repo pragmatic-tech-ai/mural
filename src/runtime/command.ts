@@ -51,9 +51,9 @@ export interface ICommand
 }
 
 // A command that also carries a checked/active state (toolbar toggles, checkable
-// menu items). The state is read off the command itself — it replaces
-// ICommandTarget.IsActive(def). Change is signalled through the same
-// CanExecuteChanged channel (consumers re-read IsChecked on that pulse).
+// menu items). The state is read off the command itself, rather than a separate
+// target method. Change is signalled through the same CanExecuteChanged channel
+// (consumers re-read IsChecked on that pulse).
 export interface ICheckableCommand extends ICommand
 {
     readonly IsChecked: boolean;

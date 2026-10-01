@@ -269,13 +269,14 @@ resources Shells {
     }
     // Toggle presentation — a distinct VM TYPE (CommandToggleViewModel) so the
     // flat ToolbarItems stream resolves THIS template by type instead of the
-    // button one above. IsChecked reflects the active document's IsActive. Fill is
-    // LEFT UNSET: the ToolBarToggleButton Style flips the inherited
+    // button one above. IsChecked reflects the command VM's own IsChecked —
+    // folded from the resolved ICheckableCommand by ToolbarService.RefreshActiveStates.
+    // Fill is LEFT UNSET: the ToolBarToggleButton Style flips the inherited
     // TextBlock.Foreground (@OnSurfaceVariant at rest, @OnPrimary while checked)
     // and a bare Shape follows it — hardcoding Fill would pin the icon dark on the
     // @Primary checked fill.
     DataTemplate [DataType = CommandToggleViewModel] {
-        ToolBarToggleButton [ Command = $Command, IsChecked = $IsActive ] {
+        ToolBarToggleButton [ Command = $Command, IsChecked = $IsChecked ] {
             Shape [ Geometry = $Definition.Icon, Width = 16, Height = 16 ]
         }
     }

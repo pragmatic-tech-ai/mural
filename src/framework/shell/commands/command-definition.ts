@@ -25,7 +25,8 @@ export enum CommandGroupPresentation
     // icon grid (Columns wide) in the popup.
     SplitGrid = 'split-grid',
     // The group renders inline as a row of toggle buttons whose checked state
-    // reflects the active document's IsActive(definition).
+    // reflects the resolved command's ICheckableCommand.IsChecked, folded onto
+    // the toolbar's CommandViewModel.IsChecked.
     Toggles   = 'toggles',
 }
 
@@ -34,7 +35,7 @@ export enum CommandGroupPresentation
 // where it sits on a toolbar (Group, Order), which command context it belongs to
 // (Context), and a stable Id. The behaviour lives on the active document, NOT
 // here — a command has no Execute of its own; it is dispatched to whatever
-// document is active (see ICommandTarget).
+// document is active (see ICommandDispatcher.Resolve).
 //
 // A MuralBase so it is DP-backed, bindable, and declarable in markup — the same
 // shape as SettingDefinition / DocumentDefinition:
@@ -56,7 +57,7 @@ export enum CommandGroupPresentation
 //
 // Why the behaviour isn't here: the target is always the active document (there
 // is no handler ambiguity to route through the tree), so a command is dispatched
-// as `activeDocument.Execute(definition)`. Routed commands solve handler-
+// as `activeDocument.Resolve(id, context)?.Execute()`. Routed commands solve handler-
 // discovery-by-focus-scope — a non-problem here — so this stays a plain
 // declaration and the document interprets it.
 export class CommandDefinition extends MuralBase

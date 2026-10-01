@@ -31,8 +31,12 @@ import {
     type ToolbarGroupViewModel,
 } from './toolbar-group-view-model.js';
 import { ShellModule } from '../module.js';
-import { type ICommandTarget, isCommandTarget } from './command-target.js';
-import { type ICommandDispatcher, isCommandDispatcher } from './command-dispatcher.js';
+import {
+    type ICommandContextSource,
+    type ICommandDispatcher,
+    isCommandContextSource,
+    isCommandDispatcher,
+} from './command-dispatcher.js';
 import { CommandContext } from './command-context.js';
 
 // Turns declared CommandDefinitions into the toolbar the shell shows for the
@@ -83,7 +87,7 @@ export class ToolbarService extends ServiceBase
     // ToolBar-with-groups look. Split groups and editor controls ride as single
     // items (their own DataTemplate). VisibleEntries stays the GROUPED projection
     // for callers that want one VM per group.
-    private readonly _toolbarItems = new ObservableCollection<MuralBase>();
+    private readonly _toolbarItems = new ObservableCollection<MuralBase | CommandViewModel>();
 
     // The Toolbar-region editor CONTROLS (font pickers, …), Order-sorted. Rendered
     // in a FIXED region beside the command ToolBar — NOT inside it. A ToolBar
@@ -138,7 +142,7 @@ export class ToolbarService extends ServiceBase
 
     public get VisibleEntries(): ObservableCollection<ToolbarEntryViewModel> { return this._visibleEntries; }
 
-    public get ToolbarItems(): ObservableCollection<MuralBase> { return this._toolbarItems; }
+    public get ToolbarItems(): ObservableCollection<MuralBase | CommandViewModel> { return this._toolbarItems; }
 
     public get ToolbarControls(): ObservableCollection<ShellControlViewModel> { return this._toolbarControls; }
 
@@ -167,19 +171,19 @@ export class ToolbarService extends ServiceBase
         this.RaiseAll();
     }
 
-    // The active document, if it handles commands. undefined when nothing is
-    // active or the active document isn't a command target (e.g. a settings page).
-    private ActiveTarget(): ICommandTarget | undefined
+    // The active document, if it publishes a command-visibility surface.
+    // undefined when nothing is active or the active document doesn't expose
+    // CommandContexts (e.g. a settings page). Used by the toolbar's context
+    // filter to decide which commands are VISIBLE.
+    private ActiveContextSource(): ICommandContextSource | undefined
     {
         const doc = this._host?.ActiveDocument;
-        return isCommandTarget(doc) ? doc : undefined;
+        return isCommandContextSource(doc) ? doc : undefined;
     }
 
     // The active document, if it resolves commands. undefined when nothing is
-    // active or the active document isn't a command dispatcher. Replaces
-    // ActiveTarget for dispatch (Execute/CanExecute/checked-state); ActiveTarget
-    // itself stays in use by the context filter (CommandContexts) until Task 6
-    // migrates it away.
+    // active or the active document isn't a command dispatcher. Drives dispatch
+    // (Execute/CanExecute/checked-state) via Resolve.
     private ActiveDispatcher(): ICommandDispatcher | undefined
     {
         const doc = this._host?.ActiveDocument;
@@ -202,7 +206,7 @@ export class ToolbarService extends ServiceBase
         const items    = this.ToolbarItems;
         const controls = this.ToolbarControls;
 
-        const target = this.ActiveTarget();
+        const target = this.ActiveContextSource();
         this.SyncStatusItems(target);
 
         // App-global (service-bound) toolbar controls surface even when no
@@ -372,7 +376,7 @@ export class ToolbarService extends ServiceBase
     // from "show with no context", hence the box.
     private ResolveControlContext(
         def:      ShellControlDefinition,
-        target:   ICommandTarget | undefined,
+        target:   ICommandContextSource | undefined,
         contexts: readonly ServiceToken<unknown>[],
     ): { dataContext: unknown } | undefined
     {
@@ -397,7 +401,7 @@ export class ToolbarService extends ServiceBase
     // service-bound ones plus document-bound ones matching the active contexts —
     // each bound to its resolved DataContext (a service or the active document).
     private BuildControls(
-        target:   ICommandTarget | undefined,
+        target:   ICommandContextSource | undefined,
         contexts: readonly ServiceToken<unknown>[],
     ): { order: number; vm: ShellControlViewModel }[]
     {
@@ -425,7 +429,7 @@ export class ToolbarService extends ServiceBase
     // added so the DockPanel's LastChildFill takes the middle rather than
     // stretching the right cell. We own only the cells WE add (tracked in
     // `_statusCells`), so app-posted status cells are left untouched.
-    private SyncStatusItems(target: ICommandTarget | undefined): void
+    private SyncStatusItems(target: ICommandContextSource | undefined): void
     {
         const status = this.Provider.get(StatusService.Key);
         if (status === undefined) return;
@@ -496,11 +500,11 @@ export class ToolbarService extends ServiceBase
         }
     }
 
-    // Sync every built VM's IsActive by resolving its command through the active
-    // dispatcher and reading ICheckableCommand.IsChecked (false when the resolved
-    // command isn't checkable). Called whenever CanExecute is re-queried (requery
-    // pulse / active-doc change) so a Toggles button's checked state tracks the
-    // live selection.
+    // Sync every built VM's IsChecked by resolving its command through the
+    // active dispatcher and reading ICheckableCommand.IsChecked (false when the
+    // resolved command isn't checkable). Called whenever CanExecute is
+    // re-queried (requery pulse / active-doc change) so a Toggles button's
+    // checked state tracks the live selection.
     private RefreshActiveStates(): void
     {
         const dispatcher = this.ActiveDispatcher();
@@ -508,7 +512,7 @@ export class ToolbarService extends ServiceBase
         for (const vm of this._vmById.values())
         {
             const resolved = dispatcher?.Resolve(vm.Definition.Id, ctx);
-            vm.IsActive = resolved !== undefined && isCheckableCommand(resolved) ? resolved.IsChecked : false;
+            vm.IsChecked = resolved !== undefined && isCheckableCommand(resolved) ? resolved.IsChecked : false;
         }
     }
 
@@ -526,8 +530,8 @@ export class ToolbarService extends ServiceBase
                 () => this.ActiveDispatcher()?.Resolve(def.Id, this.Context())?.CanExecute() ?? false,
                 { Text: def.Title });
             vm = isToggle
-                ? new CommandToggleViewModel(def, command)
-                : new CommandViewModel(def, command);
+                ? new CommandToggleViewModel(def, command, true)
+                : new CommandViewModel(def, command, false);
             this._vmById.set(def.Id, vm);
         }
         return vm;

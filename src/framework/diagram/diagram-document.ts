@@ -43,8 +43,6 @@ import { waypoint } from './route-waypoint.js';
 import { ConnectorEndpoint } from './connector-endpoint.js';
 import { PortSide } from './port.js';
 import type { IDocument } from '../shell/services/documents-content-host-service.js';
-import type { ICommandTarget } from '../shell/commands/command-target.js';
-import type { CommandDefinition } from '../shell/commands/command-definition.js';
 import type { CommandContext } from '../shell/commands/command-context.js';
 import type { ICommandDispatcher } from '../shell/commands/command-dispatcher.js';
 import { DiagramEditingContext, DiagramCommandId } from './diagram-command-contexts.js';
@@ -134,9 +132,9 @@ const STORAGE_KEY = 'mural-diagram-state-v1';
 const DIAGRAM_COMMAND_CONTEXTS: readonly ServiceToken<unknown>[] = Object.freeze([DiagramEditingContext]);
 
 // Maps each diagram command id → the Diagram control command that performs it.
-// DiagramDocument.Execute / CanExecute resolve through this against the currently
-// published ActiveView, so the commands stay where they naturally live (the
-// control, driven by view selection) while the document is the dispatch target.
+// DiagramDocument.Resolve (ICommandDispatcher) resolves through this against the
+// currently published ActiveView, so the commands stay where they naturally live
+// (the control, driven by view selection) while the document is the dispatch target.
 const DIAGRAM_COMMAND_GETTERS: ReadonlyMap<string, (v: Diagram) => ICommand | undefined> = new Map<string, (v: Diagram) => ICommand | undefined>([
     [DiagramCommandId.AlignLeft,            (v) => v.AlignLeftCommand],
     [DiagramCommandId.AlignRight,           (v) => v.AlignRightCommand],
@@ -173,10 +171,11 @@ const DIAGRAM_COMMAND_GETTERS: ReadonlyMap<string, (v: Diagram) => ICommand | un
 ]);
 
 // Active-state predicates for the Toggles-presentation commands — the paragraph
-// alignment and character-decoration toggles. DiagramDocument.IsActive resolves
-// through this against the published ActiveView so a toolbar toggle's IsChecked
-// reflects the current selection's text state (the same Selection* DPs the
-// diagram demo binds directly). Commands absent here are never "active".
+// alignment and character-decoration toggles. DiagramDocument.Resolve wraps the
+// executor command in a CheckableRelayCommand whose IsChecked reads this against
+// the published ActiveView, so a toolbar toggle's IsChecked reflects the current
+// selection's text state (the same Selection* DPs the diagram demo binds
+// directly). Commands absent here are never "active".
 const DIAGRAM_COMMAND_ACTIVE: ReadonlyMap<string, (v: Diagram) => boolean> = new Map<string, (v: Diagram) => boolean>([
     [DiagramCommandId.TextAlignLeft,     (v) => v.SelectionTextAlignment === TextAlignment.Left],
     [DiagramCommandId.TextAlignCenter,   (v) => v.SelectionTextAlignment === TextAlignment.Center],
@@ -209,7 +208,7 @@ let _diagramDocSeq = 0;
 // Customise by subclassing (override CreateNode for custom Figure
 // shapes, etc.) or by composing — the Document doesn't lock methods
 // down.
-export class DiagramDocument extends MuralBase implements DiagramMutator, IDocument, ICommandTarget, ICommandDispatcher, IFontFormatSink
+export class DiagramDocument extends MuralBase implements DiagramMutator, IDocument, ICommandDispatcher, IFontFormatSink
 {
     // ── IDocument surface — lets a DocumentsContentHostService host this
     // document (open-set dedupe, tab title, dirty indicator, Save). ──
@@ -606,45 +605,15 @@ export class DiagramDocument extends MuralBase implements DiagramMutator, IDocum
         return () => { for (const sub of subs) sub.dispose(); };
     }
 
-    // ── ICommandTarget surface — the diagram as a command dispatch target ──
-    // The ToolbarService reads CommandContexts to decide which commands show,
-    // and calls Execute / CanExecute to run / gate them. Each is resolved through
-    // DIAGRAM_COMMAND_GETTERS against the published ActiveView (the control that
-    // owns the selection-driven commands); an unrecognised id or a document with
-    // no live view is a no-op / disabled.
+    // The command contexts this document activates. Read directly by the
+    // toolbar's context filter (duck-typed via isCommandContextSource — see
+    // ToolbarService) to decide which commands are VISIBLE; a plain getter —
+    // no dispatch-handling interface needed for that.
     public get CommandContexts(): readonly ServiceToken<unknown>[] { return DIAGRAM_COMMAND_CONTEXTS; }
 
-    public Execute(definition: CommandDefinition): void
-    {
-        this._commandFor(definition.Id)?.Execute(undefined);
-    }
-
-    public CanExecute(definition: CommandDefinition): boolean
-    {
-        return this._commandFor(definition.Id)?.CanExecute(undefined) ?? false;
-    }
-
-    // Toggle state for the Toggles-presentation commands (text-align / text-style)
-    // — read off the live view's Selection* DPs. Non-toggle or unknown ids, or no
-    // active view, are never active.
-    public IsActive(definition: CommandDefinition): boolean
-    {
-        const view = this.ActiveView;
-        if (view === undefined) return false;
-        return DIAGRAM_COMMAND_ACTIVE.get(definition.Id)?.(view) ?? false;
-    }
-
-    private _commandFor(id: string): ICommand | undefined
-    {
-        const view = this.ActiveView;
-        if (view === undefined) return undefined;
-        return DIAGRAM_COMMAND_GETTERS.get(id)?.(view);
-    }
-
-    // ── ICommandDispatcher surface — the surface-agnostic replacement for
-    // ICommandTarget. Resolve reuses the same getter/active maps Execute/
-    // CanExecute/IsActive read above: the executor command for a known id,
-    // wrapped as a CheckableRelayCommand when the id is a toggle (present in
+    // ── ICommandDispatcher surface — resolves a command id to the ICommand that
+    // runs it. The executor command for a known id, wrapped as a
+    // CheckableRelayCommand when the id is a toggle (present in
     // DIAGRAM_COMMAND_ACTIVE) so IsChecked reads the predicate. `_context` is
     // unused for now — a diagram document has no use for the dispatch context
     // yet; kept on the signature so every ICommandDispatcher implementation

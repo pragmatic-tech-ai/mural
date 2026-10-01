@@ -392,9 +392,10 @@ export class DiagramCommands
         }
         // Selection changed → command executability may have too. Pulse the
         // global requery so a data-driven ToolbarService (whose CommandViewModel
-        // RelayCommands dispatch to this diagram via ICommandTarget, not to these
-        // internal commands directly) re-evaluates CanExecute. Harmless when no
-        // ToolbarService is present — the pulse just has no subscribers.
+        // RelayCommands dispatch to this diagram via ICommandDispatcher.Resolve,
+        // not to these internal commands directly) re-evaluates CanExecute.
+        // Harmless when no ToolbarService is present — the pulse just has no
+        // subscribers.
         CommandManager.InvalidateRequerySuggested();
     }
 

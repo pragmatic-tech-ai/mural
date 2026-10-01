@@ -98,7 +98,7 @@ describe('FormatMirror — text channel', () => {
     });
 
     test('a text-format DP change pulses RequerySuggested (keeps toolbar toggles a radio group)', () => {
-        // The toolbar's align/decoration toggles are `IsChecked = $IsActive`, re-read
+        // The toolbar's align/decoration toggles are `IsChecked = $IsChecked`, re-read
         // only on a requery PULSE. A command-driven alignment change mutates the DP
         // without a selection change, so the DP itself must pulse — otherwise the
         // previously-active button stays lit (Center stays toggled after Left).
