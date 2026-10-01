@@ -1,4 +1,4 @@
-import { Visual, type Disposable } from '../../../runtime/index.js';
+import { Visual, type IDisposable } from '../../../runtime/index.js';
 import type { Diagram } from '../diagram.js';
 import { Figure } from '../figure.js';
 
@@ -73,7 +73,7 @@ export class SelectionGeometryMirror
             const keys = [Figure.LeftKey, Figure.TopKey, Visual.WidthKey, Visual.HeightKey,
                           Figure.RotationKey, Figure.BaseWidthKey, Figure.BaseHeightKey,
                           Figure.LockAspectRatioKey, Figure.PositionFromKey];
-            const subs: Disposable[] = keys.map(k => f.PropertyChanged(k).subscribe(seed));
+            const subs: IDisposable[] = keys.map(k => f.PropertyChanged(k).subscribe(seed));
             this._figureUnsub = (): void => { for (const s of subs) s.dispose(); };
             this._seed(f);
         }

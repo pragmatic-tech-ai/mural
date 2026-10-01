@@ -25,7 +25,7 @@ export abstract class ToolbarEntryViewModel extends MuralBase { }
 //   Flat      → ToolbarFlatGroup       (inline icon buttons)
 //   SplitMenu → ToolbarSplitMenuGroup  (icon-only dropdown, menu rows)
 //   SplitGrid → ToolbarSplitGridGroup  (icon-only dropdown, Columns-wide grid)
-//   Toggles   → ToolbarToggleGroup     (inline toggle buttons, IsActive-driven)
+//   Toggles   → ToolbarToggleGroup     (inline toggle buttons, IsChecked-driven)
 //
 // Icon / Title / Columns describe the dropdown FACE and only matter for the two
 // split presentations; Flat / Toggles ignore them.
@@ -83,7 +83,7 @@ export class ToolbarSplitMenuGroup extends ToolbarGroupViewModel { }
 // Icon-only dropdown; members tile as a Columns-wide icon grid in the popup.
 export class ToolbarSplitGridGroup extends ToolbarGroupViewModel { }
 
-// Inline row of toggle buttons whose IsChecked binds each item's IsActive.
+// Inline row of toggle buttons whose IsChecked binds each item's own IsChecked.
 export class ToolbarToggleGroup extends ToolbarGroupViewModel { }
 
 // A non-command editor control (font pickers, a mode indicator, …) the shell

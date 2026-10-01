@@ -4,7 +4,7 @@ import { MuralBase } from '../model.js';
 import { Observable } from '../observable.js';
 import type { PropertyKey } from '../model.js';
 import { resolveKey } from '../model-internals.js';
-import type { Disposable } from '@pragmatic-tech-ai/todl-runtime';
+import type { IDisposable } from '@pragmatic-tech-ai/todl-runtime';
 import type { PropertyDescriptor } from '../property-descriptor.js';
 import type { Visual } from '../../visual-engine/visual.js';
 
@@ -57,13 +57,13 @@ class DataContextBindingImpl extends Binding
     private readonly target:  Visual;
     private readonly pathStr: string;
     private readonly dcCallback: () => void;
-    private dcSubscription:     Disposable | undefined;
+    private dcSubscription:     IDisposable | undefined;
 
     // The source-side change-channel subscription on the first path segment.
     // Disposed on each refresh so we detach cleanly before re-resolving. One
-    // Disposable covers both source shapes — a MuralBase source (subscribed by
+    // IDisposable covers both source shapes — a MuralBase source (subscribed by
     // descriptor key) and a plain Observable source (subscribed by name).
-    private sourceSubscription: Disposable | undefined;
+    private sourceSubscription: IDisposable | undefined;
     // Cached at construction — `'DataContext'` resolves on every Visual,
     // and the binding listens to it for its entire lifetime.
     private readonly dataContextKey: PropertyKey<unknown>;

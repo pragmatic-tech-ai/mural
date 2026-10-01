@@ -28,6 +28,8 @@ import { Brush, Visibility } from '../../visual-engine/index.js';
 import { ClickAwayScrim } from '../tool-bar/tool-bar.js';
 import { Button } from '../buttons/button.js';
 import type { ICommand } from '../../runtime/command.js';
+import { MenuContainerFactory } from './menu-container-factory.js';
+import type { ExpandableMenuData } from './expandable-menu-data.js';
 
 // ─────────────────────────────────────────────────────────────────────
 // MenuStrip — horizontal main-menu bar. Holds top-level MenuItems whose
@@ -96,6 +98,30 @@ export class MenuStrip extends ItemsControl
         }
     }
 
+    // A CommandViewModel (or any non-Visual data item) resolved through a
+    // HierarchicalDataTemplate becomes a MenuItem container so top-level strip
+    // items recurse into submenus; everything else falls to the base path.
+    public override GetContainerForItemOverride(item: unknown): Visual
+    {
+        return MenuContainerFactory.GetContainer(this, item) ?? super.GetContainerForItemOverride(item);
+    }
+
+    public override RebindContainerForItemOverride(container: Visual, item: unknown): void
+    {
+        if (!MenuContainerFactory.RebindContainer(this, container, item))
+        {
+            super.RebindContainerForItemOverride(container, item);
+        }
+    }
+
+    // Undo the generated-container state the factory set before the base nulls
+    // `_itemsControlData` (the stamp the clear guard reads).
+    public override ClearContainerForItemOverride(container: Visual, item: unknown): void
+    {
+        MenuContainerFactory.ClearContainer(this, container);
+        super.ClearContainerForItemOverride(container, item);
+    }
+
     protected override OnPropertyChanged(
         descriptor: PropertyDescriptor,
         oldValue: unknown,
@@ -151,6 +177,18 @@ export class MenuItem extends HeaderedItemsControl
     public static readonly CommandKey           = MuralBase.RegisterProperty<ICommand | undefined>(MenuItem, 'Command',           undefined, MetaData.None);
     public static readonly CommandParameterKey  = MuralBase.RegisterProperty<unknown>(            MenuItem, 'CommandParameter',  undefined, MetaData.None);
     public static readonly IsSubmenuOpenKey     = MuralBase.RegisterProperty<boolean>(           MenuItem, 'IsSubmenuOpen',     false,     MetaData.None);
+    // A leading divider rendered ABOVE this row — the intrinsic-to-MenuItem
+    // equivalent of a declarative `MenuSeparator` sibling, for surfaces that
+    // can only ever render ONE container type per data item (a
+    // HierarchicalDataTemplate's root MUST stay a MenuItem — see
+    // MenuContainerFactory.GetContainer — so a data-bound submenu row has no
+    // way to place a sibling MenuSeparator the way declaratively-nested
+    // markup can). Default false so every EXISTING row — declarative or
+    // data-bound — is visually unchanged; only a row whose data explicitly
+    // sets this shows the divider. Mirrors CommandDefinition.SeparatorBefore
+    // / CommandViewModel.SeparatorBefore, which @CommandMenuItemTemplate
+    // binds this to.
+    public static readonly SeparatorBeforeKey   = MuralBase.RegisterProperty<boolean>(           MenuItem, 'SeparatorBefore',   false,     MetaData.Render);
     // RowTemplate — the ControlTemplate for the inline visible row
     // chrome. MenuItem's primary Template (ItemsControl-inherited) is
     // the SUBMENU popup chrome with an ItemsPresenter; the row
@@ -182,6 +220,9 @@ export class MenuItem extends HeaderedItemsControl
     public get IsSubmenuOpen():    boolean { return this.get_property_value(MenuItem.IsSubmenuOpenKey); }
     public set IsSubmenuOpen(v:    boolean) { this.set_property_value(MenuItem.IsSubmenuOpenKey, v); }
 
+    public get SeparatorBefore():  boolean { return this.get_property_value(MenuItem.SeparatorBeforeKey); }
+    public set SeparatorBefore(v:  boolean) { this.set_property_value(MenuItem.SeparatorBeforeKey, v); }
+
     public get RowTemplate():      ControlTemplate | undefined { return this.get_property_value(MenuItem.RowTemplateKey); }
     public set RowTemplate(v:      ControlTemplate | undefined) { this.set_property_value(MenuItem.RowTemplateKey, v); }
 
@@ -192,11 +233,18 @@ export class MenuItem extends HeaderedItemsControl
     public _onActivated: (() => void) | undefined;
 
     // Row template parts — cached after the row template Apply.
-    private _rowRoot:      Visual    | undefined;
-    private _iconHost:     Border    | undefined;
-    private _rowLabel:     TextBlock | undefined;
-    private _gestureLabel: TextBlock | undefined;
-    private _chevron:      Shape     | undefined;
+    private _rowRoot:          Visual         | undefined;
+    // The visible row within _rowRoot. DefaultMenuItemRow wraps the row in a
+    // StackPanel { PART_SeparatorBefore, PART_Row }, so _rowRoot is the wrapper
+    // and the fly-out must anchor at PART_Row (see anchorElement / mountSubmenu).
+    // Row templates with no PART_Row (e.g. DefaultMenuStripItemRow) leave this
+    // undefined and anchoring falls back to _rowRoot.
+    private _partRow:          Visual         | undefined;
+    private _iconHost:         Border         | undefined;
+    private _rowLabel:         TextBlock      | undefined;
+    private _gestureLabel:     TextBlock      | undefined;
+    private _chevron:          Shape          | undefined;
+    private _separatorBefore:  MenuSeparator  | undefined;
 
     // Submenu popup parts — cached after applyDefaultStyle materialises
     // the primary Template. The popup root is DETACHED from MenuItem so
@@ -277,11 +325,13 @@ export class MenuItem extends HeaderedItemsControl
         if (this._rowRoot !== undefined)
         {
             this.DetachVisual(this._rowRoot);
-            this._rowRoot      = undefined;
-            this._iconHost     = undefined;
-            this._rowLabel     = undefined;
-            this._gestureLabel = undefined;
-            this._chevron      = undefined;
+            this._rowRoot         = undefined;
+            this._partRow         = undefined;
+            this._iconHost        = undefined;
+            this._rowLabel        = undefined;
+            this._gestureLabel    = undefined;
+            this._chevron         = undefined;
+            this._separatorBefore = undefined;
         }
         const tpl = this.RowTemplate;
         if (tpl === undefined)
@@ -298,14 +348,18 @@ export class MenuItem extends HeaderedItemsControl
         const inst = tpl.Apply(this);
         this._rowRoot = inst.root;
         this.AttachVisual(this._rowRoot);
-        const icon    = this._rowRoot.FindName('PART_Icon');
-        const label   = this._rowRoot.FindName('PART_Label');
-        const gesture = this._rowRoot.FindName('PART_Gesture');
-        const chevron = this._rowRoot.FindName('PART_Chevron');
-        if (icon instanceof Border)       this._iconHost     = icon;
-        if (label instanceof TextBlock)   this._rowLabel     = label;
-        if (gesture instanceof TextBlock) this._gestureLabel = gesture;
-        if (chevron instanceof Shape)     this._chevron      = chevron;
+        const icon      = this._rowRoot.FindName('PART_Icon');
+        const label     = this._rowRoot.FindName('PART_Label');
+        const gesture   = this._rowRoot.FindName('PART_Gesture');
+        const chevron   = this._rowRoot.FindName('PART_Chevron');
+        const separator = this._rowRoot.FindName('PART_SeparatorBefore');
+        const rowBody   = this._rowRoot.FindName('PART_Row');
+        if (icon instanceof Border)             this._iconHost        = icon;
+        if (label instanceof TextBlock)         this._rowLabel        = label;
+        if (gesture instanceof TextBlock)       this._gestureLabel    = gesture;
+        if (chevron instanceof Shape)           this._chevron         = chevron;
+        if (separator instanceof MenuSeparator) this._separatorBefore = separator;
+        if (rowBody instanceof Visual)          this._partRow         = rowBody;
     }
 
     public override get visualChildren(): readonly Visual[]
@@ -361,6 +415,30 @@ export class MenuItem extends HeaderedItemsControl
         }
     }
 
+    // A non-Visual submenu data item resolved through a HierarchicalDataTemplate
+    // becomes a MenuItem container so the submenu recurses; a flat/plain template
+    // or an own-container Visual falls to the base ContentPresenter path.
+    public override GetContainerForItemOverride(item: unknown): Visual
+    {
+        return MenuContainerFactory.GetContainer(this, item) ?? super.GetContainerForItemOverride(item);
+    }
+
+    public override RebindContainerForItemOverride(container: Visual, item: unknown): void
+    {
+        if (!MenuContainerFactory.RebindContainer(this, container, item))
+        {
+            super.RebindContainerForItemOverride(container, item);
+        }
+    }
+
+    // Undo the generated-container state the factory set before the base nulls
+    // `_itemsControlData` (the stamp the clear guard reads).
+    public override ClearContainerForItemOverride(container: Visual, item: unknown): void
+    {
+        MenuContainerFactory.ClearContainer(this, container);
+        super.ClearContainerForItemOverride(container, item);
+    }
+
     /** Public refresh for tests + DP-change forwarding. */
     public refreshRow(): void
     {
@@ -387,8 +465,7 @@ export class MenuItem extends HeaderedItemsControl
         // submenu chevron.
         if (this._chevron !== undefined)
         {
-            const hasSubmenu = this.itemCount() > 0;
-            this._chevron.Visibility = hasSubmenu ? Visibility.Visible : Visibility.Collapsed;
+            this._chevron.Visibility = this.hasSubmenu() ? Visibility.Visible : Visibility.Collapsed;
         }
         // Icon column — host the consumer's Icon, OR an inline check
         // glyph when IsCheckable + IsChecked, OR clear it.
@@ -407,6 +484,14 @@ export class MenuItem extends HeaderedItemsControl
                 this._iconHost.SetChild(undefined);
             }
         }
+        // Leading divider — Collapsed unless the data explicitly asks for
+        // one (SeparatorBefore=true). Collapsed is the DP default too, so
+        // an existing row that never touches this property renders exactly
+        // as it did before this property existed.
+        if (this._separatorBefore !== undefined)
+        {
+            this._separatorBefore.Visibility = this.SeparatorBefore ? Visibility.Visible : Visibility.Collapsed;
+        }
     }
 
     private itemCount(): number
@@ -414,6 +499,27 @@ export class MenuItem extends HeaderedItemsControl
         const items = this.Items;
         if (items === undefined) return 0;
         return Array.isArray(items) ? items.length : (items as { Count: number }).Count;
+    }
+
+    // Branch-vs-leaf for every real interaction path (click, hover dwell,
+    // keyboard). itemCount() alone undercounts a LAZY node: a HierarchicalData-
+    // Template-bound CommandViewModel sets ItemsSource = Definition.Children
+    // (MenuContainerFactory.GetContainer → HierarchicalItemsBinder.BindChildItems)
+    // at container-prepare time, but the VM's OWN Children collection stays
+    // empty until EnsureExpanded runs — which activate()/hover/keydown only ever
+    // trigger BY flipping IsSubmenuOpen, so gating on itemCount() alone is a
+    // chicken-and-egg: a never-yet-opened branch always reads as a leaf. Falling
+    // back to the bound data's own HasChildren (stamped as _itemsControlData by
+    // ItemsControl.PrepareContainerForItemOverride, read the same way
+    // OnPropertyChanged already reads it for the OnSubmenuOpen hook below) lets a
+    // still-unrealized CommandViewModel branch report itself correctly — mirrors
+    // TreeView's identical hasChildItems() falling back to the bound data where
+    // realized containers alone would undercount.
+    private hasSubmenu(): boolean
+    {
+        if (this.itemCount() > 0) return true;
+        const data = (this as unknown as { _itemsControlData?: unknown })._itemsControlData;
+        return (data as { HasChildren?: boolean } | undefined)?.HasChildren === true;
     }
 
     protected override OnPropertyChanged(
@@ -443,12 +549,26 @@ export class MenuItem extends HeaderedItemsControl
         }
         if (name === 'IsSubmenuOpen' && this._popupHost !== undefined)
         {
-            if (newValue === true) this.mountSubmenu();
-            else                   this.unmountSubmenu();
+            if (newValue === true)
+            {
+                // Lazy submenu population — the bound data (a CommandViewModel)
+                // gets a first-open callback so a ChildrenContributor realizes its
+                // children BEFORE the popup mounts, mirroring TreeView's dataOf()
+                // ExpandableTreeData hook (tree-view.ts:1136). The data is the item
+                // stamped on us in PrepareContainerForItemOverride.
+                const data = (this as unknown as { _itemsControlData?: unknown })._itemsControlData;
+                (data as ExpandableMenuData | undefined)?.OnSubmenuOpen?.();
+                this.mountSubmenu();
+            }
+            else
+            {
+                this.unmountSubmenu();
+            }
         }
         if (
             name === 'Header' || name === 'Icon' || name === 'InputGestureText' ||
             name === 'IsCheckable' || name === 'IsChecked' || name === 'Items' ||
+            name === 'SeparatorBefore' ||
             // 'HasItems' flips when declaratively-nested children are added/removed
             // (a collection mutation, which — unlike reassigning Items — never fires
             // OnPropertyChanged('Items')). Refreshing here is what makes the submenu
@@ -500,7 +620,8 @@ export class MenuItem extends HeaderedItemsControl
         // (ContextMenu, MenuButton, MenuItem, anonymous wrappers) →
         // vertical context.
         const topLevel = this.isTopLevelInMenuStrip();
-        if (this._rowRoot !== undefined) this._popupHost.anchor = this._rowRoot;
+        const anchor   = this.anchorElement();
+        if (anchor !== undefined) this._popupHost.anchor = anchor;
         this._popupHost.anchorSide = topLevel ? MenuAnchorSide.Below : MenuAnchorSide.Right;
         // A NESTED submenu must not lay a hit-testable scrim over the rest of
         // the menu chain. The scrim fills the whole surface, so if it caught
@@ -525,6 +646,19 @@ export class MenuItem extends HeaderedItemsControl
     {
         const parent = this.GetLogicalParent();
         return parent instanceof MenuStrip;
+    }
+
+    // The element the submenu fly-out anchors to. PopupHost derives the
+    // fly-out origin from absoluteOriginOf(anchor) (summing ArrangedRect.Y up
+    // the tree), so for the default DefaultMenuItemRow — a StackPanel wrapping
+    // PART_SeparatorBefore above PART_Row — we must anchor at PART_Row, not the
+    // StackPanel (_rowRoot): a visible SeparatorBefore divider would otherwise
+    // lift a nested (anchorSide=Right) fly-out by the divider's height. Row
+    // templates without a PART_Row (e.g. the MenuStrip top-level row) fall back
+    // to _rowRoot, where wrapper and visible row coincide.
+    private anchorElement(): Visual | undefined
+    {
+        return this._partRow ?? this._rowRoot;
     }
 
     private unmountSubmenu(): void
@@ -557,7 +691,7 @@ export class MenuItem extends HeaderedItemsControl
     // clicking or pressing Enter on a parent item toggles IsSubmenuOpen.
     private activate(): void
     {
-        if (this.itemCount() > 0)
+        if (this.hasSubmenu())
         {
             this.IsSubmenuOpen = !this.IsSubmenuOpen;
             return;
@@ -636,13 +770,13 @@ export class MenuItem extends HeaderedItemsControl
         // open. Then, if THIS item is itself a parent, arm a dwell timer to open
         // its own submenu (click still opens it immediately via activate()).
         this.closeSiblingSubmenus();
-        if (this.itemCount() > 0 && !this.IsSubmenuOpen)
+        if (this.hasSubmenu() && !this.IsSubmenuOpen)
         {
             this.clearHoverOpenTimer();
             this._hoverOpenTimer = setTimeout((): void =>
             {
                 this._hoverOpenTimer = undefined;
-                if (this.itemCount() > 0) this.IsSubmenuOpen = true;
+                if (this.hasSubmenu()) this.IsSubmenuOpen = true;
             }, MenuItem.HoverOpenDelayMs);
         }
     }
@@ -730,7 +864,7 @@ export class MenuItem extends HeaderedItemsControl
         {
             if (inStrip)
             {
-                if (this.itemCount() > 0)
+                if (this.hasSubmenu())
                 {
                     this.IsSubmenuOpen = true;
                     this.focusFirstSubmenuChild(args);
@@ -755,7 +889,7 @@ export class MenuItem extends HeaderedItemsControl
             {
                 this.focusSibling(args, +1);
             }
-            else if (this.itemCount() > 0)
+            else if (this.hasSubmenu())
             {
                 this.IsSubmenuOpen = true;
                 this.focusFirstSubmenuChild(args);

@@ -4,7 +4,7 @@
     Point,
     Element, Visual,
     type PropertyDescriptor,
-    type Disposable,
+    type IDisposable,
 } from '../../runtime/index.js';
 import { resolveKey } from '../../runtime/model-internals.js';
 import {
@@ -486,7 +486,7 @@ export class BrushPicker extends TemplatedControl
                 this.updatePreviewBrush();
             };
             const key = resolveKey(cp, undefined, 'Color');
-            const sub: Disposable = cp.PropertyChanged(key).subscribe(handler);
+            const sub: IDisposable = cp.PropertyChanged(key).subscribe(handler);
             this._popupListeners.push(() => sub.dispose());
         };
         wireColor('PART_SolidColor',         () => this.SolidColor,         c => { this.SolidColor         = c; });
@@ -519,7 +519,7 @@ export class BrushPicker extends TemplatedControl
                 this.updatePreviewBrush();
             };
             const key = resolveKey(s, undefined, 'Value');
-            const sub: Disposable = s.PropertyChanged(key).subscribe(handler);
+            const sub: IDisposable = s.PropertyChanged(key).subscribe(handler);
             this._popupListeners.push(() => sub.dispose());
         };
         wireSlider('PART_LinearAngle',   () => this.LinearAngle,    v => { this.LinearAngle   = v; });
@@ -560,7 +560,7 @@ export class BrushPicker extends TemplatedControl
                 this.updatePreviewBrush();
             };
             const key = resolveKey(kindCombo, undefined, 'SelectedItem');
-            const sub: Disposable = kindCombo.PropertyChanged(key).subscribe(handler);
+            const sub: IDisposable = kindCombo.PropertyChanged(key).subscribe(handler);
             this._popupListeners.push(() => sub.dispose());
         }
     }

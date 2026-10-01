@@ -1,5 +1,5 @@
 import { Observable } from '../../runtime/index.js';
-import { type Disposable, type IPropertyBag } from '@pragmatic-tech-ai/todl-runtime';
+import { type IDisposable, type IPropertyBag } from '@pragmatic-tech-ai/todl-runtime';
 import { GridProperty } from './grid-property.js';
 import { type DataTemplate } from '../../basic/templates/data-template.js';
 
@@ -24,7 +24,7 @@ export class PropertyItem extends Observable
 {
     readonly Descriptor: GridProperty;
     private readonly _bag: IPropertyBag;
-    private _subscription: Disposable | null;
+    private _subscription: IDisposable | null;
 
     constructor(descriptor: GridProperty, bag: IPropertyBag)
     {

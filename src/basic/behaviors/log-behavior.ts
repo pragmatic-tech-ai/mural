@@ -2,7 +2,7 @@
     Behavior,
     MetaData,
     MuralBase,
-    type Disposable,
+    type IDisposable,
     type Visual,
 } from '../../runtime/index.js';
 import { resolveKey } from '../../runtime/model-internals.js';
@@ -44,7 +44,7 @@ export class LogBehavior extends Behavior
     public get Tag():  string | undefined { return this.get_property_value(LogBehavior.TagKey); }
     public set Tag(v: string | undefined) { this.set_property_value(LogBehavior.TagKey, v); }
 
-    private _sub: Disposable | undefined;
+    private _sub: IDisposable | undefined;
 
     public override OnAttached(visual: Visual): void
     {

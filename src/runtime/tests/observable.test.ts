@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { Observable, MuralBase, MetaData, type Disposable } from '../index.js';
+import { Observable, MuralBase, MetaData, type IDisposable } from '../index.js';
 
 // A plain Observable subclass: real typed field + getter/setter + notify.
 class Loc extends Observable
@@ -42,7 +42,7 @@ test('an unsubscribed Observable allocates no listener map', () => {
 test('RemovePropertyChangedListener stops delivery', () => {
   const l = new Loc();
   let fired = 0;
-  const sub: Disposable = l.PropertyChanged('label').subscribe(() => { fired++; });
+  const sub: IDisposable = l.PropertyChanged('label').subscribe(() => { fired++; });
   sub.dispose();
   l.label = 'x';
   assert.equal(fired, 0);

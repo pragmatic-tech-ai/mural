@@ -1,4 +1,4 @@
-﻿import { MuralBase, type PropertyKey, type Disposable } from '../../../runtime/index.js';
+﻿import { MuralBase, type PropertyKey, type IDisposable } from '../../../runtime/index.js';
 import {
     Brush,
     Color,
@@ -83,7 +83,7 @@ export class FormatMirror
 
     // Per-pen-property subscriptions attached to the current FormatStroke
     // instance. Detach + reattach on every FormatStroke DP change.
-    private readonly _strokeListeners: Disposable[] = [];
+    private readonly _strokeListeners: IDisposable[] = [];
     private _attachedPen: Pen | undefined = undefined;
 
     private _seedingFormat = false;
@@ -130,8 +130,9 @@ export class FormatMirror
         diagram.PropertyChanged(Diagram.SelectionStrikethroughKey).subscribe( () => this._broadcast((t, d) => t.ApplyStrikethrough(d.SelectionStrikethrough)));
 
         // Keep the toolbar's Toggles-presentation buttons in sync with the
-        // selection's text state. Their IsChecked is `= $IsActive`, which the
-        // ToolbarService only re-reads (via DiagramDocument.IsActive → these DPs)
+        // selection's text state. Their IsChecked is `= $IsChecked` on the command
+        // VM, which ToolbarService.RefreshActiveStates only re-reads (via
+        // DiagramDocument.Resolve → ICheckableCommand.IsChecked → these DPs)
         // on a global requery PULSE. Selection CHANGES already pulse (the command
         // collaborator's _raiseCanExecuteAll), but a command-driven format change
         // (clicking an align/decoration button) mutates the DP WITHOUT changing

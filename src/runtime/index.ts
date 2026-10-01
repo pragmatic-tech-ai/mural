@@ -60,7 +60,7 @@ export { Observable } from './observable.js';
 // Signal / Disposable live in todl-runtime (zero-dep); re-exported here so
 // consumers subscribing to a `PropertyChanged(name)` change channel can type
 // the returned subscription without a second import path.
-export { Signal, type Disposable } from '@pragmatic-tech-ai/todl-runtime';
+export { Signal, Disposable, CompositeDisposable, type IDisposable } from '@pragmatic-tech-ai/todl-runtime';
 // Storage IO subsystem lives in todl-runtime (zero-dep); re-exported here so
 // consumers already importing '@pragmatic-tech-ai/mural/runtime' need no second
 // import path. Canonical source: @pragmatic-tech-ai/todl-runtime.
@@ -129,8 +129,11 @@ export { type ISettingSource, type ISettingReArmable, SettingSourceKey, SettingS
 export {
     CommandBase,
     RelayCommand,
+    CheckableRelayCommand,
+    isCheckableCommand,
     type CommandMetadataInit,
     type ICommand,
+    type ICheckableCommand,
 } from './command.js';
 export {
     EventTrigger,

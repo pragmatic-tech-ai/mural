@@ -617,7 +617,7 @@ export const ENUM_MEMBERS: ReadonlyMap<string, ReadonlySet<string>> = new Map<st
     // Resolved via PROPERTY_TO_ENUM under the `Presentation` property.
     ['CommandGroupPresentation', new Set(['Flat', 'SplitMenu', 'SplitGrid', 'Toggles'])],
     // Shell-control host region — `ShellControlDefinition [ Region = StatusBar ]`.
-    ['ShellRegion', new Set(['Toolbar', 'StatusBar', 'EditorActions'])],
+    ['ShellRegion', new Set(['Toolbar', 'StatusBar', 'EditorActions', 'MainMenu'])],
 ]);
 
 // Type → set of valid static-member names exposed for use in DOTTED
@@ -885,6 +885,11 @@ export const DEFAULT_SLOT_INFO: ReadonlyMap<string, SlotInfo> = new Map<string, 
     ['MenuItem',                { name: 'Items',    kind: 'list'   }],
     // MenuSeparator: no body
     ['ContextMenu',             { name: 'Items',    kind: 'list'   }],
+    // A nested `CommandDefinition { CommandDefinition […] … }` body lowers
+    // to `parent.AddChild(child)` per child — the submenu tree (Children),
+    // orthogonal to the `.commands:` member-block (→ Commands.Add) that
+    // appends top-level definitions to a module.
+    ['CommandDefinition',       { name: 'Children', kind: 'list'   }],
     // MenuPopupHost: Panel-shaped, takes Scrim + popup-container as
     // children declaratively from the default ControlTemplates in
     // framework.resources.mu.

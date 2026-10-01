@@ -12,7 +12,7 @@
     type ObservableCollection,
     type CollectionChange,
     type MuralBase,
-    type Disposable,
+    type IDisposable,
     hasModifier,
     ModifierKeys,
 } from '../../../runtime/index.js';
@@ -1020,7 +1020,7 @@ export function attachConnectorInteractions(diagram: Diagram): () => void
     // state.hoveredFigure so detach can run after state has already
     // been cleared.
     let subscribedHoverFigure: Figure | undefined = undefined;
-    let hoverFigureSubs: Disposable[] = [];
+    let hoverFigureSubs: IDisposable[] = [];
     const onHoveredFigureGeometryChanged = (): void => {
         sideAdornerVisual?.InvalidateArrange();
     };
@@ -1059,8 +1059,8 @@ export function attachConnectorInteractions(diagram: Diagram): () => void
     //   * Pen.ThicknessKey   — drives the clamp in makeHaloPen.
     let subscribedHoverConnector: Connector | undefined = undefined;
     let subscribedHoverPen:       Pen       | undefined = undefined;
-    let hoverConnectorSubs: Disposable[] = [];
-    let hoverPenSub: Disposable | undefined = undefined;
+    let hoverConnectorSubs: IDisposable[] = [];
+    let hoverPenSub: IDisposable | undefined = undefined;
     const onHoveredConnectorChanged = (): void => {
         // Stroke swap: rebind the thickness listener against the new pen.
         const conn = subscribedHoverConnector;

@@ -2,7 +2,7 @@ import { MuralBase, PropertyKey } from '../../runtime/index.js';
 import {
     Signal,
     type PropertyChangedEventArgs,
-    type Disposable,
+    type IDisposable,
     type IPropertyBag,
     type IReadOnlyPropertyAccessor,
 } from '@pragmatic-tech-ai/todl-runtime';
@@ -25,7 +25,7 @@ import {
  * - `IsReadOnly` reflects `PropertyDescriptor.IsReadOnly`.
  * - `Observe` returns a per-name `Signal`, bridged from the target's DP change
  *   notification via a single `AddPropertyChangedListener`. The bridge listener
- *   lives until `dispose()` — subscribers detach via the `Disposable` from
+ *   lives until `dispose()` — subscribers detach via the `IDisposable` from
  *   `subscribe()`, but the DP listener is released only on `dispose()`.
  * - Iterating yields `[name, accessor]` for every DP; the synthesized accessor's
  *   `displayName` falls back to the name (a DP carries no human label).
@@ -38,7 +38,7 @@ export class DpPropertyBag implements IPropertyBag
     // Lazily-created per-name change channels and the DP listener bridging each
     // one, so dispose() can release the target-side subscriptions.
     private readonly _signals: Map<string, Signal<PropertyChangedEventArgs>> = new Map();
-    private readonly _bridges: Map<string, Disposable> = new Map();
+    private readonly _bridges: Map<string, IDisposable> = new Map();
 
     constructor(target: MuralBase)
     {

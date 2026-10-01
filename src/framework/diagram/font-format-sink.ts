@@ -1,9 +1,10 @@
 import type { ICommand } from '../../runtime/index.js';
 
 // IFontFormatSink — the font-format editing surface a document exposes to the
-// shell toolbar's font-format editor control. The parallel of ICommandTarget for
-// VALUE editing: where ICommandTarget is dispatched to (Execute/CanExecute), a
-// font sink is BOUND to — a picker two-way binds `$FontFamily` / `$FontSize` /
+// shell toolbar's font-format editor control. The parallel of ICommandDispatcher
+// for VALUE editing: where ICommandDispatcher.Resolve is dispatched to
+// (Execute/CanExecute on the resolved command), a font sink is BOUND to — a
+// picker two-way binds `$FontFamily` / `$FontSize` /
 // `$FontColorHex` against the active document, and the size steppers bind the two
 // step commands.
 //

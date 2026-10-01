@@ -23,7 +23,7 @@ import {
     Rect,
     Thickness,
     type CoerceValue,
-    type Disposable,
+    type IDisposable,
     type VisualHost,
     type DrawingContext,
     ObservableCollection,
@@ -344,7 +344,7 @@ describe('TwoWay Bindings across a graph of Models', () => {
 
         let fired = 0;
         let captured: [unknown, string, unknown, unknown] | null = null;
-        const sub: Disposable = desk.PropertyChanged(resolveKey(desk, undefined, 'label')).subscribe(({ owner, property, oldValue, newValue }) => {
+        const sub: IDisposable = desk.PropertyChanged(resolveKey(desk, undefined, 'label')).subscribe(({ owner, property, oldValue, newValue }) => {
             fired++;
             captured = [owner, property, oldValue, newValue];
         });
@@ -533,7 +533,7 @@ describe('Per-instance PropertyChanged listeners', () => {
 
         let aFires = 0;
         let bFires = 0;
-        const aSub: Disposable = a.PropertyChanged(resolveKey(a, undefined, 'label')).subscribe(() => { aFires++; });
+        const aSub: IDisposable = a.PropertyChanged(resolveKey(a, undefined, 'label')).subscribe(() => { aFires++; });
         b.PropertyChanged(resolveKey(b, undefined, 'label')).subscribe(() => { bFires++; });
 
         aSub.dispose();
@@ -2552,7 +2552,7 @@ describe('Typed PropertyKey<T>', () => {
         const widthKey = MuralBase.RegisterProperty<number>(Widget, 'width', 0, MetaData.None);
         const w = new Widget();
         const captures: Array<[unknown, unknown]> = [];
-        const sub: Disposable = w.PropertyChanged(widthKey).subscribe(({ oldValue, newValue }) => { captures.push([oldValue, newValue]); });
+        const sub: IDisposable = w.PropertyChanged(widthKey).subscribe(({ oldValue, newValue }) => { captures.push([oldValue, newValue]); });
 
         w.set_property_value(widthKey, 1);
         sub.dispose();
@@ -5017,7 +5017,7 @@ describe('AddPropertyChangedListener name resolution', () =>
         // MuralBase source). Registered DP names still route through the EVD path.
         const w = new Widget();
         const seen: unknown[] = [];
-        let plainSub: Disposable;
+        let plainSub: IDisposable;
         assert.doesNotThrow(() => {
             plainSub = w.PropertyChanged('plain').subscribe(({ newValue }) => { seen.push(newValue); });
         });

@@ -1,160 +1,35 @@
 import ContextMenuVM from "./context-menu-vm.mjs"
 
-// context-menu.mu — ContextMenu attached-property showcase. Three
-// coloured panels each carry their OWN ContextMenu via the attached
-// `ContextMenuService.ContextMenu` DP (or the ergonomic
-// `Visual.ContextMenu` instance accessor). Right-click any panel to
-// open its menu at the cursor position.
+// context-menu.mu — ContextMenu attached-property showcase, now rendered
+// through the COMMAND-DRIVEN menu machinery. Three coloured panels each
+// carry their own CommandContextMenu (attached imperatively, in the
+// descriptor's OnViewMounted, over the x:name'd panels below) rather than
+// a hand-authored `ContextMenu x:key=... { MenuItem ... }` resource — the
+// CommandDefinition trees + the "Recent" ChildrenContributor live in
+// context-menu-vm.mts; this file only needs to NAME the three panels.
 //
-// Each menu is a themed capabilities tour — collectively they exercise
-// every MenuItem feature:
-//   * Icon             — a Material Symbols glyph in the icon gutter.
-//   * InputGestureText — display-only shortcut chord ("Ctrl+C", "Del").
-//   * MenuSeparator    — horizontal group divider.
-//   * IsEnabled=false  — a disabled (greyed, non-clickable) item.
-//   * IsCheckable/IsChecked — ✓ items bound to VM state (View menu).
-//   * Submenus         — nested MenuItem blocks, up to two levels deep
-//                        (File ▸ Share ▸ Export).
+// Collectively the three menus still exercise the same capabilities tour
+// as before migration:
+//   * Leaf commands           — Cut/Copy/Paste, Open/Save, Zoom levels, …
+//   * A CanExecute=false leaf — Delete (functionally non-clickable; see
+//                                context-menu-vm.mts for the visual-dimming
+//                                caveat — @CommandMenuItemTemplate has no
+//                                CanExecute→IsEnabled wiring today).
+//   * Presentation=Toggles    — Show Grid / Snap to Grid / Show Rulers /
+//                                Bookmark, checkable via CommandViewModel.
+//                                IsToggle + IsChecked (live-synced, see
+//                                CommandMenuBuilder.Build).
+//   * Nested submenus         — Red's Transform▸, Green's Zoom▸, Blue's
+//                                two-level Share▸Export▸.
+//   * A DYNAMIC submenu       — Blue's Recent▸, backed by
+//                                RecentCommandContributor (a
+//                                ChildrenContributor that re-evaluates
+//                                every time the submenu opens).
 //
-// Icons are Material Symbols Outlined ligatures rendered as a TextBlock
-// (the platform preloads that font); the icon gutter is ~24dp, so 18px
-// centred glyphs sit correctly. Checkable rows carry NO icon — the ✓
-// occupies the same gutter.
-//
-// The status line at the bottom updates as commands fire — each leaf
-// passes a CommandParameter the VM uses to format the status string.
+// The status line at the bottom updates as commands fire — each leaf's
+// own dedicated RelayCommand (see context-menu-vm.mts) narrates into Status.
 
 resources ContextMenuDemo {
-    // ── Red panel → "Edit" menu ──────────────────────────────────────
-    // Icon + gesture items, a disabled item, and a Transform ▸ submenu.
-    ContextMenu x:key="RedMenu" {
-        MenuItem
-            [ Header           = "Cut",
-              InputGestureText = "Ctrl+X",
-              Command          = $RedCommand,
-              CommandParameter = "Cut",
-              Icon             = TextBlock [ Text = "content_cut",   FontFamily = "Material Symbols Outlined", FontSize = 18, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center, VerticalAlignment = Center ] ]
-        MenuItem
-            [ Header           = "Copy",
-              InputGestureText = "Ctrl+C",
-              Command          = $RedCommand,
-              CommandParameter = "Copy",
-              Icon             = TextBlock [ Text = "content_copy",  FontFamily = "Material Symbols Outlined", FontSize = 18, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center, VerticalAlignment = Center ] ]
-        MenuItem
-            [ Header           = "Paste",
-              InputGestureText = "Ctrl+V",
-              Command          = $RedCommand,
-              CommandParameter = "Paste",
-              Icon             = TextBlock [ Text = "content_paste", FontFamily = "Material Symbols Outlined", FontSize = 18, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center, VerticalAlignment = Center ] ]
-        MenuSeparator
-        // Disabled: nothing to delete until something is selected.
-        MenuItem
-            [ Header           = "Delete",
-              InputGestureText = "Del",
-              IsEnabled        = false,
-              Icon             = TextBlock [ Text = "delete", FontFamily = "Material Symbols Outlined", FontSize = 18, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center, VerticalAlignment = Center ] ]
-        MenuSeparator
-        MenuItem
-            [ Header = "Transform",
-              Icon   = TextBlock [ Text = "transform", FontFamily = "Material Symbols Outlined", FontSize = 18, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center, VerticalAlignment = Center ] ] {
-            MenuItem
-                [ Header           = "Rotate 90°",
-                  Command          = $RedCommand,
-                  CommandParameter = "Rotate 90°",
-                  Icon             = TextBlock [ Text = "rotate_right", FontFamily = "Material Symbols Outlined", FontSize = 18, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center, VerticalAlignment = Center ] ]
-            MenuItem
-                [ Header           = "Flip Horizontal",
-                  Command          = $RedCommand,
-                  CommandParameter = "Flip Horizontal",
-                  Icon             = TextBlock [ Text = "swap_horiz", FontFamily = "Material Symbols Outlined", FontSize = 18, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center, VerticalAlignment = Center ] ]
-            MenuItem
-                [ Header           = "Flip Vertical",
-                  Command          = $RedCommand,
-                  CommandParameter = "Flip Vertical",
-                  Icon             = TextBlock [ Text = "swap_vert", FontFamily = "Material Symbols Outlined", FontSize = 18, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center, VerticalAlignment = Center ] ]
-        }
-    }
-    // ── Green panel → "View" menu ────────────────────────────────────
-    // Checkable items bound to VM state + a Zoom ▸ submenu.
-    ContextMenu x:key="GreenMenu" {
-        MenuItem
-            [ Header      = "Show Grid",
-              IsCheckable = true,
-              IsChecked   = $ShowGrid,
-              Command     = $ShowGridCommand ]
-        MenuItem
-            [ Header      = "Snap to Grid",
-              IsCheckable = true,
-              IsChecked   = $SnapToGrid,
-              Command     = $SnapToGridCommand ]
-        MenuItem
-            [ Header      = "Show Rulers",
-              IsCheckable = true,
-              IsChecked   = $ShowRulers,
-              Command     = $ShowRulersCommand ]
-        MenuSeparator
-        MenuItem
-            [ Header = "Zoom",
-              Icon   = TextBlock [ Text = "zoom_in", FontFamily = "Material Symbols Outlined", FontSize = 18, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center, VerticalAlignment = Center ] ] {
-            MenuItem [ Header = "50%",  Command = $GreenCommand, CommandParameter = "Zoom 50%" ]
-            MenuItem [ Header = "100%", Command = $GreenCommand, CommandParameter = "Zoom 100%" ]
-            MenuItem [ Header = "200%", Command = $GreenCommand, CommandParameter = "Zoom 200%" ]
-            MenuSeparator
-            MenuItem
-                [ Header           = "Fit to Window",
-                  InputGestureText = "Ctrl+0",
-                  Command          = $GreenCommand,
-                  CommandParameter = "Fit to Window",
-                  Icon             = TextBlock [ Text = "fit_screen", FontFamily = "Material Symbols Outlined", FontSize = 18, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center, VerticalAlignment = Center ] ]
-        }
-    }
-    // ── Blue panel → "File" menu ─────────────────────────────────────
-    // Icon + gesture items and a two-level Share ▸ Export ▸ submenu.
-    ContextMenu x:key="BlueMenu" {
-        MenuItem
-            [ Header           = "Open…",
-              InputGestureText = "Ctrl+O",
-              Command          = $BlueCommand,
-              CommandParameter = "Open",
-              Icon             = TextBlock [ Text = "folder_open", FontFamily = "Material Symbols Outlined", FontSize = 18, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center, VerticalAlignment = Center ] ]
-        MenuItem
-            [ Header           = "Save",
-              InputGestureText = "Ctrl+S",
-              Command          = $BlueCommand,
-              CommandParameter = "Save",
-              Icon             = TextBlock [ Text = "save", FontFamily = "Material Symbols Outlined", FontSize = 18, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center, VerticalAlignment = Center ] ]
-        MenuSeparator
-        MenuItem
-            [ Header = "Share",
-              Icon   = TextBlock [ Text = "share", FontFamily = "Material Symbols Outlined", FontSize = 18, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center, VerticalAlignment = Center ] ] {
-            MenuItem
-                [ Header           = "Copy Link",
-                  Command          = $BlueCommand,
-                  CommandParameter = "Copy Link",
-                  Icon             = TextBlock [ Text = "link", FontFamily = "Material Symbols Outlined", FontSize = 18, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center, VerticalAlignment = Center ] ]
-            MenuItem
-                [ Header           = "Email",
-                  Command          = $BlueCommand,
-                  CommandParameter = "Email",
-                  Icon             = TextBlock [ Text = "mail", FontFamily = "Material Symbols Outlined", FontSize = 18, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center, VerticalAlignment = Center ] ]
-            MenuSeparator
-            // Second-level submenu: Share ▸ Export ▸ {PNG, SVG, PDF}.
-            MenuItem
-                [ Header = "Export as",
-                  Icon   = TextBlock [ Text = "download", FontFamily = "Material Symbols Outlined", FontSize = 18, Foreground = @OnSurfaceVariant, HorizontalAlignment = Center, VerticalAlignment = Center ] ] {
-                MenuItem [ Header = "PNG image", Command = $BlueCommand, CommandParameter = "Export PNG" ]
-                MenuItem [ Header = "SVG vector", Command = $BlueCommand, CommandParameter = "Export SVG" ]
-                MenuItem [ Header = "PDF document", Command = $BlueCommand, CommandParameter = "Export PDF" ]
-            }
-        }
-        MenuSeparator
-        MenuItem
-            [ Header      = "Bookmark",
-              IsCheckable = true,
-              IsChecked   = $Bookmarked,
-              Command     = $BookmarkCommand ]
-    }
-
     DataTemplate [DataType = ContextMenuVM] {
         Border [ Fill = @Surface, Stroke = Pen [ Brush = @OutlineVariant ] ] {
             DockPanel {
@@ -169,14 +44,13 @@ resources ContextMenuDemo {
 
                 StackPanel [ Orientation = Vertical, Margin = (16,16,16,16) ] {
                     StackPanel [ Orientation = Horizontal, Margin = (0,0,0,16) ] {
-                        Border
-                            [ Fill                     = #ef4444,
-                              Width                          = 180,
-                              Height                         = 120,
-                              Margin                         = (0,0,12,0),
-                              ContextMenuService.ContextMenu = @RedMenu ] {
+                        Border x:name="redPanel"
+                            [ Fill   = #ef4444,
+                              Width  = 180,
+                              Height = 120,
+                              Margin = (0,0,12,0) ] {
                             TextBlock
-                                [ Text                = "Edit menu\nicons · shortcuts · disabled · submenu",
+                                [ Text                = "Edit menu\ncommands · disabled · Transform submenu",
                                   Foreground          = @OnPrimary,
                                   FontSize            = 14,
                                   FontWeight          = Bold,
@@ -184,12 +58,11 @@ resources ContextMenuDemo {
                                   HorizontalAlignment = Center,
                                   VerticalAlignment   = Center ]
                         }
-                        Border
-                            [ Fill                     = #22c55e,
-                              Width                          = 180,
-                              Height                         = 120,
-                              Margin                         = (0,0,12,0),
-                              ContextMenuService.ContextMenu = @GreenMenu ] {
+                        Border x:name="greenPanel"
+                            [ Fill   = #22c55e,
+                              Width  = 180,
+                              Height = 120,
+                              Margin = (0,0,12,0) ] {
                             TextBlock
                                 [ Text                = "View menu\ncheckables · Zoom submenu",
                                   Foreground          = @OnPrimary,
@@ -199,13 +72,12 @@ resources ContextMenuDemo {
                                   HorizontalAlignment = Center,
                                   VerticalAlignment   = Center ]
                         }
-                        Border
-                            [ Fill                     = #3b82f6,
-                              Width                          = 180,
-                              Height                         = 120,
-                              ContextMenuService.ContextMenu = @BlueMenu ] {
+                        Border x:name="bluePanel"
+                            [ Fill   = #3b82f6,
+                              Width  = 180,
+                              Height = 120 ] {
                             TextBlock
-                                [ Text                = "File menu\nnested Share ▸ Export submenu",
+                                [ Text                = "File menu\ndynamic Recent ▸ + Share ▸ Export ▸ submenu",
                                   Foreground          = @OnPrimary,
                                   FontSize            = 14,
                                   FontWeight          = Bold,

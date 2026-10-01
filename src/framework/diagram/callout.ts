@@ -1,4 +1,4 @@
-﻿import { MetaData, MuralBase, type PropertyDescriptor, type Disposable } from '../../runtime/index.js';
+﻿import { MetaData, MuralBase, type PropertyDescriptor, type IDisposable } from '../../runtime/index.js';
 import { resolveKey } from '../../runtime/model-internals.js';
 import { pathGeometryFromSvgD, type PathGeometry, Point } from '../../visual-engine/index.js';
 import { Figure, registerFigureKind } from './figure.js';
@@ -64,7 +64,7 @@ export class Callout extends TextNode
         Callout, 'LeaderGeometry', undefined, MetaData.None);
 
     private _trackedTarget: ILeaderTarget | undefined = undefined;
-    private _targetSubs: Disposable[] = [];
+    private _targetSubs: IDisposable[] = [];
     private readonly _onTargetMoved = (): void => { this._updateLeader(); };
 
     public get LeaderTargetNode(): ILeaderTarget | undefined

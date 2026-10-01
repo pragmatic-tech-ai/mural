@@ -1,5 +1,5 @@
 ﻿import { MuralBase } from '../runtime/model.js';
-import type { Disposable } from '@pragmatic-tech-ai/todl-runtime';
+import type { IDisposable } from '@pragmatic-tech-ai/todl-runtime';
 import type { PropertyDescriptor } from '../runtime/property-descriptor.js';
 import { findDescriptor, propertyValues } from '../runtime/model-internals.js';
 import { inherits } from '../runtime/metadata.js';
@@ -58,7 +58,7 @@ interface WritebackEntry
 {
     // The EVD change-channel subscription installed for TwoWay writeback;
     // disposed in UnapplySetter to detach before the tier slot is cleared.
-    readonly sub: Disposable;
+    readonly sub: IDisposable;
 }
 
 // Friend-interface for the EVD ensure-helper on Visual that
@@ -294,7 +294,7 @@ export class StyleApplicator
             // from being interpreted as a target-driven write and looping.
             const writebackEnabled = binding.mode === BindingMode.TwoWay
                                   || binding.mode === BindingMode.OneWayToSource;
-            let targetSub: Disposable | undefined;
+            let targetSub: IDisposable | undefined;
             if (writebackEnabled)
             {
                 targetSub = evd.ChangedSignal().subscribe(({ newValue }): void => {

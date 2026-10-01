@@ -94,42 +94,56 @@ resources Menus
     }
 
     // ── MenuItem: row (hover surface + dedicated selected layer) ──────
+    // Wrapped in a vertical StackPanel so a leading divider (PART_
+    // SeparatorBefore, default Collapsed — MenuItem.SeparatorBefore's
+    // intrinsic equivalent of a declarative sibling MenuSeparator) can sit
+    // ABOVE the row without changing what the row's own Border/DockPanel
+    // chrome looks like. This exists because a HierarchicalDataTemplate's
+    // generated container must stay a single MenuItem (MenuContainerFactory.
+    // GetContainer only recurses a submenu when `tmpl.Apply(item) instanceof
+    // MenuItem`), so a data-bound row has no way to place a sibling
+    // MenuSeparator the way declaratively-nested `MenuItem { MenuSeparator;
+    // MenuItem }` markup can — the divider has to be INTRINSIC to the row.
     Template x:key="DefaultMenuItemRow" [TargetType = MenuItem]
     {
-        Border x:name="PART_Row" [ Fill = #00000000, CornerRadius = @RadiusMd ]
+        StackPanel [ Orientation = Vertical ]
         {
-            // PART_Selected carries the row padding so its @SurfaceSelected
-            // fill spans the full row and survives a concurrent @Bg2 hover.
-            Border x:name="PART_Selected"
-                [ Fill = #00000000,
-                  CornerRadius = @RadiusMd,
-                  Padding = (@Space3,@Space2,@Space3,@Space2) ]
+            MenuSeparator x:name="PART_SeparatorBefore" [ Visibility = Collapsed ]
+            Border x:name="PART_Row" [ Fill = #00000000, CornerRadius = @RadiusMd ]
             {
-                DockPanel [ LastChildFill = true ]
+                // PART_Selected carries the row padding so its @SurfaceSelected
+                // fill spans the full row and survives a concurrent @Bg2 hover.
+                Border x:name="PART_Selected"
+                    [ Fill = #00000000,
+                      CornerRadius = @RadiusMd,
+                      Padding = (@Space3,@Space2,@Space3,@Space2) ]
                 {
-                    Border x:name="PART_Icon"
-                        [ DockPanel.Dock = Left,
-                          Width = 24,
-                          MinWidth = 24,
-                          TextBlock.Foreground = @Fg2 ]
-                    Shape x:name="PART_Chevron"
-                        [ DockPanel.Dock = Right,
-                          Geometry = @ChevronRight,
-                          Fill = @Fg2,
-                          Width = 5,
-                          Height = 10,
-                          VerticalAlignment = Center,
-                          Visibility = Collapsed ]
-                    TextBlock x:name="PART_Gesture"
-                        [ DockPanel.Dock = Right,
-                          Margin = (@Space4,0,@Space4,0),
-                          Foreground = @Fg2,
-                          Style = @UiCaption ]
-                    TextBlock x:name="PART_Label"
-                        [ Margin = (@Space2,0,@Space4,0),
-                          MinWidth = 80,
-                          Foreground = @Fg1,
-                          Style = @UiLabel ]
+                    DockPanel [ LastChildFill = true ]
+                    {
+                        Border x:name="PART_Icon"
+                            [ DockPanel.Dock = Left,
+                              Width = 24,
+                              MinWidth = 24,
+                              TextBlock.Foreground = @Fg2 ]
+                        Shape x:name="PART_Chevron"
+                            [ DockPanel.Dock = Right,
+                              Geometry = @ChevronRight,
+                              Fill = @Fg2,
+                              Width = 5,
+                              Height = 10,
+                              VerticalAlignment = Center,
+                              Visibility = Collapsed ]
+                        TextBlock x:name="PART_Gesture"
+                            [ DockPanel.Dock = Right,
+                              Margin = (@Space4,0,@Space4,0),
+                              Foreground = @Fg2,
+                              Style = @UiCaption ]
+                        TextBlock x:name="PART_Label"
+                            [ Margin = (@Space2,0,@Space4,0),
+                              MinWidth = 80,
+                              Foreground = @Fg1,
+                              Style = @UiLabel ]
+                    }
                 }
             }
         }

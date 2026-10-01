@@ -1,4 +1,4 @@
-﻿import { MetaData, MuralBase, type PropertyDescriptor, type Disposable, Visual } from '../../runtime/index.js';
+﻿import { MetaData, MuralBase, type PropertyDescriptor, type IDisposable, Visual } from '../../runtime/index.js';
 import { FontStyle, FontWeight, ImageSource, Stretch, TextDecorations } from '../../visual-engine/index.js';
 import { Inline, type InlineHost } from './text-element.js';
 import { InlineCollection } from './inline-collection.js';
@@ -130,7 +130,7 @@ export class ImageInline extends Inline
         ImageInline, 'Display', ImageDisplay.Inline, MetaData.None);
 
     // Re-layout when the source's intrinsic size becomes known.
-    private _naturalSizeSub: Disposable | undefined;
+    private _naturalSizeSub: IDisposable | undefined;
 
     constructor(source?: ImageSource, opts?: { width?: number; height?: number; stretch?: Stretch; display?: ImageDisplay })
     {

@@ -7,27 +7,33 @@ import EllipseFigure from "./commands-vm.mjs"
 import NoteFigure from "./commands-vm.mjs"
 
 // commands.mu — integration showcase: ToolBar + MenuButton + ContextMenu
-// over a Diagram of selectable / movable nodes.
+// over a Diagram of selectable / movable nodes. The MenuButton and the
+// per-node ContextMenu are COMMAND-DRIVEN (CommandsVM.Roots / .NodeContextMenu,
+// built via CommandMenuBuilder / CommandContextMenu — see commands-vm.mts);
+// the ToolBar and Ribbon below were already command-machinery-driven and are
+// unchanged.
 //
-//   * Top strip: a hamburger MenuButton (File + Edit groups) and a
+//   * Top strip: a hamburger MenuButton (`ItemsSource = $Roots`) and a
 //     ToolBar with icon-only buttons (Save / Cut / Copy / Paste /
 //     Delete / Duplicate + AlignLeft / AlignCenter / AlignRight).
 //   * Body: a Diagram populated with three pre-seeded Figures. Click /
 //     Ctrl-click / Shift-click / marquee selects; Delete removes
 //     selected; the alignment commands operate on the selected
 //     subset.
-//   * Each node carries an attached ContextMenu (via a TargetType-keyed
-//     Style on each Figure subclass) — right-click the node for Cut /
-//     Copy / Duplicate / Delete in-place. The Styles auto-BasedOn the
-//     framework Figure default Template, so the catalog-driven Shape
-//     chrome still renders.
+//   * Each node carries CommandsVM.NodeContextMenu, attached imperatively
+//     in CommandsVM.CreateNode (seeded AND Cut/Paste/Duplicate-spawned
+//     nodes alike) — right-click the node for Cut / Copy / Duplicate /
+//     Delete in-place. The per-kind Styles below still auto-BasedOn the
+//     framework Figure default Template for the selection-state Stroke,
+//     so the catalog-driven Shape chrome still renders.
 //
 // Selection-gated commands (Cut / Copy / Delete / Duplicate / Align*)
-// dim across all three surfaces in lockstep because they share the
-// same RelayCommand instances. The bootstrap subscribes to the
-// Diagram's SelectionChanged event and calls
-// CommandsVM.PublishSelectionState — that pulse drives
-// CanExecuteChanged on every gated command.
+// dim across all three surfaces in lockstep because the MenuButton, the
+// ToolBar, and the NodeContextMenu all dispatch to the SAME RelayCommand
+// instances (DemoCommandDispatcher resolves every command-driven id to
+// CommandsVM's own getters). The bootstrap subscribes to the Diagram's
+// SelectionChanged event and calls CommandsVM.PublishSelectionState —
+// that pulse drives CanExecuteChanged on every gated command.
 
 resources CommandsDemo {
     // Toolbar icons baked from the shared Material Symbols font at compile
@@ -90,31 +96,27 @@ resources CommandsDemo {
     // IsSelected. Shared across the three Figure subclasses.
     Pen x:key="CommandsSelectedPen" [ Brush = #f97316, Thickness = 2 ]
 
-    // ── Shared per-node ContextMenu ─────────────────────────────────
-    ContextMenu x:key="NodeContextMenu" {
-        MenuItem [ Header = "Cut", InputGestureText = "Ctrl+X", Command = $CutCommand ]
-        MenuItem [ Header = "Copy", InputGestureText = "Ctrl+C", Command = $CopyCommand ]
-        MenuItem [ Header = "Duplicate", InputGestureText = "Ctrl+D", Command = $DuplicateCommand ]
-        MenuSeparator
-        MenuItem [ Header = "Delete", InputGestureText = "Del", Command = $DeleteCommand ]
-    }
+    // The per-node ContextMenu is command-driven now (CommandsVM.
+    // NodeContextMenu, a CommandContextMenu over Cut/Copy/Duplicate/Delete)
+    // and attached imperatively — CommandsVM.CreateNode sets
+    // `fig.ContextMenu = this.NodeContextMenu` on every node it creates
+    // (seeded or Cut/Paste/Duplicate-spawned) — rather than via a Style
+    // setter referencing a hand-authored `ContextMenu x:key=...` resource.
 
-    // ── Per-kind Styles — ContextMenu attached + selection chrome ──
+    // ── Per-kind Styles — selection chrome only (ContextMenu attaches
+    //    imperatively now; see above) ──────────────────────────────
     // Each Style auto-BasedOn's the framework Figure default Template
     // (Application.ResolveDefaultResource walks the prototype chain
-    // from the subclass to Figure to find the theme entry). So the
-    // catalog-rendered Shape stays intact; only ContextMenu and the
-    // selection-state Stroke ride on top.
+    // from the subclass to Figure to find the theme entry), so the
+    // catalog-rendered Shape stays intact; only the selection-state
+    // Stroke rides on top here.
     Style [TargetType = RectFigure] {
-        ContextMenuService.ContextMenu = @NodeContextMenu;
         when ( IsSelected ) { Stroke = @CommandsSelectedPen; }
     }
     Style [TargetType = EllipseFigure] {
-        ContextMenuService.ContextMenu = @NodeContextMenu;
         when ( IsSelected ) { Stroke = @CommandsSelectedPen; }
     }
     Style [TargetType = NoteFigure] {
-        ContextMenuService.ContextMenu = @NodeContextMenu;
         when ( IsSelected ) { Stroke = @CommandsSelectedPen; }
     }
 
@@ -149,51 +151,11 @@ resources CommandsDemo {
                     DockPanel {
                     Line [ DockPanel.Dock = Bottom, Orientation = Horizontal, Stroke = (@OutlineVariant, 1) ]
                     StackPanel [ Orientation = Horizontal ] {
-                        MenuButton [ Header = "☰  File", Margin = (0,0,8,0) ] {
-                            MenuItem
-                                [ Header           = "Save",
-                                  InputGestureText = "Ctrl+S",
-                                  Command          = $SaveCommand ]
-                            MenuItem
-                                [ Header           = "Load",
-                                  InputGestureText = "Ctrl+O",
-                                  Command          = $LoadCommand ]
-                            MenuSeparator
-                            MenuItem
-                                [ Header           = "Cut",
-                                  InputGestureText = "Ctrl+X",
-                                  Command          = $CutCommand ]
-                            MenuItem
-                                [ Header           = "Copy",
-                                  InputGestureText = "Ctrl+C",
-                                  Command          = $CopyCommand ]
-                            MenuItem
-                                [ Header           = "Paste",
-                                  InputGestureText = "Ctrl+V",
-                                  Command          = $PasteCommand ]
-                            MenuItem
-                                [ Header           = "Delete",
-                                  InputGestureText = "Del",
-                                  Command          = $DeleteCommand ]
-                            MenuSeparator
-                            MenuItem
-                                [ Header           = "Duplicate",
-                                  InputGestureText = "Ctrl+D",
-                                  Command          = $DuplicateCommand ]
-                            MenuItem
-                                [ Header           = "Select All",
-                                  InputGestureText = "Ctrl+A",
-                                  Command          = $SelectAllCommand ]
-                            MenuSeparator
-                            MenuItem
-                                [ Header           = "Undo",
-                                  InputGestureText = "Ctrl+Z",
-                                  Command          = $UndoCommand ]
-                            MenuItem
-                                [ Header           = "Redo",
-                                  InputGestureText = "Ctrl+Y",
-                                  Command          = $RedoCommand ]
-                        }
+                        MenuButton
+                            [ Header       = "☰  File",
+                              Margin       = (0,0,8,0),
+                              ItemsSource  = $Roots,
+                              ItemTemplate = @CommandMenuItemTemplate ]
                         TextBlock
                             [ Text       = $Status,
                               FontSize   = 12,

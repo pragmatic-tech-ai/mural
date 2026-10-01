@@ -3,7 +3,7 @@
     MuralBase,
     Visibility,
     Element, type PropertyDescriptor,
-    type Disposable,
+    type IDisposable,
 } from '../../runtime/index.js';
 import { resolveKey } from '../../runtime/model-internals.js';
 import {
@@ -102,7 +102,7 @@ export class PenEditor extends TemplatedControl
     // Per-instance subscriptions bound to the current Pen's property
     // changes. Re-installed in seedFromPen so a Pen swap detaches the
     // subscription from the prior Pen and attaches a fresh one.
-    private _penListeners: Disposable[] = [];
+    private _penListeners: IDisposable[] = [];
     private _brushEditor:     FillEditor  | undefined;
     private _thicknessSlider: Slider      | undefined;
     private _thicknessRead:   TextBlock   | undefined;
@@ -115,7 +115,7 @@ export class PenEditor extends TemplatedControl
     // in the row Visibility=Collapsed, the Grid's Auto-sized row height
     // contracts to 0 and the row visually disappears.
     private _miterLabel:      TextBlock   | undefined;
-    private _partListeners: Disposable[] = [];
+    private _partListeners: IDisposable[] = [];
 
     constructor()
     {

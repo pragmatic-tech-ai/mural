@@ -1,6 +1,6 @@
 ﻿import {
     type CollectionChange,
-    type Disposable,
+    type IDisposable,
     type MuralBase,
     type Visual,
     Panel,
@@ -171,7 +171,7 @@ export class DiagramConnectorsMaterializer
         const connector = visual;
         const onCaps = (): void => this._syncCaps(item, connector);
         const onZ    = (): void => this._mirrorZToDecor(item);
-        const subs: Disposable[] = [
+        const subs: IDisposable[] = [
             connector.PropertyChanged(Connector.SourceCapTemplateKey).subscribe(onCaps),
             connector.PropertyChanged(Connector.TargetCapTemplateKey).subscribe(onCaps),
             connector.PropertyChanged(Panel.ZIndexKey).subscribe(onZ),

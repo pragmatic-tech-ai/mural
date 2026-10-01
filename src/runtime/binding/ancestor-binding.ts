@@ -2,7 +2,7 @@
 import { MetaData } from '../metadata.js';
 import { MuralBase } from '../model.js';
 import { resolveKey } from '../model-internals.js';
-import type { Disposable } from '@pragmatic-tech-ai/todl-runtime';
+import type { IDisposable } from '@pragmatic-tech-ai/todl-runtime';
 import type { Visual } from '../../visual-engine/visual.js';
 
 // Internal watcher MuralBase — same shape as DataContextWatcher /
@@ -33,7 +33,7 @@ class AncestorBindingImpl extends Binding
 {
     private readonly watcher:  AncestorWatcher;
     private readonly callback: (() => void) | undefined;
-    private subscription:      Disposable | undefined;
+    private subscription:      IDisposable | undefined;
 
     constructor(start: Visual, ancestorType: Function, property: string, level: number)
     {

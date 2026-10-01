@@ -18,7 +18,7 @@
     hasModifier,
     ModifierKeys,
     type WheelEventArgs,
-    type Disposable,
+    type IDisposable,
 } from '../../runtime/index.js';
 import { NodeViewModel } from './node-view-model.js';
 import type { DataTemplate } from '../../basic/templates/data-template.js';
@@ -354,8 +354,8 @@ export class Diagram extends Selector implements RigidConnectorDragHost
     // Text-format commands — the command surface behind the two label toolbars
     // (paragraph alignment WITHIN the label; label placement WITHIN the shape).
     // Same RelayCommand-DP shape as the align/combine commands, so a data-driven
-    // toolbar / ICommandTarget consumer (e.g. Plexus) binds them exactly the same
-    // way. DiagramCommands installs the defaults; each Execute force-applies its
+    // toolbar / ICommandDispatcher consumer (e.g. Plexus) binds them exactly the
+    // same way. DiagramCommands installs the defaults; each Execute force-applies its
     // value to every selected shape's label (via ApplySelectionText*), and each
     // CanExecute requires ≥ 1 selected shape that carries a label. The demo's
     // active-state toggles bind BOTH Command (the write) and IsChecked (the
@@ -1938,9 +1938,9 @@ export class Diagram extends Selector implements RigidConnectorDragHost
         };
         feed();
         const scroll = this.ScrollHost;
-        const zoomSub: Disposable = this.PropertyChanged(Diagram.ZoomKey).subscribe(feed);
-        const hOffSub: Disposable | undefined = scroll?.PropertyChanged(ScrollViewer.HorizontalOffsetKey).subscribe(feed);
-        const vOffSub: Disposable | undefined = scroll?.PropertyChanged(ScrollViewer.VerticalOffsetKey).subscribe(feed);
+        const zoomSub: IDisposable = this.PropertyChanged(Diagram.ZoomKey).subscribe(feed);
+        const hOffSub: IDisposable | undefined = scroll?.PropertyChanged(ScrollViewer.HorizontalOffsetKey).subscribe(feed);
+        const vOffSub: IDisposable | undefined = scroll?.PropertyChanged(ScrollViewer.VerticalOffsetKey).subscribe(feed);
         this._rulerCameraDetach = (): void => {
             zoomSub.dispose();
             hOffSub?.dispose();

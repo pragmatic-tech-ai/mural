@@ -1,5 +1,5 @@
 ﻿import { Binding, type ValueConverter } from './binding.js';
-import type { Disposable } from '@pragmatic-tech-ai/todl-runtime';
+import type { IDisposable } from '@pragmatic-tech-ai/todl-runtime';
 import { MetaData } from '../metadata.js';
 import { MuralBase } from '../model.js';
 import { resolveKey } from '../model-internals.js';
@@ -44,7 +44,7 @@ class FixedSourceBinding extends Binding
     private readonly pathStr:     string;
 
     private nameSource:         MuralBase | undefined;
-    private sourceSubscription: Disposable | undefined;
+    private sourceSubscription: IDisposable | undefined;
     private disposed = false;
     // The forward-ref retry (activate) fires at most once. One microtask
     // defers past the current synchronous factory run — the entire forward-ref
@@ -66,7 +66,7 @@ class FixedSourceBinding extends Binding
     // so it passes none. The Service case watches the target's inherited
     // `ServiceScope` — re-parenting the subtree under a different provider
     // must rebind to that provider's service. See reresolve().
-    private rebindSubscription: Disposable | undefined;
+    private rebindSubscription: IDisposable | undefined;
 
     constructor(
         source:    MuralBase | (() => MuralBase | undefined),

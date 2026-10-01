@@ -4,7 +4,7 @@
     MuralBase,
     Rect,
     Size,
-    type Disposable,
+    type IDisposable,
     type PointerEventArgs,
     type PropertyDescriptor,
 } from '../../runtime/index.js';
@@ -254,7 +254,7 @@ export class Connector extends Shape
     // → re-sync so filled caps (bound to $Brush) recolour too. In-place
     // brush-COLOUR mutation needs nothing here: the cap's Fill IS that
     // same brush instance, and Shape's own fill listener repaints it.
-    private _capStrokeBrushSub: Disposable | undefined = undefined;
+    private _capStrokeBrushSub: IDisposable | undefined = undefined;
     private readonly _onCapStrokeBrushChanged = (): void => { this._resyncCapContexts(); };
 
     // Last resolved anchors from _scheduleRecompute. Edit-mode handle
@@ -339,18 +339,18 @@ export class Connector extends Shape
     // Stored subscriptions for endpoint, node-move, node-resize, and ancestor
     // listeners. Each group is disposed when its tracked reference flips and
     // re-subscribed for the new reference.
-    private _sourceSubs: Disposable[] = [];
-    private _targetSubs: Disposable[] = [];
-    private _sourceNodeMoveSubs: Disposable[] = [];
-    private _sourceNodeResizeSubs: Disposable[] = [];
-    private _targetNodeMoveSubs: Disposable[] = [];
-    private _targetNodeResizeSubs: Disposable[] = [];
-    private _sourceAncestorSubs: Disposable[] = [];
-    private _targetAncestorSubs: Disposable[] = [];
+    private _sourceSubs: IDisposable[] = [];
+    private _targetSubs: IDisposable[] = [];
+    private _sourceNodeMoveSubs: IDisposable[] = [];
+    private _sourceNodeResizeSubs: IDisposable[] = [];
+    private _targetNodeMoveSubs: IDisposable[] = [];
+    private _targetNodeResizeSubs: IDisposable[] = [];
+    private _sourceAncestorSubs: IDisposable[] = [];
+    private _targetAncestorSubs: IDisposable[] = [];
 
     // Bound handlers — arrow functions kept as class fields so they can be
     // passed as handler identity is no longer required for detach (the
-    // returned Disposable handles that), but the named fields keep the
+    // returned IDisposable handles that), but the named fields keep the
     // readable intent clear.
     private readonly _onSourceEndpointInputChanged = (): void => {
         this._reattachSourceNodeListener();

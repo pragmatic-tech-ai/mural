@@ -6,7 +6,7 @@
     Thickness,
     Element, Visual, Visibility, VerticalAlignment,
     type PropertyDescriptor,
-    type Disposable,
+    type IDisposable,
 } from '../../runtime/index.js';
 import { resolveKey } from '../../runtime/model-internals.js';
 import {
@@ -162,7 +162,7 @@ function wireSwatchHover(
         onPreview?.(sw.IsMouseOver);
     };
 
-    const sub: Disposable = sw.PropertyChanged(Element.IsMouseOverKey).subscribe(onHover);
+    const sub: IDisposable = sw.PropertyChanged(Element.IsMouseOverKey).subscribe(onHover);
     return () => {
         sub.dispose();
         clear();

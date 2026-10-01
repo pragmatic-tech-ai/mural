@@ -5,7 +5,7 @@ import {
     Rect,
     Size,
     Visual,
-    type Disposable,
+    type IDisposable,
 } from '../../../runtime/index.js';
 import { Adorner, Pen, RotateTransform, SolidColorBrush } from '../../../visual-engine/index.js';
 import { Border } from '../../../basic/index.js';
@@ -73,8 +73,8 @@ export class TextBlockAdorner extends Adorner
     // Selection tracking — the single adorned Figure + its ShapeText DP
     // unsubscribes (re-armed when the target changes).
     private _figure: Figure | undefined;
-    private _textUnsubs: Disposable[] = [];
-    private _diagramSubs: Disposable[] = [];
+    private _textUnsubs: IDisposable[] = [];
+    private _diagramSubs: IDisposable[] = [];
     private readonly _onChange = (): void => { this._retarget(); this.InvalidateArrange(); };
 
     // Drag state.

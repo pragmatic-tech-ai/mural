@@ -1,9 +1,11 @@
 ﻿import {
     MetaData,
     MuralBase,
+    ObservableCollection,
     type ServiceToken,
 } from '../../../runtime/index.js';
 import type { Geometry } from '../../../visual-engine/index.js';
+import type { ICommandContributor } from './command-contributor.js';
 import { ShellRegion } from './shell-control-definition.js';
 
 // How a command GROUP is presented on the toolbar. A group's presentation is
@@ -23,7 +25,8 @@ export enum CommandGroupPresentation
     // icon grid (Columns wide) in the popup.
     SplitGrid = 'split-grid',
     // The group renders inline as a row of toggle buttons whose checked state
-    // reflects the active document's IsActive(definition).
+    // reflects the resolved command's ICheckableCommand.IsChecked, folded onto
+    // the toolbar's CommandViewModel.IsChecked.
     Toggles   = 'toggles',
 }
 
@@ -32,7 +35,7 @@ export enum CommandGroupPresentation
 // where it sits on a toolbar (Group, Order), which command context it belongs to
 // (Context), and a stable Id. The behaviour lives on the active document, NOT
 // here — a command has no Execute of its own; it is dispatched to whatever
-// document is active (see ICommandTarget).
+// document is active (see ICommandDispatcher.Resolve).
 //
 // A MuralBase so it is DP-backed, bindable, and declarable in markup — the same
 // shape as SettingDefinition / DocumentDefinition:
@@ -54,7 +57,7 @@ export enum CommandGroupPresentation
 //
 // Why the behaviour isn't here: the target is always the active document (there
 // is no handler ambiguity to route through the tree), so a command is dispatched
-// as `activeDocument.Execute(definition)`. Routed commands solve handler-
+// as `activeDocument.Resolve(id, context)?.Execute()`. Routed commands solve handler-
 // discovery-by-focus-scope — a non-problem here — so this stays a plain
 // declaration and the document interprets it.
 export class CommandDefinition extends MuralBase
@@ -162,4 +165,27 @@ export class CommandDefinition extends MuralBase
 
     public get SeparatorBefore(): boolean  { return this.get_property_value(CommandDefinition.SeparatorBeforeKey); }
     public set SeparatorBefore(v: boolean) { this.set_property_value(CommandDefinition.SeparatorBeforeKey, v); }
+
+    // Nested child commands — a menu/submenu tree. Populated from a `.commands:` or
+    // Hierarchy-DSL body (the markup content collection) and merged at build time with
+    // any ChildrenContributor output. Orthogonal to Group/Presentation (responsive
+    // toolbar layout); these are structural submenu children.
+    public readonly Children: ObservableCollection<CommandDefinition> =
+        new ObservableCollection<CommandDefinition>();
+
+    // The markup content collection: a `CommandDefinition { … }` body lowers to
+    // AddChild per nested element (see DEFAULT_SLOT_INFO['CommandDefinition']).
+    public AddChild(child: CommandDefinition): void
+    {
+        this.Children.Add(child);
+    }
+
+    // Names an ICommandContributor that supplies this command's children at build
+    // time (merged after Children). A ServiceToken DP — same precedent as
+    // HierarchyContributorDefinition.Contributor; resolved lazily on submenu expand.
+    public static readonly ChildrenContributorKey = MuralBase.RegisterProperty<ServiceToken<ICommandContributor> | undefined>(
+        CommandDefinition, 'ChildrenContributor', undefined, MetaData.None);
+
+    public get ChildrenContributor(): ServiceToken<ICommandContributor> | undefined  { return this.get_property_value(CommandDefinition.ChildrenContributorKey); }
+    public set ChildrenContributor(v: ServiceToken<ICommandContributor> | undefined) { this.set_property_value(CommandDefinition.ChildrenContributorKey, v); }
 }

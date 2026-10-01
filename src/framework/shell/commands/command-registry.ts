@@ -64,10 +64,26 @@ export class CommandRegistry extends ServiceBase
 
     private addDefinition(definition: CommandDefinition): void
     {
-        // Dedupe by Id (first module to declare an id wins). Id-less definitions
-        // are dropped — a command with no id can't be dispatched.
-        if (definition.Id === '' || this._byId.has(definition.Id)) return;
-        this._byId.set(definition.Id, definition);
-        this.Commands.Add(definition);
+        this.indexTree(definition);
+        if (this._byId.get(definition.Id) === definition)
+        {
+            this.Commands.Add(definition);
+        }
+    }
+
+    // Index a definition and all its Children by Id (first writer wins, matching
+    // the existing top-level dedupe). Nested ids become GetById-resolvable at any
+    // depth; only a winning ROOT is ever added to the flat Commands collection
+    // (see addDefinition).
+    private indexTree(definition: CommandDefinition): void
+    {
+        if (definition.Id !== '' && !this._byId.has(definition.Id))
+        {
+            this._byId.set(definition.Id, definition);
+        }
+        for (const child of definition.Children)
+        {
+            this.indexTree(child);
+        }
     }
 }

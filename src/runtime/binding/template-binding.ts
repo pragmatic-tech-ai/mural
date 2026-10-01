@@ -3,7 +3,7 @@ import { MetaData } from '../metadata.js';
 import { MuralBase } from '../model.js';
 import type { PropertyKey } from '../model.js';
 import { resolveKey } from '../model-internals.js';
-import type { Disposable } from '@pragmatic-tech-ai/todl-runtime';
+import type { IDisposable } from '@pragmatic-tech-ai/todl-runtime';
 import type { Visual } from '../../visual-engine/visual.js';
 
 // Internal MuralBase that mirrors the templated parent's watched property.
@@ -35,7 +35,7 @@ class TemplateBindingImpl extends Binding
     private readonly watcher:         TemplatedParentWatcher;
     private readonly templatedParent: Visual;
     private readonly callback:        () => void;
-    private subscription:             Disposable | undefined;
+    private subscription:             IDisposable | undefined;
     // Resolved once at construction; used to install the change-channel
     // subscription and (via set_value) to write back to the templated parent.
     private readonly key:             PropertyKey<unknown>;

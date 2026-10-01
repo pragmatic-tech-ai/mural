@@ -1,5 +1,5 @@
 ﻿import type { PropertyChangedEventArgs } from './effective-value.js';
-import type { Disposable } from '@pragmatic-tech-ai/todl-runtime';
+import type { IDisposable } from '@pragmatic-tech-ai/todl-runtime';
 import { bindsTwoWayByDefault } from '../metadata.js';
 import { MuralBase } from '../model.js';
 import { Observable } from '../observable.js';
@@ -33,7 +33,7 @@ class PropertyPathSegment
     // attach_and_step time. Disposing it detaches the onChanged handler from
     // whichever channel the segment subscribed to (MuralBase key OR plain-
     // Observable name) — no need to re-derive source/key at detach.
-    private subscription: Disposable | undefined;
+    private subscription: IDisposable | undefined;
     // Cached at attach_and_step time so re-resolution can reuse the same key
     // without re-walking the class hierarchy for the descriptor.
     private resolvedKey: PropertyKey<unknown> | undefined;
@@ -75,12 +75,12 @@ class PropertyPathSegment
         return this.collectionUnsub;
     }
 
-    set Subscription(sub: Disposable | undefined)
+    set Subscription(sub: IDisposable | undefined)
     {
         this.subscription = sub;
     }
 
-    get Subscription(): Disposable | undefined
+    get Subscription(): IDisposable | undefined
     {
         return this.subscription;
     }
@@ -391,7 +391,7 @@ class PropertyPath
             segment.CollectionUnsub = undefined;
             return;
         }
-        // Property-change teardown. One Disposable tears down whichever
+        // Property-change teardown. One IDisposable tears down whichever
         // channel the segment subscribed to — a MuralBase key OR a plain-
         // Observable name — so no source/key re-derivation is needed here.
         segment.Subscription?.dispose();

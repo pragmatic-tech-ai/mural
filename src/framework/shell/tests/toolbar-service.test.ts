@@ -1,6 +1,12 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { Application, ServiceKey, type ServiceToken } from '../../../runtime/index.js';
+import {
+    Application,
+    CheckableRelayCommand,
+    ServiceKey,
+    type ICommand,
+    type ServiceToken,
+} from '../../../runtime/index.js';
 import { ShellModule } from '../module.js';
 import { ContentHostService } from '../services/content-host-service.js';
 import { DocumentsContentHostService, type IDocument } from '../services/documents-content-host-service.js';
@@ -24,7 +30,7 @@ import {
     ToolbarToggleGroup,
 } from '../commands/toolbar-group-view-model.js';
 import { CommandToggleViewModel, CommandViewModel } from '../commands/command-view-model.js';
-import { type ICommandTarget } from '../commands/command-target.js';
+import { CommandContext } from '../commands/command-context.js';
 
 // Two shared contexts the fake documents activate.
 const CTX_A = new ServiceKey<unknown>('ctx.a');
@@ -42,14 +48,19 @@ function command(id: string, context: ServiceToken<unknown>, order = 0): Command
 }
 
 // A document that is BOTH an IDocument (so the host can open it) and an
-// ICommandTarget (so the toolbar dispatches to it).
-class FakeDoc implements IDocument, ICommandTarget
+// ICommandContextSource (so the toolbar's context filter still reads
+// CommandContexts — the filter duck-types on it, untouched by this migration)
+// AND an ICommandDispatcher (so the toolbar's EXECUTION path, which dispatches
+// via Resolve, has something to resolve against).
+class FakeDoc implements IDocument
 {
     public readonly Id: string;
     public readonly Title = 'doc';
     public readonly IsDirty = false;
     public CommandContexts: readonly ServiceToken<unknown>[];
-    public readonly executed: CommandDefinition[] = [];
+    // Holds the command IDS Resolve's returned command was invoked with
+    // (dispatch runs through Resolve(id).Execute()).
+    public readonly executed: string[] = [];
     public canRun = true;
 
     constructor(id: string, contexts: readonly ServiceToken<unknown>[])
@@ -59,8 +70,17 @@ class FakeDoc implements IDocument, ICommandTarget
     }
 
     public Save(): void { /* no-op */ }
-    public Execute(def: CommandDefinition): void { this.executed.push(def); }
-    public CanExecute(_def: CommandDefinition): boolean { return this.canRun; }
+
+    // Checked-state hook for subclasses (TogglingDoc). Base reports unchecked.
+    protected IsCheckedFor(_id: string): boolean { return false; }
+
+    public Resolve(commandId: string, _context: CommandContext): ICommand | undefined
+    {
+        return new CheckableRelayCommand(
+            () => this.executed.push(commandId),
+            () => this.canRun,
+            () => this.IsCheckedFor(commandId));
+    }
 }
 
 function appWith(...cmds: CommandDefinition[]): Application
@@ -115,7 +135,7 @@ describe('ToolbarService visibility', () => {
         const app = appWith(command('c.a1', CTX_A));
         const host = app.Services.getRequired(ContentHostService.Key) as DocumentsContentHostService;
         const toolbar = app.Services.getRequired(ToolbarService.Key);
-        // A plain IDocument (no Execute/CanExecute/CommandContexts).
+        // A plain IDocument (no CommandContexts / Resolve).
         host.Open({ Id: 'plain', Title: 'plain', IsDirty: false, Save() { /* */ } });
         assert.deepEqual(ids(toolbar), []);
     });
@@ -131,7 +151,7 @@ describe('ToolbarService dispatch', () => {
 
         toolbar.VisibleCommands.Get(0)!.Command.Execute(undefined);
         assert.equal(doc.executed.length, 1);
-        assert.equal(doc.executed[0]!.Id, 'c.a1');
+        assert.equal(doc.executed[0], 'c.a1');
     });
 
     test('CanExecute reflects the active document', () => {
@@ -146,6 +166,41 @@ describe('ToolbarService dispatch', () => {
         assert.equal(cmd.CanExecute(undefined), false);
         doc.canRun = true;
         assert.equal(cmd.CanExecute(undefined), true);
+    });
+
+    // Explicit proof the dispatch path goes through ICommandDispatcher.Resolve —
+    // a document that records every commandId passed to Resolve, and whose
+    // resolved command's IsChecked drives the VM's checked state.
+    test('dispatch flows through Resolve', () => {
+        const app = appWith(command('c.a1', CTX_A));
+        const host = app.Services.getRequired(ContentHostService.Key) as DocumentsContentHostService;
+        const toolbar = app.Services.getRequired(ToolbarService.Key);
+
+        const resolvedIds: string[] = [];
+        class RecordingDoc extends FakeDoc
+        {
+            public checked = false;
+            public override Resolve(commandId: string, context: CommandContext): ICommand | undefined
+            {
+                resolvedIds.push(commandId);
+                return new CheckableRelayCommand(
+                    () => this.executed.push(commandId),
+                    () => this.canRun,
+                    () => this.checked);
+            }
+        }
+        const doc = new RecordingDoc('a', [CTX_A]);
+        host.Open(doc);
+        resolvedIds.length = 0;   // discard the Resolve calls Open()'s Rebuild made
+
+        const vm = toolbar.VisibleCommands.Get(0)!;
+        vm.Command.Execute(undefined);
+        assert.deepEqual(resolvedIds, ['c.a1'], 'Execute dispatched via Resolve(id, ctx)');
+        assert.deepEqual(doc.executed, ['c.a1'], 'the command Resolve returned actually ran');
+
+        doc.checked = true;
+        CommandManager.InvalidateRequerySuggested();   // triggers RefreshActiveStates
+        assert.equal(vm.IsChecked, true, 'IsChecked on the resolved command flows into vm.IsChecked');
     });
 });
 
@@ -167,11 +222,13 @@ function grouped(
     return c;
 }
 
-// A command target that also reports active-state for a fixed id set.
+// A document that also reports active-state for a fixed id set. Toggle state
+// flows Resolve → ICheckableCommand.IsChecked → RefreshActiveStates →
+// vm.IsChecked, so this overrides IsCheckedFor.
 class TogglingDoc extends FakeDoc
 {
     public active = new Set<string>();
-    public override IsActive?(def: CommandDefinition): boolean { return this.active.has(def.Id); }
+    protected override IsCheckedFor(id: string): boolean { return this.active.has(id); }
 }
 
 describe('ToolbarService grouping', () => {
@@ -235,7 +292,7 @@ describe('ToolbarService grouping', () => {
         assert.equal(items.length, 7, 'exactly: split | sep | grp | ungrp | sep | bold | italic');
 
         // The SAME cached VM instance backs both projections (liveness of
-        // CanExecute / IsActive), so ToolbarItems' command VMs are the group's.
+        // CanExecute / IsChecked), so ToolbarItems' command VMs are the group's.
         const arrange = [...toolbar.VisibleEntries].find(e => e instanceof ToolbarFlatGroup) as ToolbarFlatGroup;
         assert.equal(items[2], arrange.Items.Get(0), 'flat member VM is shared with VisibleEntries');
     });
@@ -355,7 +412,7 @@ describe('ToolbarService grouping', () => {
         assert.equal(DockPanel.GetDock(cell as StatusBarItem), Dock.Right, 'docked right');
     });
 
-    test('IsActive reflects the active document per command, refreshed on requery', () => {
+    test('IsChecked reflects the active document per command, refreshed on requery', () => {
         const app = appWith(
             grouped('bold',   'style', 10, { presentation: CommandGroupPresentation.Toggles }),
             grouped('italic', 'style', 20),
@@ -368,15 +425,15 @@ describe('ToolbarService grouping', () => {
 
         const group = [...toolbar.VisibleEntries][0]!;
         const byId = new Map([...group.Items].map(vm => [vm.Definition.Id, vm]));
-        assert.equal(byId.get('bold')!.IsActive, true);
-        assert.equal(byId.get('italic')!.IsActive, false);
+        assert.equal(byId.get('bold')!.IsChecked, true);
+        assert.equal(byId.get('italic')!.IsChecked, false);
 
-        // Flip the selection state → the requery pulse re-reads IsActive.
+        // Flip the selection state → the requery pulse re-reads IsChecked.
         doc.active.delete('bold');
         doc.active.add('italic');
         CommandManager.InvalidateRequerySuggested();
-        assert.equal(byId.get('bold')!.IsActive, false);
-        assert.equal(byId.get('italic')!.IsActive, true);
+        assert.equal(byId.get('bold')!.IsChecked, false);
+        assert.equal(byId.get('italic')!.IsChecked, true);
     });
 });
 

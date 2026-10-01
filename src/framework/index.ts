@@ -95,16 +95,24 @@ export {
 export { SettingDefinition, SettingKind } from './shell/settings/setting-definition.js';
 export { DocumentDefinition } from './shell/documents/document-definition.js';
 export { DocumentTypeRegistry } from './shell/documents/document-type-registry.js';
-export { CommandDefinition } from './shell/commands/command-definition.js';
+export { CommandDefinition, CommandGroupPresentation } from './shell/commands/command-definition.js';
 export {
     ShellControlDefinition,
     ShellRegion,
     ShellControlAlignment,
 } from './shell/commands/shell-control-definition.js';
 export { CommandRegistry } from './shell/commands/command-registry.js';
-export { CommandViewModel } from './shell/commands/command-view-model.js';
+export { CommandViewModel, CommandToggleViewModel } from './shell/commands/command-view-model.js';
 export { ToolbarService } from './shell/commands/toolbar-service.js';
-export { type ICommandTarget, isCommandTarget } from './shell/commands/command-target.js';
+export { CommandContext } from './shell/commands/command-context.js';
+export {
+    type ICommandDispatcher,
+    isCommandDispatcher,
+    type ICommandContextSource,
+    isCommandContextSource,
+} from './shell/commands/command-dispatcher.js';
+export { type ICommandContributor } from './shell/commands/command-contributor.js';
+export { CommandMenuBuilder } from './shell/commands/command-menu-builder.js';
 export {
     SettingsLauncherService,
     SettingsContributionKey,

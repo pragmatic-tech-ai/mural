@@ -1,6 +1,13 @@
 ﻿import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { Application, MetaData, MuralBase, type IServiceProvider } from '../../../runtime/index.js';
+import {
+    Application,
+    CheckableRelayCommand,
+    MetaData,
+    MuralBase,
+    type ICommand,
+    type IServiceProvider,
+} from '../../../runtime/index.js';
 import { resolveKey } from '../../../runtime/model-internals.js';
 import { ContentHostService } from '../services/content-host-service.js';
 import {
@@ -10,7 +17,7 @@ import {
 import { CommandRegistry } from '../commands/command-registry.js';
 import { CommandDefinition } from '../commands/command-definition.js';
 import { ShellRegion } from '../commands/shell-control-definition.js';
-import type { ICommandTarget } from '../commands/command-target.js';
+import { CommandContext } from '../commands/command-context.js';
 
 // A test document that records Save() calls and can be marked dirty.
 class FakeDoc implements IDocument
@@ -48,18 +55,27 @@ class PlainFieldDoc extends MuralBase implements IDocument
 function provider(): IServiceProvider { return new Application().Services; }
 
 // A document that also handles commands — so ExtendedCommands dispatch can be
-// observed.
-class CommandDoc implements IDocument, ICommandTarget
+// observed. Exposes CommandContexts (kept for parity with the toolbar's fakes
+// and the context filter's duck-typing) AND ICommandDispatcher —
+// rebuildExtendedCommands dispatches via Resolve.
+class CommandDoc implements IDocument
 {
     public readonly Title = 'doc';
     public readonly IsDirty = false;
-    public readonly CommandContexts: readonly never[] = [];   // no contexts; still a target
-    public readonly executed: CommandDefinition[] = [];
+    public readonly CommandContexts: readonly never[] = [];   // no contexts; still a context source
+    // Holds the command IDS Resolve's returned command was invoked with.
+    public readonly executed: string[] = [];
     public canRun = true;
     constructor(public readonly Id: string) {}
     public Save(): void { /* no-op */ }
-    public Execute(def: CommandDefinition): void { this.executed.push(def); }
-    public CanExecute(_def: CommandDefinition): boolean { return this.canRun; }
+
+    public Resolve(commandId: string, _context: CommandContext): ICommand | undefined
+    {
+        return new CheckableRelayCommand(
+            () => this.executed.push(commandId),
+            () => this.canRun,
+            () => false);
+    }
 }
 
 function cmd(id: string, region: ShellRegion = ShellRegion.Toolbar): CommandDefinition
@@ -253,7 +269,7 @@ describe('DocumentsContentHostService', () => {
         const doc = new CommandDoc('d');
         host.Open(doc);
         host.ExtendedCommands.Get(0)!.Command.Execute(undefined);
-        assert.deepEqual(doc.executed.map((d) => d.Id), ['e1']);
+        assert.deepEqual(doc.executed, ['e1']);
     });
 
     test('ExtendedCommands is empty when no CommandRegistry is registered', () => {

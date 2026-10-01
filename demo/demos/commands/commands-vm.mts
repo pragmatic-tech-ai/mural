@@ -22,14 +22,24 @@
 // from the framework while the demo's setters / triggers add chrome.
 
 import {
+    Application,
     MetaData,
     MuralBase,
     Color,
     RelayCommand,
+    type ICommand,
 } from '@pragmatic-tech-ai/mural/runtime';
 import { SolidColorBrush, Visual } from '@pragmatic-tech-ai/mural/visual-engine';
 import { Figure } from '@pragmatic-tech-ai/mural/framework';
 import { DiagramDocument, type DiagramStorage } from '@pragmatic-tech-ai/mural/framework';
+import {
+    CommandContext,
+    CommandDefinition,
+    CommandMenuBuilder,
+    CommandViewModel,
+} from '@pragmatic-tech-ai/mural/framework';
+import { CommandContextMenu } from '@pragmatic-tech-ai/mural/framework/surface.js';
+import { DemoCommandDispatcher } from '../_shared/demo-command-dispatcher.mjs';
 
 // A Figure subclass constructor carrying the demo's per-kind marker.
 type FigureCtor = (new (id: string, left: number, top: number) => Figure) & { DemoKind: string };
@@ -179,6 +189,41 @@ export class CommandsVM extends DiagramDocument
     static CombineSubtractCommandKey      = MuralBase.RegisterProperty<RelayCommand | undefined>(CommandsVM, 'CombineSubtractCommand',      undefined, MetaData.None);
     static CombineExcludeCommandKey       = MuralBase.RegisterProperty<RelayCommand | undefined>(CommandsVM, 'CombineExcludeCommand',       undefined, MetaData.None);
 
+    // ── Command-driven MenuButton / NodeContextMenu ids ──────────────────
+    // Stable ids the Dispatcher resolves to the SAME RelayCommand instances
+    // the ToolBar/Ribbon already bind directly (`$CutCommand` etc.) — the
+    // migration's whole point is that the MenuButton and the per-node
+    // ContextMenu dispatch through the IDENTICAL command objects, so
+    // selection-gated CanExecute stays in lockstep across every surface
+    // exactly as it did before migration (see the file-header comment).
+    private static readonly SaveId       = 'commands.save';       private static readonly SaveTitle       = 'Save';
+    private static readonly LoadId       = 'commands.load';       private static readonly LoadTitle       = 'Load';
+    private static readonly CutId        = 'commands.cut';        private static readonly CutTitle        = 'Cut';
+    private static readonly CopyId       = 'commands.copy';       private static readonly CopyTitle       = 'Copy';
+    private static readonly PasteId      = 'commands.paste';      private static readonly PasteTitle      = 'Paste';
+    private static readonly DeleteId     = 'commands.delete';     private static readonly DeleteTitle     = 'Delete';
+    private static readonly DuplicateId  = 'commands.duplicate';  private static readonly DuplicateTitle  = 'Duplicate';
+    private static readonly SelectAllId  = 'commands.selectAll';  private static readonly SelectAllTitle  = 'Select All';
+    private static readonly UndoId       = 'commands.undo';       private static readonly UndoTitle       = 'Undo';
+    private static readonly RedoId       = 'commands.redo';       private static readonly RedoTitle       = 'Redo';
+
+    // id → live ICommand, resolved by the Dispatcher on every click —
+    // populated at the end of the constructor, once every command above
+    // exists.
+    private readonly commandsById = new Map<string, ICommand>();
+
+    // The command-driven MenuButton's root CommandViewModels
+    // (`ItemsSource = $Roots` in commands.mu) and the single
+    // CommandContextMenu every node attaches to (CreateNode below) — both
+    // built once in the constructor; neither has a ChildrenContributor-
+    // backed submenu, so there is nothing that would go stale between
+    // opens (the NodeContextMenu still rebuilds its OWN VM tree fresh on
+    // every open, same as CommandContextMenu always does — only the
+    // *definitions* it resolves from are fixed).
+    public readonly Dispatcher:      DemoCommandDispatcher;
+    public readonly Roots:           readonly CommandViewModel[];
+    public readonly NodeContextMenu: CommandContextMenu;
+
     // Cut/Copy stash replayed by Paste. Plain field — view-invisible state.
     private _clipboard: ClipEntry[] = [];
 
@@ -263,6 +308,64 @@ export class CommandsVM extends DiagramDocument
         this.set_property_value(CommandsVM.RedoCommandKey, new RelayCommand(() => setStatus('Redo — no-op stub.')));
 
         this._clipboard = [];
+
+        // ── Command-driven MenuButton + NodeContextMenu ──────────────────
+        // Every id below resolves to the SAME RelayCommand instance the
+        // ToolBar/Ribbon bind directly — built last so every getter already
+        // has its command.
+        this.commandsById.set(CommandsVM.SaveId,       this.SaveCommand!);
+        this.commandsById.set(CommandsVM.LoadId,       this.LoadCommand!);
+        this.commandsById.set(CommandsVM.CutId,        this.CutCommand!);
+        this.commandsById.set(CommandsVM.CopyId,       this.CopyCommand!);
+        this.commandsById.set(CommandsVM.PasteId,      this.PasteCommand!);
+        this.commandsById.set(CommandsVM.DeleteId,     this.DeleteCommand!);
+        this.commandsById.set(CommandsVM.DuplicateId,  this.DuplicateCommand!);
+        this.commandsById.set(CommandsVM.SelectAllId,  this.SelectAllCommand!);
+        this.commandsById.set(CommandsVM.UndoId,       this.UndoCommand!);
+        this.commandsById.set(CommandsVM.RedoId,       this.RedoCommand!);
+        this.Dispatcher = new DemoCommandDispatcher(this.commandsById);
+
+        const provider = Application.current!.Services;
+        const builder   = new CommandMenuBuilder(this.Dispatcher, provider, new CommandContext());
+        // Dividers restored to match the pre-migration MenuSeparators: before
+        // Cut (after Load), before Duplicate (after Delete), before Undo
+        // (after Select All).
+        this.Roots = [
+            CommandsVM.MakeDef(CommandsVM.SaveId,      CommandsVM.SaveTitle),
+            CommandsVM.MakeDef(CommandsVM.LoadId,      CommandsVM.LoadTitle),
+            CommandsVM.MakeDef(CommandsVM.CutId,       CommandsVM.CutTitle,  true),
+            CommandsVM.MakeDef(CommandsVM.CopyId,      CommandsVM.CopyTitle),
+            CommandsVM.MakeDef(CommandsVM.PasteId,     CommandsVM.PasteTitle),
+            CommandsVM.MakeDef(CommandsVM.DeleteId,    CommandsVM.DeleteTitle),
+            CommandsVM.MakeDef(CommandsVM.DuplicateId, CommandsVM.DuplicateTitle, true),
+            CommandsVM.MakeDef(CommandsVM.SelectAllId, CommandsVM.SelectAllTitle),
+            CommandsVM.MakeDef(CommandsVM.UndoId,      CommandsVM.UndoTitle, true),
+            CommandsVM.MakeDef(CommandsVM.RedoId,      CommandsVM.RedoTitle),
+        ].map((def) => builder.Build(def));
+
+        // The shared per-node ContextMenu — CreateNode (below) attaches this
+        // SAME instance to every Figure it creates (seed nodes AND any
+        // Cut/Paste/Duplicate-created ones), mirroring the pre-migration
+        // Style[TargetType=...] { ContextMenuService.ContextMenu = @NodeContextMenu }
+        // attachment (one shared menu instance, many attached nodes — only
+        // one can be open at a time).
+        // Divider restored to match the pre-migration MenuSeparator: before
+        // Delete (after Duplicate).
+        this.NodeContextMenu = new CommandContextMenu([
+            CommandsVM.MakeDef(CommandsVM.CutId,       CommandsVM.CutTitle),
+            CommandsVM.MakeDef(CommandsVM.CopyId,      CommandsVM.CopyTitle),
+            CommandsVM.MakeDef(CommandsVM.DuplicateId, CommandsVM.DuplicateTitle),
+            CommandsVM.MakeDef(CommandsVM.DeleteId,    CommandsVM.DeleteTitle, true),
+        ], this.Dispatcher, provider);
+    }
+
+    private static MakeDef(id: string, title: string, separatorBefore = false): CommandDefinition
+    {
+        const def = new CommandDefinition();
+        def.Id              = id;
+        def.Title           = title;
+        def.SeparatorBefore = separatorBefore;
+        return def;
     }
 
     // Commands-local kind map — 'rect' / 'ellipse' / 'note' map to the
@@ -282,6 +385,9 @@ export class CommandsVM extends DiagramDocument
         const id = 'n' + (this as unknown as DiagramDocumentNextId)._nextId++;
         const fig = new Cls(id, left, top);
         this.Nodes.Add(fig);
+        // Every node — seeded or Cut/Paste/Duplicate-created — shares the
+        // ONE CommandContextMenu built in the constructor (see there).
+        fig.ContextMenu = this.NodeContextMenu;
         return fig;
     }
 

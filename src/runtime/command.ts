@@ -50,6 +50,20 @@ export interface ICommand
     RemoveCanExecuteChangedListener(listener: () => void): void;
 }
 
+// A command that also carries a checked/active state (toolbar toggles, checkable
+// menu items). The state is read off the command itself, rather than a separate
+// target method. Change is signalled through the same CanExecuteChanged channel
+// (consumers re-read IsChecked on that pulse).
+export interface ICheckableCommand extends ICommand
+{
+    readonly IsChecked: boolean;
+}
+
+export function isCheckableCommand(command: ICommand): command is ICheckableCommand
+{
+    return typeof (command as Partial<ICheckableCommand>).IsChecked === 'boolean';
+}
+
 // Initialisation bag for `CommandBase` subclasses. All optional — the
 // command works without any of them set, but consumers (tooltips,
 // menus, toolbars) read these to render display chrome.
@@ -181,5 +195,29 @@ export class RelayCommand extends CommandBase
     public override CanExecute(parameter?: unknown): boolean
     {
         return this.canExecute === undefined ? true : this.canExecute(parameter);
+    }
+}
+
+// A RelayCommand that also reports a checked state via a pull predicate. IsChecked
+// is re-read on demand; callers refresh on the CanExecuteChanged pulse (as the
+// toolbar already does for toggle state).
+export class CheckableRelayCommand extends RelayCommand implements ICheckableCommand
+{
+    private readonly isChecked: () => boolean;
+
+    constructor(
+        execute:    (parameter?: unknown) => void,
+        canExecute: ((parameter?: unknown) => boolean) | undefined,
+        isChecked:  () => boolean,
+        metadata?:  CommandMetadataInit,
+    )
+    {
+        super(execute, canExecute, metadata);
+        this.isChecked = isChecked;
+    }
+
+    public get IsChecked(): boolean
+    {
+        return this.isChecked();
     }
 }

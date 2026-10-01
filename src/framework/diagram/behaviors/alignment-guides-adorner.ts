@@ -4,7 +4,7 @@ import {
     Rect,
     Size,
     type Visual,
-    type Disposable,
+    type IDisposable,
 } from '../../../runtime/index.js';
 import { Adorner, type Brush } from '../../../visual-engine/index.js';
 import { Border } from '../../../basic/index.js';
@@ -34,7 +34,7 @@ export class AlignmentGuidesAdorner extends Adorner
     private readonly _diagram: Diagram;
     private readonly _pool:    Border[] = [];
     private readonly _onChange: () => void;
-    private _sub: Disposable | undefined;
+    private _sub: IDisposable | undefined;
 
     constructor(adornedElement: Visual, diagram: Diagram)
     {
