@@ -16,6 +16,7 @@ import { Shape } from '../../basic/shapes/shape.js';
 import { Border } from '../../basic/border.js';
 import { DataTemplate, HierarchicalDataTemplate } from '../../basic/templates/data-template.js';
 import { DataTemplateSelector } from '../../basic/templates/data-template-selector.js';
+import { HierarchicalItemsBinder } from '../../basic/templates/hierarchical-items-binder.js';
 import { HeaderedItemsControl } from '../base/headered-items-control.js';
 import { ItemsControl } from '../base/items-control.js';
 import { ScrollViewer } from '../surfaces/scroll-viewer.js';
@@ -1087,19 +1088,10 @@ function bindTreeItem(tvi: TreeViewItem, item: unknown, owner: ItemsControl): vo
     tvi.Header = headerFor(item, tmpl);
     if (tmpl instanceof HierarchicalDataTemplate)
     {
-        tvi.ItemTemplate = (tmpl.itemTemplate ?? tmpl) as never;
-        // Propagate the selector so it's re-consulted at every depth,
-        // not just the roots. Undefined when the consumer only set a
-        // plain ItemTemplate — harmless.
-        tvi.ItemTemplateSelector = owner.ItemTemplateSelector;
-        // Bind the LIVE children collection as ItemsSource rather than snapshotting
-        // it into Items with `[...]`. A plain array fires no change events, so
-        // incremental mutations on a nested node (e.g. deleting a file under a
-        // folder) never reached the row — the collection changed but the tree
-        // didn't. Setting ItemsSource wraps the source in a CollectionView that
-        // subscribes to its ObservableCollection, so nested add/remove now update
-        // the tree in place (matching how the root binds ItemsSource = Root.Children).
-        tvi.ItemsSource = tmpl.itemsSelector(item);
+        // The three child-binding assignments (ItemTemplate / ItemTemplateSelector /
+        // ItemsSource) now live on HierarchicalItemsBinder, shared with the Menu
+        // family — see its doc comment for the live-collection rationale.
+        HierarchicalItemsBinder.BindChildItems(owner, item, tvi);
     }
     // The item's branch/leaf identity may have changed (recycled row, or a
     // collapsed virtualizing row that realizes no container to trigger a
