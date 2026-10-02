@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ServiceProvider, ServiceKey } from '../../../runtime/index.js';
+import { ServiceProvider, ServiceKey, type IDisposable } from '../../../runtime/index.js';
 import {
     HierarchyModel, HierarchyContributorRegistry, HierarchyContributorDefinition,
     NodeContribution, ProviderContribution, ChildAdded, ChildUpdated, ChildRemoved,
@@ -33,7 +33,7 @@ function reg(provider: ServiceProvider): HierarchyContributorRegistry
     return new HierarchyContributorRegistry(provider);
 }
 
-function registerContributor(registry: HierarchyContributorRegistry, token: ServiceKey<IHierarchyContributor>, parents: string[]): () => void
+function registerContributor(registry: HierarchyContributorRegistry, token: ServiceKey<IHierarchyContributor>, parents: string[]): IDisposable
 {
     const d = new HierarchyContributorDefinition();
     d.ParentKeys = parents; d.Contributor = token; d.Order = 0;
@@ -103,8 +103,8 @@ test('reRealizeKeyed does NOT re-realize an unexpanded keyed child (no eager pro
 
     // A contributor-set change re-realizes only realized keyed nodes (root). The surviving member
     // entry is NOT realized, so its file contributor must NOT be consulted (no eager provider mount).
-    const off = registerContributor(registry, files, ['project']);   // fires Changed -> reRealizeKeyed
-    off();
+    const sub = registerContributor(registry, files, ['project']);   // fires Changed -> reRealizeKeyed
+    sub.dispose();
     assert.equal(fileConsulted, 0);
 });
 

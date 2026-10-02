@@ -1,7 +1,7 @@
-import { ApplicationService, ServiceBase, ServiceKey, type IServiceProvider } from '../../runtime/index.js';
+import { ApplicationService, Disposable, ServiceBase, ServiceKey, type IDisposable, type IServiceProvider } from '../../runtime/index.js';
 import { ShellModule } from '../shell/module.js';
 import { HierarchyContributorDefinition } from './hierarchy-contributor-definition.js';
-import type { IHierarchyContributor } from './hierarchy-node.js';
+import type { IHierarchyContributor } from './hierarchy-contribution.js';
 
 // Aggregates every composed module's declared HierarchyContributorDefinitions and
 // answers ordered contributor lookups by parent family key. Definitions flow module →
@@ -47,15 +47,15 @@ export class HierarchyContributorRegistry extends ServiceBase
 
     // Live registration. Returns a remover that unregisters the definition and raises
     // Changed — a HierarchyModel keyed to an already-realized parent re-contributes.
-    public Register(def: HierarchyContributorDefinition): () => void
+    public Register(def: HierarchyContributorDefinition): IDisposable
     {
         this.add(def);
         this.raiseChanged();
-        return () =>
+        return new Disposable(() =>
         {
             this.remove(def);
             this.raiseChanged();
-        };
+        });
     }
 
     // Signal that a live contributor's OUTPUT changed (its data, not its registration) so a
@@ -70,7 +70,7 @@ export class HierarchyContributorRegistry extends ServiceBase
     // that isn't a global ServiceToken). A synthetic definition carries its ParentKeys/Order
     // and is pre-seeded into the resolved cache, so For() returns the instance without token
     // resolution. Returns a remover that unregisters it, mirroring Register.
-    public RegisterInstance(contributor: IHierarchyContributor): () => void
+    public RegisterInstance(contributor: IHierarchyContributor): IDisposable
     {
         const def = new HierarchyContributorDefinition();
         def.ParentKeys = [...contributor.ParentKeys];
@@ -78,11 +78,11 @@ export class HierarchyContributorRegistry extends ServiceBase
         this.add(def);
         this.resolved.set(def, contributor);
         this.raiseChanged();
-        return () =>
+        return new Disposable(() =>
         {
             this.remove(def);
             this.raiseChanged();
-        };
+        });
     }
 
     // Contributors registered for `parentKey`, ordered by Order (ascending). Tokens are

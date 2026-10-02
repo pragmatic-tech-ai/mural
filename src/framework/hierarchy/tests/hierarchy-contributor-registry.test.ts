@@ -2,10 +2,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ServiceProvider, ServiceKey } from '../../../runtime/index.js';
 import {
-    HierarchyContributorRegistry, HierarchyContributorDefinition, NodeContribution,
+    HierarchyContributorRegistry, HierarchyContributorDefinition,
     HierarchyModel, NodeSeverity,
-    type IHierarchyContributor, type HierarchyNode,
+    NodeContribution as LegacyNodeContribution,
+    type HierarchyNode,
 } from '../index.js';
+import { NodeContribution, type IHierarchyContributor } from '../hierarchy-contribution.js';
+import type { CommandContext } from '../../shell/commands/command-context.js';
+import type { HierarchyItem } from '../hierarchy-item.js';
 
 function pnode(key: string, ext: unknown, caption = key): HierarchyNode
 {
@@ -15,7 +19,8 @@ function pnode(key: string, ext: unknown, caption = key): HierarchyNode
 class FakeContributor implements IHierarchyContributor
 {
     constructor(public readonly ParentKeys: readonly string[], public readonly Order: number, private readonly tag: string) {}
-    public Contribute(_p: HierarchyNode): NodeContribution { return new NodeContribution([]); }
+    public Contribute(_p: HierarchyItem): NodeContribution { return new NodeContribution([]); }
+    public Resolve(_id: string, _ctx: CommandContext) { return undefined; }
     public get Tag(): string { return this.tag; }
 }
 
@@ -35,13 +40,13 @@ test('runtime Register indexes by every ParentKey, ordered by Order; disposer re
     provider.registerInstance(kB, new FakeContributor(['solution'], 0, 'B'));
     const reg = new HierarchyContributorRegistry(provider);
 
-    const offB = reg.Register(defFor(kB, ['solution'], 0));
+    const subB = reg.Register(defFor(kB, ['solution'], 0));
     reg.Register(defFor(kA, ['solution', 'project'], 10));
 
     assert.deepEqual(reg.For('solution').map((c) => (c as FakeContributor).Tag), ['B', 'A']); // Order 0 then 10
     assert.deepEqual(reg.For('project').map((c) => (c as FakeContributor).Tag), ['A']);        // multi-ParentKey
 
-    offB();
+    subB.dispose();
     assert.deepEqual(reg.For('solution').map((c) => (c as FakeContributor).Tag), ['A']);
 });
 
@@ -53,8 +58,8 @@ test('Changed fires on register and on remove', () =>
     const reg = new HierarchyContributorRegistry(provider);
     let fired = 0;
     reg.PropertyChanged('Contributors').subscribe(() => { fired++; });
-    const off = reg.Register(defFor(k, ['solution'], 0));
-    off();
+    const sub = reg.Register(defFor(k, ['solution'], 0));
+    sub.dispose();
     assert.equal(fired, 2);
 });
 
@@ -63,8 +68,12 @@ test('NotifyContributionsChanged re-contributes a realized root live', () =>
     const provider = new ServiceProvider();
     let count = 0;
     const listing = new ServiceKey<IHierarchyContributor>('listing');
+    // Uses the LEGACY NodeContribution (hierarchy-node.js): HierarchyModel.RealizeChildren
+    // still does `instanceof` against that class (Task 11 reconciles it), so a contribution
+    // built from the new hierarchy-contribution.js class would not be recognized here.
     provider.registerInstance(listing, { ParentKeys: ['solution'], Order: 0,
-        Contribute: () => new NodeContribution(count === 0 ? [] : [pnode('project', { id: 'p' })]) } as IHierarchyContributor);
+        Contribute: () => new LegacyNodeContribution(count === 0 ? [] : [pnode('project', { id: 'p' })]),
+        Resolve: (_id: string, _ctx: CommandContext) => undefined } as IHierarchyContributor);
     const registry = new HierarchyContributorRegistry(provider);
     const d = new HierarchyContributorDefinition();
     d.ParentKeys = ['solution']; d.Contributor = listing; d.Order = 0;
@@ -88,15 +97,18 @@ test('RegisterInstance exposes a per-instance contributor via For + re-contribut
     model.RealizeChildren(root);
     assert.equal(model.ChildrenOf(root).length, 0);
 
+    // Same LEGACY NodeContribution note as above — HierarchyModel still instanceof-checks
+    // against hierarchy-node.js's class.
     const contributor: IHierarchyContributor = {
         ParentKeys: ['solution'], Order: 0,
-        Contribute: () => new NodeContribution([pnode('project', { id: 'p' })]),
+        Contribute: () => new LegacyNodeContribution([pnode('project', { id: 'p' })]),
+        Resolve: (_id: string, _ctx: CommandContext) => undefined,
     };
-    const off = registry.RegisterInstance(contributor);          // Changed -> re-contribute root
+    const sub = registry.RegisterInstance(contributor);          // Changed -> re-contribute root
     assert.equal(registry.For('solution').length, 1);
     assert.equal(model.ChildrenOf(root).length, 1);
 
-    off();
+    sub.dispose();
     assert.equal(registry.For('solution').length, 0);
     assert.equal(model.ChildrenOf(root).length, 0);
 });

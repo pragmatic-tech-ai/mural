@@ -26,10 +26,10 @@ test('a runtime Register keyed to an already-realized node re-contributes live',
         Contribute: () => new NodeContribution([node('project', { id: 'p' })]) } as IHierarchyContributor);
     const d = new HierarchyContributorDefinition();
     d.ParentKeys = ['solution']; d.Contributor = tok; d.Order = 0;
-    const off = reg.Register(d);                       // Changed -> model re-contributes root
+    const sub = reg.Register(d);                        // Changed -> model re-contributes root
 
     assert.equal(model.ChildrenOf(root).length, 1);
 
-    off();                                             // Changed -> re-contribute -> stale keyed child pruned
+    sub.dispose();                                      // Changed -> re-contribute -> stale keyed child pruned
     assert.equal(model.ChildrenOf(root).length, 0);   // the disposer removes what it added (spec §9)
 });
