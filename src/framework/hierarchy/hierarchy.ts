@@ -36,6 +36,7 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
     private readonly allocator = new ItemIdAllocator();
     private readonly composition = new Map<HierarchyItem, ParentComposition>();
     private readonly internedByParent = new Map<HierarchyItem, Map<unknown, HierarchyItem>>();
+    private readonly ownerProvider = new Map<HierarchyItem, IHierarchyProvider>();
     private root: HierarchyItem | undefined;
     private readonly contributorsSub: IDisposable;
 
@@ -61,9 +62,24 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
         return new HierarchyItem(this.allocator.Mint(), key, this, this.host, init);
     }
 
-    public CanonicalNameOf(_item: HierarchyItem): string
+    public CanonicalNameOf(item: HierarchyItem): string
     {
-        return '/';   // T6/T8 implement owner-aware canonical names
+        if (this.root === undefined || item === this.root || item.Parent === undefined) return '/';
+        const parts: string[] = [];
+        let cur: HierarchyItem | undefined = item;
+        while (cur !== undefined && cur !== this.root)
+        {
+            parts.unshift(this.segmentOf(cur));
+            cur = cur.Parent;
+        }
+        return '/' + parts.join('/');
+    }
+
+    private segmentOf(item: HierarchyItem): string
+    {
+        const base = item.CanonicalSegment ?? item.Key;
+        const owner = this.ownerProvider.get(item);
+        return owner !== undefined ? owner.ProviderId + ':' + base : base;
     }
 
     public BuildActions(_item: HierarchyItem, _context: unknown): ObservableCollection<unknown>
@@ -75,11 +91,30 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
     {
         this.composition.delete(item);
         this.internedByParent.delete(item);
+        this.ownerProvider.delete(item);
     }
 
     public Realize(item: HierarchyItem): void
     {
         if (this.composition.has(item)) return;
+        const owner = this.ownerProvider.get(item);
+        if (owner !== undefined)
+        {
+            const ownedComp = new ParentComposition();
+            this.composition.set(item, ownedComp);
+            const segment = new Segment(0);
+            segment.provider = owner;
+            this.insertSegment(ownedComp, segment);
+            const ctx = new RealizeContext(this, item, segment);
+            const handle = owner.Realize(item, ctx);
+            segment.providerHandle = handle;
+            ownedComp.teardown.add(handle);
+            const injected = this.registry.For(item.Key)
+                .map(c => c.Contribute(item))
+                .filter((x): x is NodeContribution => x instanceof NodeContribution);
+            if (injected.length > 0) owner.Integrate(item, injected);
+            return;
+        }
         const comp = new ParentComposition();
         this.composition.set(item, comp);
         for (const contributor of this.registry.For(item.Key))
@@ -205,6 +240,7 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
         if (comp === undefined || segment.items.includes(child)) return;
         const within = segment.items.length;
         segment.items.push(child);
+        if (segment.provider !== undefined) this.ownerProvider.set(child, segment.provider);
         const target = parent === this.root ? this.Roots : parent.Children;
         target.Insert(this.flatBaseOf(comp, segment) + within, child);
     }
