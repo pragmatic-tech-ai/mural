@@ -1,9 +1,36 @@
-import { Observable, ObservableCollection, CompositeDisposable, type IDisposable } from '../../runtime/index.js';
+import { Observable, ObservableCollection, CompositeDisposable, ServiceProvider, type IDisposable, type ServiceToken, type IServiceProvider } from '../../runtime/index.js';
 import { ItemIdAllocator } from './item-id.js';
 import { HierarchyItem, type HierarchyItemInit, type IHierarchyItemOwner, type IHierarchyItemHost } from './hierarchy-item.js';
 import { HierarchyContributorRegistry } from './hierarchy-contributor-registry.js';
 import { NodeContribution, ProviderContribution, type HierarchyContribution, type IHierarchyContributor } from './hierarchy-contribution.js';
 import type { IHierarchyProvider, IRealizeContext } from './hierarchy-provider.js';
+import type { HierarchyActionContext } from './hierarchy-action-context.js';
+import { CommandRegistry } from '../shell/commands/command-registry.js';
+import type { ICommandDispatcher } from '../shell/commands/command-dispatcher.js';
+import { CommandMenuBuilder } from '../shell/commands/command-menu-builder.js';
+import { CommandViewModel } from '../shell/commands/command-view-model.js';
+
+// Options wiring a Hierarchy's per-node BuildActions onto Milestone A's command
+// machinery. All optional — a Hierarchy built with none (the pre-T10 ctor shape)
+// keeps BuildActions returning an empty collection for every node.
+export interface HierarchyCommandOptions
+{
+    CommandRegistry?: CommandRegistry;
+    Dispatcher?: ICommandDispatcher;
+    CommandContexts?: ReadonlyMap<string, ServiceToken<unknown>>;
+    Services?: IServiceProvider;
+}
+
+// The dispatcher BuildActions falls back to when no HierarchyCommandOptions.Dispatcher
+// was supplied — every resolved command is inert (CommandMenuBuilder.Build still
+// produces a CommandViewModel, just with an undefined Command).
+class NoOpCommandDispatcher implements ICommandDispatcher
+{
+    public Resolve(): undefined
+    {
+        return undefined;
+    }
+}
 
 class Segment
 {
@@ -49,6 +76,7 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
     constructor(
         private readonly registry: HierarchyContributorRegistry,
         private readonly host: IHierarchyItemHost,
+        private readonly commandOptions: HierarchyCommandOptions = {},
     )
     {
         super();
@@ -153,9 +181,26 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
         return current;
     }
 
-    public BuildActions(_item: HierarchyItem, _context: unknown): ObservableCollection<unknown>
+    // Builds a FRESH command-view-model tree for `item`'s menu, scoped by its
+    // Key: only CommandDefinitions tagged with the ServiceToken that
+    // commandOptions.CommandContexts maps `item.Key` to, ordered by Order.
+    // No tag for the key, or no CommandRegistry wired in, yields an empty menu.
+    // A per-call CommandMenuBuilder means nothing is retained between opens —
+    // disposal of the returned VMs is the caller's job (DR6).
+    public BuildActions(item: HierarchyItem, context: HierarchyActionContext): ObservableCollection<CommandViewModel>
     {
-        return new ObservableCollection<unknown>();   // T10 implements command-driven actions
+        const result = new ObservableCollection<CommandViewModel>();
+        const token = this.commandOptions.CommandContexts?.get(item.Key);
+        const registry = this.commandOptions.CommandRegistry;
+        if (token === undefined || registry === undefined) return result;
+        const roots = registry.Commands.ToArray()
+            .filter(d => d.Context !== undefined && d.Context === token)
+            .sort((a, b) => a.Order - b.Order);
+        const dispatcher = this.commandOptions.Dispatcher ?? new NoOpCommandDispatcher();
+        const services = this.commandOptions.Services ?? new ServiceProvider();
+        const builder = new CommandMenuBuilder(dispatcher, services, context);
+        for (const root of roots) result.Add(builder.Build(root));
+        return result;
     }
 
     public OnItemDisposed(item: HierarchyItem): void

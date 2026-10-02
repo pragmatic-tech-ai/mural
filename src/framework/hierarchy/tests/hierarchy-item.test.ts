@@ -4,6 +4,7 @@ import { ObservableCollection } from '../../../runtime/index.js';
 import { HierarchyItem, type IHierarchyItemOwner, type IHierarchyItemHost } from '../hierarchy-item.js';
 import { NodeSeverity } from '../node-severity.js';
 import { ItemIdAllocator } from '../item-id.js';
+import type { CommandViewModel } from '../../shell/commands/command-view-model.js';
 
 function fakeHost(over: Partial<IHierarchyItemHost> = {}): IHierarchyItemHost
 {
@@ -22,7 +23,7 @@ function fakeOwner(over: Partial<IHierarchyItemOwner> = {}): IHierarchyItemOwner
         Realize: () => {},
         Collapse: () => {},
         CanonicalNameOf: () => '/',
-        BuildActions: () => new ObservableCollection(),
+        BuildActions: () => new ObservableCollection<CommandViewModel>(),
         OnItemDisposed: () => {},
         ...over,
     };

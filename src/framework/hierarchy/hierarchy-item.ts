@@ -1,6 +1,8 @@
 import { Observable, ObservableCollection } from '../../runtime/index.js';
 import type { ItemId } from './item-id.js';
 import { NodeSeverity } from './node-severity.js';
+import type { HierarchyActionContext } from './hierarchy-action-context.js';
+import type { CommandViewModel } from '../shell/commands/command-view-model.js';
 
 // The domain seam HierarchyItem routes user intent through (activation, rename
 // commit, removal). Task 11 reconciles the full HierarchyHost to this shape.
@@ -19,7 +21,7 @@ export interface IHierarchyItemOwner
     Realize(item: HierarchyItem): void;
     Collapse(item: HierarchyItem): void;
     CanonicalNameOf(item: HierarchyItem): string;
-    BuildActions(item: HierarchyItem, context: unknown): ObservableCollection<unknown>;
+    BuildActions(item: HierarchyItem, context: HierarchyActionContext): ObservableCollection<CommandViewModel>;
     OnItemDisposed(item: HierarchyItem): void;
 }
 
@@ -174,6 +176,11 @@ export class HierarchyItem extends Observable
     public OnActivate(): void
     {
         this.host.Activate(this);
+    }
+
+    public BuildActions(context: HierarchyActionContext): ObservableCollection<CommandViewModel>
+    {
+        return this.owner.BuildActions(this, context);
     }
 
     public BeginEdit(): void
