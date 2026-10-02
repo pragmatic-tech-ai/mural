@@ -1,7 +1,7 @@
-import { Application, Color, ObservableCollection, ThemeManager } from '../../runtime/index.js';
+import { Application, Color, ThemeManager } from '../../runtime/index.js';
 import { SolidColorBrush } from '../../visual-engine/index.js';
 import { ApplicationSettings } from '../shell/services/application-settings-service.js';
-import { SettingDefinition, SettingKind } from '../shell/settings/setting-definition.js';
+import { SettingDefinition, SettingKind, ObservableCollection } from '@pragmatic-tech-ai/todl-runtime';
 import { Setting } from '../shell/settings/setting.js';
 
 // Stable keys for every tunable Diagram constant. A fixed set of named string

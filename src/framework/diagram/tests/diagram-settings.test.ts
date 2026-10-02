@@ -4,7 +4,7 @@ import { Application, Color, ResourceDictionary, ThemeManager } from '../../../r
 import { SolidColorBrush } from '../../../visual-engine/index.js';
 import { ApplicationSettings } from '../../shell/services/application-settings-service.js';
 import { DiagramSettings, DiagramSettingKey, SidePortsOptimizer } from '../diagram-settings.js';
-import { SettingKind } from '../../shell/settings/setting-definition.js';
+import { SettingKind } from '@pragmatic-tech-ai/todl-runtime';
 import { Pragmatic, PragmaticLight, PragmaticDark } from '../../../resources/pragmatic/pragmatic.js';
 
 // Build an Application with ApplicationSettings registered at the ROOT — the

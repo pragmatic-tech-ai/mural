@@ -9,7 +9,7 @@
 import { ContentControl } from '../base/content-control.js';
 import { ComboBox } from '../list/combo-box.js';
 import { ApplicationSettings } from '../shell/services/application-settings-service.js';
-import { SettingDefinition, SettingKind } from '../shell/settings/setting-definition.js';
+import { SettingDefinition, SettingKind } from '@pragmatic-tech-ai/todl-runtime';
 
 // Persistence key (contributed as an ApplicationSettings entry so an app with
 // an ISettingsStore round-trips it across launches). SCHEME_SETTING holds the

@@ -79,7 +79,7 @@ import {
     type IShellModule,
 } from '../../runtime/index.js';
 import type { Geometry } from '../../visual-engine/index.js';
-import { SettingDefinition } from './settings/setting-definition.js';
+import { SettingDefinition } from '@pragmatic-tech-ai/todl-runtime';
 import { DocumentDefinition } from './documents/document-definition.js';
 import { HierarchyContributorDefinition } from '../hierarchy/hierarchy-contributor-definition.js';
 import { CommandDefinition } from './commands/command-definition.js';

@@ -10,7 +10,7 @@ import {
     type PropertyKey,
 } from '../../../../runtime/index.js';
 import { ShellModule } from '../../module.js';
-import { SettingDefinition, SettingKind } from '../../settings/setting-definition.js';
+import { SettingDefinition, SettingKind } from '@pragmatic-tech-ai/todl-runtime';
 import {
     ApplicationSettings,
 } from '../application-settings-service.js';

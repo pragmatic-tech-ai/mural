@@ -92,7 +92,7 @@ export {
     SettingsStoreKey,
     type ISettingsStore,
 } from './shell/services/application-settings-service.js';
-export { SettingDefinition, SettingKind } from './shell/settings/setting-definition.js';
+export { SettingDefinition, SettingKind } from '@pragmatic-tech-ai/todl-runtime';
 export { DocumentDefinition } from './shell/documents/document-definition.js';
 export { DocumentTypeRegistry } from './shell/documents/document-type-registry.js';
 export { CommandDefinition, CommandGroupPresentation } from './shell/commands/command-definition.js';

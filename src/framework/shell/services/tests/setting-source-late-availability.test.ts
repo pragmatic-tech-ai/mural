@@ -9,7 +9,7 @@ import {
     type PropertyKey,
 } from '../../../../runtime/index.js';
 import { ApplicationSettings } from '../application-settings-service.js';
-import { SettingDefinition, SettingKind } from '../../settings/setting-definition.js';
+import { SettingDefinition, SettingKind } from '@pragmatic-tech-ai/todl-runtime';
 
 // Regression for the canvas-icon bug: a setting-backed DP that is bound/observed
 // BEFORE any ISettingSource is reachable (early render, before shell services

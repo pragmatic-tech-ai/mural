@@ -2,7 +2,7 @@
     MetaData,
     MuralBase,
 } from '../../../runtime/index.js';
-import { SettingDefinition, SettingKind } from './setting-definition.js';
+import { SettingDefinition, SettingKind } from '@pragmatic-tech-ai/todl-runtime';
 
 // A LIVE setting — a SettingDefinition (the schema) paired with the current,
 // user-modifiable value. ApplicationSettings builds one per declared definition

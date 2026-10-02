@@ -1088,11 +1088,11 @@ describe('compile — shell module NAME form', () => {
                 }
                 Capability[Name="Shapes"]
              }`);
-        assert.match(js, /import \{ SettingDefinition, SettingKind \} from "@pragmatic-tech-ai\/mural\/framework\/shell\/settings\/setting-definition\.js";/);
+        assert.match(js, /import \{ SettingDefinition, SettingKind \} from "@pragmatic-tech-ai\/todl-runtime";/);
         assert.match(js, /const _settingDefinition\d+ = new SettingDefinition\(\);/);
-        assert.match(js, /_settingDefinition\d+\.set_property_value\(SettingDefinition\.KeyKey, "diagram\.grid\.snap"\);/);
-        assert.match(js, /_settingDefinition\d+\.set_property_value\(SettingDefinition\.KindKey, SettingKind\.Boolean\);/);
-        assert.match(js, /_settingDefinition\d+\.set_property_value\(SettingDefinition\.DefaultKey, true\);/);
+        assert.match(js, /_settingDefinition\d+\.Key = "diagram\.grid\.snap";/);
+        assert.match(js, /_settingDefinition\d+\.Kind = SettingKind\.Boolean;/);
+        assert.match(js, /_settingDefinition\d+\.Default = true;/);
         assert.match(js, /_shellModule\d+\.Settings\.Add\(_settingDefinition\d+\);/);
     });
 });
