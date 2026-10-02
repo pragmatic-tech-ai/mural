@@ -99,8 +99,15 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
     public Toggle(item: HierarchyItem): void
     {
         const at = this.Selection.IndexOf(item);
-        if (at >= 0) { this.Selection.RemoveAt(at); }
-        else { this.Selection.Add(item); this._anchor = item; }
+        if (at >= 0)
+        {
+            this.Selection.RemoveAt(at);
+        }
+        else
+        {
+            this.Selection.Add(item);
+            this._anchor = item;
+        }
     }
 
     public Deselect(item: HierarchyItem): void
