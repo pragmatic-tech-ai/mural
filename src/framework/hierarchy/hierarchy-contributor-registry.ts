@@ -7,7 +7,7 @@ import type { IHierarchyContributor } from './hierarchy-contribution.js';
 // answers ordered contributor lookups by parent family key. Definitions flow module →
 // service exactly as DocumentDefinitions flow into DocumentTypeRegistry. Also supports
 // runtime Register for live contributions; both feeds raise the Changed notification
-// (PropertyChanged('Contributors')) so a HierarchyModel re-contributes already-realized
+// (PropertyChanged('Contributors')) so a Hierarchy re-contributes already-realized
 // keyed nodes.
 export class HierarchyContributorRegistry extends ServiceBase
 {
@@ -46,7 +46,7 @@ export class HierarchyContributorRegistry extends ServiceBase
     }
 
     // Live registration. Returns a remover that unregisters the definition and raises
-    // Changed — a HierarchyModel keyed to an already-realized parent re-contributes.
+    // Changed — a Hierarchy keyed to an already-realized parent re-contributes.
     public Register(def: HierarchyContributorDefinition): IDisposable
     {
         this.add(def);
@@ -59,7 +59,7 @@ export class HierarchyContributorRegistry extends ServiceBase
     }
 
     // Signal that a live contributor's OUTPUT changed (its data, not its registration) so a
-    // subscribed HierarchyModel re-contributes realized keyed nodes. The register/unregister
+    // subscribed Hierarchy re-contributes realized keyed nodes. The register/unregister
     // paths raise the same notification internally; this exposes it to contributors.
     public NotifyContributionsChanged(): void
     {

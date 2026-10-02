@@ -102,6 +102,34 @@ describe('Hierarchy — non-destructive re-realization', () =>
         assert.deepEqual(h.Roots.ToArray().map(i => i.Caption), ['Survivor']);
     });
 
+    test('a departed keyed contributor\'s child is dropped and not reused as a stale instance', () =>
+    {
+        const ext = {};
+        const kKeyed = new ServiceKey<IHierarchyContributor>('keyed');
+        const sp = new ServiceProvider();
+        sp.registerInstance(kKeyed, { ParentKeys: ['root'], Order: 0, Contribute: () => new NodeContribution([spec('leaf', ext, 'Leaf')]), Resolve: (_i: string, _c: CommandContext) => undefined } as IHierarchyContributor);
+        const registry = new HierarchyContributorRegistry(sp);
+        const dK = new HierarchyContributorDefinition(); dK.ParentKeys = ['root']; dK.Contributor = kKeyed; dK.Order = 0;
+        const keyedSub = registry.Register(dK);
+        const h = new Hierarchy(registry, noopHost());
+        h.SeedRoot('root');
+        const first = h.Roots.ToArray().find(i => i.Caption === 'Leaf');
+        assert.notEqual(first, undefined);
+
+        keyedSub.dispose();
+        registry.NotifyContributionsChanged();
+        assert.equal(h.Roots.ToArray().some(i => i.Caption === 'Leaf'), false, 'departed keyed child removed');
+
+        const kReadd = new ServiceKey<IHierarchyContributor>('readd');
+        sp.registerInstance(kReadd, { ParentKeys: ['root'], Order: 0, Contribute: () => new NodeContribution([spec('leaf', ext, 'Leaf')]), Resolve: (_i: string, _c: CommandContext) => undefined } as IHierarchyContributor);
+        const dR = new HierarchyContributorDefinition(); dR.ParentKeys = ['root']; dR.Contributor = kReadd; dR.Order = 0;
+        registry.Register(dR);
+        registry.NotifyContributionsChanged();
+        const second = h.Roots.ToArray().find(i => i.Caption === 'Leaf');
+        assert.notEqual(second, undefined);
+        assert.notEqual(second, first, 'same ExtObject re-mints a fresh item (interned entry was dropped)');
+    });
+
     test('re-realization leaves an owner-realized subtree to its provider (no rogue duplicate injection)', () =>
     {
         const prov = new OwningProvider('p', 'Branch');

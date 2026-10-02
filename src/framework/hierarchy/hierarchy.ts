@@ -61,6 +61,7 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
 {
     private static readonly RootCanonicalName = '/';
     private static readonly CanonicalSeparator = '/';
+    private static readonly ProviderSegmentSeparator = ':';
 
     public readonly Roots = new ObservableCollection<HierarchyItem>();
     public readonly Selection = new ObservableCollection<HierarchyItem>();
@@ -98,7 +99,7 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
 
     public CanonicalNameOf(item: HierarchyItem): string
     {
-        if (this.root === undefined || item === this.root || item.Parent === undefined) return '/';
+        if (this.root === undefined || item === this.root || item.Parent === undefined) return Hierarchy.RootCanonicalName;
         const parts: string[] = [];
         let cur: HierarchyItem | undefined = item;
         while (cur !== undefined && cur !== this.root)
@@ -106,14 +107,14 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
             parts.unshift(this.segmentOf(cur));
             cur = cur.Parent;
         }
-        return '/' + parts.join('/');
+        return Hierarchy.RootCanonicalName + parts.join(Hierarchy.CanonicalSeparator);
     }
 
     private segmentOf(item: HierarchyItem): string
     {
         const base = item.CanonicalSegment ?? item.Key;
         const owner = this.ownerProvider.get(item);
-        return owner !== undefined ? owner.ProviderId + ':' + base : base;
+        return owner !== undefined ? owner.ProviderId + Hierarchy.ProviderSegmentSeparator + base : base;
     }
 
     public get Anchor(): HierarchyItem | undefined { return this._anchor; }
@@ -248,7 +249,14 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
         if (comp === undefined) return;
         for (const segment of [...comp.segments])
         {
-            for (const child of [...segment.items]) this.removeFromSegment(item, segment, child);
+            for (const child of [...segment.items])
+            {
+                // An expanded child keeps its own composition entry + live provider
+                // handle; recurse first so the nested subtree's subscriptions dispose.
+                if (this.composition.has(child)) this.Collapse(child);
+                this.removeFromSegment(item, segment, child);
+                this.ownerProvider.delete(child);
+            }
         }
         comp.teardown.dispose();
         this.composition.delete(item);
@@ -348,10 +356,25 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
 
     private disposeSegment(parent: HierarchyItem, comp: ParentComposition, segment: Segment): void
     {
+        // The contributor is gone for good (unlike a plain Collapse, which may re-realize).
+        // A provider segment has segment.provider set; anything else is a keyed
+        // (NodeContribution) segment whose children must not linger interned.
+        const keyed = segment.provider === undefined;
+        const interned = keyed ? this.internedByParent.get(parent) : undefined;
         for (const child of [...segment.items])
         {
+            // Fully tear down an expanded child so its nested provider handles dispose.
+            if (this.composition.has(child)) this.Collapse(child);
             this.removeFromSegment(parent, segment, child);
             this.ownerProvider.delete(child);
+            if (keyed)
+            {
+                if (interned !== undefined)
+                {
+                    for (const [ext, item] of [...interned]) if (item === child) interned.delete(ext);
+                }
+                child.dispose();
+            }
         }
         segment.providerHandle?.dispose();
         const at = comp.segments.indexOf(segment);

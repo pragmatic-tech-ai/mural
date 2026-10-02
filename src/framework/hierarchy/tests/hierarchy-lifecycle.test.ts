@@ -37,6 +37,35 @@ class CountingProvider implements IHierarchyProvider
     public CanAccept(): boolean { return false; }
 }
 
+// A two-level provider: under the seeded root it owns an expandable BRANCH; when that
+// branch is realized it owns a nested LEAF and returns a counting subscription, so Live
+// tracks whether the nested (second-level) provider handle is still alive.
+class TwoLevelProvider implements IHierarchyProvider
+{
+    public Live = 0;
+    private branch: HierarchyItem | undefined;
+    private leaf: HierarchyItem | undefined;
+    constructor(public readonly ProviderId: string, private readonly branchKey: string) {}
+    public Realize(item: HierarchyItem, context: IRealizeContext): IDisposable
+    {
+        if (item.Key === this.branchKey)
+        {
+            if (this.leaf === undefined) this.leaf = context.NewItem('leaf', { Caption: 'Leaf' });
+            context.InsertChild(this.leaf);
+            this.Live += 1;
+            return new Disposable(() => { this.Live -= 1; });
+        }
+        if (this.branch === undefined) this.branch = context.NewItem(this.branchKey, { Caption: 'Branch', IsExpandable: true });
+        context.InsertChild(this.branch);
+        return new Disposable(() => {});
+    }
+    public Integrate(): void {}
+    public GetCanonicalName(): string { return ''; }
+    public ParseCanonicalName(): HierarchyItem | undefined { return undefined; }
+    public CanAccept(): boolean { return false; }
+    public get Branch(): HierarchyItem | undefined { return this.branch; }
+}
+
 function build(prov: IHierarchyProvider, parentKey: string): { h: Hierarchy }
 {
     const k = new ServiceKey<IHierarchyContributor>('prov');
@@ -67,6 +96,22 @@ describe('Hierarchy — lifecycle / disposal', () =>
         assert.equal(prov.Live, 1, 're-expand re-subscribes');
         h.Collapse(root);
         assert.equal(prov.Live, 0, 'back to baseline');
+    });
+
+    test('collapsing a parent tears down an expanded child subtree\'s nested provider subscription', () =>
+    {
+        const prov = new TwoLevelProvider('p', 'branch');
+        const { h } = build(prov, 'root');
+        const root = h.SeedRoot('root');
+        const branch = prov.Branch!;
+        assert.equal(prov.Live, 0, 'branch not yet expanded');
+        h.Realize(branch);
+        assert.equal(prov.Live, 1, 'expanding the branch realized the nested provider');
+        h.Collapse(root);
+        assert.equal(prov.Live, 0, 'collapsing the root recursively released the nested subscription');
+        h.Realize(root);
+        h.Realize(prov.Branch!);
+        assert.equal(prov.Live, 1, 're-expanding the subtree re-subscribes');
     });
 
     test('dispose() is idempotent and releases provider subscriptions', () =>
