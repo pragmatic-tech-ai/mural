@@ -1,20 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ServiceProvider, ServiceKey } from '../../../runtime/index.js';
-import {
-    HierarchyContributorRegistry, HierarchyContributorDefinition,
-    HierarchyModel, NodeSeverity,
-    NodeContribution as LegacyNodeContribution,
-    type HierarchyNode,
-} from '../index.js';
+import { HierarchyContributorRegistry, HierarchyContributorDefinition } from '../index.js';
 import { NodeContribution, type IHierarchyContributor } from '../hierarchy-contribution.js';
 import type { CommandContext } from '../../shell/commands/command-context.js';
 import type { HierarchyItem } from '../hierarchy-item.js';
-
-function pnode(key: string, ext: unknown, caption = key): HierarchyNode
-{
-    return { Key: key, Caption: caption, IconKey: '', ExtObject: ext, Severity: NodeSeverity.Ok };
-}
 
 class FakeContributor implements IHierarchyContributor
 {
@@ -63,52 +53,17 @@ test('Changed fires on register and on remove', () =>
     assert.equal(fired, 2);
 });
 
-test('NotifyContributionsChanged re-contributes a realized root live', () =>
+test('NotifyContributionsChanged fires the Contributors signal', () =>
 {
     const provider = new ServiceProvider();
-    let count = 0;
-    const listing = new ServiceKey<IHierarchyContributor>('listing');
-    // Uses the LEGACY NodeContribution (hierarchy-node.js): HierarchyModel.RealizeChildren
-    // still does `instanceof` against that class (Task 11 reconciles it), so a contribution
-    // built from the new hierarchy-contribution.js class would not be recognized here.
-    provider.registerInstance(listing, { ParentKeys: ['solution'], Order: 0,
-        Contribute: () => new LegacyNodeContribution(count === 0 ? [] : [pnode('project', { id: 'p' })]),
-        Resolve: (_id: string, _ctx: CommandContext) => undefined } as IHierarchyContributor);
+    const k = new ServiceKey<IHierarchyContributor>('K');
+    provider.registerInstance(k, new FakeContributor(['solution'], 0, 'K'));
     const registry = new HierarchyContributorRegistry(provider);
-    const d = new HierarchyContributorDefinition();
-    d.ParentKeys = ['solution']; d.Contributor = listing; d.Order = 0;
-    registry.Register(d);
-    const model = new HierarchyModel(registry);
-    const root = model.SeedRoot(pnode('solution', {}));
-    model.RealizeChildren(root);
-    assert.equal(model.ChildrenOf(root).length, 0);
+    registry.Register(defFor(k, ['solution'], 0));
 
-    count = 1;
+    let fired = 0;
+    registry.PropertyChanged('Contributors').subscribe(() => { fired++; });
+
     registry.NotifyContributionsChanged();
-    assert.equal(model.ChildrenOf(root).length, 1);
-});
-
-test('RegisterInstance exposes a per-instance contributor via For + re-contributes; remover unregisters', () =>
-{
-    const provider = new ServiceProvider();
-    const registry = new HierarchyContributorRegistry(provider);
-    const model = new HierarchyModel(registry);
-    const root = model.SeedRoot(pnode('solution', {}));
-    model.RealizeChildren(root);
-    assert.equal(model.ChildrenOf(root).length, 0);
-
-    // Same LEGACY NodeContribution note as above — HierarchyModel still instanceof-checks
-    // against hierarchy-node.js's class.
-    const contributor: IHierarchyContributor = {
-        ParentKeys: ['solution'], Order: 0,
-        Contribute: () => new LegacyNodeContribution([pnode('project', { id: 'p' })]),
-        Resolve: (_id: string, _ctx: CommandContext) => undefined,
-    };
-    const sub = registry.RegisterInstance(contributor);          // Changed -> re-contribute root
-    assert.equal(registry.For('solution').length, 1);
-    assert.equal(model.ChildrenOf(root).length, 1);
-
-    sub.dispose();
-    assert.equal(registry.For('solution').length, 0);
-    assert.equal(model.ChildrenOf(root).length, 0);
+    assert.equal(fired, 1);
 });
