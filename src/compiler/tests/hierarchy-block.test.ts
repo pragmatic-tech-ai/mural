@@ -46,4 +46,44 @@ describe('Hierarchy { } block — Contributor fan-out', () =>
             /Hierarchy \{ \} accepts only Contributor entries/,
         );
     });
+
+    test('nested CommandDefinitions become the contributor Actions with interned Context', () =>
+    {
+        const js = emitted(`
+            import ProjectsContributor from "./projects-contributor.mjs"
+
+            shell module ExplorerModule {
+                Hierarchy {
+                    Contributor [ Under = "solution", Use = ProjectsContributor, Order = 10 ] {
+                        CommandDefinition [ Id = "project.build", Title = "Build", Context = "project", Icon = @Build ] {
+                            CommandDefinition [ Id = "project.build.default", Title = "Build (Default)", Context = "project" ]
+                        }
+                        CommandDefinition [ Id = "folder.newFile", Title = "New File", Context = "folder" ]
+                    }
+                }
+            }
+        `);
+        // top-level actions collected into an array assigned to Actions
+        assert.match(js, /set_property_value\(HierarchyContributorDefinition\.ActionsKey, \[/);
+        // Context authored as a key string lowers to the interner call
+        assert.match(js, /set_property_value\(CommandDefinition\.ContextKey, HierarchyContext\.For\("project"\)\)/);
+        assert.match(js, /set_property_value\(CommandDefinition\.ContextKey, HierarchyContext\.For\("folder"\)\)/);
+        // nesting still routes through AddChild
+        assert.match(js, /\.AddChild\(/);
+        // Icon ref still lowers as a resource
+        assert.match(js, /DynamicResource\(/);
+    });
+
+    test('a normal .commands: block Context keeps the bare class/token reference (hook does not leak)', () =>
+    {
+        const js = emitted(`
+            shell module DiagramModule {
+                .commands: {
+                    CommandDefinition[Id="build", Title="Build", Context=DiagramEditingContext]
+                }
+            }
+        `);
+        assert.match(js, /set_property_value\(CommandDefinition\.ContextKey, DiagramEditingContext\)/);
+        assert.doesNotMatch(js, /HierarchyContext\.For/);
+    });
 });

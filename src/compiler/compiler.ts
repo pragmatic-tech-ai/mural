@@ -26,6 +26,7 @@ import type {
     KeyValueResource,
     ModuleForm,
     ModulesBlock,
+    NamedAttr,
     TargetsBlock,
     PropertySetter,
     ResourceForm,
@@ -356,6 +357,18 @@ export class Compiler
     // file from the family name instead of repeating the path.
     private fontPaths: Map<string, string> = new Map();
     private varCounter = 0;
+    // >0 while compiling a nested CommandDefinition entry inside a
+    // Hierarchy { } block's Contributor body (emitHierarchyContributor).
+    // Scopes the one Hierarchy-specific lowering override — a
+    // CommandDefinition's `Context` attribute authored as a node-type
+    // KEY STRING interns to HierarchyContext.For("<key>") instead of a
+    // bare string literal — strictly to Hierarchy-block command
+    // compilation, so a normal `.commands:` block's
+    // `Context = SomeContextToken` keeps lowering to the bare class
+    // reference. See compileAttribute's tryCompileHierarchyContextValue
+    // call. Guarded with try/finally so a throw mid-compile can't leave
+    // it stuck above zero.
+    private hierarchyCommandDepth = 0;
     // Variable name of the element that owns the active NameScope —
     // populated when an element carries `x:root` and consumed by every
     // x:name'd descendant to emit a Register() call. NameScopes are
@@ -3443,11 +3456,36 @@ export class Compiler
             return;
         }
         const propName = attr.path.parts[0]!;
-        const valueExpr = this.compileValue(attr.value, {
+        const hierarchyContextExpr = this.tryCompileHierarchyContextValue(parentClass, propName, attr);
+        const valueExpr = hierarchyContextExpr ?? this.compileValue(attr.value, {
             propertyName: propName,
             targetExpr:   targetVar,
         });
         this.emitSetDP(targetVar, undefined, parentClass, propName, valueExpr, attr.span);
+    }
+
+    // The one Hierarchy-block-specific lowering override: inside a
+    // Hierarchy { } block's Contributor body, a CommandDefinition's
+    // `Context` attribute is authored as a node-type KEY STRING (e.g.
+    // `Context = "project"`), not a bare ServiceToken reference — it must
+    // lower to the interned `HierarchyContext.For("<key>")` token instead
+    // of a raw JSON string literal (the type the Context DP actually
+    // wants is `ServiceToken<unknown>`, not `string`).
+    //
+    // Scoped strictly to hierarchyCommandDepth > 0 — set only while
+    // emitHierarchyContributor compiles the nested CommandDefinition
+    // entries of a Contributor's body — so a normal `.commands:` block's
+    // `Context = SomeContextToken` is untouched and keeps lowering to the
+    // bare class/token reference via the ordinary compileValue path.
+    // Returns null (falls through to compileValue) for every other
+    // attribute, owner class, value kind, or depth-zero call.
+    private tryCompileHierarchyContextValue(parentClass: string, propName: string, attr: NamedAttr): string | null
+    {
+        if (this.hierarchyCommandDepth === 0) return null;
+        if (parentClass !== 'CommandDefinition' || propName !== 'Context') return null;
+        if (attr.value.kind !== 'string') return null;
+        this.ensureImport('HierarchyContext');
+        return `HierarchyContext.For(${JSON.stringify(attr.value.value)})`;
     }
 
     private compileElementBody(parentVar: string, parentClass: string, body: StructuredBody): void
@@ -3762,7 +3800,56 @@ export class Compiler
                 : this.compileValue(attr.value, { propertyName: propName, targetExpr: defVar });
             this.emitSetDP(defVar, undefined, 'HierarchyContributorDefinition', propName, valueExpr, attr.span);
         }
+        this.emitHierarchyContributorActions(defVar, element);
         this.line(`${parentVar}.HierarchyContributors.Add(${defVar});`);
+    }
+
+    // A Contributor's nested body — `Contributor [ … ] { CommandDefinition
+    // [ … ] { … } … }` — becomes the contributor's Actions: each top-level
+    // entry must be a CommandDefinition, compiled through the normal
+    // element-compile path (so its own nested `{ CommandDefinition }`
+    // children lower to AddChild exactly like the `.commands:` precedent,
+    // and an `Icon = @ref` attribute lowers to the normal DynamicResource
+    // reference). hierarchyCommandDepth is held open across the whole
+    // compileElement call (including its nested children) so the
+    // Context-interning override in tryCompileHierarchyContextValue
+    // applies at every depth of the Contributor's command tree.
+    private emitHierarchyContributorActions(defVar: string, element: ElementNode): void
+    {
+        const body = element.body;
+        if (body === null) return;
+        if (body.kind !== 'structured-body')
+        {
+            throw new EmitError(
+                'Contributor body must contain CommandDefinition entries',
+                element.span);
+        }
+        const actionVars: string[] = [];
+        this.hierarchyCommandDepth++;
+        try
+        {
+            for (const child of body.items)
+            {
+                if (child.kind !== 'element' || child.name !== 'CommandDefinition')
+                {
+                    throw new EmitError(
+                        `A Contributor body accepts only CommandDefinition entries (got ${
+                            child.kind === 'element' ? child.name : child.kind})`,
+                        'span' in child ? child.span : element.span);
+                }
+                actionVars.push(this.compileElement(child));
+            }
+        }
+        finally
+        {
+            this.hierarchyCommandDepth--;
+        }
+        if (actionVars.length > 0)
+        {
+            this.emitSetDP(
+                defVar, undefined, 'HierarchyContributorDefinition', 'Actions',
+                `[${actionVars.join(', ')}]`, element.span);
+        }
     }
 
     // `Under` accepts a single key OR a list (ParentKeys is
