@@ -1,9 +1,8 @@
-import { ModifierKeys, toModifierKeys } from '../../runtime/index.js';
+import { Key, ModifierKeys, toModifierKeys, type KeyEventInit } from '../../runtime/index.js';
 import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { initTestApp } from './test-app.js';
 
-import { Key, type KeyEventInit, type ModifierKeys } from '../../runtime/index.js';
 import { HeadlessTarget } from '../../visual-engine/index.js';
 import { EditableTextBlock } from '../editable-text-block.js';
 import { TextBox } from '../text-box.js';
@@ -58,6 +57,23 @@ describe('EditableTextBlock — display / edit toggle', () => {
         assert.equal(eb.child, editor, 'the inner TextBox becomes the active child');
         assert.equal(editor.Text, 'Alpha', 'the editor shows the seeded EditingText');
         assert.equal(editor.IsFocused, true, 'the editor is focused on entry');
+    });
+
+    test('typing into the inner TextBox updates EditingText (the reverse sync)', () => {
+        const { eb, editor } = fixture();
+        eb.Text = 'Alpha';
+        eb.EditingText = 'Alpha';
+        eb.IsEditing = true;
+
+        // Simulate the user typing by writing the inner TextBox's own Text
+        // DP directly — the same DP a real keystroke mutates via TextBox's
+        // own OnKeyDown/insertText path. This exercises the reverse half of
+        // the Text<->EditingText sync (editor.Text -> EditingText), not
+        // just the forward half (EditingText -> editor.Text) the other
+        // tests drive by writing eb.EditingText.
+        editor.Text = 'Typed By User';
+
+        assert.equal(eb.EditingText, 'Typed By User');
     });
 });
 
