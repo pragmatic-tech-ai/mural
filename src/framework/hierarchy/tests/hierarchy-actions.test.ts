@@ -10,6 +10,7 @@ import { HierarchyActionContext } from '../hierarchy-action-context.js';
 import type { HierarchyItem, IHierarchyItemHost } from '../hierarchy-item.js';
 import { CommandDefinition } from '../../shell/commands/command-definition.js';
 import type { CommandContext } from '../../shell/commands/command-context.js';
+import type { ICommandContributor } from '../../shell/commands/command-contributor.js';
 
 function noopHost(): IHierarchyItemHost
 {
@@ -142,5 +143,72 @@ describe('Hierarchy — context-driven actions', () =>
 
         childVm.Command.Execute(undefined);
         assert.deepEqual(executed, ['build.verbose']);
+    });
+
+    test('a lazily-realized ChildrenContributor submenu command routes through the owning contributor (Review Focus 1 — dynamic ChildrenContributor routing)', () =>
+    {
+        // Unlike 'build.verbose' above (a STATIC CommandDefinition.Children
+        // entry, already covered by Hierarchy.mapRoutes), this child id is
+        // produced DYNAMICALLY by an ICommandContributor at submenu-open
+        // (CommandMenuBuilder.RealizeChildren) and is never in BuildActions'
+        // routes map. HierarchyRoutingDispatcher must fall back to the
+        // contributor that owns it.
+        const dynamicChildId = 'demo.parent.dynamicChild';
+        let flipped = false;
+
+        const kDemo = new ServiceKey<IHierarchyContributor>('demo');
+        const sp = new ServiceProvider();
+        const demo: IHierarchyContributor = {
+            ParentKeys: ['solution'],
+            Order: 0,
+            Contribute: () => new NodeContribution([spec('project', 'MyProj')]),
+            Resolve: (id: string, _c: CommandContext): ICommand | undefined =>
+            {
+                switch (id)
+                {
+                    case dynamicChildId: return new RelayCommand(() => { flipped = true; });
+                    default: return undefined;
+                }
+            },
+        };
+        sp.registerInstance(kDemo, demo);
+        const registry = new HierarchyContributorRegistry(sp);
+
+        const kDynamicChildren = new ServiceKey<ICommandContributor>('demo.dynamicChildren');
+        const services = new ServiceProvider();
+        const dynamicContributor: ICommandContributor = {
+            Contribute: (): readonly CommandDefinition[] =>
+            {
+                const child = new CommandDefinition();
+                child.Id = dynamicChildId;
+                child.Title = 'Dynamic Child';
+                return [child];
+            },
+        };
+        services.registerInstance(kDynamicChildren, dynamicContributor);
+
+        const parentAction = action('demo.parent', 'Demo Parent', 'project', 0);
+        parentAction.ChildrenContributor = kDynamicChildren;
+
+        const def = new HierarchyContributorDefinition();
+        def.ParentKeys = ['solution'];
+        def.Contributor = kDemo;
+        def.Order = 0;
+        def.Actions = [parentAction];
+        registry.Register(def);
+
+        const h = new Hierarchy(registry, noopHost(), { Services: services });
+        h.SeedRoot('solution');
+        const project = h.Roots.ToArray()[0]!;
+        const menu = project.BuildActions(new HierarchyActionContext(project, [project]));
+
+        const parentVm = menu.ToArray()[0]!;
+        parentVm.EnsureExpanded();
+        const childVm = parentVm.Children.ToArray()[0]!;
+        assert.equal(childVm.Definition.Id, dynamicChildId);
+
+        assert.notEqual(childVm.Command, undefined);
+        childVm.Command.Execute(undefined);
+        assert.equal(flipped, true);
     });
 });

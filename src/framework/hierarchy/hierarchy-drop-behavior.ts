@@ -21,8 +21,8 @@ import type { ItemId } from './item-id.js';
 // HierarchyItem rows) and wires the receiver side of a hierarchy-items drag
 // gesture onto the domain seam (`HierarchyHost.CanDrop` / `Drop`). Mirrors
 // `ListReorderBehavior.OnAttached`'s wiring shape (src/basic/behaviors/
-// list-reorder-behavior.ts:101-124): AllowDrop=true, then DragOver / DragLeave
-// / Drop routed listeners, torn down via a CompositeDisposable in OnDetached.
+// list-reorder-behavior.ts:101-124): AllowDrop=true, then DragOver / Drop
+// routed listeners, torn down via a CompositeDisposable in OnDetached.
 //
 // Payload decoding: the drag source is expected to stamp the DataObject with
 // `data.Set(HierarchyItemsDrop.Kind, HierarchyItemsDrop.For(ids))` — i.e. the
@@ -50,7 +50,6 @@ import type { ItemId } from './item-id.js';
 export class HierarchyDropBehavior extends Behavior
 {
     private static readonly DragOverEvent  = 'DragOver';
-    private static readonly DragLeaveEvent = 'DragLeave';
     private static readonly DropEvent      = 'Drop';
 
     private static readonly AttachErrorMessage =
@@ -82,15 +81,6 @@ export class HierarchyDropBehavior extends Behavior
         visual.AddRoutedEventListener(HierarchyDropBehavior.DragOverEvent, onDragOver);
         this._subscriptions.add(new Disposable(() =>
             visual.RemoveRoutedEventListener(HierarchyDropBehavior.DragOverEvent, onDragOver)));
-
-        // No adorner / visual feedback state in this behavior (unlike
-        // ListReorderBehavior's insertion line) — nothing to tear down on
-        // DragLeave today. Wired anyway for shape-parity with the precedent
-        // and as the natural seam for a future hover-highlight.
-        const onDragLeave = (): void => { };
-        visual.AddRoutedEventListener(HierarchyDropBehavior.DragLeaveEvent, onDragLeave);
-        this._subscriptions.add(new Disposable(() =>
-            visual.RemoveRoutedEventListener(HierarchyDropBehavior.DragLeaveEvent, onDragLeave)));
 
         const onDrop = (raw: unknown): void => this.handleDrop(visual, raw as DragEventArgs);
         visual.AddRoutedEventListener(HierarchyDropBehavior.DropEvent, onDrop);

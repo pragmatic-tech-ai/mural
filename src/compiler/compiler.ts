@@ -2993,6 +2993,14 @@ export class Compiler
     // AttachBehaviorAction re-invokes the entry's full compileElement
     // path each fire, so each (trigger, target) pair gets a fresh
     // Behavior with its own per-instance DPs.
+    //
+    // NOTE: unlike the .Behaviors:/Behaviors{} path (see behaviorHostVar's
+    // use in emitBehaviorAttachments), this triggered path does NOT set
+    // behaviorHostVar — a Behavior attribute binding inside a when(){
+    // Behaviors { … } } block resolves against the behavior instance (no
+    // DataContext), not the host Visual. Accepted limitation for C1; wire
+    // behaviorHostVar here if a triggered Behavior ever needs host-relative
+    // bindings.
     private compileTriggeredBehavior(entry: ElementNode): { attachVar: string; detachVar: string }
     {
         this.ensureImport('AttachBehaviorAction');
