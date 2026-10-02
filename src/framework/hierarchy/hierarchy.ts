@@ -203,6 +203,7 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
 
     private reRealize(parent: HierarchyItem): void
     {
+        if (this.ownerProvider.has(parent)) return;   // owner-realized subtree: the provider owns reconciliation
         const comp = this.composition.get(parent);
         if (comp === undefined) return;
         const desired = this.registry.For(parent.Key);
