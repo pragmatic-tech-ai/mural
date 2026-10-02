@@ -2,6 +2,7 @@ import { ApplicationService, Disposable, ServiceBase, ServiceKey, type IDisposab
 import { ShellModule } from '../shell/module.js';
 import { HierarchyContributorDefinition } from './hierarchy-contributor-definition.js';
 import type { IHierarchyContributor } from './hierarchy-contribution.js';
+import type { CommandDefinition } from '../shell/commands/command-definition.js';
 
 // Aggregates every composed module's declared HierarchyContributorDefinitions and
 // answers ordered contributor lookups by parent family key. Definitions flow module →
@@ -64,6 +65,29 @@ export class HierarchyContributorRegistry extends ServiceBase
     public NotifyContributionsChanged(): void
     {
         this.raiseChanged();
+    }
+
+    // Every top-level action declared on a registered definition, paired with
+    // that definition's resolved contributor (the dispatcher for it). Deduped by
+    // definition identity so a contributor registered under several parent keys
+    // contributes its actions once. Hierarchy.BuildActions filters these by the
+    // live CommandContexts.
+    public ActionBindings(): readonly { Action: CommandDefinition; Dispatcher: IHierarchyContributor }[]
+    {
+        const seen = new Set<HierarchyContributorDefinition>();
+        const out: { Action: CommandDefinition; Dispatcher: IHierarchyContributor }[] = [];
+        for (const defs of this.byParent.values())
+        {
+            for (const def of defs)
+            {
+                if (seen.has(def)) continue;
+                seen.add(def);
+                if (def.Actions.length === 0) continue;
+                const dispatcher = this.resolve(def);
+                for (const action of def.Actions) out.push({ Action: action, Dispatcher: dispatcher });
+            }
+        }
+        return out;
     }
 
     // Register an already-constructed contributor instance (a per-session/per-solution one

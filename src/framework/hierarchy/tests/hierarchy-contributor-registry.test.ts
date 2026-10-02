@@ -5,6 +5,7 @@ import { HierarchyContributorRegistry, HierarchyContributorDefinition } from '..
 import { NodeContribution, type IHierarchyContributor } from '../hierarchy-contribution.js';
 import type { CommandContext } from '../../shell/commands/command-context.js';
 import type { HierarchyItem } from '../hierarchy-item.js';
+import { CommandDefinition } from '../../shell/commands/command-definition.js';
 
 class FakeContributor implements IHierarchyContributor
 {
@@ -66,4 +67,30 @@ test('NotifyContributionsChanged fires the Contributors signal', () =>
 
     registry.NotifyContributionsChanged();
     assert.equal(fired, 1);
+});
+
+test('ActionBindings pairs each definition action with its resolved contributor', () =>
+{
+    const kProj = new ServiceKey<IHierarchyContributor>('proj');
+    const sp = new ServiceProvider();
+    const proj: IHierarchyContributor = {
+        ParentKeys: ['solution'],
+        Order: 0,
+        Contribute: () => new NodeContribution([]),
+        Resolve: () => undefined,
+    };
+    sp.registerInstance(kProj, proj);
+    const registry = new HierarchyContributorRegistry(sp);
+
+    const rename = new CommandDefinition(); rename.Id = 'project.rename'; rename.Title = 'Rename';
+    const def = new HierarchyContributorDefinition();
+    def.ParentKeys = ['solution', 'folder'];   // two parents — action must appear ONCE
+    def.Contributor = kProj;
+    def.Actions = [rename];
+    registry.Register(def);
+
+    const bindings = registry.ActionBindings();
+    assert.equal(bindings.length, 1);
+    assert.equal(bindings[0]!.Action.Id, 'project.rename');
+    assert.equal(bindings[0]!.Dispatcher, proj);
 });
