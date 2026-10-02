@@ -105,6 +105,7 @@ export {
     type ClipboardSink,
 } from './text-box.js';
 export { SpinEdit } from './spin-edit.js';
+export { EditableTextBlock } from './editable-text-block.js';
 export { Slider, SliderLayout } from './slider.js';
 export { SliderSpinEdit } from './slider-spin-edit.js';
 export { PageView } from './page-view.js';
