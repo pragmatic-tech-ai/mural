@@ -187,7 +187,7 @@ export class TextOnPathDemo extends ResourceDictionary {
             const _line36 = new Line();
             _line36.set_property_value(DockPanel.DockKey, Dock.Top);
             _line36.set_property_value(Line.OrientationKey, Orientation.Horizontal);
-            _line36.set_property_value(Line.StrokeKey, new Thickness(_line36.TryFindResource("OutlineVariant"), 1, _line36.TryFindResource("OutlineVariant"), 1));
+            _line36.set_property_value(Line.StrokeKey, new Pen(DynamicResource(_line36, "OutlineVariant"), 1));
             _dockPanel3.AddChild(_line36);
             const _border37 = new Border();
             _border37.set_property_value(Border.FillKey, DynamicResource(_border37, "SurfaceContainerLow"));

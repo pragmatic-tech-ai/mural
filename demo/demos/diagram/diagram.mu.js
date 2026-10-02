@@ -192,7 +192,7 @@ export class DiagramDemo extends ResourceDictionary {
             const _line32 = new Line();
             _line32.set_property_value(DockPanel.DockKey, Dock.Bottom);
             _line32.set_property_value(Line.OrientationKey, Orientation.Horizontal);
-            _line32.set_property_value(Line.StrokeKey, new Thickness(_line32.TryFindResource("OutlineVariant"), 1, _line32.TryFindResource("OutlineVariant"), 1));
+            _line32.set_property_value(Line.StrokeKey, new Pen(DynamicResource(_line32, "OutlineVariant"), 1));
             _dockPanel31.AddChild(_line32);
             const _scrollViewer33 = new ScrollViewer();
             _scrollViewer33.set_property_value(ScrollViewer.HorizontalScrollEnabledKey, true);
@@ -496,7 +496,7 @@ export class DiagramDemo extends ResourceDictionary {
             const _line98 = new Line();
             _line98.set_property_value(DockPanel.DockKey, Dock.Right);
             _line98.set_property_value(Line.OrientationKey, Orientation.Vertical);
-            _line98.set_property_value(Line.StrokeKey, new Thickness(_line98.TryFindResource("OutlineVariant"), 1, _line98.TryFindResource("OutlineVariant"), 1));
+            _line98.set_property_value(Line.StrokeKey, new Pen(DynamicResource(_line98, "OutlineVariant"), 1));
             _dockPanel97.AddChild(_line98);
             const _stackPanel99 = new StackPanel();
             _stackPanel99.set_property_value(DockPanel.DockKey, Dock.Bottom);
@@ -551,7 +551,7 @@ export class DiagramDemo extends ResourceDictionary {
             const _line111 = new Line();
             _line111.set_property_value(DockPanel.DockKey, Dock.Left);
             _line111.set_property_value(Line.OrientationKey, Orientation.Vertical);
-            _line111.set_property_value(Line.StrokeKey, new Thickness(_line111.TryFindResource("OutlineVariant"), 1, _line111.TryFindResource("OutlineVariant"), 1));
+            _line111.set_property_value(Line.StrokeKey, new Pen(DynamicResource(_line111, "OutlineVariant"), 1));
             _dockPanel110.AddChild(_line111);
             const _textBlock112 = new TextBlock();
             _textBlock112.set_property_value(DockPanel.DockKey, Dock.Top);

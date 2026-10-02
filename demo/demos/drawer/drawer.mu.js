@@ -57,7 +57,7 @@ export class DrawerDemo extends ResourceDictionary {
             const _line11 = new Line();
             _line11.set_property_value(DockPanel.DockKey, Dock.Right);
             _line11.set_property_value(Line.OrientationKey, Orientation.Vertical);
-            _line11.set_property_value(Line.StrokeKey, new Thickness(_line11.TryFindResource("OutlineVariant"), 1, _line11.TryFindResource("OutlineVariant"), 1));
+            _line11.set_property_value(Line.StrokeKey, new Pen(DynamicResource(_line11, "OutlineVariant"), 1));
             _dockPanel10.AddChild(_line11);
             const _stackPanel12 = new StackPanel();
             const _textBlock13 = new TextBlock();
@@ -90,7 +90,7 @@ export class DrawerDemo extends ResourceDictionary {
             const _line19 = new Line();
             _line19.set_property_value(DockPanel.DockKey, Dock.Left);
             _line19.set_property_value(Line.OrientationKey, Orientation.Vertical);
-            _line19.set_property_value(Line.StrokeKey, new Thickness(_line19.TryFindResource("OutlineVariant"), 1, _line19.TryFindResource("OutlineVariant"), 1));
+            _line19.set_property_value(Line.StrokeKey, new Pen(DynamicResource(_line19, "OutlineVariant"), 1));
             _dockPanel18.AddChild(_line19);
             const _stackPanel20 = new StackPanel();
             _stackPanel20.set_property_value(StackPanel.MarginKey, new Thickness(24));

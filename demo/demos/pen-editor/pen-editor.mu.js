@@ -43,7 +43,7 @@ export class PenEditorDemo extends ResourceDictionary {
             const _line7 = new Line();
             _line7.set_property_value(DockPanel.DockKey, Dock.Bottom);
             _line7.set_property_value(Line.OrientationKey, Orientation.Horizontal);
-            _line7.set_property_value(Line.StrokeKey, new Thickness(_line7.TryFindResource("OutlineVariant"), 1, _line7.TryFindResource("OutlineVariant"), 1));
+            _line7.set_property_value(Line.StrokeKey, new Pen(DynamicResource(_line7, "OutlineVariant"), 1));
             _dockPanel2.AddChild(_line7);
             const _border8 = new Border();
             _border8.set_property_value(DockPanel.DockKey, Dock.Bottom);

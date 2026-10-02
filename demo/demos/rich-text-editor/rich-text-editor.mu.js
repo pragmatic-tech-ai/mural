@@ -2,7 +2,7 @@ import { RichTextEditorVM } from "./rich-text-editor-vm.mjs";
 import { Bold, Border, DataTemplate, Dock, DockPanel, FlowDocument, Italic, Line, List, ListItem, ListMarkerStyle, Orientation, Paragraph, RichTextBox, Run, StackPanel, TextBlock, TextWrapping, Underline } from "@pragmatic-tech-ai/mural/basic";
 import { Button, ButtonVariant } from "@pragmatic-tech-ai/mural/framework/buttons/button.js";
 import { DynamicResource, NameScope, ResourceDictionary, Thickness, VerticalAlignment } from "@pragmatic-tech-ai/mural/runtime";
-import { FontStyle, FontWeight, TextDecorations } from "@pragmatic-tech-ai/mural/visual-engine";
+import { FontStyle, FontWeight, Pen, TextDecorations } from "@pragmatic-tech-ai/mural/visual-engine";
 
 
 const _gate_RichTextEditorDemo = Symbol("RichTextEditorDemo.ctor");
@@ -98,7 +98,7 @@ export class RichTextEditorDemo extends ResourceDictionary {
             const _line20 = new Line();
             _line20.set_property_value(DockPanel.DockKey, Dock.Top);
             _line20.set_property_value(Line.OrientationKey, Orientation.Horizontal);
-            _line20.set_property_value(Line.StrokeKey, new Thickness(_line20.TryFindResource("OutlineVariant"), 1, _line20.TryFindResource("OutlineVariant"), 1));
+            _line20.set_property_value(Line.StrokeKey, new Pen(DynamicResource(_line20, "OutlineVariant"), 1));
             _dockPanel8.AddChild(_line20);
             const _border21 = new Border();
             _border21.set_property_value(Border.PaddingKey, new Thickness(28, 24, 28, 24));

@@ -3,7 +3,7 @@ import { Border, DataTemplate, Dock, DockPanel, Line, Orientation, StackPanel, T
 import { ColorPicker, FontFamilyPicker, FontSizePicker } from "@pragmatic-tech-ai/mural/framework";
 import { ToggleButton } from "@pragmatic-tech-ai/mural/framework/buttons/toggle-button.js";
 import { DataContextBinding, DynamicResource, NameScope, ResourceDictionary, Thickness, VerticalAlignment } from "@pragmatic-tech-ai/mural/runtime";
-import { FontStyle, FontWeight, TextDecorations } from "@pragmatic-tech-ai/mural/visual-engine";
+import { FontStyle, FontWeight, Pen, TextDecorations } from "@pragmatic-tech-ai/mural/visual-engine";
 
 
 const _gate_TextFormatDemo = Symbol("TextFormatDemo.ctor");
@@ -94,7 +94,7 @@ export class TextFormatDemo extends ResourceDictionary {
             const _line19 = new Line();
             _line19.set_property_value(DockPanel.DockKey, Dock.Top);
             _line19.set_property_value(Line.OrientationKey, Orientation.Horizontal);
-            _line19.set_property_value(Line.StrokeKey, new Thickness(_line19.TryFindResource("OutlineVariant"), 1, _line19.TryFindResource("OutlineVariant"), 1));
+            _line19.set_property_value(Line.StrokeKey, new Pen(DynamicResource(_line19, "OutlineVariant"), 1));
             _dockPanel3.AddChild(_line19);
             const _border20 = new Border();
             _border20.set_property_value(Border.PaddingKey, new Thickness(28, 24, 28, 24));

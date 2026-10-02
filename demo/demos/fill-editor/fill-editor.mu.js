@@ -47,7 +47,7 @@ export class FillEditorDemo extends ResourceDictionary {
             const _line9 = new Line();
             _line9.set_property_value(DockPanel.DockKey, Dock.Top);
             _line9.set_property_value(Line.OrientationKey, Orientation.Horizontal);
-            _line9.set_property_value(Line.StrokeKey, new Thickness(_line9.TryFindResource("OutlineVariant"), 1, _line9.TryFindResource("OutlineVariant"), 1));
+            _line9.set_property_value(Line.StrokeKey, new Pen(DynamicResource(_line9, "OutlineVariant"), 1));
             _dockPanel8.AddChild(_line9);
             const _textBlock10 = new TextBlock();
             _textBlock10.set_property_value(TextBlock.TextKey, DataContextBinding(_textBlock10, "FillSummary"));

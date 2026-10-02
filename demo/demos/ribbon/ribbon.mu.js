@@ -5,7 +5,7 @@ import { Diagram } from "@pragmatic-tech-ai/mural/framework/diagram/diagram.js";
 import { SelectionMode } from "@pragmatic-tech-ai/mural/framework/list/list-box.js";
 import { MenuItem, MenuSeparator, Ribbon, RibbonButton, RibbonDropDownButton, RibbonGroup, RibbonSmallButtonColumn, RibbonSplitButton, RibbonTab, RibbonToggleButton } from "@pragmatic-tech-ai/mural/framework/surface.js";
 import { DataContextBinding, DynamicResource, ElementNameBinding, ResourceDictionary, Thickness } from "@pragmatic-tech-ai/mural/runtime";
-import { LineSegment, PathFigure, PathGeometry, Point, QuadraticBezierSegment } from "@pragmatic-tech-ai/mural/visual-engine";
+import { LineSegment, PathFigure, PathGeometry, Pen, Point, QuadraticBezierSegment } from "@pragmatic-tech-ai/mural/visual-engine";
 
 
 const _gate_RibbonDemo = Symbol("RibbonDemo.ctor");
@@ -198,7 +198,7 @@ export class RibbonDemo extends ResourceDictionary {
             const _line43 = new Line();
             _line43.set_property_value(DockPanel.DockKey, Dock.Bottom);
             _line43.set_property_value(Line.OrientationKey, Orientation.Horizontal);
-            _line43.set_property_value(Line.StrokeKey, new Thickness(_line43.TryFindResource("OutlineVariant"), 1, _line43.TryFindResource("OutlineVariant"), 1));
+            _line43.set_property_value(Line.StrokeKey, new Pen(DynamicResource(_line43, "OutlineVariant"), 1));
             _dockPanel4.AddChild(_line43);
             const _border44 = new Border();
             _border44.set_property_value(DockPanel.DockKey, Dock.Bottom);

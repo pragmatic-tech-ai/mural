@@ -132,7 +132,7 @@ export class WordToolboxDemo extends ResourceDictionary {
             const _line36 = new Line();
             _line36.set_property_value(DockPanel.DockKey, Dock.Left);
             _line36.set_property_value(Line.OrientationKey, Orientation.Vertical);
-            _line36.set_property_value(Line.StrokeKey, new Thickness(_line36.TryFindResource("OutlineVariant"), 1, _line36.TryFindResource("OutlineVariant"), 1));
+            _line36.set_property_value(Line.StrokeKey, new Pen(DynamicResource(_line36, "OutlineVariant"), 1));
             _dockPanel30.AddChild(_line36);
             const _border37 = new Border();
             const _dockPanel38 = new DockPanel();
