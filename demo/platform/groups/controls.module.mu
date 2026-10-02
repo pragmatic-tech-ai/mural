@@ -14,6 +14,7 @@ import DialogDemo from "../../demos/dialog/dialog.mu.js"
 import DrawerDemo from "../../demos/drawer/drawer.mu.js"
 import FabDemo from "../../demos/fab/fab.mu.js"
 import FabMenuDemo from "../../demos/fab-menu/fab-menu.mu.js"
+import HierarchyTreeDemo from "../../demos/hierarchy-tree/hierarchy-tree.mu.js"
 import IconButtonDemo from "../../demos/icon-button/icon-button.mu.js"
 import ListBoxDemo from "../../demos/list-box/list-box.mu.js"
 import LoadingIndicatorDemo from "../../demos/loading-indicator/loading-indicator.mu.js"
@@ -53,6 +54,7 @@ shell module ControlsModule [ Name = "Controls" ] {
         merge DrawerDemo
         merge FabDemo
         merge FabMenuDemo
+        merge HierarchyTreeDemo
         merge IconButtonDemo
         merge ListBoxDemo
         merge LoadingIndicatorDemo

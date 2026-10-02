@@ -1,4 +1,5 @@
 import { Icons } from "../assets/icons.mu.js";
+import { HierarchyTreeDemoModule } from "../demos/hierarchy-tree/hierarchy-tree.module.mu.js";
 import { DemoGroupService, DemoVM } from "./demo-group-service.mjs";
 import { DemoPlatformIcons } from "./demo-platform-icons.mu.js";
 import { DemoStorageStore } from "./demo-storage-store.mjs";
@@ -27,6 +28,7 @@ export const app = (() => {
     _app0.AddModule(PatternsModule);
     _app0.AddModule(StylesModule);
     _app0.AddModule(ShapeLibraryModule);
+    _app0.AddModule(HierarchyTreeDemoModule);
     const _rd1 = _app0.Resources;
     for (const [_k, _v] of DemoPlatformIcons.Clone().Entries()) _rd1.Set(_k, _v);
     for (const [_k, _v] of Icons.Clone().Entries()) _rd1.Set(_k, _v);

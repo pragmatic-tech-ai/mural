@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import { ControlsService } from '../controls-service.mjs';
 import { controlsDescriptors } from '../controls.descriptors.mjs';
 const nullProvider = { get: () => undefined, getRequired: () => { throw new Error('none'); } };
-test('Controls group exposes exactly 32 demos with unique ids', () => {
+test('Controls group exposes exactly 33 demos with unique ids', () => {
     const ids = controlsDescriptors.map(d => d.id);
-    assert.equal(ids.length, 32);
+    assert.equal(ids.length, 33);
     assert.equal(new Set(ids).size, ids.length);
 });
 test('Controls service seeds its demo list from the barrel', () => {

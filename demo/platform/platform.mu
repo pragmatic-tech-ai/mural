@@ -44,6 +44,13 @@ import PatternsModule from "./groups/patterns.module.mu.js"
 import StylesModule from "./groups/styles.module.mu.js"
 import ShapeLibraryModule from "./groups/shape-library.module.mu.js"
 
+// The hierarchy-tree demo's OWN module — carries no Capability (not a
+// navigable group), just the `Hierarchy { }` DSL block its Contributors
+// register through (see demos/hierarchy-tree/hierarchy-tree.module.mu).
+// Composed here so HierarchyContributorRegistry.PopulateFromModules sees it
+// among `Application.Modules`, exactly like a real app's own modules.
+import HierarchyTreeDemoModule from "../demos/hierarchy-tree/hierarchy-tree.module.mu.js"
+
 Application [ Theme = Pragmatic, Scheme = PragmaticLight ] {
     .services: {
         // Persistence backend, bound to the framework's DiagramStorageKey token.
@@ -62,6 +69,7 @@ Application [ Theme = Pragmatic, Scheme = PragmaticLight ] {
         PatternsModule
         StylesModule
         ShapeLibraryModule
+        HierarchyTreeDemoModule
     }
 
     resources: {

@@ -12,10 +12,10 @@ const barrels = [
     patternsDescriptors, stylesDescriptors, shapeLibraryDescriptors,
 ];
 
-test('all 54 demos are reachable through exactly one group, ids globally unique', () => {
+test('all 55 demos are reachable through exactly one group, ids globally unique', () => {
     const all = barrels.flatMap(b => b.map(d => d.id));
-    assert.equal(all.length, 54);
-    assert.equal(new Set(all).size, 54);   // no demo in two groups, none duplicated
+    assert.equal(all.length, 55);
+    assert.equal(new Set(all).size, 55);   // no demo in two groups, none duplicated
 });
 
 test('the registry module no longer exists', async () => {

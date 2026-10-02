@@ -11,6 +11,7 @@ import { DialogDemo } from "../../demos/dialog/dialog.mu.js";
 import { DrawerDemo } from "../../demos/drawer/drawer.mu.js";
 import { FabMenuDemo } from "../../demos/fab-menu/fab-menu.mu.js";
 import { FabDemo } from "../../demos/fab/fab.mu.js";
+import { HierarchyTreeDemo } from "../../demos/hierarchy-tree/hierarchy-tree.mu.js";
 import { IconButtonDemo } from "../../demos/icon-button/icon-button.mu.js";
 import { ListBoxDemo } from "../../demos/list-box/list-box.mu.js";
 import { LoadingIndicatorDemo } from "../../demos/loading-indicator/loading-indicator.mu.js";
@@ -52,6 +53,7 @@ export const ControlsModule = (() => {
     for (const [_k, _v] of DrawerDemo.Clone().Entries()) _rd1.Set(_k, _v);
     for (const [_k, _v] of FabDemo.Clone().Entries()) _rd1.Set(_k, _v);
     for (const [_k, _v] of FabMenuDemo.Clone().Entries()) _rd1.Set(_k, _v);
+    for (const [_k, _v] of HierarchyTreeDemo.Clone().Entries()) _rd1.Set(_k, _v);
     for (const [_k, _v] of IconButtonDemo.Clone().Entries()) _rd1.Set(_k, _v);
     for (const [_k, _v] of ListBoxDemo.Clone().Entries()) _rd1.Set(_k, _v);
     for (const [_k, _v] of LoadingIndicatorDemo.Clone().Entries()) _rd1.Set(_k, _v);

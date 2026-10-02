@@ -11,6 +11,7 @@ import dialogDemo from '../../demos/dialog/dialog.descriptor.mjs';
 import drawerDemo from '../../demos/drawer/drawer.descriptor.mjs';
 import fabDemo from '../../demos/fab/fab.descriptor.mjs';
 import fabMenuDemo from '../../demos/fab-menu/fab-menu.descriptor.mjs';
+import hierarchyTreeDemo from '../../demos/hierarchy-tree/hierarchy-tree.descriptor.mjs';
 import iconButtonDemo from '../../demos/icon-button/icon-button.descriptor.mjs';
 import listBoxDemo from '../../demos/list-box/list-box.descriptor.mjs';
 import loadingIndicatorDemo from '../../demos/loading-indicator/loading-indicator.descriptor.mjs';
@@ -47,6 +48,7 @@ export const controlsDescriptors = [
     drawerDemo,
     fabDemo,
     fabMenuDemo,
+    hierarchyTreeDemo,
     iconButtonDemo,
     listBoxDemo,
     loadingIndicatorDemo,
