@@ -3566,6 +3566,16 @@ export class Compiler
                     this.compileBehaviorsBlock(parentVar, item);
                     continue;
                 }
+                // `Hierarchy { … }` block — not a default-slot child;
+                // each entry is a `Contributor [ Under, Use, Order ]`
+                // shorthand that fans out to a HierarchyContributorDefinition
+                // appended to the parent's HierarchyContributors collection.
+                // Mirrors the Behaviors block precedent immediately above.
+                if (item.name === 'Hierarchy')
+                {
+                    this.compileHierarchyBlock(parentVar, item);
+                    continue;
+                }
                 // Property-collection blocks — `ColumnDefinitions { … }`
                 // and `RowDefinitions { … }` under Grid. The block isn't
                 // itself an element to instantiate; each inner element is
@@ -3672,6 +3682,96 @@ export class Compiler
             const behaviorVar = this.compileElement(child);
             this.line(`${parentVar}.AddBehavior(${behaviorVar});`);
         }
+    }
+
+    // `Hierarchy { … }` block — the braces form that fans a module's
+    // `Contributor [ Under, Use, Order ]` shorthand entries out to
+    // HierarchyContributorDefinition instances appended to the parent's
+    // HierarchyContributors collection. Nested command actions on a
+    // Contributor (its body) are a later task — only the attribute
+    // fan-out is handled here.
+    private compileHierarchyBlock(parentVar: string, hierarchyElem: ElementNode): void
+    {
+        if (hierarchyElem.attrs.length > 0)
+        {
+            throw new EmitError(
+                "Hierarchy { … } block doesn't take attributes — attach Contributor entries inside the body",
+                hierarchyElem.span);
+        }
+        const body = hierarchyElem.body;
+        if (body === null || body.kind !== 'structured-body')
+        {
+            // An empty Hierarchy block is a no-op; only structured
+            // bodies (zero or more Contributor entries) make sense here.
+            if (body !== null)
+            {
+                throw new EmitError(
+                    "Hierarchy block must contain Contributor element entries",
+                    hierarchyElem.span);
+            }
+            return;
+        }
+        this.ensureImport('HierarchyContributorDefinition');
+        for (const child of body.items)
+        {
+            if (child.kind !== 'element' || child.name !== 'Contributor')
+            {
+                throw new EmitError(
+                    `Hierarchy { } accepts only Contributor entries (got ${
+                        child.kind === 'element' ? child.name : child.kind})`,
+                    'span' in child ? child.span : body.span);
+            }
+            this.emitHierarchyContributor(parentVar, child);
+        }
+    }
+
+    // DSL alias (the `Contributor [ … ]` attribute spelling) → the real
+    // HierarchyContributorDefinition property it sets. `Under` is the one
+    // exception needing a bespoke value shape — see compileUnderValue.
+    private static readonly HierarchyContributorAttrToProperty: ReadonlyMap<string, string> = new Map([
+        ['Under', 'ParentKeys'],
+        ['Use',   'Contributor'],
+        ['Order', 'Order'],
+    ]);
+
+    // `Contributor [ Under = …, Use = …, Order = … ]` → a fresh
+    // HierarchyContributorDefinition, each attribute routed through the
+    // normal DP-write machinery (emitSetDP) so the emit matches a plain
+    // attribute compile — then appended to the parent's
+    // HierarchyContributors collection.
+    private emitHierarchyContributor(parentVar: string, element: ElementNode): void
+    {
+        const defVar = this.fresh(this.varHint('HierarchyContributorDefinition'));
+        this.line(`const ${defVar} = new HierarchyContributorDefinition();`);
+        for (const attr of element.attrs)
+        {
+            if (attr.kind === 'positional-attr')
+            {
+                throw new EmitError(
+                    'Contributor only accepts named attributes (Under / Use / Order)',
+                    attr.span);
+            }
+            const attrName = attr.path.parts[attr.path.parts.length - 1]!;
+            const propName = Compiler.HierarchyContributorAttrToProperty.get(attrName);
+            if (propName === undefined)
+            {
+                throw new EmitError(`Contributor accepts Under / Use / Order (got ${attrName})`, attr.span);
+            }
+            const valueExpr = propName === 'ParentKeys'
+                ? this.compileUnderValue(attr.value)
+                : this.compileValue(attr.value, { propertyName: propName, targetExpr: defVar });
+            this.emitSetDP(defVar, undefined, 'HierarchyContributorDefinition', propName, valueExpr, attr.span);
+        }
+        this.line(`${parentVar}.HierarchyContributors.Add(${defVar});`);
+    }
+
+    // `Under` accepts a single key OR a list (ParentKeys is
+    // `readonly string[]`): a bare value becomes a one-element array; a
+    // list compiles element-wise as usual (already bracketed).
+    private compileUnderValue(value: ValueNode): string
+    {
+        if (value.kind === 'list') return this.compileValue(value, {});
+        return `[${this.compileValue(value, {})}]`;
     }
 
     // Lowers a property-collection block like
