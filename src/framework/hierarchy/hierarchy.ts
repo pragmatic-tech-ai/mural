@@ -185,16 +185,16 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner, IComma
         return current;
     }
 
-    // Builds a FRESH command-view-model tree for `item`'s menu (DR1/DR5/DR6):
-    // contexts come from the passed HierarchyActionContext's selection (or the anchor
-    // when the selection is empty); actions are the contributors' CommandDefinitions
-    // whose Context is in that set, ordered by Order; each dispatches through its
-    // supplying contributor via a per-open routing dispatcher. Per-call builder: the
-    // caller disposes the returned VMs (DR9).
-    public BuildActions(item: HierarchyItem, context: HierarchyActionContext): ObservableCollection<CommandViewModel>
+    // Builds a FRESH command-view-model tree for a node's menu (DR1/DR5/DR6):
+    // contexts come from the passed HierarchyActionContext's Selection (or its
+    // Anchor when the selection is empty, per DR7); actions are the contributors'
+    // CommandDefinitions whose Context is in that set, ordered by Order; each
+    // dispatches through its supplying contributor via a per-open routing
+    // dispatcher. Per-call builder: the caller disposes the returned VMs (DR9).
+    public BuildActions(_item: HierarchyItem, context: HierarchyActionContext): ObservableCollection<CommandViewModel>
     {
         const result = new ObservableCollection<CommandViewModel>();
-        const selection = context.Selection.length > 0 ? context.Selection : [item];
+        const selection = context.Selection.length > 0 ? context.Selection : [context.Anchor];
         const contexts = new Set<ServiceToken<unknown>>(selection.map(i => HierarchyContext.For(i.Key)));
 
         const matched = this.registry.ActionBindings()

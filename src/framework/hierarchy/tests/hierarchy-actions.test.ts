@@ -45,11 +45,14 @@ describe('Hierarchy — context-driven actions', () =>
         sp.registerInstance(kProj, proj);
         const registry = new HierarchyContributorRegistry(sp);
 
+        const build = action('build', 'Build', 'project', 20);
+        build.AddChild(action('build.verbose', 'Verbose', 'project', 0));   // submenu child — Review Focus 1
+
         const def = new HierarchyContributorDefinition();
         def.ParentKeys = ['solution'];
         def.Contributor = kProj;
         def.Order = 0;
-        def.Actions = [action('rename', 'Rename', 'project', 10), action('build', 'Build', 'project', 20),
+        def.Actions = [action('rename', 'Rename', 'project', 10), build,
                        action('x', 'X', 'other', 0)];   // 'other' must not show on a project node
         registry.Register(def);
 
@@ -118,5 +121,26 @@ describe('Hierarchy — context-driven actions', () =>
         menu.ToArray()[2]!.Command.Execute(undefined);
         assert.deepEqual(log, ['project.extra']);
         assert.deepEqual(executed, []);   // dispatched through its OWN contributor, not proj's
+    });
+
+    test('a nested child command id routes through the supplying contributor (Review Focus 1 — descendant routing)', () =>
+    {
+        const { h, executed } = setup();
+
+        // setup()'s 'build' action carries a submenu child ('build.verbose');
+        // mapRoutes must register the CHILD id too, not just 'build' itself, so
+        // the routing dispatcher can resolve it once CommandMenuBuilder's
+        // RealizeChildren builds it lazily on submenu-open.
+        h.SeedRoot('solution');
+        const project = h.Roots.ToArray()[0]!;
+        const menu = project.BuildActions(new HierarchyActionContext(project, [project]));
+
+        const buildVm = menu.ToArray().find(vm => vm.Title === 'Build')!;
+        buildVm.EnsureExpanded();
+        const childVm = buildVm.Children.ToArray()[0]!;
+        assert.equal(childVm.Definition.Id, 'build.verbose');
+
+        childVm.Command.Execute(undefined);
+        assert.deepEqual(executed, ['build.verbose']);
     });
 });
