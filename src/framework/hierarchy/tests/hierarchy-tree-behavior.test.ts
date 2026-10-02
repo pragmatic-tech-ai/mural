@@ -1,14 +1,17 @@
 import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { initTestApp } from '../../../basic/tests/test-app.js';
-import { Key, KeyEventArgs, ModifierKeys, ServiceProvider } from '../../../runtime/index.js';
+import { Key, KeyEventArgs, ModifierKeys, ServiceKey, ServiceProvider } from '../../../runtime/index.js';
 import { StackPanel } from '../../../basic/panels/stack-panel.js';
 import { EditableTextBlock } from '../../../basic/editable-text-block.js';
 import { Hierarchy as HierarchyTemplates } from '../../../../build/framework/hierarchy/hierarchy.template.mu.js';
 import { TreeView } from '../../list/tree-view.js';
 import { Hierarchy } from '../hierarchy.js';
 import { HierarchyContributorRegistry } from '../hierarchy-contributor-registry.js';
+import { HierarchyContributorDefinition } from '../hierarchy-contributor-definition.js';
+import { NodeContribution, type IHierarchyContributor } from '../hierarchy-contribution.js';
 import type { IHierarchyItemHost } from '../hierarchy-item.js';
+import { CommandContext } from '../../shell/commands/command-context.js';
 import { HierarchyTreeBehavior } from '../hierarchy-tree-behavior.js';
 
 // Task 9 — HierarchyTreeBehavior: selection mirroring + inline-rename wiring.
@@ -192,5 +195,74 @@ describe('HierarchyTreeBehavior', () => {
         tree.FireRoutedListeners('KeyDown', keyArgs);
         assert.equal(keyArgs.Handled, false, 'F2 no longer handled after detach');
         assert.equal(a.IsEditing, false);
+    });
+
+    // Fix round 1 — Critical: collapsing a node must release that row's
+    // rename subscriptions immediately (not just on OnDetached). Collapsing
+    // removes the child HierarchyItem from the bound `Children`
+    // ObservableCollection (Hierarchy.Collapse → removeFromSegment →
+    // RemoveAt), which flows straight through to
+    // ClearContainerForItemOverride on the nested TreeViewItem — the
+    // ordinary default (non-virtualizing) collapse path. Before the fix,
+    // per-row Committed/Cancelled subscriptions (and the nested
+    // container-prepared listener they registered) lived only in the
+    // top-level `_subscriptions`, released only on OnDetached — so this
+    // path leaked a subscription (and kept the detached row + its
+    // HierarchyItem reachable) on every expand/collapse cycle.
+    test('collapsing an expanded node releases that row\'s rename subscriptions (no growth across repeated expand/collapse cycles)', () => {
+        const host: IHierarchyItemHost = { Activate: () => {}, CommitRename: () => {}, OnItemRemoved: () => {} };
+        const childKey = new ServiceKey<IHierarchyContributor>('child-contributor');
+        const sp = new ServiceProvider();
+        const contributor: IHierarchyContributor = {
+            ParentKeys: ['parent'],
+            Order: 0,
+            // A fresh ExtObject per Contribute() call means NO interning across
+            // expand/collapse cycles — each expand mints a genuinely new child
+            // HierarchyItem (and container), which is what makes "does the OLD
+            // row's subscription actually release" an observable question.
+            Contribute: () => new NodeContribution([{ Key: 'child', ExtObject: {}, Caption: 'Child', IsExpandable: false }]),
+            Resolve: (_id: string, _ctx: CommandContext) => undefined,
+        };
+        sp.registerInstance(childKey, contributor);
+        const registry = new HierarchyContributorRegistry(sp);
+        const def = new HierarchyContributorDefinition();
+        def.ParentKeys = ['parent']; def.Contributor = childKey; def.Order = 0;
+        registry.Register(def);
+
+        const hierarchy = new Hierarchy(registry, host);
+        const parent = hierarchy.NewItem('parent', { Caption: 'Parent', IsExpandable: true });
+        hierarchy.Roots.Add(parent);
+        const { tree } = buildTree(hierarchy);
+
+        // Expand → realize the real 'child' row, capture its EditableTextBlock,
+        // assert exactly one subscriber each signal → collapse → return it so
+        // the caller can assert the subscriptions were released.
+        function expandCollapseOnce(): EditableTextBlock
+        {
+            parent.OnExpand();
+            const parentRow = tree.RootItems[0]!;
+            const childRow = parentRow.SubItems[0]!;
+            const editable = captionOf(childRow.Header);
+            assert.equal(editable.Committed.subscriberCount, 1, 'expanding wires exactly one Committed subscriber');
+            assert.equal(editable.Cancelled.subscriberCount, 1, 'expanding wires exactly one Cancelled subscriber');
+            parent.OnCollapse();
+            return editable;
+        }
+
+        const first = expandCollapseOnce();
+        assert.equal(first.Committed.subscriberCount, 0, 'collapsing releases the Committed subscription');
+        assert.equal(first.Cancelled.subscriberCount, 0, 'collapsing releases the Cancelled subscription');
+
+        // Repeat several cycles — a leak would show the subscriber count of
+        // each cycle's OWN (freshly minted) row staying >0 after its collapse,
+        // or the prior cycle's row never reaching 0 in the first place. Every
+        // cycle must independently start at 1 (fresh wiring) and end at 0
+        // (fresh teardown) — no accumulation across cycles.
+        for (let i = 0; i < 3; i++)
+        {
+            const editable = expandCollapseOnce();
+            assert.equal(editable.Committed.subscriberCount, 0, `cycle ${i}: Committed released`);
+            assert.equal(editable.Cancelled.subscriberCount, 0, `cycle ${i}: Cancelled released`);
+        }
     });
 });

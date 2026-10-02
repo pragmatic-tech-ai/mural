@@ -9,7 +9,7 @@ import {
     type IDisposable,
     type KeyEventArgs,
 } from '../../runtime/index.js';
-import { ItemsControl, type ContainerPreparedListener } from '../base/items-control.js';
+import { ItemsControl, type ContainerClearedListener, type ContainerPreparedListener } from '../base/items-control.js';
 import { Selector } from '../list/selector.js';
 import { EditableTextBlock } from '../../basic/editable-text-block.js';
 import { Hierarchy } from './hierarchy.js';
@@ -39,14 +39,26 @@ import { HierarchyItem } from './hierarchy-item.js';
 // block — Task 12 wires the default TreeView template + this behavior
 // together into the shared solution-explorer shell.
 //
-// Row discovery: AddContainerPreparedListener (items-control.ts) fires for
-// EVERY fresh container realization, at any depth — this behavior re-arms
-// the same listener on each realized TreeViewItem (itself an ItemsControl)
-// so nested rows are covered too. KNOWN GAP: a RECYCLED container reused for
-// a DIFFERENT item (virtualizing trees only — TreeView.IsVirtualizing opts
-// in, default false) goes through RebindContainerForItemOverride, which does
-// NOT fire this listener today, so a recycled row's rename wiring can go
-// stale. Acceptable for this task's scope; a follow-up would need a
+// Row discovery + teardown: AddContainerPreparedListener (items-control.ts)
+// fires for every fresh container realization, at any depth — this behavior
+// re-arms the same prepared/cleared pair on each realized TreeViewItem
+// (itself an ItemsControl) so nested rows are covered too. Per-row wiring
+// (the rename subscriptions AND the nested listener pair registered on that
+// row's own container) is tracked in `_rowTeardown`, keyed by container, and
+// disposed the moment that SPECIFIC container clears — collapsing a node
+// removes its children from the bound `Children` ObservableCollection
+// (Hierarchy.Collapse → removeFromSegment → RemoveAt), which flows straight
+// through to ClearContainerForItemOverride on the nested TreeViewItem; without
+// per-row teardown keyed this way, repeated expand/collapse cycles would grow
+// `_subscriptions` without bound (Fix round 1 — see the task report). Only the
+// top-level prepared/cleared registration (against the attached host itself)
+// lives for the whole attach, torn down in OnDetached.
+//
+// KNOWN GAP: a RECYCLED container reused for a DIFFERENT item (virtualizing
+// trees only — TreeView.IsVirtualizing opts in, default false) goes through
+// RebindContainerForItemOverride, which does NOT fire ContainerPrepared/
+// ContainerCleared today, so a recycled row's rename wiring can go stale.
+// Acceptable for this task's scope; a follow-up would need a
 // container-rebound notification on ItemsControl to close the gap.
 export class HierarchyTreeBehavior extends Behavior
 {
@@ -58,7 +70,13 @@ export class HierarchyTreeBehavior extends Behavior
     public get Hierarchy(): Hierarchy | undefined { return this.get_property_value(HierarchyTreeBehavior.HierarchyKey); }
     public set Hierarchy(v: Hierarchy | undefined) { this.set_property_value(HierarchyTreeBehavior.HierarchyKey, v); }
 
+    // Lives for the whole attach — the top-level SelectionChanged / KeyDown /
+    // container-listener registrations against the host itself.
     private readonly _subscriptions = new CompositeDisposable();
+    // Per-row teardown (rename subscriptions + any nested listener pair the
+    // row registered on its own container), keyed by container. Disposed and
+    // removed the moment ITS container clears — see the class doc comment.
+    private readonly _rowTeardown = new Map<Visual, IDisposable>();
 
     public override OnAttached(visual: Visual): void
     {
@@ -75,12 +93,13 @@ export class HierarchyTreeBehavior extends Behavior
         visual.AddRoutedEventListener(HierarchyTreeBehavior.KeyDownEvent, onKeyDown);
         this._subscriptions.add(new Disposable(() => visual.RemoveRoutedEventListener(HierarchyTreeBehavior.KeyDownEvent, onKeyDown)));
 
-        this.WireContainerTree(visual);
+        this.wireContainerLevel(visual, this._subscriptions);
     }
 
     public override OnDetached(_visual: Visual): void
     {
         this._subscriptions.dispose();
+        this._rowTeardown.clear();
     }
 
     // Thin dispatcher the SelectionChanged listener calls — kept as its own
@@ -105,43 +124,68 @@ export class HierarchyTreeBehavior extends Behavior
         args.Handled = true;
     }
 
-    // Arms a container-prepared listener on `host` and re-arms the same
-    // wiring on every TreeViewItem it realizes (itself an ItemsControl),
-    // so nested rows at any depth get covered as they're realized — not
-    // just the top level.
-    private WireContainerTree(host: ItemsControl): void
+    // Arms a container-prepared/cleared pair on `host`. Prepared wires the row
+    // (rename subscriptions + recursing into the row's own container as a
+    // further level); cleared disposes exactly that row's teardown. The
+    // listener-removal itself (NOT the per-row teardown it triggers) is
+    // registered against `ownerTeardown` — `this._subscriptions` for the
+    // top-level host (lives for the whole attach), or a row's own
+    // `_rowTeardown` entry for a nested container (lives only until THAT row
+    // clears).
+    private wireContainerLevel(host: ItemsControl, ownerTeardown: CompositeDisposable): void
     {
-        const listener: ContainerPreparedListener = (container, item): void =>
+        const prepared: ContainerPreparedListener = (container, item): void =>
         {
-            this.WireRow(container, item);
+            this.wireRow(container, item);
         };
-        host.AddContainerPreparedListener(listener);
-        this._subscriptions.add(new Disposable(() => host.RemoveContainerPreparedListener(listener)));
+        const cleared: ContainerClearedListener = (container): void =>
+        {
+            this.clearRow(container);
+        };
+        host.AddContainerPreparedListener(prepared);
+        host.AddContainerClearedListener(cleared);
+        ownerTeardown.add(new Disposable(() =>
+        {
+            host.RemoveContainerPreparedListener(prepared);
+            host.RemoveContainerClearedListener(cleared);
+        }));
     }
 
-    private WireRow(container: Visual, item: unknown): void
+    private wireRow(container: Visual, item: unknown): void
     {
+        const rowTeardown = new CompositeDisposable();
         if (item instanceof HierarchyItem)
         {
-            this.WireRowEditing(container, item);
+            this.wireRowEditing(container, item, rowTeardown);
         }
         if (container instanceof ItemsControl)
         {
-            this.WireContainerTree(container);
+            this.wireContainerLevel(container, rowTeardown);
         }
+        this._rowTeardown.set(container, rowTeardown);
+    }
+
+    private clearRow(container: Visual): void
+    {
+        const teardown = this._rowTeardown.get(container);
+        if (teardown === undefined) return;
+        this._rowTeardown.delete(container);
+        teardown.dispose();
     }
 
     // Finds the row's EditableTextBlock (the caption cell the default
     // @HierarchyItemTemplate renders as the row's Header) and wires its
-    // Committed / Cancelled signals back onto the bound HierarchyItem.
-    private WireRowEditing(container: Visual, item: HierarchyItem): void
+    // Committed / Cancelled signals back onto the bound HierarchyItem. The
+    // subscriptions are added to `teardown` — the caller's per-row
+    // CompositeDisposable, disposed when THIS row's container clears.
+    private wireRowEditing(container: Visual, item: HierarchyItem, teardown: CompositeDisposable): void
     {
         const header = (container as unknown as { Header?: unknown }).Header;
-        const editable = header instanceof Visual ? HierarchyTreeBehavior.FindEditableTextBlock(header) : undefined;
+        const editable = header instanceof Visual ? HierarchyTreeBehavior.findEditableTextBlock(header) : undefined;
         if (editable === undefined) return;
         const committed: IDisposable = editable.Committed.subscribe(() => item.CommitEdit());
         const cancelled: IDisposable = editable.Cancelled.subscribe(() => item.CancelEdit());
-        this._subscriptions.add(new Disposable(() =>
+        teardown.add(new Disposable(() =>
         {
             committed.dispose();
             cancelled.dispose();
@@ -151,12 +195,12 @@ export class HierarchyTreeBehavior extends Behavior
     // Depth-first search for an EditableTextBlock under a row's Header
     // Visual — decoupled from the exact template shape (icon-then-caption
     // today) so a future template reorder doesn't break the wiring.
-    private static FindEditableTextBlock(root: Visual): EditableTextBlock | undefined
+    private static findEditableTextBlock(root: Visual): EditableTextBlock | undefined
     {
         if (root instanceof EditableTextBlock) return root;
         for (const child of root.visualChildren)
         {
-            const found = HierarchyTreeBehavior.FindEditableTextBlock(child);
+            const found = HierarchyTreeBehavior.findEditableTextBlock(child);
             if (found !== undefined) return found;
         }
         return undefined;
