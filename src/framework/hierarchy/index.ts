@@ -11,3 +11,4 @@ export * from './hierarchy-contributor-definition.js';
 export * from './node-key.js';
 export * from './node-key-registry.js';
 export * from './hierarchy-drop.js';
+export * from './hierarchy-routing-dispatcher.js';

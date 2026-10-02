@@ -5,31 +5,20 @@ import { HierarchyContributorRegistry } from './hierarchy-contributor-registry.j
 import { NodeContribution, ProviderContribution, type HierarchyContribution, type IHierarchyContributor } from './hierarchy-contribution.js';
 import type { IHierarchyProvider, IRealizeContext } from './hierarchy-provider.js';
 import type { HierarchyActionContext } from './hierarchy-action-context.js';
-import { CommandRegistry } from '../shell/commands/command-registry.js';
-import type { ICommandDispatcher } from '../shell/commands/command-dispatcher.js';
+import { HierarchyContext } from './hierarchy-context.js';
+import { HierarchyRoutingDispatcher } from './hierarchy-routing-dispatcher.js';
+import type { ICommandContextSource, ICommandDispatcher } from '../shell/commands/command-dispatcher.js';
+import type { CommandDefinition } from '../shell/commands/command-definition.js';
 import { CommandMenuBuilder } from '../shell/commands/command-menu-builder.js';
 import type { CommandViewModel } from '../shell/commands/command-view-model.js';
 
-// Options wiring a Hierarchy's per-node BuildActions onto Milestone A's command
-// machinery. All optional — a Hierarchy built with none (the pre-T10 ctor shape)
-// keeps BuildActions returning an empty collection for every node.
+// Options wiring a Hierarchy's per-node BuildActions onto the command machinery.
+// All optional — a Hierarchy built with none keeps BuildActions returning an
+// empty collection for every node (DR1: context-driven resolution replaces the
+// old key→token map, so only the service provider used to build menu VMs remains).
 export interface HierarchyCommandOptions
 {
-    CommandRegistry?: CommandRegistry;
-    Dispatcher?: ICommandDispatcher;
-    CommandContexts?: ReadonlyMap<string, ServiceToken<unknown>>;
     Services?: IServiceProvider;
-}
-
-// The dispatcher BuildActions falls back to when no HierarchyCommandOptions.Dispatcher
-// was supplied — every resolved command is inert (CommandMenuBuilder.Build still
-// produces a CommandViewModel, just with an undefined Command).
-class NoOpCommandDispatcher implements ICommandDispatcher
-{
-    public Resolve(): undefined
-    {
-        return undefined;
-    }
 }
 
 class Segment
@@ -57,7 +46,7 @@ class ParentComposition
 // instance rather than minting a new one; the intern map lives on the Hierarchy
 // (internedByParent), not on the per-realize Segment, because the Segment is discarded
 // on Collapse while the interning identity must survive it.
-export class Hierarchy extends Observable implements IHierarchyItemOwner
+export class Hierarchy extends Observable implements IHierarchyItemOwner, ICommandContextSource
 {
     private static readonly RootCanonicalName = '/';
     private static readonly CanonicalSeparator = '/';
@@ -118,6 +107,20 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
     }
 
     public get Anchor(): HierarchyItem | undefined { return this._anchor; }
+
+    // ICommandContextSource — the live contexts this hierarchy activates, from the
+    // current selection (DR1/DR7: union of the selected nodes' interned type tokens).
+    public get CommandContexts(): readonly ServiceToken<unknown>[]
+    {
+        const seen = new Set<ServiceToken<unknown>>();
+        const out: ServiceToken<unknown>[] = [];
+        for (const item of this.Selection)
+        {
+            const token = HierarchyContext.For(item.Key);
+            if (!seen.has(token)) { seen.add(token); out.push(token); }
+        }
+        return out;
+    }
 
     public SelectSingle(item: HierarchyItem): void
     {
@@ -182,26 +185,39 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
         return current;
     }
 
-    // Builds a FRESH command-view-model tree for `item`'s menu, scoped by its
-    // Key: only CommandDefinitions tagged with the ServiceToken that
-    // commandOptions.CommandContexts maps `item.Key` to, ordered by Order.
-    // No tag for the key, or no CommandRegistry wired in, yields an empty menu.
-    // A per-call CommandMenuBuilder means nothing is retained between opens —
-    // disposal of the returned VMs is the caller's job (DR6).
+    // Builds a FRESH command-view-model tree for `item`'s menu (DR1/DR5/DR6):
+    // contexts come from the passed HierarchyActionContext's selection (or the anchor
+    // when the selection is empty); actions are the contributors' CommandDefinitions
+    // whose Context is in that set, ordered by Order; each dispatches through its
+    // supplying contributor via a per-open routing dispatcher. Per-call builder: the
+    // caller disposes the returned VMs (DR9).
     public BuildActions(item: HierarchyItem, context: HierarchyActionContext): ObservableCollection<CommandViewModel>
     {
         const result = new ObservableCollection<CommandViewModel>();
-        const token = this.commandOptions.CommandContexts?.get(item.Key);
-        const registry = this.commandOptions.CommandRegistry;
-        if (token === undefined || registry === undefined) return result;
-        const roots = registry.Commands.ToArray()
-            .filter(d => d.Context !== undefined && d.Context === token)
-            .sort((a, b) => a.Order - b.Order);
-        const dispatcher = this.commandOptions.Dispatcher ?? new NoOpCommandDispatcher();
+        const selection = context.Selection.length > 0 ? context.Selection : [item];
+        const contexts = new Set<ServiceToken<unknown>>(selection.map(i => HierarchyContext.For(i.Key)));
+
+        const matched = this.registry.ActionBindings()
+            .filter(b => b.Action.Context !== undefined && contexts.has(b.Action.Context))
+            .sort((a, b) => a.Action.Order - b.Action.Order);
+        if (matched.length === 0) return result;
+
+        const routes = new Map<string, ICommandDispatcher>();
+        for (const { Action, Dispatcher } of matched) Hierarchy.mapRoutes(Action, Dispatcher, routes);
+
+        const dispatcher = new HierarchyRoutingDispatcher(routes);
         const services = this.commandOptions.Services ?? new ServiceProvider();
         const builder = new CommandMenuBuilder(dispatcher, services, context);
-        for (const root of roots) result.Add(builder.Build(root));
+        for (const { Action } of matched) result.Add(builder.Build(Action));
         return result;
+    }
+
+    // Register an action id and every descendant command id to one contributor, so
+    // the routing dispatcher resolves lazily-realized submenu commands too (DR6).
+    private static mapRoutes(def: CommandDefinition, dispatcher: ICommandDispatcher, routes: Map<string, ICommandDispatcher>): void
+    {
+        routes.set(def.Id, dispatcher);
+        for (const child of def.Children) Hierarchy.mapRoutes(child, dispatcher, routes);
     }
 
     public OnItemDisposed(item: HierarchyItem): void

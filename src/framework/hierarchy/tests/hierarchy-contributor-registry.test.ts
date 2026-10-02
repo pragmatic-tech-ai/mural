@@ -94,3 +94,27 @@ test('ActionBindings pairs each definition action with its resolved contributor'
     assert.equal(bindings[0]!.Action.Id, 'project.rename');
     assert.equal(bindings[0]!.Dispatcher, proj);
 });
+
+test('RegisterInstance carries its optional actions into ActionBindings, dispatched through the instance', () =>
+{
+    const provider = new ServiceProvider();
+    const registry = new HierarchyContributorRegistry(provider);
+    const instance = new FakeContributor(['solution'], 0, 'INST');
+
+    const extra = new CommandDefinition(); extra.Id = 'instance.extra'; extra.Title = 'Extra';
+    registry.RegisterInstance(instance, [extra]);
+
+    const bindings = registry.ActionBindings();
+    assert.equal(bindings.length, 1);
+    assert.equal(bindings[0]!.Action.Id, 'instance.extra');
+    assert.equal(bindings[0]!.Dispatcher, instance);
+});
+
+test('RegisterInstance with no actions argument contributes none (back-compat default)', () =>
+{
+    const provider = new ServiceProvider();
+    const registry = new HierarchyContributorRegistry(provider);
+    registry.RegisterInstance(new FakeContributor(['solution'], 0, 'INST'));
+
+    assert.deepEqual(registry.ActionBindings(), []);
+});

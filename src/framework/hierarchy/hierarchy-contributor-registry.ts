@@ -93,12 +93,16 @@ export class HierarchyContributorRegistry extends ServiceBase
     // Register an already-constructed contributor instance (a per-session/per-solution one
     // that isn't a global ServiceToken). A synthetic definition carries its ParentKeys/Order
     // and is pre-seeded into the resolved cache, so For() returns the instance without token
-    // resolution. Returns a remover that unregisters it, mirroring Register.
-    public RegisterInstance(contributor: IHierarchyContributor): IDisposable
+    // resolution. `actions` (optional) is copied onto the synthetic definition so a
+    // runtime-registered, actions-only contributor still participates in ActionBindings() —
+    // the declarative Register(def) path and this instance path are otherwise asymmetric.
+    // Returns a remover that unregisters it, mirroring Register.
+    public RegisterInstance(contributor: IHierarchyContributor, actions: readonly CommandDefinition[] = []): IDisposable
     {
         const def = new HierarchyContributorDefinition();
         def.ParentKeys = [...contributor.ParentKeys];
         def.Order = contributor.Order;
+        def.Actions = actions;
         this.add(def);
         this.resolved.set(def, contributor);
         this.raiseChanged();
