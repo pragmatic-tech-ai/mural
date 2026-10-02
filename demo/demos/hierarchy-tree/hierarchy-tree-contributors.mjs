@@ -15,7 +15,7 @@ import { HierarchyTreeDemoKeys } from './hierarchy-tree-keys.mjs';
 export class NotebookSectionsContributor {
     static StarCommandId = 'hierarchy-tree-demo.section.star';
     static ClearStarsCommandId = 'hierarchy-tree-demo.section.clearStars';
-    static StarSuffix = ' ★'; // ' ★'
+    static StarSuffix = ' ★';
     static IdeasSection = 'ideas';
     static TodoSection = 'todo';
     ParentKeys = [HierarchyTreeDemoKeys.NotebookRoot];
@@ -36,13 +36,9 @@ export class NotebookSectionsContributor {
         const anchor = context.Anchor;
         switch (commandId) {
             case NotebookSectionsContributor.StarCommandId:
-                return new RelayCommand(() => {
-                    anchor.Caption = anchor.Caption + NotebookSectionsContributor.StarSuffix;
-                });
+                return new RelayCommand(() => { anchor.Caption = anchor.Caption + NotebookSectionsContributor.StarSuffix; });
             case NotebookSectionsContributor.ClearStarsCommandId:
-                return new RelayCommand(() => {
-                    anchor.Caption = anchor.Caption.split(NotebookSectionsContributor.StarSuffix).join('');
-                });
+                return new RelayCommand(() => { anchor.Caption = anchor.Caption.split(NotebookSectionsContributor.StarSuffix).join(''); });
             default:
                 return undefined;
         }
@@ -51,7 +47,7 @@ export class NotebookSectionsContributor {
 export class NotebookNotesContributor {
     static ToggleDoneCommandId = 'hierarchy-tree-demo.note.toggleDone';
     static LogCommandId = 'hierarchy-tree-demo.note.logToConsole';
-    static DonePrefix = '✓ '; // '✓ '
+    static DonePrefix = '✓ ';
     static LogLabel = '[hierarchy-tree demo] note:';
     static SectionIdSeparator = ':';
     static NotesBySection = new Map([
@@ -82,9 +78,7 @@ export class NotebookNotesContributor {
                         : NotebookNotesContributor.DonePrefix + anchor.Caption;
                 });
             case NotebookNotesContributor.LogCommandId:
-                return new RelayCommand(() => {
-                    console.log(NotebookNotesContributor.LogLabel, anchor.Caption);
-                });
+                return new RelayCommand(() => { console.log(NotebookNotesContributor.LogLabel, anchor.Caption); });
             default:
                 return undefined;
         }

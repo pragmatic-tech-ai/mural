@@ -21,7 +21,7 @@ export class NotebookSectionsContributor implements IHierarchyContributor
 {
     private static readonly StarCommandId = 'hierarchy-tree-demo.section.star';
     private static readonly ClearStarsCommandId = 'hierarchy-tree-demo.section.clearStars';
-    private static readonly StarSuffix = ' ★'; // ' ★'
+    private static readonly StarSuffix = ' ★';
     private static readonly IdeasSection = 'ideas';
     private static readonly TodoSection = 'todo';
 
@@ -50,15 +50,9 @@ export class NotebookSectionsContributor implements IHierarchyContributor
         switch (commandId)
         {
             case NotebookSectionsContributor.StarCommandId:
-                return new RelayCommand(() =>
-                {
-                    anchor.Caption = anchor.Caption + NotebookSectionsContributor.StarSuffix;
-                });
+                return new RelayCommand(() => { anchor.Caption = anchor.Caption + NotebookSectionsContributor.StarSuffix; });
             case NotebookSectionsContributor.ClearStarsCommandId:
-                return new RelayCommand(() =>
-                {
-                    anchor.Caption = anchor.Caption.split(NotebookSectionsContributor.StarSuffix).join('');
-                });
+                return new RelayCommand(() => { anchor.Caption = anchor.Caption.split(NotebookSectionsContributor.StarSuffix).join(''); });
             default:
                 return undefined;
         }
@@ -69,7 +63,7 @@ export class NotebookNotesContributor implements IHierarchyContributor
 {
     private static readonly ToggleDoneCommandId = 'hierarchy-tree-demo.note.toggleDone';
     private static readonly LogCommandId = 'hierarchy-tree-demo.note.logToConsole';
-    private static readonly DonePrefix = '✓ '; // '✓ '
+    private static readonly DonePrefix = '✓ ';
     private static readonly LogLabel = '[hierarchy-tree demo] note:';
     private static readonly SectionIdSeparator = ':';
 
@@ -103,17 +97,13 @@ export class NotebookNotesContributor implements IHierarchyContributor
         switch (commandId)
         {
             case NotebookNotesContributor.ToggleDoneCommandId:
-                return new RelayCommand(() =>
-                {
+                return new RelayCommand(() => {
                     anchor.Caption = anchor.Caption.startsWith(NotebookNotesContributor.DonePrefix)
                         ? anchor.Caption.slice(NotebookNotesContributor.DonePrefix.length)
                         : NotebookNotesContributor.DonePrefix + anchor.Caption;
                 });
             case NotebookNotesContributor.LogCommandId:
-                return new RelayCommand(() =>
-                {
-                    console.log(NotebookNotesContributor.LogLabel, anchor.Caption);
-                });
+                return new RelayCommand(() => { console.log(NotebookNotesContributor.LogLabel, anchor.Caption); });
             default:
                 return undefined;
         }
