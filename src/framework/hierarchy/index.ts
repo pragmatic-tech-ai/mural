@@ -12,3 +12,7 @@ export * from './node-key.js';
 export * from './node-key-registry.js';
 export * from './hierarchy-drop.js';
 export * from './hierarchy-routing-dispatcher.js';
+export * from './hierarchy-icon-converter.js';
+export * from './hierarchy-tree-behavior.js';
+export * from './hierarchy-context-menu.js';
+export * from './hierarchy-drop-behavior.js';

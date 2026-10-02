@@ -7,6 +7,7 @@ import type { IHierarchyProvider, IRealizeContext } from './hierarchy-provider.j
 import type { HierarchyActionContext } from './hierarchy-action-context.js';
 import { HierarchyContext } from './hierarchy-context.js';
 import { HierarchyRoutingDispatcher } from './hierarchy-routing-dispatcher.js';
+import type { HierarchyHost } from './hierarchy-host.js';
 import type { ICommandContextSource, ICommandDispatcher } from '../shell/commands/command-dispatcher.js';
 import type { CommandDefinition } from '../shell/commands/command-definition.js';
 import { CommandMenuBuilder } from '../shell/commands/command-menu-builder.js';
@@ -107,6 +108,22 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner, IComma
     }
 
     public get Anchor(): HierarchyItem | undefined { return this._anchor; }
+
+    // The constructor's host, widened to the full HierarchyHost surface
+    // (Delete/CanDrop/Drop on top of IHierarchyItemHost's Activate/
+    // CommitRename/OnItemRemoved — see hierarchy-item.ts's own comment:
+    // "Task 11 reconciles the full HierarchyHost to this shape"). Hierarchy
+    // itself only NEEDS the narrower IHierarchyItemHost surface, but every
+    // real host object (an app's solution-explorer view-model, typically)
+    // implements the full HierarchyHost — exposed here so markup can reach
+    // it via `$Hierarchy.Host`, the only way a `.Behaviors:` binding can
+    // wire HierarchyDropBehavior.Host from the same DataContext property
+    // (`$Hierarchy`) that supplies TreeView.ItemsSource (Task 12's default
+    // TreeView integration). The cast is unchecked — a host that only
+    // implements IHierarchyItemHost (no drop/delete support) would surface
+    // as a Host whose CanDrop/Drop/Delete are undefined; HierarchyDropBehavior
+    // already treats a missing Host as a no-op, so this degrades safely.
+    public get Host(): HierarchyHost | undefined { return this.host as HierarchyHost; }
 
     // ICommandContextSource — the live contexts this hierarchy activates, from the
     // current selection (DR1/DR7: union of the selected nodes' interned type tokens).

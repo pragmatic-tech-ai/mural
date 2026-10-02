@@ -369,6 +369,21 @@ export class Compiler
     // call. Guarded with try/finally so a throw mid-compile can't leave
     // it stuck above zero.
     private hierarchyCommandDepth = 0;
+    // Set only while emitBehaviorAttachments compiles ONE Behavior
+    // element's own attributes — holds the var of the Visual the
+    // behavior is being attached to (AddBehavior's receiver), not the
+    // behavior instance itself. A Behavior has no DataContext of its
+    // own (Behavior extends MuralBase directly, not Element — see
+    // behavior.ts), so a binding authored on a Behavior attribute
+    // (`SomeBehavior [ Hierarchy = $Hierarchy ]`) must resolve against
+    // the HOST Visual's DataContext instead: WPF's own Behaviors model
+    // (AssociatedObject) binds a behavior's configuration through the
+    // element it attaches to, never through the behavior itself. Read
+    // by compileAttribute's bindingTargetVar; reset to undefined before
+    // that same element's body (if any) compiles, so a hypothetical
+    // nested descendant inside a Behavior's own body still binds
+    // against ITS natural target, not leaking the host override.
+    private behaviorHostVar: string | undefined;
     // Variable name of the element that owns the active NameScope —
     // populated when an element carries `x:root` and consumed by every
     // x:name'd descendant to emit a Register() call. NameScopes are
@@ -3120,6 +3135,11 @@ export class Compiler
         {
             this.compileAttribute(v, elem.name, attr);
         }
+        // The host-var override (see behaviorHostVar) applies only to
+        // THIS element's own attributes — a Behavior never has a
+        // structured body in practice, but clear it defensively before
+        // any descendant compiles so a nested element can't inherit it.
+        this.behaviorHostVar = undefined;
 
         if (elem.body !== null && elem.body.kind === 'structured-body')
         {
@@ -3460,13 +3480,17 @@ export class Compiler
                 'positional attributes only apply to macros (not supported in v0)',
                 attr.span);
         }
+        // Inside a Behavior's own attribute list, bindings resolve
+        // against the HOST Visual (see behaviorHostVar's declaration),
+        // not this element's own var — a Behavior has no DataContext.
+        const bindingTargetVar = this.behaviorHostVar ?? targetVar;
         if (attr.path.parts.length === 2)
         {
             const ownerType = attr.path.parts[0]!;
             const propName  = attr.path.parts[1]!;
             const valueExpr = this.compileValue(attr.value, {
                 propertyName: propName,
-                targetExpr:   targetVar,
+                targetExpr:   bindingTargetVar,
             });
             this.emitSetDP(targetVar, ownerType, parentClass, propName, valueExpr, attr.span);
             return;
@@ -3475,7 +3499,7 @@ export class Compiler
         const hierarchyContextExpr = this.tryCompileHierarchyContextValue(parentClass, propName, attr);
         const valueExpr = hierarchyContextExpr ?? this.compileValue(attr.value, {
             propertyName: propName,
-            targetExpr:   targetVar,
+            targetExpr:   bindingTargetVar,
         });
         this.emitSetDP(targetVar, undefined, parentClass, propName, valueExpr, attr.span);
     }
@@ -3733,7 +3757,20 @@ export class Compiler
                     `Behaviors block only accepts Behavior element entries (got ${child.kind})`,
                     'span' in child ? child.span : body.span);
             }
-            const behaviorVar = this.compileElement(child);
+            // See behaviorHostVar's declaration — a Behavior's own
+            // attribute bindings resolve against the HOST Visual
+            // (parentVar), not the behavior instance.
+            const previousHost = this.behaviorHostVar;
+            this.behaviorHostVar = parentVar;
+            let behaviorVar: string;
+            try
+            {
+                behaviorVar = this.compileElement(child);
+            }
+            finally
+            {
+                this.behaviorHostVar = previousHost;
+            }
             this.line(`${parentVar}.AddBehavior(${behaviorVar});`);
         }
     }

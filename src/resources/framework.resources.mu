@@ -21,6 +21,7 @@ resources MuralFramework {
     import Diagrams from "../framework/diagram/diagram.template.mu.js"
     import Caps from "../framework/diagram/caps/caps.template.mu.js"
     import Formatting from "../framework/formatting/formatting.template.mu.js"
+    import Hierarchy from "../framework/hierarchy/hierarchy.template.mu.js"
     import ComboBoxes from "../framework/list/combo-box.template.mu.js"
     import ListBoxes from "../framework/list/list-box.template.mu.js"
     import TreeViews from "../framework/list/tree-view.template.mu.js"

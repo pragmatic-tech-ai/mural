@@ -191,12 +191,43 @@ export class HierarchyContextMenuBehavior extends Behavior
         // underlying field through a cast.
         const target = (visual as unknown as { _target: PresentationTarget | undefined })._target;
         if (target === undefined) return;
-        // No pointer position is available for a keyboard invocation; (0, 0)
-        // places the popup at the host's own origin rather than wherever the
-        // mouse last was. Precise row-anchored placement (opening flush
-        // against the focused tree row) is a presentation refinement left
-        // for whichever task wires the default TreeView template end-to-end.
-        menu.OpenAt(target, visual, 0, 0);
+        // Row-anchored placement (Task 12, now that the real tree is wired):
+        // open flush against the bottom-left of the currently-anchored row,
+        // same coordinate space (host-root-relative) the pointer path's
+        // `args.HostX`/`args.HostY` already use — see rowOrigin's own
+        // comment. No realized anchor row (nothing focused, or a Visual
+        // that isn't an ItemsControl) falls back to the host's own origin.
+        const anchor = this.Hierarchy?.Anchor;
+        const origin = anchor !== undefined
+            ? HierarchyContextMenuBehavior.rowOrigin(visual, anchor)
+            : undefined;
+        const { x, y } = origin ?? { x: 0, y: 0 };
+        menu.OpenAt(target, visual, x, y);
         args.Handled = true;
+    }
+
+    // Host-root-relative (x, y) of the anchor row's bottom-left corner —
+    // the SAME coordinate space OpenAt's pointer-driven callers already
+    // pass (context-menu.ts's OnPreviewPointerDown patch forwards
+    // `args.HostX`/`args.HostY` as-is), built the same way
+    // HierarchyDropBehavior.topOffsetOf walks a realized row's offset: sum
+    // each ancestor's ArrangedRect as we climb GetVisualParent() to the
+    // root. Undefined when `visual` isn't an ItemsControl (no Generator) or
+    // the anchor item has no realized container (collapsed/off-screen).
+    private static rowOrigin(visual: Visual, item: unknown): { x: number; y: number } | undefined
+    {
+        const generator = (visual as unknown as { Generator?: { ContainerFromItem(i: unknown): Visual | undefined } }).Generator;
+        const container = generator?.ContainerFromItem(item);
+        if (container === undefined) return undefined;
+        let x = 0;
+        let y = 0;
+        let cur: Visual | undefined = container;
+        while (cur !== undefined)
+        {
+            x += cur.ArrangedRect.X;
+            y += cur.ArrangedRect.Y;
+            cur = cur.GetVisualParent();
+        }
+        return { x, y: y + container.ArrangedRect.Height };
     }
 }
