@@ -198,10 +198,43 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
 
     private reRealizeAll(): void
     {
-        // T7 replaces this with a non-destructive diff. T4 stub: re-realize root.
-        if (this.root === undefined) return;
-        this.Collapse(this.root);
-        this.Realize(this.root);
+        for (const parent of [...this.composition.keys()]) this.reRealize(parent);
+    }
+
+    private reRealize(parent: HierarchyItem): void
+    {
+        const comp = this.composition.get(parent);
+        if (comp === undefined) return;
+        const desired = this.registry.For(parent.Key);
+        const desiredSet = new Set(desired);
+        for (const segment of [...comp.segments])
+        {
+            if (segment.contributor !== undefined && !desiredSet.has(segment.contributor))
+            {
+                this.disposeSegment(parent, comp, segment);
+            }
+        }
+        const present = new Set(comp.segments.map(s => s.contributor));
+        for (const contributor of desired)
+        {
+            if (present.has(contributor)) continue;
+            const segment = new Segment(contributor.Order);
+            segment.contributor = contributor;
+            this.insertSegment(comp, segment);
+            this.applyContribution(parent, segment, contributor.Contribute(parent));
+        }
+    }
+
+    private disposeSegment(parent: HierarchyItem, comp: ParentComposition, segment: Segment): void
+    {
+        for (const child of [...segment.items])
+        {
+            this.removeFromSegment(parent, segment, child);
+            this.ownerProvider.delete(child);
+        }
+        segment.providerHandle?.dispose();
+        const at = comp.segments.indexOf(segment);
+        if (at >= 0) comp.segments.splice(at, 1);
     }
 
     private internedFor(parent: HierarchyItem): Map<unknown, HierarchyItem>
