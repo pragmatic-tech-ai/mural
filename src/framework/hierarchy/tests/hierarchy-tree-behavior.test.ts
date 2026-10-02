@@ -197,6 +197,31 @@ describe('HierarchyTreeBehavior', () => {
         assert.equal(a.IsEditing, false);
     });
 
+    // Fix round 2 — Critical: OnDetached must DISPOSE every still-live row's
+    // teardown, not just drop the Map. The round-1 fix moved per-row rename
+    // subscriptions into `_rowTeardown`, keyed by container and disposed on
+    // that row's ClearContainerForItemOverride — but OnDetached originally
+    // only called `_rowTeardown.clear()`, which discards the Map's
+    // IDisposable values WITHOUT calling .dispose() on them. Detaching while
+    // a row is still realized (the ordinary case — e.g. the test above,
+    // which detaches with root row `a` still realized) leaked that row's
+    // Committed/Cancelled subscriptions.
+    test("OnDetached releases a still-realized row's rename subscriptions too", () => {
+        const { hierarchy } = buildHierarchy();
+        const a = hierarchy.NewItem('a', { Caption: 'Alpha' });
+        hierarchy.Roots.Add(a);
+        const { tree, behavior } = buildTree(hierarchy);
+
+        const editable = captionOf(tree.RootItems[0]!.Header);
+        assert.equal(editable.Committed.subscriberCount, 1, 'sanity: the row is wired before detach');
+        assert.equal(editable.Cancelled.subscriberCount, 1, 'sanity: the row is wired before detach');
+
+        tree.RemoveBehavior(behavior);
+
+        assert.equal(editable.Committed.subscriberCount, 0, 'OnDetached released the Committed subscription');
+        assert.equal(editable.Cancelled.subscriberCount, 0, 'OnDetached released the Cancelled subscription');
+    });
+
     // Fix round 1 — Critical: collapsing a node must release that row's
     // rename subscriptions immediately (not just on OnDetached). Collapsing
     // removes the child HierarchyItem from the bound `Children`

@@ -99,6 +99,17 @@ export class HierarchyTreeBehavior extends Behavior
     public override OnDetached(_visual: Visual): void
     {
         this._subscriptions.dispose();
+        // Dispose every STILL-LIVE row's teardown — clearRow already removed
+        // (and disposed) any row whose container cleared before detach, so
+        // this only touches rows that were still realized at detach time.
+        // Map.clear() alone would drop these refs without running their
+        // cleanup, leaking the still-realized rows' rename subscriptions
+        // (and, for nested rows, their own ContainerPrepared/ContainerCleared
+        // registrations) — Fix round 2, see the task report.
+        for (const teardown of this._rowTeardown.values())
+        {
+            teardown.dispose();
+        }
         this._rowTeardown.clear();
     }
 
