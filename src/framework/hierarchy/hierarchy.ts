@@ -44,6 +44,7 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
     private root: HierarchyItem | undefined;
     private _anchor: HierarchyItem | undefined;
     private readonly contributorsSub: IDisposable;
+    private disposed = false;
 
     constructor(
         private readonly registry: HierarchyContributorRegistry,
@@ -215,10 +216,14 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
 
     public dispose(): void
     {
+        if (this.disposed) return;
+        this.disposed = true;
         this.contributorsSub.dispose();
         for (const comp of this.composition.values()) comp.teardown.dispose();
         this.composition.clear();
         this.internedByParent.clear();
+        this.ownerProvider.clear();
+        this.Selection.Clear();
         this.Roots.Clear();
     }
 
