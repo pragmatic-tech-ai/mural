@@ -86,4 +86,22 @@ describe('Hierarchy { } block — Contributor fan-out', () =>
         assert.match(js, /set_property_value\(CommandDefinition\.ContextKey, DiagramEditingContext\)/);
         assert.doesNotMatch(js, /HierarchyContext\.For/);
     });
+
+    test('a non-CommandDefinition entry in a Contributor body throws', () =>
+    {
+        assert.throws(
+            () => emitted(`
+                import SomeContributor from "./some-contributor.mjs"
+
+                shell module ExplorerModule {
+                    Hierarchy {
+                        Contributor [ Under = "x", Use = SomeContributor, Order = 0 ] {
+                            NotACommand [ ]
+                        }
+                    }
+                }
+            `),
+            /accepts only CommandDefinition entries/,
+        );
+    });
 });
