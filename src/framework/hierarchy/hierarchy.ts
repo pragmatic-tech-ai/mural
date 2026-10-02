@@ -32,12 +32,17 @@ class ParentComposition
 // on Collapse while the interning identity must survive it.
 export class Hierarchy extends Observable implements IHierarchyItemOwner
 {
+    private static readonly RootCanonicalName = '/';
+    private static readonly CanonicalSeparator = '/';
+
     public readonly Roots = new ObservableCollection<HierarchyItem>();
+    public readonly Selection = new ObservableCollection<HierarchyItem>();
     private readonly allocator = new ItemIdAllocator();
     private readonly composition = new Map<HierarchyItem, ParentComposition>();
     private readonly internedByParent = new Map<HierarchyItem, Map<unknown, HierarchyItem>>();
     private readonly ownerProvider = new Map<HierarchyItem, IHierarchyProvider>();
     private root: HierarchyItem | undefined;
+    private _anchor: HierarchyItem | undefined;
     private readonly contributorsSub: IDisposable;
 
     constructor(
@@ -80,6 +85,64 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
         const base = item.CanonicalSegment ?? item.Key;
         const owner = this.ownerProvider.get(item);
         return owner !== undefined ? owner.ProviderId + ':' + base : base;
+    }
+
+    public get Anchor(): HierarchyItem | undefined { return this._anchor; }
+
+    public SelectSingle(item: HierarchyItem): void
+    {
+        this.Selection.Clear();
+        this.Selection.Add(item);
+        this._anchor = item;
+    }
+
+    public Toggle(item: HierarchyItem): void
+    {
+        const at = this.Selection.IndexOf(item);
+        if (at >= 0) { this.Selection.RemoveAt(at); }
+        else { this.Selection.Add(item); this._anchor = item; }
+    }
+
+    public Deselect(item: HierarchyItem): void
+    {
+        const at = this.Selection.IndexOf(item);
+        if (at >= 0) this.Selection.RemoveAt(at);
+        if (this._anchor === item) this._anchor = undefined;
+    }
+
+    public ClearSelection(): void
+    {
+        this.Selection.Clear();
+        this._anchor = undefined;
+    }
+
+    public SyncSelection(items: readonly HierarchyItem[], anchor: HierarchyItem | undefined): void
+    {
+        this.Selection.Clear();
+        for (const i of items) this.Selection.Add(i);
+        this._anchor = anchor;
+    }
+
+    // Walks canonical-name segments from the root, lazily expanding/realizing each
+    // hop — including across a provider boundary (segmentOf prefixes ProviderId
+    // for provider-owned items) — so a collapsed subtree is re-materialized on
+    // the way down instead of requiring everything to already be realized.
+    public Reveal(canonicalName: string): HierarchyItem | undefined
+    {
+        if (this.root === undefined) return undefined;
+        if (canonicalName === Hierarchy.RootCanonicalName) return this.root;
+        const segments = canonicalName.replace(/^\//, '').split(Hierarchy.CanonicalSeparator);
+        let current: HierarchyItem = this.root;
+        for (const seg of segments)
+        {
+            if (!current.IsExpanded && current !== this.root) current.OnExpand();
+            else if (current === this.root && !this.composition.has(current)) this.Realize(current);
+            const children = current === this.root ? this.Roots.ToArray() : current.Children.ToArray();
+            const next = children.find(c => this.segmentOf(c) === seg);
+            if (next === undefined) return undefined;
+            current = next;
+        }
+        return current;
     }
 
     public BuildActions(_item: HierarchyItem, _context: unknown): ObservableCollection<unknown>
@@ -287,6 +350,7 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
         const target = parent === this.root ? this.Roots : parent.Children;
         const flatAt = target.IndexOf(child);
         if (flatAt >= 0) target.RemoveAt(flatAt);
+        this.Deselect(child);
     }
 }
 
