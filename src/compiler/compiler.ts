@@ -2281,24 +2281,13 @@ export class Compiler
         this.ensureImport('HierarchicalDataTemplate');
         const tmplVar = this.fresh('tmpl');
 
-        if (triggers.length === 0 && eventTriggers.length === 0)
-        {
-            // Trigger-free path — preserve the historical 5-arg construction
-            // shape (keeps existing snapshot output stable).
-            this.line(`const ${tmplVar} = new HierarchicalDataTemplate((_data) => {`);
-            this.indent += 4;
-            const rootVar = this.compileElement(rootElement);
-            this.line(`return ${rootVar};`);
-            this.indent -= 4;
-            this.line(`}, ${childSel}, undefined, undefined, ${dataType});`);
-            return tmplVar;
-        }
-
-        // Trigger-bearing path — mirrors compileDataTemplateForm: open a fresh
-        // template-local name scope, walk the factory inside an IIFE, then
-        // compile the `when()` / `on` triggers (which reference x:named parts
-        // by targetName, resolved at Apply time) and forward them into the
-        // HierarchicalDataTemplate's trailing trigger slots.
+        // Open a fresh template-local name scope for the factory body —
+        // mirrors compileDataTemplateForm's unconditional setup so `x:name`
+        // inside a hierarchical row template resolves against this
+        // per-Apply NameScope (populated at runtime by DataTemplate.Apply)
+        // instead of requiring an enclosing `x:root`. Done BEFORE the
+        // triggers.length branch below (not only in the trigger-bearing
+        // path) so a trigger-free row template can use x:name too.
         const savedTNS         = this.templateNameScope;
         const savedTNO         = this.templateNameOwners;
         const savedTNV         = this.templateNameVars;
@@ -2311,6 +2300,33 @@ export class Compiler
         this.nameScopeOwnerVar = undefined;
         this.collectTemplateXNames(rootElement);
 
+        if (triggers.length === 0 && eventTriggers.length === 0)
+        {
+            // Trigger-free path — preserve the historical 5-arg construction
+            // shape (keeps existing snapshot output stable). `emitPreallocatedXNameLets`
+            // is a no-op when the row carries no x:name, so this stays a pure
+            // addition for templates that don't use one.
+            this.line(`const ${tmplVar} = new HierarchicalDataTemplate((_data) => {`);
+            this.indent += 4;
+            this.emitPreallocatedXNameLets();
+            const rootVar = this.compileElement(rootElement);
+            this.line(`return ${rootVar};`);
+            this.indent -= 4;
+            this.line(`}, ${childSel}, undefined, undefined, ${dataType});`);
+
+            this.templateNameScope  = savedTNS;
+            this.templateNameOwners = savedTNO;
+            this.templateNameVars   = savedTNV;
+            this.inTemplateBody     = savedInTemplate;
+            this.nameScopeOwnerVar  = savedScopeOwner;
+            return tmplVar;
+        }
+
+        // Trigger-bearing path — mirrors compileDataTemplateForm: walk the
+        // factory inside an IIFE, then compile the `when()` / `on` triggers
+        // (which reference x:named parts by targetName, resolved at Apply
+        // time) and forward them into the HierarchicalDataTemplate's
+        // trailing trigger slots.
         this.line(`const ${tmplVar} = (() => {`);
         this.indent += 4;
         this.line(`const _factory = (_data) => {`);

@@ -71,12 +71,22 @@ export class EditableTextBlock extends Single implements IDisposable
 
         this._subscriptions.add(this.PropertyChanged(EditableTextBlock.TextKey).subscribe(({ newValue }) =>
         {
-            this._display.Text = newValue as string;
+            // A binding whose source path isn't reachable yet (e.g. applied
+            // before the host sets DataContext — the normal
+            // Apply()-then-DataContext ordering every container generator
+            // uses) pushes `undefined` here even though Text is declared
+            // `string`. Fall back to the DP's own default rather than
+            // propagating it — TextBlock.Text tolerates undefined, but
+            // nothing downstream should have to.
+            this._display.Text = (newValue as string | undefined) ?? EditableTextBlock.TextKey.descriptor.DefaultValue;
         }));
         this._subscriptions.add(this.PropertyChanged(EditableTextBlock.EditingTextKey).subscribe(({ newValue }) =>
         {
             if (this._suppressEditingTextSync) return;
-            this._editor.Text = newValue as string;
+            // Same guard as above — TextBox.Text actively computes
+            // `value.length` in its setter and throws on undefined, so an
+            // unresolved initial binding push must not reach it.
+            this._editor.Text = (newValue as string | undefined) ?? EditableTextBlock.EditingTextKey.descriptor.DefaultValue;
         }));
         this._subscriptions.add(this._editor.PropertyChanged(TextBox.TextKey).subscribe(({ newValue }) =>
         {
