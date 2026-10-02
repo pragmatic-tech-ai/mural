@@ -8,7 +8,7 @@ import type { HierarchyActionContext } from './hierarchy-action-context.js';
 import { CommandRegistry } from '../shell/commands/command-registry.js';
 import type { ICommandDispatcher } from '../shell/commands/command-dispatcher.js';
 import { CommandMenuBuilder } from '../shell/commands/command-menu-builder.js';
-import { CommandViewModel } from '../shell/commands/command-view-model.js';
+import type { CommandViewModel } from '../shell/commands/command-view-model.js';
 
 // Options wiring a Hierarchy's per-node BuildActions onto Milestone A's command
 // machinery. All optional — a Hierarchy built with none (the pre-T10 ctor shape)
