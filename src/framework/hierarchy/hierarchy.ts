@@ -1,0 +1,204 @@
+import { Observable, ObservableCollection, CompositeDisposable, type IDisposable } from '../../runtime/index.js';
+import { ItemIdAllocator } from './item-id.js';
+import { HierarchyItem, type HierarchyItemInit, type IHierarchyItemOwner, type IHierarchyItemHost } from './hierarchy-item.js';
+import { HierarchyContributorRegistry } from './hierarchy-contributor-registry.js';
+import { NodeContribution, ProviderContribution, type HierarchyContribution, type IHierarchyContributor } from './hierarchy-contribution.js';
+
+class Segment
+{
+    public readonly items: HierarchyItem[] = [];
+    public contributor: IHierarchyContributor | undefined;
+    public provider: unknown;            // IHierarchyProvider — typed in T5
+    public providerHandle: IDisposable | undefined;
+
+    constructor(public readonly Order: number)
+    {
+    }
+}
+
+class ParentComposition
+{
+    public readonly segments: Segment[] = [];
+    public readonly teardown = new CompositeDisposable();
+}
+
+// The composition engine behind a realized tree: mints HierarchyItem ids, asks the
+// HierarchyContributorRegistry what belongs under each realized parent (ordered by
+// Order), and projects the root's children onto Roots. Keyed (NodeContribution) nodes
+// are interned per (parent, ExtObject) so a Collapse→Realize reuses the surviving
+// instance rather than minting a new one; the intern map lives on the Hierarchy
+// (internedByParent), not on the per-realize Segment, because the Segment is discarded
+// on Collapse while the interning identity must survive it.
+export class Hierarchy extends Observable implements IHierarchyItemOwner
+{
+    public readonly Roots = new ObservableCollection<HierarchyItem>();
+    private readonly allocator = new ItemIdAllocator();
+    private readonly composition = new Map<HierarchyItem, ParentComposition>();
+    private readonly internedByParent = new Map<HierarchyItem, Map<unknown, HierarchyItem>>();
+    private root: HierarchyItem | undefined;
+    private readonly contributorsSub: IDisposable;
+
+    constructor(
+        private readonly registry: HierarchyContributorRegistry,
+        private readonly host: IHierarchyItemHost,
+    )
+    {
+        super();
+        this.contributorsSub = this.registry.PropertyChanged('Contributors').subscribe(() => this.reRealizeAll());
+    }
+
+    public SeedRoot(key: string, init: HierarchyItemInit = {}): HierarchyItem
+    {
+        const root = this.NewItem(key, { ...init, IsExpandable: true });
+        this.root = root;
+        this.Realize(root);
+        return root;
+    }
+
+    public NewItem(key: string, init: HierarchyItemInit = {}): HierarchyItem
+    {
+        return new HierarchyItem(this.allocator.Mint(), key, this, this.host, init);
+    }
+
+    public CanonicalNameOf(_item: HierarchyItem): string
+    {
+        return '/';   // T6/T8 implement owner-aware canonical names
+    }
+
+    public BuildActions(_item: HierarchyItem, _context: unknown): ObservableCollection<unknown>
+    {
+        return new ObservableCollection<unknown>();   // T10 implements command-driven actions
+    }
+
+    public OnItemDisposed(item: HierarchyItem): void
+    {
+        this.composition.delete(item);
+        this.internedByParent.delete(item);
+    }
+
+    public Realize(item: HierarchyItem): void
+    {
+        if (this.composition.has(item)) return;
+        const comp = new ParentComposition();
+        this.composition.set(item, comp);
+        for (const contributor of this.registry.For(item.Key))
+        {
+            const segment = new Segment(contributor.Order);
+            segment.contributor = contributor;
+            this.insertSegment(comp, segment);
+            this.applyContribution(item, segment, contributor.Contribute(item));
+        }
+    }
+
+    public Collapse(item: HierarchyItem): void
+    {
+        const comp = this.composition.get(item);
+        if (comp === undefined) return;
+        for (const segment of [...comp.segments])
+        {
+            for (const child of [...segment.items]) this.removeFromSegment(item, segment, child);
+        }
+        comp.teardown.dispose();
+        this.composition.delete(item);
+    }
+
+    public ChildrenOf(item: HierarchyItem): readonly HierarchyItem[]
+    {
+        return item === this.root ? this.Roots.ToArray() : item.Children.ToArray();
+    }
+
+    public dispose(): void
+    {
+        this.contributorsSub.dispose();
+        for (const comp of this.composition.values()) comp.teardown.dispose();
+        this.composition.clear();
+        this.internedByParent.clear();
+        this.Roots.Clear();
+    }
+
+    // --- internals shared by T5–T7 ---
+
+    protected applyContribution(parent: HierarchyItem, segment: Segment, contribution: HierarchyContribution): void
+    {
+        if (contribution instanceof NodeContribution)
+        {
+            const interned = this.internedFor(parent);
+            for (const node of contribution.Nodes)
+            {
+                const existing = interned.get(node.ExtObject);
+                const child = existing ?? this.NewItem(node.Key, node);
+                child.ExtObject = node.ExtObject;
+                child.Parent = parent;
+                interned.set(node.ExtObject, child);
+                this.insertIntoSegment(parent, segment, child);
+            }
+        }
+        else if (contribution instanceof ProviderContribution)
+        {
+            this.attachProvider(parent, segment, contribution);   // T5
+        }
+    }
+
+    protected attachProvider(_parent: HierarchyItem, _segment: Segment, _contribution: ProviderContribution): void
+    {
+        // T5 implements provider attachment.
+    }
+
+    private reRealizeAll(): void
+    {
+        // T7 replaces this with a non-destructive diff. T4 stub: re-realize root.
+        if (this.root === undefined) return;
+        this.Collapse(this.root);
+        this.Realize(this.root);
+    }
+
+    private internedFor(parent: HierarchyItem): Map<unknown, HierarchyItem>
+    {
+        let m = this.internedByParent.get(parent);
+        if (m === undefined) { m = new Map(); this.internedByParent.set(parent, m); }
+        return m;
+    }
+
+    private insertSegment(comp: ParentComposition, segment: Segment): void
+    {
+        let i = 0;
+        while (i < comp.segments.length)
+        {
+            const current = comp.segments[i];
+            if (current === undefined || current.Order > segment.Order) break;
+            i += 1;
+        }
+        comp.segments.splice(i, 0, segment);
+    }
+
+    private flatBaseOf(comp: ParentComposition, segment: Segment): number
+    {
+        let base = 0;
+        for (const s of comp.segments)
+        {
+            if (s === segment) break;
+            base += s.items.length;
+        }
+        return base;
+    }
+
+    protected insertIntoSegment(parent: HierarchyItem, segment: Segment, child: HierarchyItem): void
+    {
+        const comp = this.composition.get(parent);
+        if (comp === undefined || segment.items.includes(child)) return;
+        const within = segment.items.length;
+        segment.items.push(child);
+        const target = parent === this.root ? this.Roots : parent.Children;
+        target.Insert(this.flatBaseOf(comp, segment) + within, child);
+    }
+
+    protected removeFromSegment(parent: HierarchyItem, segment: Segment, child: HierarchyItem): void
+    {
+        const at = segment.items.indexOf(child);
+        if (at < 0) return;
+        segment.items.splice(at, 1);
+        const target = parent === this.root ? this.Roots : parent.Children;
+        const flatAt = target.IndexOf(child);
+        if (flatAt >= 0) target.RemoveAt(flatAt);
+    }
+}
