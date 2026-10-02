@@ -151,12 +151,12 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
         comp.teardown.add(handle);
     }
 
-    public insertIntoSegmentPublic(parent: HierarchyItem, segment: Segment, child: HierarchyItem): void
+    public InsertIntoSegmentPublic(parent: HierarchyItem, segment: Segment, child: HierarchyItem): void
     {
         this.insertIntoSegment(parent, segment, child);
     }
 
-    public removeFromSegmentPublic(parent: HierarchyItem, segment: Segment, child: HierarchyItem): void
+    public RemoveFromSegmentPublic(parent: HierarchyItem, segment: Segment, child: HierarchyItem): void
     {
         this.removeFromSegment(parent, segment, child);
     }
@@ -221,8 +221,8 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
 }
 
 // The Order-scoped child sink handed to an IHierarchyProvider.Realize. InsertChild /
-// RemoveChild route through the owning Hierarchy's insertIntoSegmentPublic /
-// removeFromSegmentPublic shims so a child — even one arriving asynchronously, long
+// RemoveChild route through the owning Hierarchy's InsertIntoSegmentPublic /
+// RemoveFromSegmentPublic shims so a child — even one arriving asynchronously, long
 // after Realize returned — lands inside this provider's own Segment (flatBaseOf(segment)
 // + within), not appended after whatever segment currently sits last.
 class RealizeContext implements IRealizeContext
@@ -243,11 +243,11 @@ class RealizeContext implements IRealizeContext
     public InsertChild(child: HierarchyItem): void
     {
         child.Parent = this.parent;
-        this.hierarchy.insertIntoSegmentPublic(this.parent, this.segment, child);
+        this.hierarchy.InsertIntoSegmentPublic(this.parent, this.segment, child);
     }
 
     public RemoveChild(child: HierarchyItem): void
     {
-        this.hierarchy.removeFromSegmentPublic(this.parent, this.segment, child);
+        this.hierarchy.RemoveFromSegmentPublic(this.parent, this.segment, child);
     }
 }
