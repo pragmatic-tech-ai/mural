@@ -3,12 +3,13 @@ import { ItemIdAllocator } from './item-id.js';
 import { HierarchyItem, type HierarchyItemInit, type IHierarchyItemOwner, type IHierarchyItemHost } from './hierarchy-item.js';
 import { HierarchyContributorRegistry } from './hierarchy-contributor-registry.js';
 import { NodeContribution, ProviderContribution, type HierarchyContribution, type IHierarchyContributor } from './hierarchy-contribution.js';
+import type { IHierarchyProvider, IRealizeContext } from './hierarchy-provider.js';
 
 class Segment
 {
     public readonly items: HierarchyItem[] = [];
     public contributor: IHierarchyContributor | undefined;
-    public provider: unknown;            // IHierarchyProvider — typed in T5
+    public provider: IHierarchyProvider | undefined;
     public providerHandle: IDisposable | undefined;
 
     constructor(public readonly Order: number)
@@ -139,9 +140,25 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
         }
     }
 
-    protected attachProvider(_parent: HierarchyItem, _segment: Segment, _contribution: ProviderContribution): void
+    protected attachProvider(parent: HierarchyItem, segment: Segment, contribution: ProviderContribution): void
     {
-        // T5 implements provider attachment.
+        const comp = this.composition.get(parent);
+        if (comp === undefined) return;
+        segment.provider = contribution.Provider;
+        const ctx = new RealizeContext(this, parent, segment);
+        const handle = contribution.Provider.Realize(parent, ctx);
+        segment.providerHandle = handle;
+        comp.teardown.add(handle);
+    }
+
+    public insertIntoSegmentPublic(parent: HierarchyItem, segment: Segment, child: HierarchyItem): void
+    {
+        this.insertIntoSegment(parent, segment, child);
+    }
+
+    public removeFromSegmentPublic(parent: HierarchyItem, segment: Segment, child: HierarchyItem): void
+    {
+        this.removeFromSegment(parent, segment, child);
     }
 
     private reRealizeAll(): void
@@ -200,5 +217,37 @@ export class Hierarchy extends Observable implements IHierarchyItemOwner
         const target = parent === this.root ? this.Roots : parent.Children;
         const flatAt = target.IndexOf(child);
         if (flatAt >= 0) target.RemoveAt(flatAt);
+    }
+}
+
+// The Order-scoped child sink handed to an IHierarchyProvider.Realize. InsertChild /
+// RemoveChild route through the owning Hierarchy's insertIntoSegmentPublic /
+// removeFromSegmentPublic shims so a child — even one arriving asynchronously, long
+// after Realize returned — lands inside this provider's own Segment (flatBaseOf(segment)
+// + within), not appended after whatever segment currently sits last.
+class RealizeContext implements IRealizeContext
+{
+    constructor(
+        private readonly hierarchy: Hierarchy,
+        private readonly parent: HierarchyItem,
+        private readonly segment: Segment,
+    )
+    {
+    }
+
+    public NewItem(key: string, init?: HierarchyItemInit): HierarchyItem
+    {
+        return this.hierarchy.NewItem(key, init);
+    }
+
+    public InsertChild(child: HierarchyItem): void
+    {
+        child.Parent = this.parent;
+        this.hierarchy.insertIntoSegmentPublic(this.parent, this.segment, child);
+    }
+
+    public RemoveChild(child: HierarchyItem): void
+    {
+        this.hierarchy.removeFromSegmentPublic(this.parent, this.segment, child);
     }
 }
