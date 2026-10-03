@@ -1,4 +1,4 @@
-import { Disposable, isCheckableCommand, type IServiceProvider, type ICommand } from '../../../runtime/index.js';
+import { Disposable, isCheckableCommand, ServiceProvider, type IServiceProvider, type ICommand } from '../../../runtime/index.js';
 import type { ICommandDispatcher } from './command-dispatcher.js';
 import type { CommandContext } from './command-context.js';
 import type { ICommandContributor } from './command-contributor.js';
@@ -66,7 +66,14 @@ export class CommandMenuBuilder implements ICommandChildRealizer
         const token = parent.Definition.ChildrenContributor;
         if (token !== undefined)
         {
-            const contributor = this.provider.getRequired(token) as ICommandContributor;
+            // Same raw-ctor-vs-Key normalization as
+            // HierarchyContributorRegistry.resolve — the Hierarchy DSL lowers
+            // ChildrenContributor to the raw constructor, which a Keyed
+            // contributor class does NOT register under (it registers under its
+            // static Key). tokenFor is idempotent when `token` is already a
+            // ServiceKey, so this is safe either way.
+            const normalized = ServiceProvider.tokenFor(token as unknown as Function);
+            const contributor = this.provider.getRequired(normalized) as ICommandContributor;
             for (const childDef of contributor.Contribute(parent.Definition, this.context))
             {
                 parent.Children.Add(this.Build(childDef));
