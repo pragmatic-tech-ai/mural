@@ -1,4 +1,4 @@
-import { ApplicationService, Disposable, ServiceBase, ServiceKey, type IDisposable, type IServiceProvider } from '../../runtime/index.js';
+import { ApplicationService, Disposable, ServiceBase, ServiceKey, ServiceProvider, type IDisposable, type IServiceProvider } from '../../runtime/index.js';
 import { ShellModule } from '../shell/module.js';
 import { HierarchyContributorDefinition } from './hierarchy-contributor-definition.js';
 import type { IHierarchyContributor } from './hierarchy-contribution.js';
@@ -151,7 +151,13 @@ export class HierarchyContributorRegistry extends ServiceBase
         let hit = this.resolved.get(def);
         if (hit === undefined)
         {
-            hit = this.Provider.getRequired(def.Contributor!) as IHierarchyContributor;
+            // The Hierarchy DSL lowers `Use=`/`ChildrenContributor=` to the raw
+            // constructor, but a `.services:` entry with a static `Key` registers
+            // under that Key (ServiceProvider.tokenFor). Normalize through the
+            // same tokenFor here so a Keyed contributor class still resolves —
+            // tokenFor is idempotent when def.Contributor is already a token.
+            const token = ServiceProvider.tokenFor(def.Contributor! as unknown as Function);
+            hit = this.Provider.getRequired(token) as IHierarchyContributor;
             this.resolved.set(def, hit);
         }
         return hit;

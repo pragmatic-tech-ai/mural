@@ -118,3 +118,36 @@ test('RegisterInstance with no actions argument contributes none (back-compat de
 
     assert.deepEqual(registry.ActionBindings(), []);
 });
+
+// Regression: the Hierarchy DSL (`Contributor = SomeClass`) lowers to the RAW
+// constructor, but a class with a static `Key` registers under that Key (the
+// same convention `.services:` uses — ServiceProvider.tokenFor(ctor)). Before
+// the fix, resolve() called getRequired(def.Contributor) with no normalization,
+// so a Keyed contributor class never resolved ("no service registered").
+class KeyedContributor implements IHierarchyContributor
+{
+    public static readonly Key = new ServiceKey<KeyedContributor>('KeyedContributor');
+    public readonly ParentKeys: readonly string[] = ['solution'];
+    public readonly Order: number = 0;
+    public Contribute(_p: HierarchyItem): NodeContribution { return new NodeContribution([]); }
+    public Resolve(_id: string, _ctx: CommandContext) { return undefined; }
+}
+
+test('For() resolves a Keyed contributor class whose HierarchyContributorDefinition.Contributor holds the RAW ctor (DSL emission)', () =>
+{
+    const provider = new ServiceProvider();
+    const instance = new KeyedContributor();
+    // Mirrors how `.services:` registers a Keyed class: under tokenFor(ctor),
+    // i.e. under KeyedContributor.Key, never under the raw ctor itself.
+    provider.addInstance(instance);
+
+    const registry = new HierarchyContributorRegistry(provider);
+    const def = new HierarchyContributorDefinition();
+    def.ParentKeys = ['solution'];
+    // The DSL's emission: the raw constructor, NOT KeyedContributor.Key.
+    def.Contributor = KeyedContributor;
+    registry.Register(def);
+
+    assert.doesNotThrow(() => registry.For('solution'));
+    assert.deepEqual(registry.For('solution'), [instance]);
+});

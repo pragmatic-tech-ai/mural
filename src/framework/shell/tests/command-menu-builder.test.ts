@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { CheckableRelayCommand, RelayCommand, ServiceKey, type ICommand, type IServiceProvider } from '../../../runtime/index.js';
+import { CheckableRelayCommand, RelayCommand, ServiceKey, ServiceProvider, type ICommand, type IServiceProvider } from '../../../runtime/index.js';
 import { CommandDefinition, CommandGroupPresentation } from '../commands/command-definition.js';
 import { CommandMenuBuilder } from '../commands/command-menu-builder.js';
 import { CommandContext } from '../commands/command-context.js';
@@ -141,6 +141,39 @@ describe('CommandMenuBuilder.RealizeChildren via EnsureExpanded', () => {
         assert.deepEqual([...vm.Children].map(c => c.Definition.Id),
             ['file.new', 'file.open', 'file.recent.a', 'file.recent.b']);
         assert.equal(calls, 1);
+    });
+
+    // Regression: the Hierarchy DSL (`ChildrenContributor = SomeClass`) lowers to
+    // the RAW constructor, but a class with a static `Key` registers under that
+    // Key (same convention as `.services:` — ServiceProvider.tokenFor(ctor)).
+    // Before the fix, RealizeChildren called getRequired(token) with no
+    // normalization, so a Keyed ICommandContributor class never resolved
+    // ("no service registered").
+    test('resolves a Keyed ICommandContributor whose ChildrenContributor holds the RAW ctor (DSL emission)', () => {
+        class KeyedContributor implements ICommandContributor
+        {
+            public static readonly Key = new ServiceKey<KeyedContributor>('KeyedContributor');
+            public Contribute(_p: CommandDefinition, _c: CommandContext): readonly CommandDefinition[]
+            {
+                return [def('contributed.a')];
+            }
+        }
+
+        const provider = new ServiceProvider();
+        // Mirrors how `.services:` registers a Keyed class: under
+        // tokenFor(ctor), i.e. under KeyedContributor.Key, never under the raw
+        // ctor itself.
+        provider.addInstance(new KeyedContributor());
+
+        const parent = def('file');
+        // The DSL's emission: the raw constructor, NOT KeyedContributor.Key.
+        parent.ChildrenContributor = KeyedContributor;
+
+        const builder = new CommandMenuBuilder(dispatcher, provider, new CommandContext());
+        const vm = builder.Build(parent);
+
+        assert.doesNotThrow(() => vm.EnsureExpanded());
+        assert.deepEqual([...vm.Children].map(c => c.Definition.Id), ['contributed.a']);
     });
 
     test('a self-referential contributor terminates (expansion is per-level, lazy)', () => {
