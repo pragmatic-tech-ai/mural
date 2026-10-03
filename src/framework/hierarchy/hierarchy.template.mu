@@ -58,6 +58,7 @@
 //                HierarchyTreeBehavior        [ Hierarchy = $Hierarchy ]
 //                HierarchyContextMenuBehavior [ Hierarchy = $Hierarchy ]
 //                HierarchyDropBehavior        [ Hierarchy = $Hierarchy, Host = $Hierarchy.Host ]
+//                HierarchyDragBehavior        [ Hierarchy = $Hierarchy ]
 //            }
 //            .ItemsSource: $Hierarchy.Roots
 //        }
@@ -99,15 +100,18 @@
 //    unaffected either way (it reads SelectedItems live); only inline-rename
 //    wiring on ALREADY-realized rows depends on this order.
 //
-// 6. RULING — drag-SOURCE wiring is PARKED for C2. HierarchyDropBehavior
-//    (Task 11) is the receiver side only; nothing in this repo stamps a
-//    row's drag payload (`data.Set(HierarchyItemsDrop.Kind, …)`) today.
-//    Building that source behavior correctly needs the DragDrop-initiation
-//    API investigated on its own (pointer-down + move-threshold vs. a
-//    dedicated start-drag hook) with its own tests — a half-built source
-//    gesture would be worse than none. Task 13's demo should either show
-//    the drop side only, or add a minimal source wire-up itself once it
-//    picks a concrete gesture.
+// 6. RULING — drag-SOURCE wiring (C2 wave 3, Task 3). HierarchyDropBehavior
+//    (Task 11) was the receiver side only; HierarchyDragBehavior
+//    (hierarchy-drag-behavior.ts) is the sibling source side — it sets
+//    IsDraggable=true + an OnDragStart callback on every realized row
+//    container (both already-realized ones, walked at OnAttached, and
+//    future ones via AddContainerPreparedListener), stamping the live
+//    Selection's ItemId[] under HierarchyItemsDrop.Kind exactly as
+//    HierarchyDropBehavior.decodeDraggedIds expects. Gated on the pressed
+//    row being part of the current Selection (drags the WHOLE selection,
+//    not just the pressed row) — an unselected row returns null (no drag).
+//    Included in the bundle above as a fourth, independently includable/
+//    omittable line, same as the other three.
 //
 // 7. RULING — deep (nested-descendant) drop targeting is PARKED for C2.
 //    HierarchyDropBehavior.resolveTarget (Task 11) only walks the ATTACHED
