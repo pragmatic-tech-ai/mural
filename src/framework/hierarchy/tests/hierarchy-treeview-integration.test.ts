@@ -20,6 +20,7 @@ import type { HierarchyHost } from '../hierarchy-host.js';
 import { HierarchyTreeBehavior } from '../hierarchy-tree-behavior.js';
 import { HierarchyContextMenuBehavior } from '../hierarchy-context-menu.js';
 import { HierarchyDropBehavior } from '../hierarchy-drop-behavior.js';
+import { HierarchyDragBehavior } from '../hierarchy-drag-behavior.js';
 import { EditableTextBlock } from '../../../basic/editable-text-block.js';
 
 // Task 12 — the default TreeView style bundle (@HierarchyItemTemplate via a
@@ -100,6 +101,7 @@ class HierarchyVmService
 const CTX: Record<string, unknown> = {
     ...runtime, ...basic, ...engine,
     TreeView, HierarchyItem, HierarchyTreeBehavior, HierarchyContextMenuBehavior, HierarchyDropBehavior,
+    HierarchyDragBehavior,
     HierarchyVmService,
 };
 const SYMS = new Map([...DEFAULT_SYMBOLS, ['HierarchyVmService', 'test']]);
@@ -120,6 +122,7 @@ import HierarchyItem from "@pragmatic-tech-ai/mural/framework/hierarchy/hierarch
 import HierarchyTreeBehavior from "@pragmatic-tech-ai/mural/framework/hierarchy/hierarchy-tree-behavior.js"
 import HierarchyContextMenuBehavior from "@pragmatic-tech-ai/mural/framework/hierarchy/hierarchy-context-menu.js"
 import HierarchyDropBehavior from "@pragmatic-tech-ai/mural/framework/hierarchy/hierarchy-drop-behavior.js"
+import HierarchyDragBehavior from "@pragmatic-tech-ai/mural/framework/hierarchy/hierarchy-drag-behavior.js"
 `;
 
 function fullHostVm(): { hierarchy: Hierarchy; host: HierarchyHost }
@@ -165,6 +168,7 @@ const DEFAULT_BUNDLE_BODY = `
         HierarchyTreeBehavior        [ Hierarchy = $Hierarchy ]
         HierarchyContextMenuBehavior [ Hierarchy = $Hierarchy ]
         HierarchyDropBehavior        [ Hierarchy = $Hierarchy, Host = $Hierarchy.Host ]
+        HierarchyDragBehavior        [ Hierarchy = $Hierarchy ]
     }
     ItemsSource: $Hierarchy.Roots
 `;
@@ -190,11 +194,12 @@ describe('Default TreeView integration (Task 12)', () =>
         // 2. ItemsSource bound through DataContext.
         assert.equal(tree.ItemsSource, hierarchy.Roots, 'ItemsSource = $Hierarchy.Roots resolved');
 
-        // 3. All three behaviors attached, each correctly wired from the SAME
-        //    $Hierarchy (and $Hierarchy.Host) binding — not three independent
+        // 3. All four behaviors attached, each correctly wired from the SAME
+        //    $Hierarchy (and $Hierarchy.Host) binding — not four independent
         //    reads that could drift.
-        assert.equal(tree.Behaviors.length, 3);
-        const [treeBeh, menuBeh, dropBeh] = tree.Behaviors as [HierarchyTreeBehavior, HierarchyContextMenuBehavior, HierarchyDropBehavior];
+        assert.equal(tree.Behaviors.length, 4);
+        const [treeBeh, menuBeh, dropBeh, dragBeh] = tree.Behaviors as
+            [HierarchyTreeBehavior, HierarchyContextMenuBehavior, HierarchyDropBehavior, HierarchyDragBehavior];
         assert.ok(treeBeh instanceof HierarchyTreeBehavior);
         assert.equal(treeBeh.Hierarchy, hierarchy);
         assert.ok(menuBeh instanceof HierarchyContextMenuBehavior);
@@ -202,6 +207,8 @@ describe('Default TreeView integration (Task 12)', () =>
         assert.ok(dropBeh instanceof HierarchyDropBehavior);
         assert.equal(dropBeh.Hierarchy, hierarchy);
         assert.equal(dropBeh.Host, host, '$Hierarchy.Host resolved to the real HierarchyHost, via Hierarchy.Host (Task 12 getter)');
+        assert.ok(dragBeh instanceof HierarchyDragBehavior);
+        assert.equal(dragBeh.Hierarchy, hierarchy);
 
         // 4. The row for the pre-existing root item actually realized through
         //    @HierarchyItemTemplate (end-to-end, not just "a template object
@@ -227,8 +234,9 @@ describe('Default TreeView integration (Task 12)', () =>
             ${DEFAULT_BUNDLE_BODY}
         `);
 
-        const [, , dropBeh] = tree.Behaviors as [HierarchyTreeBehavior, HierarchyContextMenuBehavior, HierarchyDropBehavior];
-        assert.equal(tree.Behaviors.length, 3, 'all three default behaviors are still attached');
+        const [, , dropBeh] = tree.Behaviors as
+            [HierarchyTreeBehavior, HierarchyContextMenuBehavior, HierarchyDropBehavior, HierarchyDragBehavior];
+        assert.equal(tree.Behaviors.length, 4, 'all four default behaviors are still attached');
         assert.equal(dropBeh.Hierarchy, hierarchy);
         assert.equal(dropBeh.Host, host);
 
