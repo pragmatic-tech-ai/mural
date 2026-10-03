@@ -97,10 +97,13 @@ describe('CommandMenuBuilder.Build', () => {
 
         const builder = new CommandMenuBuilder(toggleDispatcher, throwingProvider(), new CommandContext());
         const vm = builder.Build(toggleDef);
-        assert.equal(listenerCount, 1, 'Build registered exactly one live-sync listener');
+        // Two live-sync listeners for a toggle: the builder's own IsChecked
+        // sync plus the VM's IsEnabled listener (added in its ctor). Both ride
+        // vm.subscriptions, so dispose() nets back to zero.
+        assert.equal(listenerCount, 2, 'Build registered the IsChecked-sync + the VM IsEnabled listener');
 
         vm.dispose();
-        assert.equal(listenerCount, 0, 'dispose() detached the listener');
+        assert.equal(listenerCount, 0, 'dispose() detached both listeners');
 
         // Flipping + pulsing after dispose must not throw and must not reach the
         // (disposed) VM.
