@@ -46,11 +46,11 @@
 //    already-true INITIAL condition — only a later false→true EDGE fires
 //    them (TriggerHost.applyTransition's `isInitialEvaluation` gate) — so
 //    there's no "always-true when()" trick either. A plain `Style` genuinely
-//    cannot attach a Behavior unconditionally today. RULING: the three
+//    cannot attach a Behavior unconditionally today. RULING: the four
 //    behaviors (HierarchyTreeBehavior / HierarchyContextMenuBehavior /
-//    HierarchyDropBehavior, all exported from index.ts) are attached by the
-//    APP's own `.Behaviors:` block on its TreeView — three lines, each
-//    independently includable/omittable, which is what makes the template
+//    HierarchyDropBehavior / HierarchyDragBehavior, all exported from
+//    index.ts) are attached by the APP's own `.Behaviors:` block on its
+//    TreeView — four lines, each independently includable/omittable, which is what makes the template
 //    and the behavior bundle independently overridable (Review Focus 3):
 //
 //        TreeView [ Style = @HierarchyTreeView ] {
