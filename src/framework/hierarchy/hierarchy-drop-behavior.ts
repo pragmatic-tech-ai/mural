@@ -166,7 +166,9 @@ export class HierarchyDropBehavior extends Behavior
     // so whatever isn't claimed by a child's span IS that row's own header
     // band. This is why checking children first, and only when the row is
     // realized as an ItemsControl AND expanded, is sufficient — no separate
-    // header-height measurement is needed.
+    // header-height measurement is needed. This relies on the subtree having
+    // no trailing gap below the last child (TreeViewItem admits only row
+    // children); a trailing in-subtree decorator would need explicit spans.
     private static resolveWithin(container: Visual, hostY: number): HierarchyItem | undefined
     {
         const top = HierarchyDropBehavior.topOffsetOf(container);
