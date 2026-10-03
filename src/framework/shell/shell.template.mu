@@ -318,6 +318,7 @@ resources Shells {
               Command         = $Command,
               IsCheckable     = $IsToggle,
               IsChecked       = $IsChecked,
+              IsEnabled       = $IsEnabled,
               SeparatorBefore = $SeparatorBefore ]
     }
 

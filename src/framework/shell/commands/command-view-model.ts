@@ -1,6 +1,7 @@
 import {
     Observable,
     type IDisposable,
+    Disposable,
     CompositeDisposable,
     ObservableCollection,
     type ICommand,
@@ -16,6 +17,7 @@ import type { ExpandableMenuData } from '../../menu/expandable-menu-data.js';
 export class CommandViewModel extends Observable implements IDisposable, ExpandableMenuData
 {
     private static readonly IsCheckedPropertyName = 'IsChecked';
+    private static readonly IsEnabledPropertyName = 'IsEnabled';
 
     private readonly subscriptions = new CompositeDisposable();
     private checked = false;
@@ -35,6 +37,22 @@ export class CommandViewModel extends Observable implements IDisposable, Expanda
     )
     {
         super();
+        // Live-dims the rendered row: a command's executability can change
+        // independently of any toggle state (selection cleared, document
+        // read-only, …), so every VM — not just toggles — listens for the
+        // pulse and re-raises. Command may be undefined at runtime despite
+        // the non-optional type (CommandMenuBuilder resolves it with an
+        // `as ICommand` cast that can still yield undefined), so guard here
+        // exactly as the IsEnabled getter below does.
+        if (this.Command !== undefined)
+        {
+            const onCanExecuteChanged = (): void =>
+            {
+                this.RaisePropertyChanged(CommandViewModel.IsEnabledPropertyName, undefined, undefined);
+            };
+            this.Command.AddCanExecuteChangedListener(onCanExecuteChanged);
+            this.subscriptions.add(new Disposable(() => this.Command.RemoveCanExecuteChangedListener(onCanExecuteChanged)));
+        }
     }
 
     public get Title(): string { return this.Definition.Title; }
@@ -46,6 +64,12 @@ export class CommandViewModel extends Observable implements IDisposable, Expanda
             || this.Definition.Children.Count > 0
             || this.Definition.ChildrenContributor !== undefined;
     }
+
+    // Live-read, not cached — the menu row re-queries this on every
+    // CanExecuteChanged pulse (see ctor) rather than tracking a shadow field,
+    // since the command itself is the single source of truth. Guards an
+    // undefined Command (see ctor comment) by treating it as always enabled.
+    public get IsEnabled(): boolean { return this.Command === undefined ? true : this.Command.CanExecute(); }
 
     public get IsChecked(): boolean { return this.checked; }
     public set IsChecked(v: boolean)

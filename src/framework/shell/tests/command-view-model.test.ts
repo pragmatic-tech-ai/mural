@@ -1,6 +1,6 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
-import { Observable, RelayCommand, ServiceKey } from '../../../runtime/index.js';
+import { Observable, RelayCommand, ServiceKey, type ICommand } from '../../../runtime/index.js';
 import { CommandDefinition } from '../commands/command-definition.js';
 import { CommandViewModel } from '../commands/command-view-model.js';
 import type { ICommandContributor } from '../commands/command-contributor.js';
@@ -70,6 +70,47 @@ describe('CommandViewModel', () => {
         d.ChildrenContributor = new ServiceKey<ICommandContributor>('test.contributor');
         const vm = new CommandViewModel(d, command());
         assert.equal(vm.HasChildren, true);
+    });
+
+    test('IsEnabled reflects the command\'s current CanExecute', () => {
+        let enabled = true;
+        const cmd = new RelayCommand(() => { /* no-op */ }, () => enabled);
+        const vm = new CommandViewModel(def(), cmd);
+        assert.equal(vm.IsEnabled, true);
+
+        enabled = false;
+        assert.equal(vm.IsEnabled, false, 'live-reads CanExecute, not cached at construction');
+    });
+
+    test('IsEnabled defaults to true when the command is undefined', () => {
+        const vm = new CommandViewModel(def(), undefined as unknown as ICommand);
+        assert.equal(vm.IsEnabled, true);
+    });
+
+    test('CanExecuteChanged raises PropertyChanged("IsEnabled") and updates IsEnabled', () => {
+        let enabled = true;
+        const cmd = new RelayCommand(() => { /* no-op */ }, () => enabled);
+        const vm = new CommandViewModel(def(), cmd);
+        let fired = 0;
+        vm.PropertyChanged('IsEnabled').subscribe(() => { fired++; });
+
+        enabled = false;
+        cmd.RaiseCanExecuteChanged();
+        assert.equal(fired, 1);
+        assert.equal(vm.IsEnabled, false);
+    });
+
+    test('dispose() unsubscribes from CanExecuteChanged — no further updates', () => {
+        let enabled = true;
+        const cmd = new RelayCommand(() => { /* no-op */ }, () => enabled);
+        const vm = new CommandViewModel(def(), cmd);
+        let fired = 0;
+        vm.PropertyChanged('IsEnabled').subscribe(() => { fired++; });
+
+        vm.dispose();
+        enabled = false;
+        cmd.RaiseCanExecuteChanged();
+        assert.equal(fired, 0, 'no PropertyChanged("IsEnabled") after dispose');
     });
 
     test('dispose() disposes children recursively and is idempotent', () => {
