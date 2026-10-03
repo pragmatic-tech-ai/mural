@@ -232,10 +232,12 @@ describe('compile — triggered Behaviors block', () => {
         assert.match(js, /AttachBehaviorAction/);
         assert.match(js, /DetachBehaviorAction/);
         // Attach action with factory closure that constructs the
-        // behavior fresh and returns it.
+        // behavior fresh and returns it. The closure takes the firing
+        // Visual as `_target` so the Behavior's own attribute bindings
+        // can resolve against the host (see behaviorHostVar).
         assert.match(
             js,
-            /new AttachBehaviorAction\(\(\) => \{[\s\S]*new StubBehavior\(\)[\s\S]*return [^;]+;[\s\S]*\}\)/,
+            /new AttachBehaviorAction\(\(_target\) => \{[\s\S]*new StubBehavior\(\)[\s\S]*return [^;]+;[\s\S]*\}\)/,
         );
         // Detach action wraps the attach action handle.
         assert.match(js, /new DetachBehaviorAction\(_attBeh\d+\)/);

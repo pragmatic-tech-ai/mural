@@ -2087,7 +2087,7 @@ export class Compiler
             {
                 for (const entry of item.entries)
                 {
-                    const { attachVar, detachVar } = this.compileTriggeredBehavior(entry);
+                    const { attachVar, detachVar } = this.compileTriggeredBehavior(entry, '_target');
                     enterActionVars.push(attachVar);
                     exitActionVars.push(detachVar);
                 }
@@ -2994,22 +2994,39 @@ export class Compiler
     // path each fire, so each (trigger, target) pair gets a fresh
     // Behavior with its own per-instance DPs.
     //
-    // NOTE: unlike the .Behaviors:/Behaviors{} path (see behaviorHostVar's
-    // use in emitBehaviorAttachments), this triggered path does NOT set
-    // behaviorHostVar — a Behavior attribute binding inside a when(){
-    // Behaviors { … } } block resolves against the behavior instance (no
-    // DataContext), not the host Visual. Accepted limitation for C1; wire
-    // behaviorHostVar here if a triggered Behavior ever needs host-relative
-    // bindings.
-    private compileTriggeredBehavior(entry: ElementNode): { attachVar: string; detachVar: string }
+    // Host-relative bindings: like the .Behaviors:/Behaviors{} path (see
+    // behaviorHostVar's use in emitBehaviorAttachments), a Behavior
+    // attribute binding inside a when(){ Behaviors { … } } block must
+    // resolve against the HOST Visual, not the behavior instance (which
+    // has no DataContext). The triggered case has no compile-time var for
+    // the host — the Style/ControlTemplate/DataTemplate trigger this
+    // lives in applies to whichever Visual it's attached to at runtime —
+    // so the factory closure takes that firing Visual as a parameter,
+    // `targetVar`, mirroring the `(_target) => …` convention
+    // BeginStoryboardAction / InvokeCommandAction already use for the same
+    // "closure needs the firing Visual" problem elsewhere in this file.
+    // AttachBehaviorAction.Invoke forwards its own `target` argument into
+    // this factory (see trigger-actions.ts), so the param is live, not a
+    // free variable.
+    private compileTriggeredBehavior(entry: ElementNode, targetVar: string): { attachVar: string; detachVar: string }
     {
         this.ensureImport('AttachBehaviorAction');
         this.ensureImport('DetachBehaviorAction');
         const attachVar = this.fresh('attBeh');
         const detachVar = this.fresh('detBeh');
-        this.line(`const ${attachVar} = new AttachBehaviorAction(() => {`);
+        this.line(`const ${attachVar} = new AttachBehaviorAction((${targetVar}) => {`);
         this.indent += 4;
-        const behaviorVar = this.compileElement(entry);
+        const previousHost = this.behaviorHostVar;
+        this.behaviorHostVar = targetVar;
+        let behaviorVar: string;
+        try
+        {
+            behaviorVar = this.compileElement(entry);
+        }
+        finally
+        {
+            this.behaviorHostVar = previousHost;
+        }
         this.line(`return ${behaviorVar};`);
         this.indent -= 4;
         this.line(`});`);

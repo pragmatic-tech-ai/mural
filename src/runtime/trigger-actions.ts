@@ -168,11 +168,19 @@ export class ResumeStoryboardAction extends TriggerAction
 //   }
 //
 // Compiler emission:
-//   const _a = new AttachBehaviorAction(() => {
+//   const _a = new AttachBehaviorAction((_target) => {
 //       const _b = new ShakeBehavior(); _b.Amplitude = 4; return _b;
 //   });
 //   const _d = new DetachBehaviorAction(_a);
 //   // enterActions: [_a]; exitActions: [_d]
+//
+// The factory receives the firing Visual as its one argument — same
+// shape as BeginStoryboardAction's Factory — so a Behavior attribute
+// binding authored inside the Behaviors block (e.g. `ShakeBehavior[
+// Hierarchy = $Hierarchy]`) can resolve against the HOST Visual's
+// DataContext (the compiler wires this via behaviorHostVar; see
+// compileTriggeredBehavior), matching how the plain .Behaviors:/
+// Behaviors{} path resolves a Behavior's own attribute bindings.
 //
 // Re-entry safety: invoking Attach on a target that's already holding
 // the attached behavior (e.g., the trigger flickers active→active
@@ -180,13 +188,13 @@ export class ResumeStoryboardAction extends TriggerAction
 // attaching a fresh one — keeps the per-target reference unique.
 export class AttachBehaviorAction extends TriggerAction
 {
-    public readonly Factory: () => Behavior;
+    public readonly Factory: (target: Visual) => Behavior;
     /** Per-target attached behavior. WeakMap so a target Visual dropping
      *  out of use lets its behavior ref be GC'd; the DetachBehaviorAction
      *  paired with this Attach reads back through the same WeakMap. */
     private readonly attached: WeakMap<Visual, Behavior> = new WeakMap();
 
-    public constructor(factory: () => Behavior)
+    public constructor(factory: (target: Visual) => Behavior)
     {
         super();
         this.Factory = factory;
@@ -206,7 +214,7 @@ export class AttachBehaviorAction extends TriggerAction
             // attachment cleanly before installing the new one.
             elementTarget.RemoveBehavior(existing);
         }
-        const beh = this.Factory();
+        const beh = this.Factory(target);
         elementTarget.AddBehavior(beh);
         this.attached.set(target, beh);
     }

@@ -1,6 +1,7 @@
 ﻿import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { compile, EmitError } from '../compile.js';
+import { Behavior, MuralBase, MetaData } from '../../runtime/index.js';
 
 // Pure source-to-source tests. Each one asserts on substrings of the
 // emitted JS — robust against trivial format changes but precise about
@@ -984,6 +985,46 @@ describe('compile — deferred & errored features', () => {
         assert.throws(
             () => emitted(`Application{ resources: { NonexistentControl x:root{} } }`),
             EmitError,
+        );
+    });
+});
+
+// A registered Behavior subclass named to match the markup's `import
+// StubBehavior from "./stub-behavior.mjs"` below — emitSetDP's
+// compile-time class/descriptor lookup (resolveClassByName ->
+// MuralBase.find_class) resolves by the JS class's own `.name`, keyed
+// as a side effect of RegisterProperty; the class only needs to exist
+// in the process for that lookup; it's never actually loaded from the
+// (nonexistent) markup import path at compile time.
+class StubBehavior extends Behavior
+{
+    public static readonly LabelKey = MuralBase.RegisterProperty<string>(
+        StubBehavior, 'Label', '', MetaData.None);
+}
+
+describe('compile — triggered Behaviors block host binding', () => {
+    test('a Behavior inside when(){ Behaviors{} } binds $-attributes against the host Visual, not the behavior instance', () => {
+        const js = emitted(`
+            import StubBehavior from "./stub-behavior.mjs"
+            Application{ resources: {
+                Style[TargetType=Border]{
+                    when( IsMouseOver ){
+                        Behaviors { StubBehavior [ Label = $HostProp ] }
+                    }
+                }
+            }}
+        `);
+        // The AttachBehaviorAction factory closure now takes the firing
+        // Visual as `_target` (mirroring BeginStoryboardAction /
+        // InvokeCommandAction's existing `(_target) => …` convention),
+        // and the Behavior's own `$HostProp` binding resolves against
+        // THAT host var — the same host-relative form the plain
+        // .Behaviors:/Behaviors{} path emits via behaviorHostVar — not
+        // against the behavior instance's own var.
+        assert.match(js, /new AttachBehaviorAction\(\(_target\) => \{/);
+        assert.match(
+            js,
+            /\.set_property_value\(\w+\.LabelKey, DataContextBinding\(_target, "HostProp"\)\);/,
         );
     });
 });

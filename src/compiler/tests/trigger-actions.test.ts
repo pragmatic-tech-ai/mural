@@ -252,8 +252,10 @@ describe('compile — DataTemplate MultiDataTrigger', () => {
                 }
             }
         `);
-        // Behavior lowered to paired Attach/Detach actions.
-        assert.match(js, /new AttachBehaviorAction\(\(\) => \{/);
+        // Behavior lowered to paired Attach/Detach actions. The factory
+        // closure takes the firing Visual as `_target` so the Behavior's
+        // own attribute bindings can resolve against the host.
+        assert.match(js, /new AttachBehaviorAction\(\(_target\) => \{/);
         assert.match(js, /new DetachBehaviorAction\(_attBeh\d+\);/);
         // Template trigger ctor receives enter/exit action arrays.
         assert.match(
