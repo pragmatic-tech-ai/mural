@@ -29,6 +29,24 @@ class StubRow extends Element
     protected override MeasureOverride(_a: Size): Size { return Size.Zero; }
 }
 
+// Stand-in NESTED-capable row — same ArrangedRect-stamping trick as StubRow,
+// but itself an ItemsControl (as TreeViewItem is) so it can host stamped
+// sub-rows via `_containers`, with a settable `IsExpanded` duck-typed the
+// same way `HierarchyDropBehavior.isExpanded` reads TreeViewItem.IsExpanded.
+// Its own stamped ArrangedRect spans its WHOLE subtree (own header + every
+// nested descendant), matching how a real expanded TreeViewItem's
+// ArrangedRect.Height behaves — resolveTarget must look past that span into
+// the nested rows to find the deepest match.
+class StubContainerRow extends ItemsControl
+{
+    public IsExpanded = false;
+    public stampRect(r: Rect): void { this['_arrangedRect'] = r; }
+    public stampChildren(rows: readonly Visual[]): void
+    {
+        (this as unknown as { _containers: Visual[] })._containers = [...rows];
+    }
+}
+
 function noopItemHost(): IHierarchyItemHost
 {
     return {
@@ -144,6 +162,59 @@ describe('HierarchyDropBehavior', () =>
         assert.equal(host.dropCalls.length, 1);
         assert.equal(host.dropCalls[0]!.target, row1);
         assert.deepEqual(host.dropCalls[0]!.dragged, [row0]);
+    });
+
+    test('a drop over a NESTED descendant row resolves to that row, not the root ancestor', () =>
+    {
+        const hierarchy = buildHierarchy();
+        const ic = new ItemsControl();
+        const parentItem = hierarchy.NewItem('row', { Caption: 'parent' });
+        const childItem = hierarchy.NewItem('row', { Caption: 'child' });
+        hierarchy.Selection.Add(parentItem); // the dragged item — irrelevant to target resolution
+
+        // Root row: expanded, its stamped span [0, 40) covers its own
+        // header band [0, 20) PLUS its nested child's band [20, 40) — same
+        // shape a real expanded TreeViewItem's ArrangedRect.Height has.
+        const parentRow = new StubContainerRow();
+        parentRow.IsExpanded = true;
+        parentRow.stampRect(new Rect(0, 0, 100, 40));
+        (parentRow as unknown as { _itemsControlData?: unknown })._itemsControlData = parentItem;
+
+        // Nested child row: its own header band is hostY [20, 40) — stamped
+        // with an ABSOLUTE host Y (not parent-relative), matching the other
+        // stub rows in this file (GetVisualParent() returns undefined since
+        // none of these are attached as real visual children).
+        const childRow = new StubRow();
+        childRow.stampRect(new Rect(0, 20, 100, 20));
+        (childRow as unknown as { _itemsControlData?: unknown })._itemsControlData = childItem;
+        parentRow.stampChildren([childRow]);
+
+        (ic as unknown as { _containers: Visual[] })._containers = [parentRow];
+
+        const host = new FakeHierarchyHost();
+        host.accept = true;
+        const behavior = new HierarchyDropBehavior();
+        behavior.Hierarchy = hierarchy;
+        behavior.Host = host;
+        ic.AddBehavior(behavior);
+
+        const data = hierarchyItemsDropData([parentItem.Id]);
+
+        // hostY=25 lands inside the NESTED child's own header band [20, 40)
+        // — it must resolve to the child, not the parent whose stamped span
+        // also happens to cover [0, 40).
+        const over = dragArgs('DragOver', 25, data);
+        ic.FireRoutedListeners('DragOver', over);
+        assert.equal(host.canDropCalls.length, 1);
+        assert.equal(host.canDropCalls[0]!.target, childItem);
+
+        // hostY=5 lands inside the PARENT's own header band [0, 20) — still
+        // resolves to the parent (non-regression: the child's band doesn't
+        // swallow the whole subtree span).
+        const overParent = dragArgs('DragOver', 5, data);
+        ic.FireRoutedListeners('DragOver', overParent);
+        assert.equal(host.canDropCalls.length, 2);
+        assert.equal(host.canDropCalls[1]!.target, parentItem);
     });
 
     test('a target the host rejects leaves Effect unset and does not call Drop', () =>

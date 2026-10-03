@@ -40,13 +40,16 @@ import type { ItemId } from './item-id.js';
 //
 // Target-row resolution: TreeView rows stack strictly vertically (no wrap
 // mode, unlike ListReorderBehavior's ItemsControl), so the cursor's HostY is
-// hit-tested directly against each realized row container's vertical span
-// (walked via GetVisualParent, same offset-accumulation shape as
-// ListReorderBehavior's hostTop helper) — the first container whose span
-// contains HostY is the target row. Its bound HierarchyItem comes off the
-// `_itemsControlData` stamp ItemsControl.PrepareContainerForItemOverride
-// writes on every realized container (the same accessor HierarchyTreeBehavior
-// and tree-view.ts's own `dataOf` read).
+// hit-tested against each realized row container's vertical span (walked via
+// GetVisualParent, same offset-accumulation shape as ListReorderBehavior's
+// hostTop helper). A root row's span covers its WHOLE expanded subtree, so
+// `resolveWithin` recurses depth-first into an expanded row's own realized
+// children before accepting that row itself — this is what makes a drop over
+// a NESTED descendant resolve to that descendant rather than its root
+// ancestor. Each row's bound HierarchyItem comes off the `_itemsControlData`
+// stamp ItemsControl.PrepareContainerForItemOverride writes on every realized
+// container (the same accessor HierarchyTreeBehavior and tree-view.ts's own
+// `dataOf` read).
 export class HierarchyDropBehavior extends Behavior
 {
     private static readonly DragOverEvent  = 'DragOver';
@@ -141,21 +144,54 @@ export class HierarchyDropBehavior extends Behavior
         return drop === undefined ? undefined : HierarchyItemsDrop.ItemsOf(drop);
     }
 
-    // Hit-tests `hostY` against each realized row container's vertical span
-    // (host-coordinate, via GetVisualParent offset accumulation) and returns
-    // the first match's bound HierarchyItem.
+    // Hit-tests `hostY` against each realized root row's subtree span
+    // (host-coordinate, via GetVisualParent offset accumulation) and
+    // resolves depth-first within it — see `resolveWithin`.
     private static resolveTarget(host: ItemsControl, hostY: number): HierarchyItem | undefined
     {
         for (const container of host.logicalChildren)
         {
-            const top = HierarchyDropBehavior.topOffsetOf(container);
-            const bottom = top + container.ArrangedRect.Height;
-            if (hostY >= top && hostY < bottom)
-            {
-                return HierarchyDropBehavior.itemOf(container);
-            }
+            const target = HierarchyDropBehavior.resolveWithin(container, hostY);
+            if (target !== undefined) return target;
         }
         return undefined;
+    }
+
+    // Depth-first hit test against a single row's subtree span. A row's
+    // `ArrangedRect.Height` spans its WHOLE expanded subtree (header + every
+    // nested descendant), not just its own header band, so a hit anywhere
+    // under an expanded row would wrongly resolve to that row unless its
+    // (deeper) children are tried first — an expanded row's children sit
+    // contiguously right below its own header inside the same subtree span,
+    // so whatever isn't claimed by a child's span IS that row's own header
+    // band. This is why checking children first, and only when the row is
+    // realized as an ItemsControl AND expanded, is sufficient — no separate
+    // header-height measurement is needed.
+    private static resolveWithin(container: Visual, hostY: number): HierarchyItem | undefined
+    {
+        const top = HierarchyDropBehavior.topOffsetOf(container);
+        const bottom = top + container.ArrangedRect.Height;
+        if (hostY < top || hostY >= bottom) return undefined;
+
+        if (container instanceof ItemsControl && HierarchyDropBehavior.isExpanded(container))
+        {
+            for (const child of container.logicalChildren)
+            {
+                const nested = HierarchyDropBehavior.resolveWithin(child, hostY);
+                if (nested !== undefined) return nested;
+            }
+        }
+        return HierarchyDropBehavior.itemOf(container);
+    }
+
+    // Duck-typed read of TreeViewItem.IsExpanded (tree-view.ts:782) — this
+    // file stays decoupled from the concrete TreeViewItem type (same
+    // decoupling HierarchyTreeBehavior uses for row-template reads), since
+    // `host` is any ItemsControl hosting HierarchyItem rows, not necessarily
+    // a TreeView.
+    private static isExpanded(container: ItemsControl): boolean
+    {
+        return (container as unknown as { IsExpanded?: boolean }).IsExpanded === true;
     }
 
     private static topOffsetOf(visual: Visual): number
