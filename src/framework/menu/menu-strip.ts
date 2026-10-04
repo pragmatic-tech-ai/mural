@@ -232,6 +232,16 @@ export class MenuItem extends HeaderedItemsControl implements ICommandSource
     // MenuItem has no CommandTarget DP — a RoutedCommand targets the item.
     public get CommandTarget(): Visual | undefined { return undefined; }
 
+    // Detach the command's CanExecuteChanged listener. Called from the
+    // container-clear seam (MenuContainerFactory.ClearContainer) so a
+    // generated MenuItem recycled or removed from a churning data-templated
+    // menu stops being retained by a long-lived command. The helper is
+    // reusable - a later Command write re-attaches via OnCommandChanged.
+    public DisposeCommandSource(): void
+    {
+        this._commandSource.dispose();
+    }
+
     private syncIsEnabledFromCommand(): void
     {
         // A bound IsEnabled owns the value: a plain write (or ClearValue) would

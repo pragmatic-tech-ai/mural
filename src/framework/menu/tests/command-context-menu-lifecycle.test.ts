@@ -237,10 +237,10 @@ describe('CommandContextMenu — per-open build / dispose-on-close', () =>
 
     test('repeated open/close cycles do not accumulate VMs or leak the rendered row\'s IsChecked subscription', () =>
     {
-        // HONEST leak signal: MenuItem does not itself subscribe to
-        // Command.CanExecuteChanged (no CommandSourceHelper wiring exists on
-        // MenuItem today — confirmed by reading menu-strip.ts), so there is no
-        // per-open listener on the StableDispatcher's command to count there.
+        // HONEST leak signal: MenuItem DOES subscribe to Command.CanExecuteChanged
+        // via CommandSourceHelper; that listener is detached when the generated
+        // container is cleared (MenuContainerFactory.ClearContainer ->
+        // MenuItem.DisposeCommandSource, covered in menu-item-command-teardown.test.ts).
         // What the real shipped @CommandMenuItemTemplate DOES wire reactively
         // is `IsChecked = $IsChecked` (a DataContextBinding) — it subscribes to
         // CommandViewModel.PropertyChanged('IsChecked') (a todl-runtime Signal,

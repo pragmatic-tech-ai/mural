@@ -92,6 +92,7 @@ export class MenuContainerFactory
         {
             return;
         }
+        container.DisposeCommandSource();
         container.DataContext = undefined;
         container.ItemsSource = undefined;
     }
