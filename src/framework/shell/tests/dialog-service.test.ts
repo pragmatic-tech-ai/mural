@@ -1,13 +1,14 @@
 ﻿import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { initTestApp } from '../../../basic/tests/test-app.js';
-import { Application, MuralBase } from '../../../runtime/index.js';
+import { Application, MuralBase, Observable } from '../../../runtime/index.js';
 import { HeadlessTarget } from '../../../visual-engine/index.js';
 import { Border } from '../../../basic/border.js';
 import { DialogService } from '../services/dialog-service.js';
 
 // A trivial content VM to stand in for a settings page (rendered via ContentPresenter).
 class FakeContent extends MuralBase { }
+class FakeObservableContent extends Observable { }
 
 function makeService(host: Border): DialogService
 {
@@ -66,5 +67,19 @@ describe('DialogService', () => {
         const closed = svc.Show({ Content: new FakeContent() });
         assert.equal(await closed, undefined);
         assert.equal(svc.IsOpen, false);
+    });
+
+    test('Show accepts plain Observable content (not just MuralBase)', () => {
+        initTestApp();
+        const host = new Border();
+        const target = new HeadlessTarget(400, 300);
+        target.Content = host;
+        target.Flush();
+        const svc = makeService(host);
+        const content = new FakeObservableContent();
+        void svc.Show<string>({ Title: 'About', Content: content });
+        target.Flush();
+        const overlay = target.OverlayRoot as unknown as { Children: { Count: number } };
+        assert.equal(overlay.Children.Count, 2);
     });
 });

@@ -1,7 +1,7 @@
 ﻿import {
     DynamicResource,
     type IServiceProvider,
-    MuralBase,
+    Observable,
     RelayCommand,
     ServiceBase,
     ServiceKey,
@@ -20,15 +20,15 @@ import { DialogAction } from '../../surfaces/dialog-action.js';
 import { ScrimSurface } from '../../surfaces/drawer.js';
 import { showDialog } from '../../overlay-helpers.js';
 
-// What to show in a modal dialog. `Content` is the body — a MuralBase (rendered by
-// its own DataTemplate, e.g. a SettingsPage) or a ready-made Visual. `Actions` is
+// What to show in a modal dialog. `Content` is the body — an Observable view-model (rendered by
+// its own DataTemplate, resolved by constructor identity) or a ready-made Visual. `Actions` is
 // the optional trailing action row — an array of DialogAction view-models the
 // Dialog template stamps into Buttons. Sizing is optional; unset lets the dialog
 // size to its content (with the surface centred over the scrim).
 export interface DialogOptions
 {
     readonly Title?: string;
-    readonly Content: MuralBase | Visual;
+    readonly Content: Observable | Visual;
     readonly Actions?: readonly DialogAction[];
     // Fixed body width / max height for large content (a settings page): the
     // content's own ScrollViewer scrolls within the bounded surface. Omit for
@@ -112,7 +112,7 @@ export class DialogService extends ServiceBase
 
         const dialog = new Dialog();
         if (options.Title !== undefined) dialog.Title = options.Title;
-        (dialog as unknown as { Content: MuralBase | Visual }).Content = options.Content;
+        (dialog as unknown as { Content: Observable | Visual }).Content = options.Content;
         if (options.Actions !== undefined) dialog.Actions = options.Actions;
         // Centre the surface within the full-surface overlay slot (OverlayLayer
         // arranges children at the whole surface; Center makes the dialog sit at
