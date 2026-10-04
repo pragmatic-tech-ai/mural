@@ -32,14 +32,15 @@ resources StatusBars
     }
     Template x:key="DefaultStatusBarItem" [TargetType = StatusBarItem]
     {
-        Border [ Padding = (8,2,8,2) ]
+        Border [ Padding = (8,2,8,2), VerticalAlignment = Center ]
         {
-            ContentPresenter
+            ContentPresenter [ VerticalAlignment = Center ]
         }
     }
     Style [TargetType = StatusBarItem]
     {
         Template = @DefaultStatusBarItem;
+        VerticalAlignment = Center;
     }
     Style [TargetType = StatusBarSeparator]
     {

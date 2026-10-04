@@ -1097,6 +1097,13 @@ function bindTreeItem(tvi: TreeViewItem, item: unknown, owner: ItemsControl): vo
     // collapsed virtualizing row that realizes no container to trigger a
     // refresh). Re-evaluate the chevron from the freshly-bound item count.
     tvi.RefreshBranchAffordance();
+    // Honor a data item that is ALREADY expanded when its container is first
+    // bound (a default-expanded root, a restored-expansion row): the container's
+    // IsExpanded defaults false and otherwise only tracks user toggles, so a
+    // pre-expanded data item would render collapsed. Idempotent — the IsExpanded
+    // setter's OnExpand hook early-returns when the data is already expanded.
+    const expandable = item as ExpandableTreeData | undefined;
+    if (expandable?.IsExpanded === true && !tvi.IsExpanded) tvi.IsExpanded = true;
 }
 
 // The template that governs `item` under `owner`: ItemTemplateSelector
@@ -1126,8 +1133,12 @@ function headerFor(item: unknown, tmpl: DataTemplate | undefined): Visual | stri
 // A data item that wants tree-row lifecycle callbacks — the framework calls
 // OnExpand() on each transition to expanded (lazy-load hook), OnCollapse() on each
 // transition to collapsed (release the loaded subtree), and OnActivate() on a row
-// double-click. Idempotency is the data item's responsibility.
-interface ExpandableTreeData { OnExpand?(): void; OnCollapse?(): void; OnActivate?(): void }
+// double-click. Idempotency is the data item's responsibility. The optional
+// readable `IsExpanded` lets a data item that is ALREADY expanded when its
+// container is first bound render expanded — without it the container's own
+// IsExpanded (default false) only ever tracks USER toggles, so a default-expanded
+// node would paint collapsed.
+interface ExpandableTreeData { OnExpand?(): void; OnCollapse?(): void; OnActivate?(): void; readonly IsExpanded?: boolean }
 
 // Read the data item stamped on a container by
 // ItemsControl.PrepareContainerForItemOverride. Type-erased because
