@@ -1832,10 +1832,18 @@ export class Element extends Visual implements ITriggerHost
             pointerId: args.PointerId,
             armed: true,
         };
-        // Capture so subsequent PointerMoves keep firing on THIS element
-        // even when the cursor leaves the source bbox before crossing the
-        // drag threshold.
-        args.CapturePointer(this);
+        // DO NOT capture the pointer here. Capturing on every press redirects
+        // the matching PointerUp to THIS element (InputManager.InjectPointerUp
+        // dispatches to `captured ?? hit`), stealing the release from any
+        // DESCENDANT click handler. A TreeViewItem's selectable ClickableRow
+        // (PART_Row) is such a descendant: with capture-on-down its OnPointerUp
+        // never fires, so the press-here-release-here click never completes and
+        // selection / activation silently break on every draggable row. Capture
+        // is instead deferred to _onDragLatchPointerMove, acquired only once the
+        // drag threshold is actually crossed — a real drag crosses the small
+        // threshold while the cursor is still inside the (large) source row, so
+        // out-of-bbox move tracking is preserved, while a plain click (no move
+        // past threshold) never captures and its PointerUp routes normally.
     };
     private readonly _onDragLatchPointerMove = (raw: unknown): void => {
         const args = raw as PointerEventArgs;
@@ -1852,6 +1860,11 @@ export class Element extends Visual implements ITriggerHost
         if (start === undefined) return;
         const r = start(this);
         if (r === null) return;
+        // The drag is really starting — capture NOW (deferred from PointerDown,
+        // see _onDragLatchPointerDown) so subsequent moves that leave the source
+        // bbox keep tracking and the host acquires OS/browser pointer capture
+        // for the drag session.
+        args.CapturePointer(this);
         // Press-relative offset within the source: how far the press
         // landed from the source's host-coord top-left. The HtmlTarget
         // subtracts this from each move sample so the cursor stays
