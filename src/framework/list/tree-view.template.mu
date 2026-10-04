@@ -1,7 +1,9 @@
 // Pragmatic theme — TreeView chrome (Wave 2).
 //
 // Copies the ListBox row pattern (see list-box.template.mu) onto the
-// tree row: rest transparent, hover @Bg2 on PART_Row, a dedicated opaque
+// tree row: rest transparent, hover @Bg3 on PART_Row (one surface step
+// ABOVE the @Bg2 side-pane rows sit on, so the highlight stays visible —
+// @Bg2 would vanish against a @Bg2 ShellSideContentPane), a dedicated opaque
 // PART_Selected layer filled with @SurfaceSelected on selection (wins
 // over hover by z-order), and @RowH* density via MinHeight. Focus paints
 // a @BorderFocus stroke on PART_Row itself — the row's Stroke is
@@ -91,7 +93,7 @@ resources TreeViews
             ItemsPresenter x:name="PART_ChildHost"
         }
         when ( IsSelected ) { PART_Selected.Fill = @SurfaceSelected; }
-        when ( PART_Row.IsMouseOver ) { PART_Row.Fill = @Bg2; }
+        when ( PART_Row.IsMouseOver ) { PART_Row.Fill = @Bg3; }
         when ( PART_Row.IsFocused ) { PART_Row.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
         when ( IsEnabled = false ) { PART_Row.Opacity = @OpacityDisabled; }
         when ( ThemeManager.Density = Compact ) { PART_Row.MinHeight = @RowHCompact; }
