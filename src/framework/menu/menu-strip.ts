@@ -3,6 +3,7 @@
     MetaData,
     MuralBase,
     Panel,
+    PropertyValueSource,
     Rect,
     Size,
     Visual,
@@ -28,6 +29,7 @@ import { Brush, Visibility } from '../../visual-engine/index.js';
 import { ClickAwayScrim } from '../tool-bar/tool-bar.js';
 import { Button } from '../buttons/button.js';
 import type { ICommand } from '../../runtime/command.js';
+import { CommandSourceHelper, type ICommandSource } from '../commands/command-source.js';
 import { MenuContainerFactory } from './menu-container-factory.js';
 import type { ExpandableMenuData } from './expandable-menu-data.js';
 
@@ -144,9 +146,10 @@ export class MenuStrip extends ItemsControl
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// MenuItem — single row inside a Menu. Subclasses both ICommandSource
-// (Header / Icon / InputGestureText + Command-driven activation) AND
-// ItemsControl (nested Items = submenu; opens a Menu popup to the
+// MenuItem — single row inside a Menu. Implements ICommandSource
+// (Header / Icon / InputGestureText + Command-driven activation; IsEnabled
+// tracks Command.CanExecute via CommandSourceHelper, as Button does) AND
+// subclasses ItemsControl (nested Items = submenu; opens a Menu popup to the
 // right when present).
 //
 // Visual columns (auto-hidden when their data is absent):
@@ -168,7 +171,7 @@ export class MenuStrip extends ItemsControl
 // the parent popup machinery close the whole chain after click. It's
 // fired from PreClick (before Command runs) so the parent has a chance
 // to teardown before any Command-launched dialog steals focus.
-export class MenuItem extends HeaderedItemsControl
+export class MenuItem extends HeaderedItemsControl implements ICommandSource
 {
     public static readonly IconKey              = MuralBase.RegisterProperty<Visual | undefined>(MenuItem, 'Icon',              undefined, MetaData.Measure);
     public static readonly InputGestureTextKey  = MuralBase.RegisterProperty<string | undefined>(MenuItem, 'InputGestureText',  undefined, MetaData.Measure | MetaData.Render);
@@ -219,6 +222,28 @@ export class MenuItem extends HeaderedItemsControl
 
     public get IsSubmenuOpen():    boolean { return this.get_property_value(MenuItem.IsSubmenuOpenKey); }
     public set IsSubmenuOpen(v:    boolean) { this.set_property_value(MenuItem.IsSubmenuOpenKey, v); }
+
+    // Tracks Command.CanExecute (listener bookkeeping + cached value) the
+    // same way Button does; on every transition it pushes the result into
+    // IsEnabled so the row templates' `when ( IsEnabled = false )` dims the
+    // item and pointer/keyboard routing skips it.
+    private readonly _commandSource = new CommandSourceHelper(this, () => this.syncIsEnabledFromCommand());
+
+    // MenuItem has no CommandTarget DP — a RoutedCommand targets the item.
+    public get CommandTarget(): Visual | undefined { return undefined; }
+
+    private syncIsEnabledFromCommand(): void
+    {
+        // A bound IsEnabled owns the value: a plain write (or ClearValue) would
+        // dispose the binding, so the command sync stands down.
+        if (this.GetValueSource(MenuItem.IsEnabledKey) === PropertyValueSource.Binding) return;
+        if (this.Command === undefined)
+        {
+            this.ClearValue(MenuItem.IsEnabledKey);
+            return;
+        }
+        this.IsEnabled = this._commandSource.CanExecute;
+    }
 
     public get SeparatorBefore():  boolean { return this.get_property_value(MenuItem.SeparatorBeforeKey); }
     public set SeparatorBefore(v:  boolean) { this.set_property_value(MenuItem.SeparatorBeforeKey, v); }
@@ -530,6 +555,18 @@ export class MenuItem extends HeaderedItemsControl
     {
         super.OnPropertyChanged(descriptor, oldValue, newValue);
         const name = descriptor.Name;
+        if (name === 'Command')
+        {
+            this._commandSource.OnCommandChanged(oldValue as ICommand | undefined, newValue as ICommand | undefined);
+            this.syncIsEnabledFromCommand();
+            return;
+        }
+        if (name === 'CommandParameter')
+        {
+            this._commandSource.OnParameterOrTargetChanged();
+            this.syncIsEnabledFromCommand();
+            return;
+        }
         if (name === 'RowTemplate')
         {
             this.rebuildRow();
