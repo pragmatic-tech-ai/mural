@@ -8,9 +8,10 @@
 //   * PART_FocusRing — a transparent outer Border whose Stroke only
 //     appears `when (IsFocused)`, giving a 2dp offset ring
 //     (@BorderFocus) instead of a state-layer overlay.
-//   * PART_Root — the painted surface. Rest / hover / press are
-//     distinct token FILLS (surface steps), never translucent
-//     overlays.
+//   * PART_Root — the painted surface. Rest transparent, hover the
+//     shared @RowHoverFill (brand-green-tinted, so it reads on any
+//     surface — a neutral @Bg2 step was invisible on a @Bg2 pane),
+//     press @Bg3; distinct token FILLS, never translucent overlays.
 //   * Disabled dims the surface to @OpacityDisabled; content padding
 //     lives on PART_Root (ContentPresenter has no Padding DP).
 //
@@ -59,7 +60,7 @@ resources IconButtons
                 ContentPresenter x:name="PART_Content" [ HorizontalAlignment = Center, VerticalAlignment = Center ]
             }
         }
-        when ( IsMouseOver ) { PART_Root.Fill = @Bg2; }
+        when ( IsMouseOver ) { PART_Root.Fill = @RowHoverFill; }
         when ( IsPressed ) { PART_Root.Fill = @Bg3; }
         when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
         when ( IsEnabled = false ) { PART_Root.Opacity = @OpacityDisabled; }
@@ -128,7 +129,7 @@ resources IconButtons
                 }
             }
         }
-        when ( IsMouseOver ) { PART_Root.Fill = @Bg2; }
+        when ( IsMouseOver ) { PART_Root.Fill = @RowHoverFill; }
         when ( IsPressed ) { PART_Root.Fill = @Bg3; }
         when ( IsChecked ) { PART_Selected.Fill = @SurfaceSelected; }
         when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }

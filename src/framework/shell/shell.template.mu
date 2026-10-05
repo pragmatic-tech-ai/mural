@@ -20,10 +20,11 @@
 //     the Pragmatic Pen-object stroke convention, see tabs/status-bar/
 //     navigation/tool-bar forks).
 //   * Style = @TitleSmall → Style = @UiLabel (side-pane PART_Title).
-//   * @OnSurfaceVariantHoverLayer → @Bg2 on CompactHeaderIconButton's
-//     PART_StateLayer hover; @OnSurfaceVariantPressLayer dropped (no press
-//     cue — matches the Pragmatic icon-button/tool-bar forks' deferred
-//     press).
+//   * @OnSurfaceVariantHoverLayer → @RowHoverFill on CompactHeaderIconButton's
+//     PART_StateLayer hover (the shared brand-green-tinted hover — a neutral
+//     @Bg2 step was invisible on a @Bg2 header); @OnSurfaceVariantPressLayer
+//     dropped (no press cue — matches the Pragmatic icon-button/tool-bar
+//     forks' deferred press).
 //   * CornerRadius = @ShapeSmall → @RadiusMd (PanelButton Style).
 //   * @Spacing3/@Spacing2/@Spacing1 → @Space3/@Space2/@Space1 (side-pane
 //     header paddings/margins).
@@ -515,7 +516,7 @@ resources Shells {
                 ContentPresenter [ HorizontalAlignment = Center, VerticalAlignment = Center ]
             }
         }
-        when ( IsMouseOver ) { PART_StateLayer.Fill = @Bg2; }
+        when ( IsMouseOver ) { PART_StateLayer.Fill = @RowHoverFill; }
     }
 
     // Compact icon-only MenuButton trigger — the header overflow (…) affordance.
@@ -539,6 +540,10 @@ resources Shells {
                 }
             }
         }
+        // The (…) overflow had no hover affordance; paint the same visible
+        // @RowHoverFill box the sibling CompactHeaderIconButton uses so the
+        // header buttons give uniform hover feedback.
+        when ( IsMouseOver ) { PART_Border.Fill = @RowHoverFill; }
     }
 
     // ── PanelButton — rounded-rectangle icon button for panel headers ───────

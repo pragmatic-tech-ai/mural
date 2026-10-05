@@ -41,13 +41,15 @@ describe('Pragmatic IconButton', () =>
         ControlHarness.Reset();
     });
 
-    test('renders under PragmaticDark with no grey fallback and paints the dark @Bg2 hover surface', () =>
+    test('renders under PragmaticDark with no grey fallback and paints the @RowHoverFill hover surface', () =>
     {
         // Unfocused, deliberately — no Pen is involved on this path. A
         // bare rest IconButton paints nothing (PART_Root.Fill is the
         // literal #00000000, not a resource), so hover is the cheapest
         // state that exercises a real per-instance DynamicResource-bound
-        // Fill (@Bg2) without touching the focus-ring Pen. See the
+        // Fill (@RowHoverFill — the shared brand-green-tinted hover, which
+        // reads on any surface; a neutral @Bg2 step was invisible on a
+        // @Bg2 pane) without touching the focus-ring Pen. See the
         // skipped test below for the focus-ring path and why it's
         // tracked separately.
         const { svg } = ControlHarness.Render(() =>
@@ -56,9 +58,9 @@ describe('Pragmatic IconButton', () =>
             b._setIsMouseOver(true);
             return b;
         }, { scheme: PragmaticDark });
-        const bg2 = ControlHarness.TokenCss('Bg2');
-        assert.equal(bg2, 'rgb(34,33,30)', '@Bg2 under PragmaticDark is #22211E');
-        assert.ok(svg.includes(bg2!), 'hovered IconButton paints @Bg2 under PragmaticDark');
+        const hover = ControlHarness.TokenCss('RowHoverFill');
+        assert.equal(hover, 'rgb(38,56,43)', '@RowHoverFill under PragmaticDark is #26382B');
+        assert.ok(svg.includes(hover!), 'hovered IconButton paints @RowHoverFill under PragmaticDark');
         assert.ok(!svg.includes(ControlHarness.NeutralFallbackCss),
             'no #808080 neutral fallback — every token resolves under PragmaticDark');
         ControlHarness.Reset();
@@ -134,13 +136,13 @@ describe('Pragmatic IconButtonToggle', () =>
             return t;
         }, { scheme: PragmaticLight });
         const selected = ControlHarness.TokenCss('SurfaceSelected');
-        const hover = ControlHarness.TokenCss('Bg2');
+        const hover = ControlHarness.TokenCss('RowHoverFill');
         const selectedIndex = svg.indexOf(selected!);
         const hoverIndex = svg.indexOf(hover!);
         assert.notEqual(selectedIndex, -1, 'checked + hovered IconButtonToggle still paints @SurfaceSelected');
-        assert.notEqual(hoverIndex, -1, 'the hover surface (@Bg2) still paints underneath — this is the base ghost layer');
+        assert.notEqual(hoverIndex, -1, 'the hover surface (@RowHoverFill) still paints underneath — this is the base ghost layer');
         assert.ok(selectedIndex > hoverIndex,
-            'the @SurfaceSelected layer must paint AFTER (on top of, in SVG document order) the @Bg2 hover layer, ' +
+            'the @SurfaceSelected layer must paint AFTER (on top of, in SVG document order) the @RowHoverFill hover layer, ' +
             'so the checked cue visually wins while hovered');
         ControlHarness.Reset();
     });
