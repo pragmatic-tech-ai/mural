@@ -38,8 +38,8 @@ scheme PragmaticLight against Pragmatic
     // ── Surfaces ───────────────────────────────────────────
     @Bg0 = #FAFAF9
     @Bg1 = #FFFFFF
-    @Bg2 = #F4F4F2
-    @Bg3 = #E9E8E4
+    @Bg2 = #ECEBE8
+    @Bg3 = #DEDCD7
     @BgInverse = #0A0A0B
     // ── Text / icon ────────────────────────────────────────
     @Fg0 = #0A0A0B
@@ -146,7 +146,7 @@ scheme PragmaticLight against Pragmatic
     @ControlActive = #22824D  // = @ControlAccent (Splitter hover/drag + drag-preview)
     // Wave 5: theme-agnostic aliases for code-level colour resolution
     // (color-picker.ts row hover; diagram-settings.ts THEME_LINK).
-    @RowHoverFill = #F4F4F2   // = @Bg2 (menu/scheme-row hover)
+    @RowHoverFill = #ECEBE8   // = @Bg2 (menu/scheme-row hover)
     @InkVariant = #5F5C56     // = @Fg2 (diagram ruler tick / connector stroke)
     @SurfaceBg = #FFFFFF      // = @Bg1 (diagram ruler / backdrop fill)
 }

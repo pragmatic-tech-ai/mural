@@ -16,7 +16,7 @@ describe('Wave 5 semantic aliases (RowHoverFill / InkVariant / SurfaceBg)', () =
     test('PragmaticLight: @RowHoverFill=@Bg2, @InkVariant=@Fg2, @SurfaceBg=@Bg1', () =>
     {
         ControlHarness.Activate(PragmaticLight);
-        assert.equal(ControlHarness.TokenCss('RowHoverFill'), 'rgb(244,244,242)', '@RowHoverFill == @Bg2 (#F4F4F2)');
+        assert.equal(ControlHarness.TokenCss('RowHoverFill'), 'rgb(236,235,232)', '@RowHoverFill == @Bg2 (#ECEBE8)');
         assert.equal(ControlHarness.TokenCss('RowHoverFill'), ControlHarness.TokenCss('Bg2'));
         assert.equal(ControlHarness.TokenCss('InkVariant'), ControlHarness.TokenCss('Fg2'), '@InkVariant == @Fg2');
         assert.equal(ControlHarness.TokenCss('SurfaceBg'), ControlHarness.TokenCss('Bg1'), '@SurfaceBg == @Bg1');
