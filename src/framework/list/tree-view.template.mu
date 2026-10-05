@@ -49,7 +49,8 @@ resources TreeViews
         StackPanel x:name="PART_OuterStack" [ Orientation = Vertical ]
         {
             ClickableRow x:name="PART_Row"
-                [ MinHeight = @RowHDefault ]
+                [ MinHeight = @RowHDefault,
+                  CornerRadius = @RadiusMd ]
             {
                 // PART_Selected carries the row Padding (NOT PART_Row) so its
                 // @SurfaceSelected fill spans the full row rect and covers the
