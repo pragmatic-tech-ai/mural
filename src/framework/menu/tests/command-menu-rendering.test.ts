@@ -216,6 +216,42 @@ describe('Menu family renders a CommandViewModel tree via HierarchicalDataTempla
         assert.equal(fileVm.Children.Count, 1, 'EnsureExpanded ran as a side effect of the real click');
     });
 
+    test('hovering a data-driven sibling closes the previously-open submenu (regression: HierarchicalDataTemplate menus)', () =>
+    {
+        // The reported bug: in a data-driven context menu (ItemsSource of
+        // CommandViewModels, rendered through HierarchicalDataTemplate), opening one
+        // parent's flyout and then moving onto a different parent left BOTH submenus
+        // open. closeSiblingSubmenus only walked the owner's logical Items — which for
+        // a data-driven menu hold the view-models, never MenuItem — so no sibling was
+        // ever closed. It must also walk the generated containers in the visual panel.
+        const root = new Root();
+        const builder = new CommandMenuBuilder(new FakeDispatcher(), new FakeProvider(), new CommandContext());
+
+        const aDef = def('a', 'Run Agent / Skill'); aDef.AddChild(def('a.x', 'graphify'));
+        const bDef = def('b', 'Build'); bDef.AddChild(def('b.x', 'Debug'));
+        const aVm = builder.Build(aDef);
+        const bVm = builder.Build(bDef);
+
+        const cm = new ContextMenu();
+        cm.ItemTemplate = commandMenuItemTemplate();
+        cm.ItemsSource = [aVm, bVm] as unknown as never;
+
+        const target = openMenu(cm, root);
+
+        const gen = (cm as unknown as { Generator: { ContainerFromItem(i: unknown): Visual | undefined } }).Generator;
+        const aMi = gen.ContainerFromItem(aVm) as MenuItem;
+        const bMi = gen.ContainerFromItem(bVm) as MenuItem;
+
+        aMi.IsSubmenuOpen = true;
+        target.Flush();
+        assert.equal(aMi.IsSubmenuOpen, true, 'precondition: A (data-driven) submenu open');
+
+        // Move onto sibling B — the generated container, not a declarative MenuItem.
+        (bMi as unknown as { OnPointerEnter(x: unknown): void }).OnPointerEnter({});
+
+        assert.equal(aMi.IsSubmenuOpen, false, 'hovering data-driven sibling B closed A\'s open submenu');
+    });
+
     test('a toggle VM renders a checkable, checked MenuItem', () =>
     {
         const root = new Root();

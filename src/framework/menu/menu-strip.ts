@@ -846,16 +846,34 @@ export class MenuItem extends HeaderedItemsControl implements ICommandSource
         }
     }
 
-    // Close every SIBLING MenuItem's open submenu so only one flyout per group
-    // is open at a time (WPF / M3 behaviour), and — driven from OnPointerEnter —
-    // so hovering a different item collapses the previous submenu. Resolve the
-    // collection this item belongs to by walking the logical chain to the first
-    // enclosing MenuItem (nested submenu owner) or ItemsControl exposing an Items
-    // collection (ContextMenu / MenuStrip / MenuButton popup). A one-hop lookup
-    // is not enough: a submenu child's immediate logical parent is a panel, not
-    // its owning MenuItem.
+    // Close every SIBLING MenuItem's open submenu so only one flyout per group is
+    // open at a time (WPF / M3 behaviour), and — driven from OnPointerEnter — so
+    // hovering a different item collapses the previous submenu. Siblings are reached
+    // two ways because the Menu family renders both declaratively-authored items and
+    // data-templated ones: the visual container panel (collectSiblings) covers the
+    // generated containers of a data-driven menu, and the owner's logical Items
+    // covers directly-authored MenuItem children. Running both is idempotent — each
+    // only toggles IsSubmenuOpen off — and together they close the sibling whichever
+    // way it was realized.
     private closeSiblingSubmenus(): void
     {
+        // Data-driven menus (ItemsSource / CommandViewModel — ContextMenu,
+        // HierarchyContextMenu, the command menus) keep the DATA items in the
+        // owner's logical Items; the generated MenuItem containers live in the
+        // shared visual panel. collectSiblings() walks that panel — the same
+        // source keyboard navigation already uses — so hovering an item collapses
+        // a data-driven sibling's open flyout. This path REGRESSED when the Menu
+        // family moved to HierarchicalDataTemplate rendering: the logical Items
+        // below are view-models, never MenuItem, so the Items-only walk closed
+        // nothing and every sibling submenu stayed open at once.
+        for (const sibling of this.collectSiblings())
+            if (sibling !== this && sibling.IsSubmenuOpen) sibling.IsSubmenuOpen = false;
+        // Declaratively-authored menus (AddChild MenuItems) keep their siblings in
+        // the owner's logical Items, reachable even before a layout pass builds the
+        // visual panel. Walk up to the first enclosing MenuItem (nested-submenu
+        // owner) or ItemsControl exposing an Items collection, then close each open
+        // sibling there. A one-hop lookup is not enough: a submenu child's immediate
+        // logical parent is a panel, not its owning MenuItem.
         let owner: Visual | undefined = this.GetLogicalParent();
         for (let guard = 0; owner !== undefined && guard < 64; guard++)
         {
