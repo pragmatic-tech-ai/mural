@@ -17,12 +17,12 @@ import { ControlHarness } from './control-harness.js';
 // RowHoverFill so both track the active scheme, per theme.
 describe('Pragmatic ColorPicker — code-level token resolution', () =>
 {
-    test('under Pragmatic: AccentInk = @ControlAccent, RowHoverFill = @Bg2', () =>
+    test('under Pragmatic: AccentInk = @ControlAccent, RowHoverFill = @RowHoverFill', () =>
     {
         ControlHarness.Activate(PragmaticLight);
         const cp = new ColorPicker();
         assert.equal((cp.TryFindResource('AccentInk') as SolidColorBrush).Color.ToCss(), ControlHarness.TokenCss('ControlAccent'), 'swatch ring accent tracks @ControlAccent');
-        assert.equal((cp.TryFindResource('RowHoverFill') as SolidColorBrush).Color.ToCss(), ControlHarness.TokenCss('Bg2'), 'scheme-row hover tracks @Bg2');
+        assert.equal((cp.TryFindResource('RowHoverFill') as SolidColorBrush).Color.ToCss(), ControlHarness.TokenCss('RowHoverFill'), 'scheme-row hover tracks the @RowHoverFill token');
         ControlHarness.Reset();
     });
 });

@@ -43,7 +43,7 @@ describe('Pragmatic ListBoxItem', () =>
         ControlHarness.Reset();
     });
 
-    test('selected + hovered keeps the selected fill — PART_Selected wins over @Bg2 hover', () =>
+    test('selected + hovered keeps the selected fill — PART_Selected wins over @RowHoverFill hover', () =>
     {
         const { svg } = ControlHarness.Render(() =>
         {
@@ -54,12 +54,12 @@ describe('Pragmatic ListBoxItem', () =>
             return it;
         }, { scheme: PragmaticLight });
         const selected = ControlHarness.TokenCss('SurfaceSelected');
-        const hover = ControlHarness.TokenCss('Bg2');
+        const hover = ControlHarness.TokenCss('RowHoverFill');
         const si = svg.indexOf(selected!);
         const hi = svg.indexOf(hover!);
         assert.notEqual(si, -1, 'selected + hovered row still paints @SurfaceSelected');
-        assert.notEqual(hi, -1, 'the @Bg2 hover surface still paints underneath');
-        assert.ok(si > hi, 'PART_Selected (@SurfaceSelected) paints AFTER @Bg2 so selection wins while hovered');
+        assert.notEqual(hi, -1, 'the @RowHoverFill hover surface still paints underneath');
+        assert.ok(si > hi, 'PART_Selected (@SurfaceSelected) paints AFTER @RowHoverFill so selection wins while hovered');
         ControlHarness.Reset();
     });
 
@@ -120,7 +120,7 @@ describe('Pragmatic ListBoxItem', () =>
             return it;
         }, { scheme: PragmaticLight });
         const selected = ControlHarness.TokenCss('SurfaceSelected')!.replace(/[()]/g, '\\$&');  // rgb\(226,243,233\)
-        const hover = ControlHarness.TokenCss('Bg2')!.replace(/[()]/g, '\\$&');                 // rgb\(236,235,232\)
+        const hover = ControlHarness.TokenCss('RowHoverFill')!.replace(/[()]/g, '\\$&');        // rgb\(212,232,218\)
         const selRect = svg.match(new RegExp(`<rect[^>]*fill="${selected}"\\s*/>`))![0];
         const hoverRect = svg.match(new RegExp(`<rect[^>]*fill="${hover}"\\s*/>`))![0];
         const selW = Number(selRect.match(/width="([\d.]+)"/)![1]);

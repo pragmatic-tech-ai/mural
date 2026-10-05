@@ -146,7 +146,7 @@ scheme PragmaticLight against Pragmatic
     @ControlActive = #22824D  // = @ControlAccent (Splitter hover/drag + drag-preview)
     // Wave 5: theme-agnostic aliases for code-level colour resolution
     // (color-picker.ts row hover; diagram-settings.ts THEME_LINK).
-    @RowHoverFill = #ECEBE8   // = @Bg2 (menu/scheme-row hover)
+    @RowHoverFill = #D4E8DA   // brand-green-tinted row hover (reads on @Bg2 panes)
     @InkVariant = #5F5C56     // = @Fg2 (diagram ruler tick / connector stroke)
     @SurfaceBg = #FFFFFF      // = @Bg1 (diagram ruler / backdrop fill)
 }

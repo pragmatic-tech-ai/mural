@@ -9,7 +9,8 @@
 //     appears on `when (IsFocused)` (@BorderFocus, 2dp), offset by
 //     @FocusRingOffset — never a re-stroke of a state element.
 //   * PART_Border — the hover surface. Rest transparent, hover steps to
-//     @Bg2 (no translucent overlay).
+//     @RowHoverFill (the brand-green-tinted row-hover token — reads on any
+//     surface, including a @Bg2 pane; no translucent overlay).
 //   * PART_Selected — a SEPARATE opaque layer above PART_Border that the
 //     `when (IsSelected)` trigger fills with @SurfaceSelected, so the
 //     selected cue survives a concurrent hover by z-order compositing
@@ -68,7 +69,7 @@ resources ListBoxes
             {
                 // PART_Selected carries the row Padding (NOT PART_Border) so
                 // its @SurfaceSelected fill spans the full row rect and covers
-                // the @Bg2 hover fill; the Padding insets only the content.
+                // the @RowHoverFill hover fill; the Padding insets only the content.
                 Border x:name="PART_Selected"
                     [ Fill = #00000000,
                       CornerRadius = @RadiusMd,
@@ -94,7 +95,7 @@ resources ListBoxes
         // Selection: PART_Selected opaquely covers PART_Border regardless
         // of hover (z-order compositing, not trigger order).
         when ( IsSelected ) { PART_Selected.Fill = @SurfaceSelected; }
-        when ( IsMouseOver ) { PART_Border.Fill = @Bg2; }
+        when ( IsMouseOver ) { PART_Border.Fill = @RowHoverFill; }
         when ( IsFocused ) { PART_FocusRing.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
         when ( IsEnabled = false ) { PART_Border.Opacity = @OpacityDisabled; }
         // Density / pointer adjust row height only (MinHeight — content,

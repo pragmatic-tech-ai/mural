@@ -63,6 +63,55 @@ describe('Pragmatic TreeViewItem', () =>
         ControlHarness.Reset();
     });
 
+    // Row HOVER. The hover trigger is `when ( PART_Row.IsMouseOver )` — on the
+    // ClickableRow part, NOT the item's own IsMouseOver (so a parent row doesn't
+    // light up when a child is hovered), so drive PART_Row directly. The fill is
+    // the brand-green-tinted @RowHoverFill: a plain neutral step (@Bg2/@Bg3) was
+    // too low-contrast on a @Bg2 side pane to register as feedback.
+    test('hovering PART_Row paints @RowHoverFill (PragmaticDark)', () =>
+    {
+        const { svg } = ControlHarness.Render(() =>
+        {
+            const it = new TreeViewItem();
+            it.Header = 'Node';
+            it.GetTemplateChild('PART_Row')!._setIsMouseOver(true);
+            return it;
+        }, { scheme: PragmaticDark });
+        const hover = ControlHarness.TokenCss('RowHoverFill');
+        assert.equal(hover, 'rgb(38,56,43)', '@RowHoverFill under PragmaticDark is #26382B');
+        assert.notEqual(hover, ControlHarness.TokenCss('Bg2'), 'hover must differ from the @Bg2 side pane');
+        assert.ok(svg.includes(hover!), 'hovered TreeViewItem paints @RowHoverFill');
+        ControlHarness.Reset();
+    });
+
+    test('hovering PART_Row paints @RowHoverFill (PragmaticLight)', () =>
+    {
+        const { svg } = ControlHarness.Render(() =>
+        {
+            const it = new TreeViewItem();
+            it.Header = 'Node';
+            it.GetTemplateChild('PART_Row')!._setIsMouseOver(true);
+            return it;
+        }, { scheme: PragmaticLight });
+        const hover = ControlHarness.TokenCss('RowHoverFill');
+        assert.equal(hover, 'rgb(212,232,218)', '@RowHoverFill under PragmaticLight is #D4E8DA');
+        assert.notEqual(hover, ControlHarness.TokenCss('Bg2'), 'hover must differ from the @Bg2 side pane');
+        assert.ok(svg.includes(hover!), 'hovered TreeViewItem paints @RowHoverFill');
+        ControlHarness.Reset();
+    });
+
+    test('no hover fill at rest', () =>
+    {
+        const { svg } = ControlHarness.Render(() =>
+        {
+            const it = new TreeViewItem();
+            it.Header = 'Node';
+            return it;
+        }, { scheme: PragmaticDark });
+        assert.ok(!svg.includes(ControlHarness.TokenCss('RowHoverFill')!), 'a resting row paints no @RowHoverFill');
+        ControlHarness.Reset();
+    });
+
     test('nested virtualization intact — PART_ChildHost still hosts a CollapsibleStack of sub-rows', () =>
     {
         ControlHarness.Activate(PragmaticLight);

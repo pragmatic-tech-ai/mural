@@ -1,9 +1,10 @@
 // Pragmatic theme — TreeView chrome (Wave 2).
 //
 // Copies the ListBox row pattern (see list-box.template.mu) onto the
-// tree row: rest transparent, hover @Bg3 on PART_Row (one surface step
-// ABOVE the @Bg2 side-pane rows sit on, so the highlight stays visible —
-// @Bg2 would vanish against a @Bg2 ShellSideContentPane), a dedicated opaque
+// tree row: rest transparent, hover @RowHoverFill on PART_Row (a brand-
+// green-tinted surface that reads clearly even against a @Bg2
+// ShellSideContentPane — a plain neutral step like @Bg2/@Bg3 is too low-
+// contrast on a dark pane to register as feedback), a dedicated opaque
 // PART_Selected layer filled with @SurfaceSelected on selection (wins
 // over hover by z-order), and @RowH* density via MinHeight. Focus paints
 // a @BorderFocus stroke on PART_Row itself — the row's Stroke is
@@ -54,7 +55,7 @@ resources TreeViews
             {
                 // PART_Selected carries the row Padding (NOT PART_Row) so its
                 // @SurfaceSelected fill spans the full row rect and covers the
-                // @Bg2 hover fill; the Padding insets only the content.
+                // @RowHoverFill hover fill; the Padding insets only the content.
                 Border x:name="PART_Selected"
                     [ Fill = #00000000,
                       CornerRadius = @RadiusMd,
@@ -94,7 +95,7 @@ resources TreeViews
             ItemsPresenter x:name="PART_ChildHost"
         }
         when ( IsSelected ) { PART_Selected.Fill = @SurfaceSelected; }
-        when ( PART_Row.IsMouseOver ) { PART_Row.Fill = @Bg3; }
+        when ( PART_Row.IsMouseOver ) { PART_Row.Fill = @RowHoverFill; }
         when ( PART_Row.IsFocused ) { PART_Row.Stroke = Pen [ Brush = @BorderFocus, Thickness = 2 ]; }
         when ( IsEnabled = false ) { PART_Row.Opacity = @OpacityDisabled; }
         when ( ThemeManager.Density = Compact ) { PART_Row.MinHeight = @RowHCompact; }
