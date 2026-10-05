@@ -463,6 +463,28 @@ describe('Border render — CornerRadius (uniform + asymmetric)', () => {
         assert.equal(ry, 20);
     });
 
+    test('single-argument CornerRadius renders a UNIFORM rounded rect (regression: (n) tuple)', () => {
+        // The compiler lowers a 1-element markup tuple `CornerRadius = (6)` to
+        // `new CornerRadius(6)`. That must round all four corners equally — a
+        // clean RectangleGeometry with rx = ry = 6 — NOT leave three corners
+        // non-finite (folded to Full) which traced a lopsided per-corner path
+        // (one square corner + three circular). This is what made the header
+        // close/overflow buttons render a non-circular blob on hover.
+        const b = new Border();
+        b.Fill = new SolidColorBrush(Color.Red);
+        b.CornerRadius = new CornerRadius(6);
+        b.Measure(new Size(100, 100));
+        b.Arrange(new Rect(0, 0, 100, 100));
+
+        const dc = new CapturingContext();
+        b.Render(dc);
+
+        assert.equal(dc.geometries.length, 1, 'uniform corners lower to ONE RectangleGeometry, not a per-corner path');
+        const { rx, ry } = rectOf(dc.geometries[0]!);
+        assert.equal(rx, 6, 'all four corners rounded to 6');
+        assert.equal(ry, 6);
+    });
+
     test('asymmetric corners + uniform stroke trace a per-corner path (DrawGeometry, not a rounded-rect)', () => {
         // A connected-bar / segmented shape: rounded left ends, square right.
         // With the uniform-Stroke model this now STROKES correctly (the old

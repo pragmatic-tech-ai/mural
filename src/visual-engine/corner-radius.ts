@@ -14,20 +14,44 @@
 // Use from TS:
 //     border.CornerRadius = CornerRadius.Full;
 //     border.CornerRadius = new CornerRadius(8, 0, 0, 8);   // pill-left
+//     border.CornerRadius = new CornerRadius(4);            // uniform (all four = 4)
 //     border.CornerRadius = 4;                              // uniform
 //
 // Use from `.mu`:
 //     CornerRadius = 4
+//     CornerRadius = (4)          // uniform — a 1-element tuple IS uniform
 //     CornerRadius = @ShapeFull
 //     CornerRadius = CornerRadius.Full
+//
+// The single-argument ctor fills all four corners (mirroring `Thickness`'s
+// uniform overload). The compiler lowers a 1-element markup tuple `(n)` to
+// `new CornerRadius(n)`, so without this overload `(n)` set ONLY TopLeft and
+// left the other three `undefined` → non-finite → folded to Full at paint,
+// rendering a lopsided blob (three circular corners + one square). See the
+// `resolveCorners` fold in border.ts.
 export class CornerRadius
 {
-    constructor(
-        public readonly TopLeft:     number,
-        public readonly TopRight:    number,
-        public readonly BottomRight: number,
-        public readonly BottomLeft:  number,
-    ) {}
+    public readonly TopLeft:     number;
+    public readonly TopRight:    number;
+    public readonly BottomRight: number;
+    public readonly BottomLeft:  number;
+
+    constructor(uniform: number);
+    constructor(topLeft: number, topRight: number, bottomRight: number, bottomLeft: number);
+    constructor(a: number, b?: number, c?: number, d?: number)
+    {
+        if (b === undefined)
+        {
+            this.TopLeft = this.TopRight = this.BottomRight = this.BottomLeft = a;
+        }
+        else
+        {
+            this.TopLeft     = a;
+            this.TopRight    = b;
+            this.BottomRight = c!;
+            this.BottomLeft  = d!;
+        }
+    }
 
     public static readonly Zero: CornerRadius = new CornerRadius(0, 0, 0, 0);
 

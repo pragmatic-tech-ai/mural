@@ -507,12 +507,12 @@ resources Shells {
     Template x:key="CompactHeaderIconButton" [TargetType = IconButton] {
         Border x:name="PART_Border"
             [ Fill           = #00000000,
-              CornerRadius         = (2),
+              CornerRadius         = @RadiusPill,
               Width                = 16,
               Height               = 16,
               TextBlock.Foreground = @Fg2 ] {
             Border x:name="PART_StateLayer"
-                [ Fill = #00000000, CornerRadius = (2) ] {
+                [ Fill = #00000000, CornerRadius = @RadiusPill ] {
                 ContentPresenter [ HorizontalAlignment = Center, VerticalAlignment = Center ]
             }
         }
@@ -528,7 +528,7 @@ resources Shells {
         Button x:name="PART_Trigger" [ Variant = Text ] {
             Border x:name="PART_Border"
                 [ Fill                 = #00000000,
-                  CornerRadius         = (2),
+                  CornerRadius         = @RadiusPill,
                   Width                = 16,
                   Height               = 16,
                   TextBlock.Foreground = @Fg2 ] {
