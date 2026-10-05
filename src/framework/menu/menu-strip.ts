@@ -242,6 +242,33 @@ export class MenuItem extends HeaderedItemsControl implements ICommandSource
         this._commandSource.dispose();
     }
 
+    // Drop the child-collection subscription (symmetric with subscribeChildItems).
+    // Called from the container-clear seam (MenuContainerFactory.ClearContainer)
+    // so a generated/recycled MenuItem stops reacting to a collection it no
+    // longer renders. Idempotent — a later ItemsSource write re-subscribes.
+    public DisposeChildItemsSubscription(): void
+    {
+        this._childItemsUnsub?.();
+        this._childItemsUnsub = undefined;
+    }
+
+    // (Re)subscribe to the current ItemsSource so a mutation of the bound child
+    // collection re-runs refreshRow() — the route that makes a data-driven
+    // submenu's ▶ chevron appear once its children attach after the row is
+    // built. Unsubscribes the previous collection first; an ItemsSource that is
+    // not an observable collection (plain array / undefined) leaves us with no
+    // subscription (the HasItems path still refreshes those).
+    private subscribeChildItems(): void
+    {
+        this.DisposeChildItemsSubscription();
+        const source = this.ItemsSource as
+            { Subscribe?: (listener: () => void) => () => void } | undefined;
+        if (source !== undefined && typeof source.Subscribe === 'function')
+        {
+            this._childItemsUnsub = source.Subscribe(() => this.refreshRow());
+        }
+    }
+
     private syncIsEnabledFromCommand(): void
     {
         // A bound IsEnabled owns the value: a plain write (or ClearValue) would
@@ -298,6 +325,15 @@ export class MenuItem extends HeaderedItemsControl implements ICommandSource
     // pointer leaves first.
     private static readonly HoverOpenDelayMs = 500;
     private _hoverOpenTimer: ReturnType<typeof setTimeout> | undefined;
+
+    // Live unsubscribe for THIS item's child collection (ItemsSource). A
+    // data-driven submenu parent is handed its children via
+    // `ItemsSource = <bound item>.Children` AFTER the row is built
+    // (HierarchicalItemsBinder.BindChildItems), and that collection may still
+    // mutate afterwards. We subscribe so the ▶ chevron re-evaluates
+    // (refreshRow) whenever the children attach or change, and dispose on
+    // container-clear / teardown so a recycled row drops the old collection.
+    private _childItemsUnsub: (() => void) | undefined;
 
     static
     {
@@ -447,6 +483,11 @@ export class MenuItem extends HeaderedItemsControl implements ICommandSource
                 this.IsSubmenuOpen = false;
                 this._onActivated?.();
             };
+            // `super` just stamped `_itemsControlData` on the container. Refresh
+            // its row NOW so a data-driven submenu item shows its ▶ chevron
+            // immediately (hasSubmenu() reads the bound item's HasChildren off
+            // that stamp) instead of only after a hover realizes children.
+            container.refreshRow();
         }
     }
 
@@ -580,6 +621,15 @@ export class MenuItem extends HeaderedItemsControl implements ICommandSource
         if (name === 'RowTemplate')
         {
             this.rebuildRow();
+            this.refreshRow();
+            return;
+        }
+        if (name === 'ItemsSource')
+        {
+            // Re-point the live child-collection subscription and re-evaluate
+            // the chevron for the new source (its children may already be
+            // present, or arrive/mutate later through this subscription).
+            this.subscribeChildItems();
             this.refreshRow();
             return;
         }

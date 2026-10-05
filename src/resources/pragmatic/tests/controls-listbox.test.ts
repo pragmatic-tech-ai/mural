@@ -120,7 +120,7 @@ describe('Pragmatic ListBoxItem', () =>
             return it;
         }, { scheme: PragmaticLight });
         const selected = ControlHarness.TokenCss('SurfaceSelected')!.replace(/[()]/g, '\\$&');  // rgb\(226,243,233\)
-        const hover = ControlHarness.TokenCss('Bg2')!.replace(/[()]/g, '\\$&');                 // rgb\(244,244,242\)
+        const hover = ControlHarness.TokenCss('Bg2')!.replace(/[()]/g, '\\$&');                 // rgb\(236,235,232\)
         const selRect = svg.match(new RegExp(`<rect[^>]*fill="${selected}"\\s*/>`))![0];
         const hoverRect = svg.match(new RegExp(`<rect[^>]*fill="${hover}"\\s*/>`))![0];
         const selW = Number(selRect.match(/width="([\d.]+)"/)![1]);

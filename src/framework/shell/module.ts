@@ -120,6 +120,15 @@ export class Capability extends MuralBase implements ICapability
     public static readonly ServiceKeyKey = MuralBase.RegisterProperty<ServiceToken<unknown> | undefined>(
         Capability, 'ServiceKey', undefined, MetaData.None);
 
+    // Placement in the shell's root navigation rail. Lower sorts earlier.
+    // Default MAX_SAFE_INTEGER so a capability that leaves Order UNSET always
+    // falls AFTER every explicitly-ordered one (and, being a stable sort,
+    // unordered capabilities keep their module × declaration order among
+    // themselves). Mirrors ShellControlDefinition.Order (same number-DP shape;
+    // the default differs by design — see NavigationService.PopulateFromModules).
+    public static readonly OrderKey = MuralBase.RegisterProperty<number>(
+        Capability, 'Order', Number.MAX_SAFE_INTEGER, MetaData.None);
+
     public get Name(): string  { return this.get_property_value(Capability.NameKey); }
     public set Name(v: string) { this.set_property_value(Capability.NameKey, v); }
 
@@ -128,6 +137,9 @@ export class Capability extends MuralBase implements ICapability
 
     public get ServiceKey(): ServiceToken<unknown> | undefined  { return this.get_property_value(Capability.ServiceKeyKey); }
     public set ServiceKey(v: ServiceToken<unknown> | undefined) { this.set_property_value(Capability.ServiceKeyKey, v); }
+
+    public get Order(): number  { return this.get_property_value(Capability.OrderKey); }
+    public set Order(v: number) { this.set_property_value(Capability.OrderKey, v); }
 }
 
 // A capability provider added to the shell — the declaration of the elements

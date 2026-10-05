@@ -7,6 +7,8 @@
     ServiceKey,
 } from '../../../runtime/index.js';
 import { DialogService } from '../services/dialog-service.js';
+import { DialogAction } from '../../surfaces/dialog-action.js';
+import { ButtonVariant } from '../../buttons/button.js';
 import type { IDocument } from '../services/documents-content-host-service.js';
 import type { Geometry } from '../../../visual-engine/index.js';
 
@@ -44,6 +46,11 @@ export class SettingsLauncherService extends ServiceBase
 {
     public static readonly Key = new ServiceKey<SettingsLauncherService>('SettingsLauncherService');
 
+    // Label for the dialog's single primary action (settings apply live, so a
+    // lone "Done" that just closes the dialog is the whole action row — there is
+    // no Save/Cancel/revert to model).
+    private static readonly DoneLabel = 'Done';
+
     private readonly _openCommand: ICommand;
 
     // Built once — the view's editors bind live to the same Setting DPs, so the
@@ -74,6 +81,15 @@ export class SettingsLauncherService extends ServiceBase
             Content:   this._view as unknown as MuralBase,
             Width:     720,
             MaxHeight: 640,
+            // Live-apply model: a single primary "Done" that dismisses the
+            // dialog (settings have already persisted as they were edited).
+            Actions: [
+                new DialogAction(
+                    SettingsLauncherService.DoneLabel,
+                    new RelayCommand(() => dialogs.Close()),
+                    ButtonVariant.Filled,
+                ),
+            ],
         });
     }
 }

@@ -85,6 +85,53 @@ describe('NavigationService.PopulateFromModules', () => {
     });
 });
 
+describe('NavigationService.PopulateFromModules — ordering', () => {
+    function ordered(name: string, order: number): Capability
+    {
+        const cap = capability(name);
+        cap.Order = order;
+        return cap;
+    }
+
+    test('honors Capability.Order ascending across modules', () => {
+        const app = new Application();
+        app.Modules.Add(moduleWith(ordered('A', 30), ordered('B', 10)));
+        app.Modules.Add(moduleWith(ordered('C', 20)));
+
+        app.Services.register(NavigationService.Key, p => new ShellNav(p));
+        const nav = app.Services.getRequired(NavigationService.Key);
+
+        const labels = [...nav.Items].map(i => (i as NavigationDestination).Label);
+        assert.deepEqual(labels, ['B', 'C', 'A']);
+    });
+
+    test('ties keep module × declaration order (stable sort)', () => {
+        const app = new Application();
+        // No Order set on any capability — all share the default (MAX), so the
+        // flattened module × declaration order must survive the sort verbatim.
+        app.Modules.Add(moduleWith(capability('Shapes'), capability('Layers')));
+        app.Modules.Add(moduleWith(capability('Outline')));
+
+        app.Services.register(NavigationService.Key, p => new ShellNav(p));
+        const nav = app.Services.getRequired(NavigationService.Key);
+
+        const labels = [...nav.Items].map(i => (i as NavigationDestination).Label);
+        assert.deepEqual(labels, ['Shapes', 'Layers', 'Outline']);
+    });
+
+    test('unset Order falls after explicitly-ordered capabilities, keeping declaration order among the unset', () => {
+        const app = new Application();
+        // Two unset (default MAX) bracketing one explicitly ordered first.
+        app.Modules.Add(moduleWith(capability('Unset1'), ordered('First', 5), capability('Unset2')));
+
+        app.Services.register(NavigationService.Key, p => new ShellNav(p));
+        const nav = app.Services.getRequired(NavigationService.Key);
+
+        const labels = [...nav.Items].map(i => (i as NavigationDestination).Label);
+        assert.deepEqual(labels, ['First', 'Unset1', 'Unset2']);
+    });
+});
+
 describe('NavigationService.ActiveService', () => {
     test('selecting a destination resolves the wrapped capability\'s service', () => {
         const app = new Application();
