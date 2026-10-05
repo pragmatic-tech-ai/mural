@@ -187,6 +187,11 @@ export class EditableTextBlock extends Single implements IDisposable
         {
             this.SetChild(this._editor);
             this._editor.Focus();
+            // Select the whole value on entry (rename convention): the user can
+            // immediately type over it, and the selection gives the focused
+            // editor a visible caret/highlight. EditingText was seeded before
+            // IsEditing flipped, so the editor already holds the current text.
+            this._editor.SelectAll();
         }
         else
         {

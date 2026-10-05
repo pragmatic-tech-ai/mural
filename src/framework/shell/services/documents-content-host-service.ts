@@ -54,6 +54,15 @@ export class DocumentsContentHostService extends ContentHostService
     // content stay in lock-step.
     private _activeDocument: IDocument | undefined = undefined;
 
+    // The single EPHEMERAL "preview" document (VS Code-style). At most one at a
+    // time: opening another preview replaces it in its tab slot rather than
+    // accumulating tabs — the gesture for browsing a tree with single-click /
+    // keyboard navigation. undefined when no preview tab is active. A preview is
+    // PROMOTED to a permanent tab by Open() (double-click), Promote(), or by
+    // becoming dirty (its first edit) — so an ephemeral tab is never silently
+    // discarded with unsaved changes.
+    private _previewDocument: IDocument | undefined = undefined;
+
     // Close a document by its Id — the command a tab strip's close button binds
     // (`Command = $service(ContentHostService).CloseDocumentCommand`,
     // `CommandParameter = $Id`). Takes the Id string (not the document) because
@@ -199,6 +208,11 @@ export class DocumentsContentHostService extends ContentHostService
 
     public get OpenDocuments(): ObservableCollection<IDocument> { return this._openDocuments; }
 
+    // The current ephemeral preview document, or undefined when no tab is in
+    // preview mode. A tab strip may bind this to render the preview tab
+    // distinctly (italic title, VS Code parity).
+    public get PreviewDocument(): IDocument | undefined { return this._previewDocument; }
+
     public get ActiveDocument(): IDocument | undefined { return this._activeDocument; }
     // Settable so a TwoWay tab-strip SelectedItem binding can re-activate.
     // Activation IS what the host presents, so every (changing) write routes
@@ -223,14 +237,81 @@ export class DocumentsContentHostService extends ContentHostService
         (this._saveActiveCommand as RelayCommand | undefined)?.RaiseCanExecuteChanged();
     }
 
-    // Open a document: add it to the open set if new (dedupe by Id) and make
-    // it active. Re-opening an already-open document just re-activates the
-    // existing instance. Activation presents it via the base View().
+    // Open a document as a PERMANENT tab: add it to the open set if new (dedupe
+    // by Id) and make it active. Re-opening an already-open document just
+    // re-activates the existing instance. Activation presents it via the base
+    // View(). If the opened document is the current ephemeral preview, this
+    // PROMOTES it (clears the preview slot) — the double-click / activate
+    // gesture that pins a previewed document.
     public Open(document: IDocument): void
     {
         const existing = this.find(document.Id);
         if (existing === undefined) this.OpenDocuments.Add(document);
-        this.ActiveDocument = existing ?? document;
+        const target = existing ?? document;
+        if (this._previewDocument === target) this.setPreviewDocument(undefined);
+        this.ActiveDocument = target;
+    }
+
+    // Open a document as an EPHEMERAL preview (single-click / keyboard
+    // navigation). VS Code semantics:
+    //   - already open as a PERMANENT tab → just activate it; it stays permanent.
+    //   - already the preview → re-activate in place.
+    //   - otherwise → it takes the single preview slot, REPLACING (closing) the
+    //     current preview in its tab position so browsing a tree reuses one tab
+    //     instead of piling them up.
+    // The prior preview is always clean here — a dirty preview was promoted on
+    // its first edit (see recomputeDirty) — so nothing unsaved is discarded.
+    public OpenPreview(document: IDocument): void
+    {
+        const existing = this.find(document.Id);
+        if (existing !== undefined)
+        {
+            // Already open: a permanent tab stays permanent; the preview
+            // re-activates in place. Either way just activate — never demote a
+            // permanent tab back to preview.
+            this.ActiveDocument = existing;
+            return;
+        }
+        const prior = this._previewDocument;
+        if (prior !== undefined)
+        {
+            // Replace the prior preview IN PLACE so the tab slot is reused.
+            const index = this.OpenDocuments.IndexOf(prior);
+            this.setPreviewDocument(undefined);
+            if (index >= 0)
+            {
+                this.OpenDocuments.RemoveAt(index);
+                this.OpenDocuments.Insert(index, document);
+            }
+            else
+            {
+                this.OpenDocuments.Add(document);
+            }
+        }
+        else
+        {
+            this.OpenDocuments.Add(document);
+        }
+        this.setPreviewDocument(document);
+        this.ActiveDocument = document;
+    }
+
+    // Promote the ephemeral preview to a permanent tab (double-click / explicit
+    // pin / first edit). A no-op unless `document` IS the current preview.
+    public Promote(document: IDocument): void
+    {
+        if (this._previewDocument !== document) return;
+        this.setPreviewDocument(undefined);
+    }
+
+    // Set (or clear) the preview slot, notifying the view so a preview-aware tab
+    // template can re-render the affected tab.
+    private setPreviewDocument(document: IDocument | undefined): void
+    {
+        const old = this._previewDocument;
+        if (old === document) return;
+        this._previewDocument = document;
+        this.RaisePropertyChanged('PreviewDocument', old, document);
     }
 
     // Close a document: remove it from the open set. If it was active,
@@ -240,6 +321,7 @@ export class DocumentsContentHostService extends ContentHostService
     {
         const index = this.OpenDocuments.IndexOf(document);
         if (index < 0) return;
+        if (this._previewDocument === document) this.setPreviewDocument(undefined);
         const wasActive = this.ActiveDocument === document;
         this.OpenDocuments.RemoveAt(index);
         if (!wasActive) return;
@@ -289,6 +371,11 @@ export class DocumentsContentHostService extends ContentHostService
     // Recompute AnyDirty and requery the save commands' enablement.
     private recomputeDirty(): void
     {
+        // An edit to the preview document promotes it to a permanent tab: a
+        // dirty ephemeral tab must never be silently replaced/discarded by the
+        // next OpenPreview. (Only reactive-IsDirty documents fire this live; a
+        // double-click still promotes the rest.)
+        if (this._previewDocument?.IsDirty === true) this.setPreviewDocument(undefined);
         let any = false;
         for (const doc of this.OpenDocuments) { if (doc.IsDirty) { any = true; break; } }
         const old = this._anyDirty;

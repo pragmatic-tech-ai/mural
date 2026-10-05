@@ -716,6 +716,14 @@ export class TreeViewItem extends HeaderedItemsControl
             if (tree !== undefined) tree.HandleContainerClick(this, modifiers);
         };
         this._row.onActivate = (): void => {
+            // Double-clicking a BRANCH row expands/collapses it (the folder
+            // gesture) — activation (open-document) is a LEAF-only action, so a
+            // leaf's double-click falls through to its data OnActivate hook.
+            if (this.hasChildItems())
+            {
+                this.IsExpanded = !this.IsExpanded;
+                return;
+            }
             const data = dataOf(this) as ExpandableTreeData | undefined;
             data?.OnActivate?.();
         };

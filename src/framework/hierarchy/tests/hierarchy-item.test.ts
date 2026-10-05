@@ -61,6 +61,17 @@ describe('HierarchyItem', () => {
         assert.equal(item.Children.ToArray()[0].Caption, HierarchyItem.LoadingText);
     });
 
+    test('BeginEdit seeds EditingName from Caption and RAISES PropertyChanged (editor binding populates)', () => {
+        const item = new HierarchyItem(alloc.Mint(), 'project', fakeOwner(), fakeHost(), { Caption: 'Alpha' });
+        let fired = 0;
+        item.PropertyChanged('EditingName').subscribe(() => { fired += 1; });
+
+        item.BeginEdit();
+
+        assert.equal(item.EditingName, 'Alpha', 'editing name seeded from the current caption');
+        assert.equal(fired, 1, 'notified so the EditingText binding pushes the caption into the editor');
+    });
+
     test('CommitEdit routes the new name to the host and ends editing', () => {
         let committed = '';
         const item = new HierarchyItem(alloc.Mint(), 'project', fakeOwner(), fakeHost({ CommitRename: (_i, name) => { committed = name; } }), {});

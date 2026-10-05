@@ -185,7 +185,11 @@ export class HierarchyItem extends Observable
 
     public BeginEdit(): void
     {
-        this._editingName = this._caption;
+        // Route through the EditingName SETTER (not the backing field) so
+        // RaisePropertyChanged fires — the `EditingText = $EditingName` binding
+        // on the row's EditableTextBlock only pushes the caption into the editor
+        // on a change notification. A direct field write left the editor empty.
+        this.EditingName = this._caption;
         this.setEditing(true);
     }
 

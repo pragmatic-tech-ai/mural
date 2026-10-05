@@ -59,6 +59,17 @@ describe('EditableTextBlock — display / edit toggle', () => {
         assert.equal(editor.IsFocused, true, 'the editor is focused on entry');
     });
 
+    test('entering edit mode selects the whole name so typing replaces it (caret visible)', () => {
+        const { eb, editor } = fixture();
+        eb.Text = 'Alpha';
+        eb.EditingText = 'Alpha';
+
+        eb.IsEditing = true;
+
+        assert.equal(editor.SelectionStart, 0, 'selection starts at the beginning');
+        assert.equal(editor.SelectionLength, 'Alpha'.length, 'the whole name is selected on entry');
+    });
+
     test('typing into the inner TextBox updates EditingText (the reverse sync)', () => {
         const { eb, editor } = fixture();
         eb.Text = 'Alpha';

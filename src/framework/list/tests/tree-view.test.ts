@@ -878,4 +878,32 @@ describe('TreeViewItem — OnActivate data hook (double-click)', () => {
         im.InjectPointerDown(row, { ...pointer(), IsDoubleClick: true }); // double → activate
         assert.equal(fired, 1, 'OnActivate fires on a double-click press');
     });
+
+    test('double-clicking a BRANCH row toggles expansion instead of activating', () => {
+        const tree = new TreeView();
+        let fired = 0;
+        const child = { Name: 'leaf', children: [] };
+        const data  = { Name: 'root', children: [child], OnActivate() { fired++; } };
+        tree.ItemTemplate = new HierarchicalDataTemplate(
+            (d) => new TextBlock((d as { Name: string }).Name),
+            (d) => (d as { children?: unknown[] }).children,
+        );
+        tree.ItemsSource = [data];
+        const target = new HeadlessTarget(250, 400);
+        target.Content = tree;
+        target.Flush();
+
+        const im = new InputManager();
+        const rootItem = tree.RootItems[0]!;
+        const row = rowOf(rootItem);
+        assert.equal(rootItem.IsExpanded, false, 'precondition: collapsed');
+
+        im.InjectPointerDown(row, { ...pointer(), IsDoubleClick: true });  // double-click a branch
+        assert.equal(rootItem.IsExpanded, true, 'branch expands on double-click');
+        assert.equal(fired, 0, 'a branch double-click expands, it does not activate (open)');
+
+        im.InjectPointerDown(row, { ...pointer(), IsDoubleClick: true });  // double-click again
+        assert.equal(rootItem.IsExpanded, false, 'branch collapses on a second double-click');
+        assert.equal(fired, 0);
+    });
 });
