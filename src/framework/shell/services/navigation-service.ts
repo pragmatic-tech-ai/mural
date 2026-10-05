@@ -241,12 +241,22 @@ export class NavigationService extends ServiceBase
     {
         const app = this.Provider.getRequired(ApplicationService.Key);
         this.Items.Clear();
+        // Flatten every module's capabilities preserving module × declaration
+        // order, then STABLE-sort by Order ascending. Array.prototype.sort is
+        // stable (Node 20+), so capabilities that share an Order (the default,
+        // when unset) keep that flattened order among themselves.
+        const capabilities: Capability[] = [];
         for (const module of app.Modules)
         {
             for (const capability of module.Capabilities)
             {
-                this.Items.Add(this.createDestination(capability as Capability));
+                capabilities.push(capability as Capability);
             }
+        }
+        capabilities.sort((a, b) => a.Order - b.Order);
+        for (const capability of capabilities)
+        {
+            this.Items.Add(this.createDestination(capability));
         }
         // Land on the first destination so the shell opens showing content
         // rather than an empty panel. Apps that want no initial selection
