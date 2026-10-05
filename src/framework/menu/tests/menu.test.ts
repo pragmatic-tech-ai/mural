@@ -75,6 +75,26 @@ describe('MenuStrip / MenuItem / MenuSeparator', () => {
         assert.equal(chevron(), Visibility.Collapsed);
     });
 
+    test('data-driven submenu item shows its chevron right after prepare (no hover)', () => {
+        // A data-driven menu realizes MenuItem containers for bound VMs whose
+        // HasChildren reports a submenu. The chevron reads that flag off the
+        // `_itemsControlData` stamp — so realizing the container (prepare) must
+        // light the ▶ immediately, without waiting for a hover to force a refresh.
+        interface RowInternals { _chevron?: { Visibility: Visibility } }
+        const parent    = new MenuItem();          // the data-driven submenu owner
+        const container = new MenuItem();           // the realized child container
+        const chevron = (): Visibility | undefined =>
+            (container as unknown as RowInternals)._chevron?.Visibility;
+
+        // Before prepare: no data → leaf → chevron collapsed.
+        assert.equal(chevron(), Visibility.Collapsed);
+
+        // Realize the container for a bound item that reports a submenu. This
+        // stamps `_itemsControlData` and (the fix) refreshes the row.
+        parent.PrepareContainerForItemOverride(container, { HasChildren: true }, 0);
+        assert.equal(chevron(), Visibility.Visible, 'chevron visible immediately after prepare — no hover needed');
+    });
+
     test('SeparatorBefore defaults false (divider Collapsed); true shows it; EXISTING rows are unaffected', () => {
         // PART_SeparatorBefore is a MenuSeparator row part, Visibility-toggled
         // the same way PART_Chevron is — default Collapsed so every row that

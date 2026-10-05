@@ -93,6 +93,7 @@ export class MenuContainerFactory
             return;
         }
         container.DisposeCommandSource();
+        container.DisposeChildItemsSubscription();
         container.DataContext = undefined;
         container.ItemsSource = undefined;
     }
