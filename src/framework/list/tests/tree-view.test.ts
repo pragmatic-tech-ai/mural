@@ -482,6 +482,40 @@ describe('TreeView — root-level virtualization (IsVirtualizing)', () =>
         for (let i = 1; i < far.length; i++) assert.equal(far[i], far[i - 1]! + 1, 'realized band is contiguous');
     });
 
+    // Regression: collapsing a tall expanded branch must bring the sibling rows below
+    // it back into view within the SAME layout. The branch row shrinks on collapse,
+    // freeing vertical space, but the virtualizing panel hit-tested the viewport with
+    // the row's STALE (expanded) size and never re-realized the now-visible siblings —
+    // they stayed blank until some unrelated later layout. MeasureOverride now converges
+    // its realized range against the re-measured sizes within a single pass.
+    test('collapsing a tall branch re-realizes the sibling rows below it in one layout', () => {
+        const tree = new TreeView();
+        tree.IsVirtualizing = true;
+        tree.ItemTemplate = new HierarchicalDataTemplate(
+            (d) => new TextBlock((d as Node).Name),
+            (d) => (d as Node).children,
+        );
+        const big: Node = { Name: 'big', children: Array.from({ length: 40 }, (_, i) => ({ Name: `c${i}` })) };
+        tree.ItemsSource = [big, { Name: 's1' }, { Name: 's2' }, { Name: 's3' }] as Node[];
+        const target = new HeadlessTarget(200, 120);
+        target.Content = tree;
+        target.Flush();
+
+        const vsp = tree.ItemsPanelInstance as VirtualizingStackPanel;
+        const bigRow = tree.RootItems[0]!;
+        bigRow.IsExpanded = true;
+        target.Flush(); target.Flush(); target.Flush();
+        // Expanded, big's full child extent pushes the sibling roots far below the fold.
+        assert.ok(!vsp.RealizedIndices.includes(3),
+            `precondition: s3 is virtualized away while big is expanded, got ${vsp.RealizedIndices}`);
+
+        bigRow.IsExpanded = false;
+        target.Flush();
+        // Collapsed, the four short roots all fit the 120px viewport → all realize.
+        assert.deepEqual([...vsp.RealizedIndices], [0, 1, 2, 3],
+            `collapsing re-realizes the siblings in one layout, got ${vsp.RealizedIndices}`);
+    });
+
     test('turning virtualization back off restores the plain StackPanel', () =>
     {
         const tree = bigTree(12);
@@ -490,6 +524,45 @@ describe('TreeView — root-level virtualization (IsVirtualizing)', () =>
         assert.ok(!(tree.ItemsPanelInstance instanceof VirtualizingStackPanel));
         // Non-virtual → every root row materialized.
         assert.equal(tree.RootItems.length, 12);
+    });
+});
+
+describe('TreeViewItem — chevron affordance (optimistically expandable)', () => {
+    beforeEach(() => { initTestApp(); });
+
+    const glyphOf = (item: TreeViewItem): unknown =>
+        (item as unknown as { _chevronGlyph: { Geometry: unknown } })._chevronGlyph.Geometry;
+
+    test('a COLLAPSED node always paints a chevron, even with no known children', () => {
+        const { tree, a } = buildFixture();   // `a` is a leaf (no children)
+        const target = new HeadlessTarget(200, 300);
+        target.Content = tree;
+        target.Flush();
+        assert.equal(a.IsExpanded, false, 'precondition: collapsed');
+        assert.ok(glyphOf(a) !== undefined,
+            'a collapsed node is optimistically expandable — children may load lazily on expand');
+    });
+
+    test('a node that EXPANDS to no children retracts its chevron', () => {
+        const { tree, a } = buildFixture();
+        const target = new HeadlessTarget(200, 300);
+        target.Content = tree;
+        target.Flush();
+        a.IsExpanded = true;
+        target.Flush();
+        assert.ok(glyphOf(a) === undefined,
+            'proven-empty after expansion → the chevron disappears');
+    });
+
+    test('a branch keeps its chevron both collapsed and expanded', () => {
+        const { tree, b } = buildFixture();   // `b` has b1, b2
+        const target = new HeadlessTarget(200, 300);
+        target.Content = tree;
+        target.Flush();
+        assert.ok(glyphOf(b) !== undefined, 'collapsed branch shows a chevron');
+        b.IsExpanded = true;
+        target.Flush();
+        assert.ok(glyphOf(b) !== undefined, 'expanded branch with children keeps its chevron');
     });
 });
 

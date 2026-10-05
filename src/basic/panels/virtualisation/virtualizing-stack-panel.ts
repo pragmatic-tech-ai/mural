@@ -220,25 +220,30 @@ export class VirtualizingStackPanel extends VirtualizingPanel implements IScroll
         const childSize = horizontal
             ? new Size(Number.POSITIVE_INFINITY, crossExtent)
             : new Size(crossExtent, Number.POSITIVE_INFINITY);
-        let maxCross = 0;
-        for (const [index, container] of this.realized)
+        let maxCross = this.measureRealized(childSize, horizontal);
+
+        // Convergence pass. Measuring may have SHRUNK a realized row's cached size —
+        // most notably when a nested branch just collapsed and its row lost its children
+        // — which pulls the rows below it up, so rows that were past the fold now fall
+        // inside the viewport. Re-run the hit-test against the updated sizeCache and
+        // realize any newly-intersecting rows in THIS pass. Nothing else re-invalidates
+        // us after a sibling collapses (the sizeCache write is silent), so without this
+        // the rows below a collapsed branch stay un-realized until some unrelated later
+        // pass (the reported "siblings don't refresh on collapse"). Only ever GROW the
+        // realized range here (a re-measure can also make rows larger, which would shrink
+        // the hit-test — but keeping those already-realized rows preserves the existing
+        // viewport-buffer behavior). Bounded so a size oscillation can't spin.
+        for (let guard = 0; guard < 3 && vpLen > 0; guard++)
         {
-            container.Measure(childSize);
-            const desired = horizontal
-                ? container.DesiredSize.Width
-                : container.DesiredSize.Height;
-            // Cache the measured primary-axis extent so subsequent
-            // passes account for variable sizes. Skip when the
-            // container reported Infinity (defensive — shouldn't
-            // happen from a real Visual).
-            if (Number.isFinite(desired))
-            {
-                this.sizeCache.set(index, desired);
-            }
-            const cross = horizontal
-                ? container.DesiredSize.Height
-                : container.DesiredSize.Width;
-            if (Number.isFinite(cross)) maxCross = Math.max(maxCross, cross);
+            const range = this.indicesIntersecting(vpStart, vpEnd, count);
+            if (range.last < range.first) break;   // nothing intersects (defensive)
+            const grownFirst = Math.min(first, range.first);
+            const grownLast  = Math.max(last,  range.last);
+            if (grownFirst === first && grownLast === last) break;
+            first = grownFirst;
+            last  = grownLast;
+            this.realizeRange(first, last);
+            maxCross = this.measureRealized(childSize, horizontal);
         }
         this.measuredCross = maxCross;
 
@@ -311,6 +316,27 @@ export class VirtualizingStackPanel extends VirtualizingPanel implements IScroll
             }
         }
         return finalSize;
+    }
+
+    // Measure every realized container (primary axis unbounded, cross axis filled),
+    // caching each one's measured primary extent for the viewport math; returns the max
+    // cross-axis extent. Re-callable within a single measure pass (see the convergence
+    // loop in MeasureOverride) — Measure is a no-op for an already-measured container.
+    private measureRealized(childSize: Size, horizontal: boolean): number
+    {
+        let maxCross = 0;
+        for (const [index, container] of this.realized)
+        {
+            container.Measure(childSize);
+            const desired = horizontal ? container.DesiredSize.Width : container.DesiredSize.Height;
+            // Cache the measured primary-axis extent so subsequent passes account for
+            // variable sizes. Skip a non-finite report (defensive — a real Visual never
+            // desires Infinity along the measured axis).
+            if (Number.isFinite(desired)) this.sizeCache.set(index, desired);
+            const cross = horizontal ? container.DesiredSize.Height : container.DesiredSize.Width;
+            if (Number.isFinite(cross)) maxCross = Math.max(maxCross, cross);
+        }
+        return maxCross;
     }
 
     // ── Variable-size helpers ───────────────────────────────────────

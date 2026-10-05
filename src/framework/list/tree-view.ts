@@ -912,8 +912,15 @@ export class TreeViewItem extends HeaderedItemsControl
                 this.InvalidateMeasure();
                 {
                     const data = dataOf(this) as ExpandableTreeData | undefined;
-                    if (newValue === true) data?.OnExpand?.();
-                    else data?.OnCollapse?.();
+                    if (newValue === true)
+                    {
+                        data?.OnExpand?.();
+                    }
+                    else
+                    {
+                        data?.OnCollapse?.();
+                        this.refreshSiblingContainers();
+                    }
                 }
                 return;
             case 'Header':
@@ -1009,6 +1016,24 @@ export class TreeViewItem extends HeaderedItemsControl
         }
     }
 
+    // After this row COLLAPSES, the vertical space it freed must be reclaimed: the
+    // following siblings move up and — when the tree virtualizes — re-realize into the
+    // now-visible range. Repositioning is the containing items panel's job, so signal it
+    // to re-run layout over every sibling container. InvalidateMeasure on this row alone
+    // is not enough: Visual.InvalidateMeasure cascades to the parent only on a clean→dirty
+    // transition, so after the collapse has already dirtied this subtree it may never
+    // reach the panel, leaving the siblings below at stale offsets (and, when virtualized,
+    // never re-realized). Invalidating the panel's measure AND arrange forces the
+    // VirtualizingStackPanel to converge its realized range for the new sizes (see its
+    // MeasureOverride) and re-arrange the whole sibling set from the recomputed offsets.
+    private refreshSiblingContainers(): void
+    {
+        const panel = this.GetVisualParent();
+        if (panel === undefined) return;
+        panel.InvalidateMeasure();
+        panel.InvalidateArrange();
+    }
+
     // Re-evaluate the chevron after this row's item binding changes. A recycled
     // virtualizing row is rebound (new Header + ItemsSource) without realizing
     // any child container — so no Prepare/Clear fires and the chevron would keep
@@ -1019,14 +1044,16 @@ export class TreeViewItem extends HeaderedItemsControl
         this.refreshChevron();
     }
 
-    // Leaf items render a blank chevron cell so columns line up; non-
-    // leaf items pick the glyph from IsExpanded.
+    // A node ALWAYS paints as expandable (a collapsed chevron) while collapsed —
+    // children may be loaded lazily on expand, so a collapsed row's emptiness is
+    // unknown and we optimistically offer the affordance. The chevron is retracted
+    // ONLY once the row is EXPANDED and proves to have no child items. A blank cell
+    // (Geometry undefined → Shape paints nothing) keeps the fixed-width ChevronTarget
+    // column aligned either way.
     private refreshChevron(): void
     {
-        // Leaf rows paint no glyph (Geometry undefined → Shape renders
-        // nothing); the fixed-width ChevronTarget keeps the column aligned.
-        const hasChildren = this.hasChildItems();
-        this._chevronGlyph.Geometry = hasChildren ? chevronGeometry(this.IsExpanded) : undefined;
+        const showChevron = this.IsExpanded ? this.hasChildItems() : true;
+        this._chevronGlyph.Geometry = showChevron ? chevronGeometry(this.IsExpanded) : undefined;
     }
 
     // Branch-vs-leaf is a property of the BOUND ITEMS, not of how many

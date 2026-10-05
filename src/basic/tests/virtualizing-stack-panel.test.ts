@@ -203,27 +203,26 @@ describe('VirtualizingStackPanel — variable item heights', () => {
         protected override RenderOverride(_dc: DrawingContext): void { }
     }
 
-    test('measured size populates the cache; subsequent passes use it for viewport math', () => {
+    test('measured size populates the cache; the panel converges the realized range in one pass', () => {
         const items = Array.from({ length: 6 }, (_, i) => `item-${i}`);
         const panel = new VirtualizingStackPanel();
         panel.ItemHeight = 20;             // default estimate for un-measured items
-        panel.Viewport   = new Rect(0, 0, 100, 35);   // first pass uses estimate
+        panel.Viewport   = new Rect(0, 0, 100, 35);
         const ic = new ItemsControl();
         ic.ItemsPanel   = () => panel;
         ic.ItemTemplate = new DataTemplate(d => new VarLeaf(d));
         ic.Items        = items;
 
-        // First measure: cache empty, estimate 20/each, viewport [0..35] → items 0, 1.
+        // First measure: the empty cache estimates 20/each, so the [0..35] viewport
+        // hit-tests items 0, 1. But measuring them shrinks the cache (item-0=10,
+        // item-1=15), which pulls item-2 [25..45) into the viewport — MeasureOverride
+        // re-runs the hit-test against the updated cache and realizes it in the SAME
+        // pass rather than deferring to a later re-measure.
         ic.Measure(new Size(100, 200));
-        assert.deepEqual(panel.RealizedIndices, [0, 1]);
-        // After measure, cache has measured sizes: item-0=10, item-1=15.
+        assert.deepEqual(panel.RealizedIndices, [0, 1, 2]);
 
-        // Force a re-measure (cache invalidation on the panel side).
+        // A forced re-measure is stable: the cache already holds the measured sizes.
         panel.InvalidateMeasure();
-        // Cache populated for 0/1 (10, 15), estimate 20 for the rest.
-        // Viewport [0..35] now reaches further down:
-        //   item-0 [0..10), item-1 [10..25), item-2 [25..45), item-3 [45..65), …
-        // → items 0, 1, 2 intersect.
         ic.Measure(new Size(100, 200));
         assert.deepEqual(panel.RealizedIndices, [0, 1, 2]);
     });
