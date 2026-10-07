@@ -35,8 +35,9 @@ export interface DialogOptions
     // small prompts that should size to their text.
     readonly Width?: number;
     readonly MaxHeight?: number;
-    // Clicking the scrim (or Escape) cancels — resolving Show() with undefined.
-    // Default true; set false for a dialog that must be dismissed via an action.
+    // Controls the SCRIM click only: when true (default), clicking the scrim
+    // cancels. Escape and the title-bar close (X) always dismiss regardless of
+    // this option, resolving Show() with undefined.
     readonly DismissOnScrimClick?: boolean;
 }
 
@@ -125,6 +126,8 @@ export class DialogService extends ServiceBase
         const { closed, close } = showDialog<T>(host, dialog, scrim);
         const myClose = close as (value?: unknown) => void;
         this._close = myClose;
+        // The title-bar X dismisses via the same path as a scrim / Escape cancel.
+        dialog.AddCloseRequestedListener(() => close(undefined));
         if (options.DismissOnScrimClick !== false)
         {
             scrim.onClick = (): void => close(undefined);

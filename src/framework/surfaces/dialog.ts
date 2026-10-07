@@ -1,4 +1,4 @@
-﻿import { MetaData, MuralBase, Element } from '../../runtime/index.js';
+﻿import { MetaData, MuralBase, Element, type Visual } from '../../runtime/index.js';
 import { ContentControl } from '../base/content-control.js';
 import { DialogAction } from './dialog-action.js';
 
@@ -35,6 +35,9 @@ export class Dialog extends ContentControl
     public get Actions(): readonly DialogAction[] | undefined { return this.get_property_value(Dialog.ActionsKey); }
     public set Actions(v: readonly DialogAction[] | undefined) { this.set_property_value(Dialog.ActionsKey, v); }
 
+    private static readonly CloseButtonPartName = 'PART_CloseButton';
+    private readonly _closeRequestedListeners = new Set<() => void>();
+
     constructor()
     {
         super();
@@ -43,6 +46,21 @@ export class Dialog extends ContentControl
         // standalone Dialog (e.g. DialogService's `new Dialog()`, or a test) has
         // its chrome + Actions ItemsControl before it's tree-mounted.
         this.applyDefaultStyle();
+        this.wireCloseButton();
+    }
+
+    // Fires when the user clicks the title-bar close (X) button.
+    public AddCloseRequestedListener(l: () => void): void { this._closeRequestedListeners.add(l); }
+    public RemoveCloseRequestedListener(l: () => void): void { this._closeRequestedListeners.delete(l); }
+    private fireCloseRequested(): void { for (const l of [...this._closeRequestedListeners]) l(); }
+
+    // The default-template close button (PART_CloseButton). Optional - a
+    // re-template can omit it.
+    private wireCloseButton(): void
+    {
+        const btn = this.GetTemplateChild(Dialog.CloseButtonPartName) as
+            (Visual & { AddClickHandler?: (h: () => void) => void }) | undefined;
+        btn?.AddClickHandler?.(() => this.fireCloseRequested());
     }
 
     static

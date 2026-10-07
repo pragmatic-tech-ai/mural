@@ -115,12 +115,19 @@ resources Surfaces
         {
             DockPanel [ LastChildFill = true ]
             {
-                TextBlock x:name="PART_Title"
-                    [ DockPanel.Dock = Top,
-                      Text = $$Title,
-                      Foreground = @Fg1,
-                      Style = @H3,
-                      Margin = (0,0,0,@Space4) ]
+                DockPanel x:name="PART_Header"
+                    [ DockPanel.Dock = Top, LastChildFill = true, Margin = (0,0,0,@Space4) ]
+                {
+                    IconButton x:name="PART_CloseButton" [ Variant = Standard, DockPanel.Dock = Right ]
+                    {
+                        Shape [ Geometry = @IconClose, Fill = @Fg2, Width = 18, Height = 18 ]
+                    }
+                    TextBlock x:name="PART_Title"
+                        [ Text = $$Title,
+                          Foreground = @Fg1,
+                          Style = @H3,
+                          VerticalAlignment = Center ]
+                }
                 ItemsControl x:name="PART_Actions"
                     [ DockPanel.Dock = Bottom,
                       ItemsSource = $$Actions,
