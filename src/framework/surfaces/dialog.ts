@@ -35,6 +35,7 @@ export class Dialog extends ContentControl
     public get Actions(): readonly DialogAction[] | undefined { return this.get_property_value(Dialog.ActionsKey); }
     public set Actions(v: readonly DialogAction[] | undefined) { this.set_property_value(Dialog.ActionsKey, v); }
 
+    private static readonly CloseButtonPartName = 'PART_CloseButton';
     private readonly _closeRequestedListeners = new Set<() => void>();
 
     constructor()
@@ -53,11 +54,11 @@ export class Dialog extends ContentControl
     public RemoveCloseRequestedListener(l: () => void): void { this._closeRequestedListeners.delete(l); }
     private fireCloseRequested(): void { for (const l of [...this._closeRequestedListeners]) l(); }
 
-    // The default-template close button (PART_CloseButton). Optional — a
+    // The default-template close button (PART_CloseButton). Optional - a
     // re-template can omit it.
     private wireCloseButton(): void
     {
-        const btn = this.GetTemplateChild('PART_CloseButton') as
+        const btn = this.GetTemplateChild(Dialog.CloseButtonPartName) as
             (Visual & { AddClickHandler?: (h: () => void) => void }) | undefined;
         btn?.AddClickHandler?.(() => this.fireCloseRequested());
     }

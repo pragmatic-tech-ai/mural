@@ -122,5 +122,21 @@ describe('Dialog — Actions array', () => {
         };
         walk(dialog);
         assert.equal(found.length, 1);
+
+        // Content must land in the ContentPresenter, not the header / close button.
+        const isNamed = (v: Visual, n: string): boolean => (v as unknown as { Name?: string }).Name === n;
+        const parentOf = (v: Visual): Visual | undefined =>
+            (v as unknown as { visualParent?: Visual; VisualParent?: Visual }).visualParent
+            ?? (v as unknown as { VisualParent?: Visual }).VisualParent;
+        let p = parentOf(found[0]);
+        let depth = 0;
+        while (p !== undefined && p !== (dialog as unknown as Visual))
+        {
+            assert.equal(isNamed(p, 'PART_Header'), false, 'content not inside header');
+            assert.equal(isNamed(p, 'PART_CloseButton'), false, 'content not inside close button');
+            p = parentOf(p);
+            depth++;
+        }
+        assert.ok(depth > 0 && p !== undefined, 'walked parent chain up to the dialog');
     });
 });
