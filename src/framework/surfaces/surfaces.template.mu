@@ -120,7 +120,7 @@ resources Surfaces
                 {
                     IconButton x:name="PART_CloseButton" [ Variant = Standard, DockPanel.Dock = Right ]
                     {
-                        Shape [ Geometry = @IconClose, Fill = @Fg2, Width = 18, Height = 18 ]
+                        Shape [ Geometry = @IconClose, Fill = @Fg2, Width = 13, Height = 13 ]
                     }
                     TextBlock x:name="PART_Title"
                         [ Text = $$Title,
