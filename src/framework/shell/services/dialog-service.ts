@@ -125,6 +125,8 @@ export class DialogService extends ServiceBase
         const { closed, close } = showDialog<T>(host, dialog, scrim);
         const myClose = close as (value?: unknown) => void;
         this._close = myClose;
+        // The title-bar X dismisses via the same path as a scrim / Escape cancel.
+        dialog.AddCloseRequestedListener(() => close(undefined));
         if (options.DismissOnScrimClick !== false)
         {
             scrim.onClick = (): void => close(undefined);
