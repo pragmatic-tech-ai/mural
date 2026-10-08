@@ -111,4 +111,31 @@ describe('FontManager', () => {
     test('Current is a singleton', () => {
         assert.equal(FontManager.Current, FontManager.Current);
     });
+
+    describe('ResolveSourceUrl', () => {
+
+        test('resolves a relative source against a valid module base', () => {
+            assert.equal(
+                FontManager.ResolveSourceUrl('./fonts/Inter.woff2', 'https://host/app/theme.js'),
+                'https://host/app/fonts/Inter.woff2');
+        });
+
+        test('an undefined base (bundler-stubbed import.meta) does NOT throw', () => {
+            // The bug that blanked the html-bundle app: `new URL(rel, undefined)`
+            // throws. The resolver must degrade, returning the source unchanged
+            // when no base is available off-DOM.
+            assert.doesNotThrow(() => FontManager.ResolveSourceUrl('./fonts/Inter.woff2', undefined));
+            assert.equal(FontManager.ResolveSourceUrl('./fonts/Inter.woff2', undefined), './fonts/Inter.woff2');
+        });
+
+        test('an empty-string base is treated as no base', () => {
+            assert.equal(FontManager.ResolveSourceUrl('./x.woff2', ''), './x.woff2');
+        });
+
+        test('an already-absolute source survives any base', () => {
+            assert.equal(
+                FontManager.ResolveSourceUrl('https://cdn/x.woff2', undefined),
+                'https://cdn/x.woff2');
+        });
+    });
 });

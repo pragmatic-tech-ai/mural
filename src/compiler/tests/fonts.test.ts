@@ -19,7 +19,7 @@ describe('fonts — emit', () => {
     test('one entry → FontManager.Register + a FontFamily resource', () => {
         const js = emitted(`resources F { fonts { Inter from "../assets/Inter.ttf" } @m = #fff }`);
         assert.match(js,
-            /FontManager\.Current\.Register\("Inter", \{ kind: FontSourceKind\.Url, url: new URL\("\.\.\/assets\/Inter\.ttf", import\.meta\.url\)\.href \}\);/);
+            /FontManager\.Current\.Register\("Inter", \{ kind: FontSourceKind\.Url, url: FontManager\.ResolveSourceUrl\("\.\.\/assets\/Inter\.ttf", import\.meta\.url\) \}\);/);
         assert.match(js, /\.Set\("Inter", new FontFamily\("Inter"\)\)/);
         assert.match(js,
             /import \{[^}]*\bFontManager\b[^}]*\bFontSourceKind\b[^}]*\} from "@pragmatic-tech-ai\/mural\/visual-engine"/);
@@ -52,7 +52,7 @@ describe('fonts — emit', () => {
 
     test('an absolute URL is registered verbatim', () => {
         const js = emitted(`resources F { fonts { Roboto from "https://x/Roboto.ttf" } @m = #fff }`);
-        assert.match(js, /new URL\("https:\/\/x\/Roboto\.ttf", import\.meta\.url\)\.href/);
+        assert.match(js, /FontManager\.ResolveSourceUrl\("https:\/\/x\/Roboto\.ttf", import\.meta\.url\)/);
     });
 
     test('an unknown attribute is a clear error', () => {

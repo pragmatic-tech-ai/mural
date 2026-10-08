@@ -94,6 +94,37 @@ export class FontManager
         return [...this.faces.values()];
     }
 
+    /** Resolve a (usually relative) font source to an absolute URL against an
+     *  optional module base — what the compiler emits for a `fonts { Family
+     *  from "./x.woff2" }` declaration, passing `import.meta.url` as the base.
+     *
+     *  Defensive by necessity: a bundler that emits a classic (non-module)
+     *  script stubs `import.meta` to `{}`, so the base arrives `undefined` and
+     *  a bare `new URL(relative, undefined)` THROWS — which, run from a theme's
+     *  construction, blanks the entire app before a single visual renders.
+     *  Prefer the module base, fall back to the browser document base, then to
+     *  treating the source as already absolute, and finally return it
+     *  unchanged rather than throw. A font that still can't be located simply
+     *  degrades to the system fallback. */
+    public static ResolveSourceUrl(source: string, base: string | undefined): string
+    {
+        for (const candidate of [base, FontManager.DocumentBaseUrl()])
+        {
+            if (candidate === undefined || candidate.length === 0) continue;
+            try { return new URL(source, candidate).href; }
+            catch { /* unusable base — try the next one */ }
+        }
+        try { return new URL(source).href; }   // source may itself be absolute
+        catch { return source; }
+    }
+
+    // The page's base URL when running in a browser, else undefined (Node,
+    // workers, SSR). `typeof` guard — `document` is genuinely absent off-DOM.
+    private static DocumentBaseUrl(): string | undefined
+    {
+        return typeof document !== 'undefined' ? document.baseURI : undefined;
+    }
+
     public Has(family: string): boolean
     {
         for (const f of this.faces.values())

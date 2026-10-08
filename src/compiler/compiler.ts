@@ -1388,7 +1388,8 @@ export class Compiler
     // for rendering by every target) and publish one `@<family>` FontFamily
     // resource per family for `FontFamily=@Family` references. Unlike
     // `glyphs`, no compile-time font reading is needed — the path is
-    // emitted as a runtime-resolved URL (`new URL(path, import.meta.url)`).
+    // emitted as a runtime-resolved URL (`FontManager.ResolveSourceUrl(path,
+    // import.meta.url)`, which tolerates a bundler-stubbed `import.meta`).
     // Each declared family's path is also recorded so a later
     // `glyphs @<family> { … }` in the same dictionary can resolve it.
     private compileFonts(rdVar: string, form: FontsForm): void
@@ -1412,7 +1413,7 @@ export class Compiler
 
             this.ensureImport('FontManager');
             this.ensureImport('FontSourceKind');
-            const url = `new URL(${JSON.stringify(e.source)}, import.meta.url).href`;
+            const url = `FontManager.ResolveSourceUrl(${JSON.stringify(e.source)}, import.meta.url)`;
             this.line(
                 `FontManager.Current.Register(${JSON.stringify(e.family)}, `
                 + `{ kind: FontSourceKind.Url, url: ${url} }${opts});`);
