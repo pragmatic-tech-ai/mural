@@ -13,6 +13,13 @@ import { ItemsPresenter } from '../templates/items-presenter.js';
 import type { ScrollViewer } from '../../framework/surfaces/scroll-viewer.js';
 import { VirtualizingPanel } from '../panels/virtualisation/virtualizing-panel.js';
 
+// Reserved cross-axis space for an active scrollbar. Must match the value
+// ScrollViewer.ArrangeTemplateParts reserves (its own SCROLLBAR_GUTTER) and
+// the ScrollBar control's SCROLLBAR_THICKNESS — kept locally here, as both of
+// those are, to avoid an import cycle. Measure subtracts the same lane arrange
+// will, so width-sensitive content measures at the width it is arranged into.
+const SCROLLBAR_GUTTER = 10;
+
 // The presentation surface a ScrollViewer's default template wraps its
 // consumer Content in — WPF parity with ScrollContentPresenter. Lives
 // inside the ScrollViewer's ControlTemplate as PART_ContentSite and is
@@ -177,6 +184,36 @@ export class ScrollContentPresenter extends ContentPresenter
             content.Measure(new Size(measureW, measureH));
             this._extentWidth  = content.DesiredSize.Width;
             this._extentHeight = content.DesiredSize.Height;
+
+            // Arrange (ScrollViewer.ArrangeTemplateParts) reserves a
+            // SCROLLBAR_GUTTER lane for each active bar and shrinks the
+            // content slot by it. On a scroll-DISABLED axis the content
+            // FILLS that slot (it was measured at the bounded size above),
+            // so a cross-axis bar steals from the size it will arrange into.
+            // Width-sensitive content (a WrapPanel, a wrapping TextBlock)
+            // measured at the full bounded size reports a height for that
+            // width, then reflows TALLER when arranged into the gutter-
+            // reduced slot — overflowing its own DesiredSize and painting
+            // over whatever is stacked below (a toolbox accordion's next
+            // section). Re-measure the disabled axis at the gutter-reduced
+            // size so the reported extent matches the arrange. The viewport
+            // bookkeeping above is left untouched — only the content's
+            // measured extent changes. An ENABLED axis was measured at
+            // Infinity (it overflows and scrolls; the gutter doesn't change
+            // its reflow), so it is never re-measured here.
+            const wantsVBar = vEnabled && this._extentHeight > availableSize.Height;
+            const wantsHBar = hEnabled && this._extentWidth  > availableSize.Width;
+            const reduceW = !hEnabled && wantsVBar;
+            const reduceH = !vEnabled && wantsHBar;
+            if (reduceW || reduceH)
+            {
+                content.Measure(new Size(
+                    reduceW ? Math.max(0, availableSize.Width  - SCROLLBAR_GUTTER) : measureW,
+                    reduceH ? Math.max(0, availableSize.Height - SCROLLBAR_GUTTER) : measureH,
+                ));
+                this._extentWidth  = content.DesiredSize.Width;
+                this._extentHeight = content.DesiredSize.Height;
+            }
         }
 
         // Inner AdornerLayer shares the scrolled frame with the

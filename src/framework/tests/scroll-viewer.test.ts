@@ -16,7 +16,7 @@ import {
     type DrawingContext,
 } from '../../runtime/index.js';
 import { RectangleGeometry, SolidColorBrush, ScaleTransform } from '../../visual-engine/index.js';
-import { DataTemplate, VirtualizingStackPanel } from '../../basic/index.js';
+import { DataTemplate, VirtualizingStackPanel, WrapPanel } from '../../basic/index.js';
 import { ItemsControl, ScrollViewer } from '@pragmatic-tech-ai/mural/framework';
 
 // Fixed-size leaf that paints a colored rect — useful as ScrollViewer
@@ -610,5 +610,49 @@ describe('ScrollViewer — AutoScrollToEnd (sticky)', () => {
         c.grow(200);
         layout(sv);
         assert.equal(sv.VerticalOffset, 0);
+    });
+});
+
+// A uniform wrap grid whose tiles get TALLER at a narrower width (a
+// wrapping-label toolbox tile). If the ScrollViewer measures it at the
+// full viewport width but then arranges it a scrollbar-gutter narrower,
+// it reflows to more rows at arrange than it reported at measure and
+// overflows its own DesiredSize — painting over the next stacked section.
+class WrapTile extends Element
+{
+    constructor(private maxW: number, private textLen: number, private lineH: number, private iconH: number) { super(); }
+    protected override MeasureOverride(a: Size): Size
+    {
+        const w = Math.min(this.maxW, a.Width);
+        const lines = Math.max(1, Math.ceil(this.textLen / Math.max(1, w)));
+        return new Size(w, this.iconH + lines * this.lineH);
+    }
+}
+
+describe('ScrollViewer — reserves the arrange gutter at measure (no content overflow)', () => {
+    beforeEach(() => { initTestApp(); });
+
+    test('width-sensitive content measured at the gutter-reduced width it will arrange into', () => {
+        const sv = new ScrollViewer();
+        sv.HorizontalScrollEnabled = false; // toolbox pane: wrap to width, scroll vertically
+        const wp = new WrapPanel();
+        wp.IsUniformChildren = true;
+        // 77px uniform cells: 3 fit 231<=240 (full) but only 2 fit 231>230 (gutter-reduced).
+        const tiles = Array.from({ length: 5 }, () => new WrapTile(77, 60, 14, 48));
+        for (const t of tiles) wp.AddChild(t);
+        sv.Content = wp;
+
+        const viewportW = 240;
+        const viewportH = 120; // shorter than content => vertical bar wanted => gutter reserved
+        sv.Measure(new Size(viewportW, viewportH));
+        sv.Arrange(new Rect(0, 0, viewportW, viewportH));
+
+        let maxBottom = 0;
+        for (const t of tiles) maxBottom = Math.max(maxBottom, t.ArrangedRect.Y + t.ArrangedRect.Height);
+
+        // Content laid out as 2 columns (the gutter-reduced width), and its
+        // full height is reported as the extent — nothing paints past it.
+        assert.equal(tiles[2]!.ArrangedRect.Y > 0, true, 'reflowed to a new row at the reduced width');
+        assert.equal(maxBottom, sv.ExtentHeight, 'arranged content fits exactly within the reported extent');
     });
 });
