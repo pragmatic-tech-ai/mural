@@ -101,25 +101,26 @@ describe('DiagramCanvasService', () =>
         assert.equal(fixture.Canvas.PaperBrush, undefined);
     });
 
-    test('grid lines shift toward white on a dark page and toward black on a light page', () =>
+    test('dark page: grid lines shift toward white', () =>
     {
         fixture = new Fixture({ 'diagram.grid.show': true });
         const dark = Color.FromHex('#111112');
         fixture.SetBackground(dark);
         fixture.Start();
-        const darkBrush = fixture.Canvas.PaperBrush as PatternBrush;
-        assert.equal(darkBrush.Background.R, dark.R);
-        assert.ok(darkBrush.Foreground.R > dark.R, 'dark page: grid is lighter');
+        const brush = fixture.Canvas.PaperBrush as PatternBrush;
+        assert.equal(brush.Background.R, dark.R);
+        assert.ok(brush.Foreground.R > dark.R, 'grid is lighter than the page');
+    });
 
-        fixture.Restore();
+    test('light page: grid lines shift toward black', () =>
+    {
+        fixture = new Fixture({ 'diagram.grid.show': true });
         const light = Color.FromHex('#F4F4F1');
         fixture.SetBackground(light);
-        const lightFixture = new Fixture({ 'diagram.grid.show': true });
-        lightFixture.SetBackground(light);
-        lightFixture.Start();
-        const lightBrush = lightFixture.Canvas.PaperBrush as PatternBrush;
-        assert.ok(lightBrush.Foreground.R < light.R, 'light page: grid is darker');
-        lightFixture.Restore();
+        fixture.Start();
+        const brush = fixture.Canvas.PaperBrush as PatternBrush;
+        assert.equal(brush.Background.R, light.R);
+        assert.ok(brush.Foreground.R < light.R, 'grid is darker than the page');
     });
 
     test('PageBackgroundColor reads the CanvasBg token', () =>

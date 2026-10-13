@@ -12,7 +12,11 @@ describe('DiagramWorkspaceService', () =>
         const svc = new DiagramWorkspaceService(new ServiceProvider());
         assert.ok(svc.Document instanceof DiagramDocument);
         assert.equal(svc.Document.Title, 'Untitled Diagram');
-        assert.equal(svc.Document, svc.Document);
+        assert.notEqual(svc.Document, null);
+        assert.equal(svc.Document.IsDirty, false);
+        assert.strictEqual(svc.Document, svc.Document);
+        const other = new DiagramWorkspaceService(new ServiceProvider());
+        assert.notStrictEqual(svc.Document, other.Document);
     });
 
     test('Key is a ServiceKey', () =>

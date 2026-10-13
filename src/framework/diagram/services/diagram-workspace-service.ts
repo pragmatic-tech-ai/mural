@@ -8,7 +8,7 @@ import {
 } from '../diagram-document.js'
 
 // DiagramWorkspaceService — owns the app's in-memory diagram DOCUMENT (an
-// IDocument), ported from the Diagrammer demo (demo/demos/diagram).
+// IDocument).
 //
 // The service no longer builds or holds a Diagram control. The document is what
 // the editor hosts: the app opens it into the DocumentsContentHostService, which
@@ -30,7 +30,7 @@ export class DiagramWorkspaceService extends ServiceBase
 
     private readonly _document: DiagramDocument
 
-    constructor(provider: IServiceProvider)
+    public constructor(provider: IServiceProvider)
     {
         super(provider)
 

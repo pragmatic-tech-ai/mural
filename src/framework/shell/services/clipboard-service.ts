@@ -13,11 +13,11 @@ export class ClipboardService extends ServiceBase
 
     private readonly write: ClipboardWriter
 
-    constructor(provider: IServiceProvider, writer: ClipboardWriter = (t) => navigator.clipboard.writeText(t))
+    public constructor(provider: IServiceProvider, writer: ClipboardWriter = (t) => navigator.clipboard.writeText(t))
     {
         super(provider)
         this.write = writer
     }
 
-    public writeText(text: string): Promise<void> { return this.write(text) }
+    public WriteText(text: string): Promise<void> { return this.write(text) }
 }

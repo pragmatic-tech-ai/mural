@@ -1,11 +1,38 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { ServiceKey, ServiceProvider } from '../../../../runtime/index.js';
+import { RelayCommand, ServiceKey, ServiceProvider } from '../../../../runtime/index.js';
 import { ContentHostService } from '../../services/content-host-service.js';
 import { DocumentsContentHostService, type IDocument } from '../../services/documents-content-host-service.js';
 import { DiagramDocument } from '../../../diagram/diagram-document.js';
+import type { Diagram } from '../../../diagram/diagram.js';
+import type { DiagramHistory } from '../../../diagram/history/diagram-history.js';
 import { EditCommandsService } from '../edit-commands-service.js';
+
+// A DiagramDocument whose undo/redo and active view are observable fakes, so the
+// service's routing can be asserted without standing up a live Diagram control.
+class SpyDiagramDocument extends DiagramDocument
+{
+    public UndoCalls = 0;
+    public RedoCalls = 0;
+    public readonly CutSpy = new RelayCommand(() => { this.CutCalls++; });
+    public readonly CopySpy = new RelayCommand(() => { this.CopyCalls++; });
+    public readonly PasteSpy = new RelayCommand(() => { this.PasteCalls++; });
+    public CutCalls = 0;
+    public CopyCalls = 0;
+    public PasteCalls = 0;
+
+    public override Undo(): void { this.UndoCalls++; }
+    public override Redo(): void { this.RedoCalls++; }
+    public override get History(): DiagramHistory
+    {
+        return { CanUndo: true, CanRedo: true } as unknown as DiagramHistory;
+    }
+    public override get ActiveView(): Diagram | undefined
+    {
+        return { CutCommand: this.CutSpy, CopyCommand: this.CopySpy, PasteCommand: this.PasteSpy } as unknown as Diagram;
+    }
+}
 
 class Fixture
 {
@@ -55,5 +82,36 @@ describe('EditCommandsService', () =>
         f.Host.Open(new DiagramDocument());
         assert.equal(f.Service.PasteCommand.CanExecute(undefined), true);
         assert.equal(f.Service.UndoCommand.CanExecute(undefined), false);
+    });
+
+    test('each command routes to the active diagram operation', () =>
+    {
+        const f = new Fixture();
+        const doc = new SpyDiagramDocument();
+        f.Host.Open(doc);
+        assert.deepEqual(f.CanExecuteStates(), [true, true, true, true, true]);
+
+        f.Service.UndoCommand.Execute(undefined);
+        f.Service.RedoCommand.Execute(undefined);
+        f.Service.CutCommand.Execute(undefined);
+        f.Service.CopyCommand.Execute(undefined);
+        f.Service.PasteCommand.Execute(undefined);
+
+        assert.deepEqual(
+            [doc.UndoCalls, doc.RedoCalls, doc.CutCalls, doc.CopyCalls, doc.PasteCalls],
+            [1, 1, 1, 1, 1]);
+    });
+
+    test('changing the active document re-raises CanExecuteChanged on every command', () =>
+    {
+        const f = new Fixture();
+        const s = f.Service;
+        const commands = [s.UndoCommand, s.RedoCommand, s.CutCommand, s.CopyCommand, s.PasteCommand];
+        const raised = commands.map(() => 0);
+        commands.forEach((c, i) => c.AddCanExecuteChangedListener(() => { raised[i]++; }));
+
+        f.Host.Open(new SpyDiagramDocument());
+
+        assert.ok(raised.every(n => n >= 1), `each command should re-raise, got ${raised.join(',')}`);
     });
 });

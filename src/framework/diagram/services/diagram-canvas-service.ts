@@ -1,5 +1,5 @@
 import {
-    Application, Color, ServiceBase, ServiceKey, ThemeManager, type IServiceProvider,
+    Application, Color, ServiceBase, ServiceKey, ThemeManager, type IDisposable, type IServiceProvider,
 } from '../../../runtime/index.js'
 import { ApplicationSettings } from '../../shell/services/application-settings-service.js'
 import { ContentHostService } from '../../shell/services/content-host-service.js'
@@ -50,16 +50,22 @@ export class DiagramCanvasService extends ServiceBase
 
     private readonly bindings = new Map<IDocument, () => void>()   // doc → detach
     private readonly canvases = new Set<PaginatedCanvas>()          // live canvases to apply to
+    private readonly subscriptions: IDisposable[] = []              // settings change subscriptions
+    private readonly onThemeActivated = (): void => this.reapplyAll()
+    private unsubscribeDocuments: (() => void) | undefined
 
     public constructor(provider: IServiceProvider)
     {
         super(provider)
         const host = this.Provider.get(ContentHostService.Key) as DocumentsContentHostService | undefined
-        host?.OpenDocuments.Subscribe(() => this.sync(host))
+        if (host !== undefined)
+        {
+            this.unsubscribeDocuments = host.OpenDocuments.Subscribe(() => this.sync(host))
+        }
         this.watchSettings()
         // The grid colour is derived from the theme's page background, so a
         // light/dark scheme swap must repaint every live canvas.
-        ThemeManager.AddActivatedListener(() => this.reapplyAll())
+        ThemeManager.AddActivatedListener(this.onThemeActivated)
     }
 
     // The diagram page background colour from the active theme (@CanvasBg), or a
@@ -80,6 +86,19 @@ export class DiagramCanvasService extends ServiceBase
         return (0.299 * c.R + 0.587 * c.G + 0.114 * c.B) / 255 < 0.5
     }
 
+    public override dispose(): void
+    {
+        ThemeManager.RemoveActivatedListener(this.onThemeActivated)
+        this.unsubscribeDocuments?.()
+        this.unsubscribeDocuments = undefined
+        for (const sub of this.subscriptions) sub.dispose()
+        this.subscriptions.length = 0
+        for (const detach of this.bindings.values()) detach()
+        this.bindings.clear()
+        this.canvases.clear()
+        super.dispose()
+    }
+
     private reapplyAll(): void
     {
         for (const c of this.canvases) this.applyTo(c)
@@ -90,7 +109,9 @@ export class DiagramCanvasService extends ServiceBase
         const current = new Set(host.OpenDocuments.ToArray())
         for (const [doc, detach] of [...this.bindings])
         {
-            if (!current.has(doc)) { detach(); this.bindings.delete(doc) }
+            if (current.has(doc)) continue
+            detach()
+            this.bindings.delete(doc)
         }
         for (const doc of current) this.attach(doc)
     }
@@ -104,7 +125,11 @@ export class DiagramCanvasService extends ServiceBase
         let canvas: PaginatedCanvas | undefined
 
         const rebindView = (): void => {
-            if (canvas !== undefined) { this.canvases.delete(canvas); canvas = undefined }
+            if (canvas !== undefined)
+            {
+                this.canvases.delete(canvas)
+                canvas = undefined
+            }
             const view = doc.ActiveView
             if (view === undefined) return
             const panel = view.ItemsPanelInstance
@@ -132,7 +157,8 @@ export class DiagramCanvasService extends ServiceBase
         const reapply = (): void => this.reapplyAll()
         for (const key of [DiagramCanvasService.ShowKey, DiagramCanvasService.SizeKey, DiagramCanvasService.WidthKey, DiagramCanvasService.HeightKey])
         {
-            settings.GetSetting(key)?.PropertyChanged(Setting.ValueKey).subscribe(reapply)
+            const sub = settings.GetSetting(key)?.PropertyChanged(Setting.ValueKey).subscribe(reapply)
+            if (sub !== undefined) this.subscriptions.push(sub)
         }
     }
 

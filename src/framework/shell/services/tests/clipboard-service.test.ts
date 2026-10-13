@@ -10,7 +10,7 @@ describe('ClipboardService', () =>
     {
         const written: string[] = [];
         const svc = new ClipboardService(new ServiceProvider(), async (t) => { written.push(t); });
-        await svc.writeText('hello');
+        await svc.WriteText('hello');
         assert.deepEqual(written, ['hello']);
     });
 

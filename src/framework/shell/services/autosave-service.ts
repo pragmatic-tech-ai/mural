@@ -13,9 +13,11 @@ export class AutosaveService extends ServiceBase
     public static readonly Key = new ServiceKey<AutosaveService>('AutosaveService')
 
     // Setting keys — MUST byte-match the SettingDefinition Key values the app
-    // declares (Plexus save.module.mu), or autosave silently never runs.
+    // registers for these settings (the host app owns the definitions), or autosave silently never runs.
     private static readonly EnabledSetting = 'documents.autosave.enabled'
     private static readonly IntervalSetting = 'documents.autosave.intervalMinutes'
+    private static readonly DefaultIntervalMinutes = 5
+    private static readonly MillisecondsPerMinute = 60_000
 
     private timer: ReturnType<typeof setInterval> | undefined
     private ticking = false
@@ -40,25 +42,38 @@ export class AutosaveService extends ServiceBase
         for (const doc of host.OpenDocuments.ToArray())
         {
             if (!doc.IsDirty) continue
-            try { void host.Save(doc) }
-            catch { /* transient write failure — keep sweeping, retry next tick */ }
+            try
+            {
+                void host.Save(doc)
+            }
+            catch
+            {
+                /* transient write failure — keep sweeping, retry next tick */
+            }
         }
     }
 
     public override dispose(): void
     {
-        if (this.timer !== undefined) { clearInterval(this.timer); this.timer = undefined }
+        this.clearTimer()
         super.dispose()
+    }
+
+    private clearTimer(): void
+    {
+        if (this.timer === undefined) return
+        clearInterval(this.timer)
+        this.timer = undefined
     }
 
     private reschedule(): void
     {
-        if (this.timer !== undefined) { clearInterval(this.timer); this.timer = undefined }
+        this.clearTimer()
         const settings = this.Provider.get(ApplicationSettings.Key)
         const enabled = settings?.Get(AutosaveService.EnabledSetting)
         if (enabled === false) return
         const minutes = settings?.Get(AutosaveService.IntervalSetting)
-        const ms = (typeof minutes === 'number' && minutes >= 1 ? minutes : 5) * 60_000
+        const ms = (typeof minutes === 'number' && minutes >= 1 ? minutes : AutosaveService.DefaultIntervalMinutes) * AutosaveService.MillisecondsPerMinute
         this.timer = setInterval(() => this.tick(), ms)
     }
 
@@ -71,6 +86,9 @@ export class AutosaveService extends ServiceBase
             const host = this.Provider.get(ContentHostService.Key) as DocumentsContentHostService | undefined
             if (host !== undefined) AutosaveService.SaveDirtyDocuments(host)
         }
-        finally { this.ticking = false }
+        finally
+        {
+            this.ticking = false
+        }
     }
 }

@@ -28,7 +28,7 @@ export class PanelSection extends MuralBase
     public static readonly LabelKey = MuralBase.RegisterProperty<string>(
         PanelSection, 'Label', '', MetaData.None);
 
-    constructor(label: string)
+    public constructor(label: string)
     {
         super();
         this.set_property_value(PanelSection.LabelKey, label);
@@ -52,7 +52,7 @@ export abstract class PanelService extends ServiceBase
 {
     private readonly _sections = new ObservableCollection<PanelSection>();
 
-    constructor(provider: IServiceProvider, sections: readonly string[])
+    public constructor(provider: IServiceProvider, sections: readonly string[])
     {
         super(provider);
         for (const s of sections) this._sections.Add(new PanelSection(s));

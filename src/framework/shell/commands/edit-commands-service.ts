@@ -15,7 +15,7 @@ import type { Diagram } from '../../diagram/diagram.js'
 // (which already gate on selection); Paste is unconditionally enabled once a
 // diagram is active — the view's own PasteCommand has no selection gate
 // either, so this stays true even before a view is attached. Delete and
-// Select-All are out of scope (see task-2-brief.md).
+// Select-All are out of scope.
 export class EditCommandsService extends ServiceBase
 {
     public static readonly Key = new ServiceKey<EditCommandsService>('EditCommandsService')

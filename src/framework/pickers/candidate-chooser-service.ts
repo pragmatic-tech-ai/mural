@@ -38,7 +38,13 @@ export class CandidateChooserService extends ServiceBase
     }
 
     public get IsOpen(): boolean { return this._isOpen }
-    private setIsOpen(v: boolean): void { const o = this._isOpen; if (o === v) return; this._isOpen = v; this.RaisePropertyChanged(CandidateChooserService.IsOpenProperty, o, v) }
+    private setIsOpen(v: boolean): void
+    {
+        const o = this._isOpen
+        if (o === v) return
+        this._isOpen = v
+        this.RaisePropertyChanged(CandidateChooserService.IsOpenProperty, o, v)
+    }
     public get Rows(): ObservableCollection<ChooserRow> { return this._rows }
 
     // Generic over any candidate carrying a `label` — term-drop actions AND
