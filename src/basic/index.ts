@@ -209,6 +209,16 @@ export { ClickableBorder } from './clickable-border.js';
 export { RepeatButton } from './repeat-button.js';
 export { ClickAwayScrim } from './click-away-scrim.js';
 
+// Markdown → FlowDocument renderer (promoted from Plexus). Produces a
+// FlowDocument a RichTextBlock lays out natively; depends only on basic /
+// runtime / visual-engine plus marked + highlight.js.
+export { MarkdownRenderer, type MarkdownRenderContext } from './markdown/markdown-renderer.js';
+export { MarkdownImage, type ImageByteSource, type MarkdownImageContext } from './markdown/markdown-image.js';
+export { CodeHighlighter, type HighlightToken } from './markdown/code-highlighter.js';
+export { InlineHtml, HtmlTagKind, type HtmlTag } from './markdown/inline-html.js';
+export { SvgInline } from './markdown/svg-inline.js';
+export { FlowStyle } from './markdown/flow-style.js';
+
 // Drawer / Menu / ContextMenu / Surface-control helpers (ScrimSurface,
 // TemporaryOverlayHost, …) live in
 // `mural/framework` alongside their owning controls.
