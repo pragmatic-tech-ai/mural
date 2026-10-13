@@ -68,7 +68,7 @@ export class EditCommandsService extends ServiceBase
     public get CopyCommand(): ICommand { return this._copyCommand }
     public get PasteCommand(): ICommand { return this._pasteCommand }
 
-    public dispose(): void
+    public override dispose(): void
     {
         this._activeDocumentSubscription.dispose()
         super.dispose()
