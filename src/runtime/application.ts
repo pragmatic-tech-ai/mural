@@ -97,9 +97,26 @@ export interface MountableTarget
 
 export class Application extends ShellCompositionRoot
 {
-    // Ambient singleton — last constructed instance wins. Cleared
-    // explicitly by tests that need isolation.
-    public static current: Application | null = null;
+    // Ambient singleton — last constructed instance wins. Cleared explicitly by
+    // tests that need isolation. Backed by a cross-realm globalThis slot (keyed
+    // by Symbol.for) rather than a plain static: when mural is loaded as two
+    // module instances at once — e.g. a tsx test resolves `src` while a compiled
+    // theme `.mu.js` under `build/` resolves `dist` — both instances must see the
+    // SAME current, or theme activation (dist) can't find the Application the test
+    // built (src). In a normal single-realm app there is one slot, so this is
+    // behaviourally identical to a static field.
+    private static readonly _currentSlot = Symbol.for('@pragmatic-tech-ai/mural:Application.current');
+    private static readonly _listenersSlot = Symbol.for('@pragmatic-tech-ai/mural:Application._currentListeners');
+
+    public static get current(): Application | null
+    {
+        return ((globalThis as Record<symbol, unknown>)[Application._currentSlot] as Application | null) ?? null;
+    }
+
+    public static set current(value: Application | null)
+    {
+        (globalThis as Record<symbol, unknown>)[Application._currentSlot] = value;
+    }
 
     // Listeners fired when a new Application becomes `current`. A resource
     // reference resolved before any Application exists — e.g. a DynamicResource
@@ -107,7 +124,13 @@ export class Application extends ShellCompositionRoot
     // Application — cannot subscribe to the app's Resources at creation. It
     // registers here and re-wires when the app appears, so a later `merge` /
     // Set resolves it. Not a general event bus: one narrow lifecycle signal.
-    private static readonly _currentListeners = new Set<() => void>();
+    // Cross-realm (same rationale as `current`) so a listener registered through
+    // either module instance fires when the other constructs the Application.
+    private static get _currentListeners(): Set<() => void>
+    {
+        const g = globalThis as Record<symbol, unknown>;
+        return (g[Application._listenersSlot] ??= new Set<() => void>()) as Set<() => void>;
+    }
 
     /** INTERNAL — subscribe to "an Application became current". Returns an
      *  unsubscribe. Used by DynamicResource to recover a binding created
