@@ -70,6 +70,14 @@ export {
 } from './shell/services/dialog-service.js';
 export { Inspector, type IInspector } from './shell/services/inspector.js';
 export { StatusService } from './shell/services/status-service.js';
+export { ClipboardService, type ClipboardWriter } from './shell/services/clipboard-service.js';
+export { EditCommandsService } from './shell/commands/edit-commands-service.js';
+export { AutosaveService } from './shell/services/autosave-service.js';
+export { DocumentShortcutsService, type IDocumentShortcutCommands } from './shell/services/document-shortcuts-service.js';
+export { DiagramWorkspaceService } from './diagram/services/diagram-workspace-service.js';
+export { DiagramCanvasService } from './diagram/services/diagram-canvas-service.js';
+export { PanelService, PanelSection } from './shell/services/panel-service.js';
+export { CandidateChooserService, ChooserRow } from './pickers/candidate-chooser-service.js';
 export {
     type IThemeService,
     ThemeServiceKey,
