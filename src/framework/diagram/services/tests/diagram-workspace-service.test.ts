@@ -14,6 +14,9 @@ describe('DiagramWorkspaceService', () =>
         assert.equal(svc.Document.Title, 'Untitled Diagram');
         assert.notEqual(svc.Document, null);
         assert.equal(svc.Document.IsDirty, false);
+        // Opens EMPTY — content comes from the bound ArchModel or a .diagram file.
+        assert.equal(svc.Document.Nodes.Count, 0);
+        assert.equal(svc.Document.Connectors.Count, 0);
         assert.strictEqual(svc.Document, svc.Document);
         const other = new DiagramWorkspaceService(new ServiceProvider());
         assert.notStrictEqual(svc.Document, other.Document);
