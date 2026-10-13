@@ -14,6 +14,7 @@ import { ShellRegion } from '../commands/shell-control-definition.js';
 import { type ICommandDispatcher, isCommandDispatcher } from '../commands/command-dispatcher.js';
 import { CommandContext } from '../commands/command-context.js';
 import { TabMenuAction, TabMenuSeparator, TabMenuDocument } from './tab-menu-item.js';
+import { DocumentCloseInterceptorKey, type IDocumentCloseInterceptor } from './document-close-interceptor.js';
 
 // A document the DocumentsContentHostService manages. The host owns the
 // open-set + active-document lifecycle; the document owns its own identity,
@@ -116,9 +117,9 @@ export class DocumentsContentHostService extends ContentHostService
     constructor(provider: IServiceProvider)
     {
         super(provider);
-        this._closeDocumentCommand = new RelayCommand((id) => this.CloseById(id as string), undefined,
+        this._closeDocumentCommand = new RelayCommand((id) => { void this.TryCloseById(id as string); }, undefined,
             { Text: 'Close', Description: 'Close this document.' });
-        this._closeAllCommand = new RelayCommand(() => this.CloseAll(), undefined,
+        this._closeAllCommand = new RelayCommand(() => { void this.TryCloseAll(); }, undefined,
             { Text: 'Close All', Description: 'Close all open documents.' });
         this._activateDocumentCommand = new RelayCommand((id) => this.ActivateById(id as string), undefined,
             { Text: 'Activate', Description: 'Switch to this document.' });
@@ -420,6 +421,40 @@ export class DocumentsContentHostService extends ContentHostService
         if (typeof id !== 'string') return;
         const doc = this.find(id);
         if (doc !== undefined) this.Close(doc);
+    }
+
+    private interceptor(): IDocumentCloseInterceptor | undefined
+    {
+        return this.Provider.get(DocumentCloseInterceptorKey);
+    }
+
+    // Guarded close of one document: consult the interceptor (if any); on approval
+    // perform the raw Close(). No-op-true if the document is already gone.
+    public async TryClose(document: IDocument): Promise<boolean>
+    {
+        if (this.find(document.Id) === undefined) return true;
+        const approved = await this.interceptor()?.TryClose(document) ?? true;
+        if (!approved) return false;
+        this.Close(document);
+        return true;
+    }
+
+    public async TryCloseById(id: string): Promise<boolean>
+    {
+        if (typeof id !== 'string') return true;
+        const doc = this.find(id);
+        return doc === undefined ? true : this.TryClose(doc);
+    }
+
+    // Guarded Close-All: one interceptor consult over the whole open set, then raw
+    // CloseAll() on approval. Returns false (closing nothing) if the batch is vetoed.
+    public async TryCloseAll(): Promise<boolean>
+    {
+        const docs = [...this.OpenDocuments];
+        const approved = await this.interceptor()?.TryCloseAll(docs) ?? true;
+        if (!approved) return false;
+        this.CloseAll();
+        return true;
     }
 
     private find(id: string): IDocument | undefined

@@ -207,11 +207,12 @@ describe('DocumentsContentHostService', () => {
         assert.equal(host.OpenDocuments.Count, 0);
     });
 
-    test('CloseAllCommand runs CloseAll()', () => {
+    test('CloseAllCommand runs the guarded CloseAll (settles asynchronously)', async () => {
         const host = new DocumentsContentHostService(provider());
         host.Open(new FakeDoc('a')); host.Open(new FakeDoc('b'));
 
         host.CloseAllCommand.Execute(undefined);
+        await new Promise<void>(resolve => setImmediate(resolve));
         assert.equal(host.OpenDocuments.Count, 0);
         assert.equal(host.ActiveDocument, undefined);
     });
