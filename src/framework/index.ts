@@ -80,6 +80,7 @@ export {
     DocumentsContentHostService,
     type IDocument,
 } from './shell/services/documents-content-host-service.js';
+export { DocumentCloseInterceptorKey, type IDocumentCloseInterceptor } from './shell/services/document-close-interceptor.js';
 export {
     TabMenuAction,
     TabMenuSeparator,
