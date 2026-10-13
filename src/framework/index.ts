@@ -77,6 +77,8 @@ export { DocumentShortcutsService, type IDocumentShortcutCommands } from './shel
 export { FileDiagramStorage } from './diagram/file-diagram-storage.js';
 export { DiagramWorkspaceService } from './diagram/services/diagram-workspace-service.js';
 export { DiagramCanvasService } from './diagram/services/diagram-canvas-service.js';
+export { DiagramCameraService } from './diagram/services/diagram-camera-service.js';
+export { DiagramGuidesService } from './diagram/services/diagram-guides-service.js';
 export { PanelService, PanelSection } from './shell/services/panel-service.js';
 export { CandidateChooserService, ChooserRow } from './pickers/candidate-chooser-service.js';
 export {
