@@ -1,7 +1,6 @@
 import { test, describe, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { initTestApp } from '../../../../basic/tests/test-app.js';
 import { PaginatedCanvas } from '../../../../basic/index.js';
 import { PatternBrush, SolidColorBrush } from '../../../../visual-engine/index.js';
 import { Application, Color, ServiceKey, ServiceProvider } from '../../../../runtime/index.js';
@@ -27,13 +26,15 @@ class Fixture
     public readonly App: Application;
     public readonly Canvas = new PaginatedCanvas();
     public readonly Document = new DiagramDocument();
-    private readonly priorBackground: unknown;
 
     public constructor(settings: Record<string, unknown>)
     {
-        this.App = initTestApp();
-        this.priorBackground = this.App.Resources.Get(Fixture.CanvasToken);
-        this.App.Services.unregister(ApplicationSettings.Key);
+        // Bare Application (sets Application.current, no theme activation) — the
+        // service reads only the CanvasBg resource token + ApplicationSettings,
+        // never a live theme, so initTestApp's theme-reactivation path is both
+        // unnecessary and fragile across the src/dist module split under tsx.
+        Application.current = null;
+        this.App = new Application();
         this.App.Services.registerInstance(ApplicationSettings.Key, new FakeSettings(settings) as unknown as ApplicationSettings);
     }
 
@@ -57,8 +58,7 @@ class Fixture
 
     public Restore(): void
     {
-        if (this.priorBackground === undefined) this.App.Resources.Delete(Fixture.CanvasToken);
-        else this.App.Resources.Set(Fixture.CanvasToken, this.priorBackground);
+        Application.current = null;
     }
 }
 
