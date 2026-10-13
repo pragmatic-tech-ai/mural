@@ -74,6 +74,7 @@ export { ClipboardService, type ClipboardWriter } from './shell/services/clipboa
 export { EditCommandsService } from './shell/commands/edit-commands-service.js';
 export { AutosaveService } from './shell/services/autosave-service.js';
 export { DocumentShortcutsService, type IDocumentShortcutCommands } from './shell/services/document-shortcuts-service.js';
+export { FileDiagramStorage } from './diagram/file-diagram-storage.js';
 export { DiagramWorkspaceService } from './diagram/services/diagram-workspace-service.js';
 export { DiagramCanvasService } from './diagram/services/diagram-canvas-service.js';
 export { PanelService, PanelSection } from './shell/services/panel-service.js';
