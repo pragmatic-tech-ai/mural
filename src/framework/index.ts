@@ -71,6 +71,7 @@ export {
 export { Inspector, type IInspector } from './shell/services/inspector.js';
 export { StatusService } from './shell/services/status-service.js';
 export { ClipboardService, type ClipboardWriter } from './shell/services/clipboard-service.js';
+export { EditCommandsService } from './shell/commands/edit-commands-service.js';
 export {
     type IThemeService,
     ThemeServiceKey,
