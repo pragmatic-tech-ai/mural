@@ -10,9 +10,9 @@ import { DiagramCameraStore } from './diagram-camera-store.js'
 // App-scoped observer: for every open DiagramDocument, restore the persisted
 // camera (zoom + scroll offset) onto the document's published ActiveView when it
 // mounts, and write it back (debounced) into the document metadata whenever the
-// zoom or scroll offset changes. The
-// metadata round-trips through the .diagram file, so a diagram reopens where the
-// user left it. Applies to EVERY diagram - the generic module owns it.
+// zoom or scroll offset changes. The metadata round-trips through the .diagram
+// file, so a diagram reopens where the user left it. Applies to EVERY diagram -
+// the framework owns it.
 //
 // Mirrors DiagramGuidesService (open-docs subscription) and rebinds on
 // DiagramDocument.ActiveViewKey.
