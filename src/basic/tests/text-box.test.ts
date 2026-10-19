@@ -859,3 +859,47 @@ describe('TextBox — soft-wrap overflow handling', () => {
             'Plain field measures its text width after the variant swap');
     });
 });
+
+describe('Text coercion — non-string bound values', () => {
+    beforeEach(() => { initTestApp(); });
+
+    // A PropertyGrid number / color row binds its numeric Value straight at
+    // TextBox.Text. A binding writes through the DP (set_property_value), not
+    // the typed `set Text` accessor. Before the Text DP coerced, that number
+    // reached the editor's MeasureOverride where `text.split('\n')` threw
+    // "text.split is not a function" and crashed the whole layout pass.
+    test('a number written through the Text DP (binding path) coerces and measures without throwing', () => {
+        const { tb, target } = fixture();
+
+        (tb as unknown as { set_property_value(k: unknown, v: unknown): void })
+            .set_property_value(TextBox.TextKey, 42);
+
+        assert.equal(tb.Text, '42', 'number coerces to its string form');
+        assert.doesNotThrow(() => target.Flush(),
+            'measure pass does not throw on a coerced numeric Text');
+        assert.ok(tb.DesiredSize.Width > 0, 'coerced text still measures a width');
+    });
+
+    test('null / undefined written through the Text DP coerce to the empty string', () => {
+        const { tb } = fixture('seed');
+
+        const dp = tb as unknown as { set_property_value(k: unknown, v: unknown): void };
+        dp.set_property_value(TextBox.TextKey, undefined);
+        assert.equal(tb.Text, '', 'undefined coerces to empty string');
+
+        dp.set_property_value(TextBox.TextKey, null);
+        assert.equal(tb.Text, '', 'null coerces to empty string');
+    });
+
+    // The public `tb.Text = x` accessor must also survive a non-string (its
+    // selection-clamp reads .length) — it clamps against the coerced value.
+    test('the public Text setter coerces a non-string and does not throw on the selection clamp', () => {
+        const { tb } = fixture('seed');
+
+        assert.doesNotThrow(() => { (tb as unknown as { Text: unknown }).Text = 42; });
+        assert.equal(tb.Text, '42', 'setter path coerces number to string');
+
+        assert.doesNotThrow(() => { (tb as unknown as { Text: unknown }).Text = undefined; });
+        assert.equal(tb.Text, '', 'setter path coerces undefined to empty string');
+    });
+});
