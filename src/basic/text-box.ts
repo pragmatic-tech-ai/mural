@@ -1063,7 +1063,7 @@ export class TextBox extends TemplatedControl
         this._caret  = this.Text.length;
         this._preferredColumn = undefined;
         this.mirrorSelectionDPs();
-        this._editor.InvalidateVisual();
+        this._editor?.InvalidateVisual();
     }
 
     // Composite controls (SpinEdit and friends) embed a TextBox as a

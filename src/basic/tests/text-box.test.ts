@@ -923,5 +923,7 @@ describe('TextBox — pre-template (editor not yet wired)', () => {
         assert.doesNotThrow(() => { tb.CaretIndex = 2; }, 'CaretIndex');
         assert.doesNotThrow(() => { tb.AcceptsReturn = true; }, 'AcceptsReturn scroll-axes refresh');
         assert.doesNotThrow(() => { tb.TextWrapping = TextWrapping.NoWrap; }, 'TextWrapping scroll-axes refresh');
+        assert.doesNotThrow(() => { tb.Select(0, 2); }, 'Select');
+        assert.doesNotThrow(() => { tb.SelectAll(); }, 'SelectAll');
     });
 });
