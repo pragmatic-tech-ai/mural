@@ -8,6 +8,7 @@ import { resolveKey } from '../../runtime/model-internals.js';
 import { InputManager, ComboBox } from '../../framework/index.js';;
 import { HeadlessTarget, SolidColorBrush, type Brush } from '../../visual-engine/index.js';
 import { TextBox, TextBoxVariant, type ClipboardSink } from '../text-box.js';
+import { TextWrapping } from '../text-block.js';
 
 function pointer(overrides: Partial<PointerEventInit> = {}): PointerEventInit
 {
@@ -912,6 +913,7 @@ describe('TextBox — pre-template (editor not yet wired)', () => {
     test('Text, brush, placeholder and selection writes do not throw while the editor is unset', () => {
         const tb = new TextBox();
         (tb as unknown as { _editor: unknown })._editor = undefined;
+        (tb as unknown as { _scroll: unknown })._scroll = undefined;
 
         assert.doesNotThrow(() => { tb.Text = 'abc'; }, 'Text setter');
         assert.doesNotThrow(() => { tb.Foreground = new SolidColorBrush('#112233'); }, 'Foreground repaint');
@@ -919,5 +921,7 @@ describe('TextBox — pre-template (editor not yet wired)', () => {
         assert.doesNotThrow(() => { tb.Placeholder = 'hint'; }, 'Placeholder repaint');
         assert.doesNotThrow(() => { tb.SelectionStart = 1; }, 'SelectionStart');
         assert.doesNotThrow(() => { tb.CaretIndex = 2; }, 'CaretIndex');
+        assert.doesNotThrow(() => { tb.AcceptsReturn = true; }, 'AcceptsReturn scroll-axes refresh');
+        assert.doesNotThrow(() => { tb.TextWrapping = TextWrapping.NoWrap; }, 'TextWrapping scroll-axes refresh');
     });
 });

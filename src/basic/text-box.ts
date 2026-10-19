@@ -934,6 +934,9 @@ export class TextBox extends TemplatedControl
         //   * multi-line Wrap   → vertical only; the editor wraps to
         //                         width so horizontal scroll is moot.
         //   * multi-line NoWrap → both axes; code-editor feel.
+        // Guarded: TextWrapping / AcceptsReturn can change before PART_Scroll is wired (pre-template stamp);
+        // adoptTemplateParts calls this again once the scroll host exists.
+        if (this._scroll === undefined) return;
         this._scroll.HorizontalScrollEnabled = multiline && !wrap;
         this._scroll.VerticalScrollEnabled   = multiline;
     }
@@ -956,7 +959,7 @@ export class TextBox extends TemplatedControl
         this._caretIntoViewQueued = true;
         queueMicrotask(() => {
             this._caretIntoViewQueued = false;
-            if (this._editor === undefined) return;   // not stamped yet
+            if (this._editor === undefined || this._scroll === undefined) return;   // not stamped yet
             const lineH = this._editor.LineHeight;
             if (lineH === 0) return;     // editor hasn't measured yet
             const pos = this._editor.PositionFor(this._caret);
