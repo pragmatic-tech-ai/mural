@@ -864,7 +864,7 @@ export class TextBox extends TemplatedControl
         // render-dirty, so the editor keeps the stale colour. Forward
         // these to the editor so a live scheme switch re-tints the text
         // immediately (same hand-rolled invalidation the Text setter uses).
-        const repaintEditor = (): void => this._editor.InvalidateVisual();
+        const repaintEditor = (): void => this._editor?.InvalidateVisual();
         this.PropertyChanged(TextBox.ForegroundKey).subscribe(       repaintEditor);
         this.PropertyChanged(TextBox.CaretBrushKey).subscribe(       repaintEditor);
         this.PropertyChanged(TextBox.SelectionBrushKey).subscribe(   repaintEditor);
@@ -956,6 +956,7 @@ export class TextBox extends TemplatedControl
         this._caretIntoViewQueued = true;
         queueMicrotask(() => {
             this._caretIntoViewQueued = false;
+            if (this._editor === undefined) return;   // not stamped yet
             const lineH = this._editor.LineHeight;
             if (lineH === 0) return;     // editor hasn't measured yet
             const pos = this._editor.PositionFor(this._caret);
@@ -1453,7 +1454,7 @@ export class TextBox extends TemplatedControl
         this._caret  = s + ln;
         this._preferredColumn = undefined;
         this.mirrorSelectionDPs();
-        this._editor.InvalidateVisual();
+        this._editor?.InvalidateVisual();
     }
 
     private applyCaret(idx: number): void
@@ -1464,7 +1465,7 @@ export class TextBox extends TemplatedControl
         this._caret  = c;
         this._preferredColumn = undefined;
         this.mirrorSelectionDPs();
-        this._editor.InvalidateVisual();
+        this._editor?.InvalidateVisual();
     }
 
     // Push the internal anchor / caret out to the public DPs so

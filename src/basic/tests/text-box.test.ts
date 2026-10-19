@@ -903,3 +903,21 @@ describe('Text coercion — non-string bound values', () => {
         assert.equal(tb.Text, '', 'setter path coerces undefined to empty string');
     });
 });
+
+describe('TextBox — pre-template (editor not yet wired)', () => {
+    beforeEach(() => { initTestApp(); });
+
+    // A DP write can land while the TextBox is stamped inside a DataTemplate,
+    // before PART_Editor is adopted. The `_editor?.` guards must absorb it.
+    test('Text, brush, placeholder and selection writes do not throw while the editor is unset', () => {
+        const tb = new TextBox();
+        (tb as unknown as { _editor: unknown })._editor = undefined;
+
+        assert.doesNotThrow(() => { tb.Text = 'abc'; }, 'Text setter');
+        assert.doesNotThrow(() => { tb.Foreground = new SolidColorBrush('#112233'); }, 'Foreground repaint');
+        assert.doesNotThrow(() => { tb.PlaceholderBrush = new SolidColorBrush('#445566'); }, 'PlaceholderBrush repaint');
+        assert.doesNotThrow(() => { tb.Placeholder = 'hint'; }, 'Placeholder repaint');
+        assert.doesNotThrow(() => { tb.SelectionStart = 1; }, 'SelectionStart');
+        assert.doesNotThrow(() => { tb.CaretIndex = 2; }, 'CaretIndex');
+    });
+});
