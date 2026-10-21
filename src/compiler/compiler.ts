@@ -4856,7 +4856,7 @@ export class Compiler
         else
         {
             throw new EmitError(
-                `tuple of ${exprs.length} values has no ${ctor} shape (1, 2, or 4 expected)`,
+                Compiler.TupleArityError(exprs.length, ctor),
                 tuple.span);
         }
         // Only wrap in SetterFactory when (a) there are token cells
