@@ -350,6 +350,14 @@ export class Compiler
     private static readonly TupleCellsSingle = 1;
     private static readonly TupleCellsPair = 2;
     private static readonly TupleCellsQuad = 4;
+    private static readonly TupleArityMessage = 'tuple of {count} values has no {ctor} shape (1, 2, or 4 expected)';
+
+    private static TupleArityError(count: number, ctor: string): string
+    {
+        return Compiler.TupleArityMessage
+            .replace('{count}', String(count))
+            .replace('{ctor}', ctor);
+    }
 
     private readonly symbols: SymbolMap;
     private readonly slots:   ReadonlyMap<string, SlotInfo>;
@@ -4883,7 +4891,7 @@ export class Compiler
             && count !== Compiler.TupleCellsQuad)
         {
             throw new EmitError(
-                `tuple of ${count} values has no ${ctor} shape (1, 2, or 4 expected)`,
+                Compiler.TupleArityError(count, ctor),
                 tuple.span);
         }
         this.ensureImport(ctor);

@@ -52,5 +52,10 @@ describe('compile — token-bearing tuples lower to a live composite binding', (
         `);
         assert.match(js, /new TokenCell\("Space1"\)/);
         assert.doesNotMatch(js, /new TokenCell\("Pad"\)/);
+        const localVar = /t\.Set\("Pad", (_style\d+)\)/.exec(js)?.[1];
+        assert.ok(localVar, 'the local Pad entry registers a generated var');
+        assert.ok(
+            js.includes(`[${localVar}, new TokenCell("Space1"), ${localVar}, new TokenCell("Space1")]`),
+            'the cell list carries the local var in the Pad positions');
     });
 });
