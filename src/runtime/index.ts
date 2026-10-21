@@ -40,6 +40,8 @@ export {
     ToVisibility,
     DataContextBinding,
     DynamicResource,
+    DynamicResourceComposite,
+    TokenCell,
     EffectiveValueDescriptor,
     ElementNameBinding,
     ServiceBinding,

@@ -35,7 +35,7 @@ export { AncestorBinding } from './ancestor-binding.js';
 export { SelfBinding } from './self-binding.js';
 export { TemplateBinding } from './template-binding.js';
 export { MultiTemplateBinding } from './multi-template-binding.js';
-export { DynamicResource } from './dynamic-resource.js';
+export { DynamicResource, DynamicResourceComposite, TokenCell } from './dynamic-resource.js';
 export {
     Lighten,
     Darken,

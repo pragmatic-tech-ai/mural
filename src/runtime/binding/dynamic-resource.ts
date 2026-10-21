@@ -59,12 +59,34 @@ function isVisualHost(host: object): host is Visual & VisualResourceHost
     return typeof (host as { TryFindResource?: unknown }).TryFindResource === 'function';
 }
 
+// Marks a tuple cell that is a resource-token lookup (as opposed to a raw
+// literal) for DynamicResourceComposite.
+export class TokenCell
+{
+    public constructor(public readonly Key: string)
+    {
+    }
+}
+
+// Composite-mode description: positional cells resolved into a values array
+// and folded into one value by `Build`.
+class CompositeSpec
+{
+    public constructor(
+        public readonly Cells: ReadonlyArray<number | TokenCell>,
+        public readonly Build: (values: readonly unknown[]) => unknown)
+    {
+    }
+}
+
 class DynamicResourceBinding extends Binding
 {
     private readonly watcher: ResourceWatcher;
     private readonly subscriptions: Array<() => void>;
     private readonly host: Visual | MuralBase;
-    private readonly key: string;
+    private readonly keys: readonly string[];
+    private readonly composite: CompositeSpec | undefined;
+    private lastValues: readonly unknown[] | undefined;
     private readonly unsubscribeRewire: (() => void) | undefined;
     // Registered for the binding's whole lifetime — not only until the first
     // Application appears — so a LATER swap to a different Application
@@ -94,7 +116,7 @@ class DynamicResourceBinding extends Binding
     // the animated slot.
     private activeStoryboard: Storyboard | undefined;
 
-    constructor(host: Visual | MuralBase, key: string, converter?: ValueConverter)
+    constructor(host: Visual | MuralBase, key: string, converter?: ValueConverter, composite?: CompositeSpec)
     {
         const watcher = new ResourceWatcher();
         super(watcher, 'Value', BindingMode.OneWay,
@@ -102,7 +124,10 @@ class DynamicResourceBinding extends Binding
         this.watcher = watcher;
         this.subscriptions = [];
         this.host = host;
-        this.key = key;
+        this.composite = composite;
+        this.keys = composite !== undefined
+            ? [...new Set(composite.Cells.filter((c): c is TokenCell => c instanceof TokenCell).map(c => c.Key))]
+            : [key];
         this.wireSubscriptions();
         this.refresh();
         // Re-walk the ancestor chain whenever the host is attached /
@@ -233,7 +258,10 @@ class DynamicResourceBinding extends Binding
                 const dict = back['_resources'];
                 if (dict !== undefined)
                 {
-                    this.subscriptions.push(dict.SubscribeKey(this.key, () => this.refresh()));
+                    for (const key of this.keys)
+                    {
+                        this.subscriptions.push(dict.SubscribeKey(key, () => this.refresh()));
+                    }
                 }
                 cursor = back['_logicalParent'] ?? back['_templatedParent'];
             }
@@ -251,10 +279,39 @@ class DynamicResourceBinding extends Binding
     {
         this.appSubscription?.();
         const app = Application.current;
-        this.appSubscription = (app !== undefined && app !== null)
-            ? app.Resources.SubscribeKey(this.key, () => this.refresh())
+        const unsubs: Array<() => void> = [];
+        if (app !== undefined && app !== null)
+        {
+            for (const key of this.keys)
+            {
+                unsubs.push(app.Resources.SubscribeKey(key, () => this.refresh()));
+            }
+        }
+        this.appSubscription = unsubs.length > 0
+            ? () => { for (const u of unsubs) u(); }
             : undefined;
         this.wiredApp = app;
+    }
+
+    private resolveKey(key: string): unknown
+    {
+        return isVisualHost(this.host)
+            ? this.host.TryFindResource(key)
+            : Application.ResolveDefaultResource(key);
+    }
+
+    // Composite mode: resolve every cell positionally; null when nothing
+    // changed since the last build (skips a redundant rebuild).
+    private composeValue(spec: CompositeSpec): { value: unknown } | undefined
+    {
+        const values = spec.Cells.map(c => c instanceof TokenCell ? this.resolveKey(c.Key) : c);
+        const prev = this.lastValues;
+        if (prev !== undefined && prev.length === values.length && prev.every((v, i) => v === values[i]))
+        {
+            return undefined;
+        }
+        this.lastValues = values;
+        return { value: spec.Build(values) };
     }
 
     private refresh(): void
@@ -265,9 +322,17 @@ class DynamicResourceBinding extends Binding
         // hosts skip straight to the Application-level fallback —
         // that's where theme bundles live, so theme-token references
         // (`@Primary`, …) still resolve from a Pen / Brush resource.
-        const newValue = isVisualHost(this.host)
-            ? this.host.TryFindResource(this.key)
-            : Application.ResolveDefaultResource(this.key);
+        let newValue: unknown;
+        if (this.composite !== undefined)
+        {
+            const composed = this.composeValue(this.composite);
+            if (composed === undefined) return;
+            newValue = composed.value;
+        }
+        else
+        {
+            newValue = this.resolveKey(this.keys[0]!);
+        }
         if (oldValue === newValue) return;
 
         // Animation gate. Skip the factory entirely when no transition is
@@ -359,4 +424,17 @@ class DynamicResourceBinding extends Binding
 export function DynamicResource(host: Visual | MuralBase, key: string, converter?: ValueConverter): Binding
 {
     return new DynamicResourceBinding(host, key, converter);
+}
+
+// Live composite of several resource tokens and literals. Each TokenCell is
+// resolved through the same walk as DynamicResource and re-resolved on any
+// relevant dictionary change; `build` receives the positional values
+// (literals unchanged) and its result is the binding's value. Backs
+// `Padding = (@Space3, 1, ...)` Thickness / CornerRadius tuples in `.mu`.
+export function DynamicResourceComposite(
+    host: Visual | MuralBase,
+    cells: ReadonlyArray<number | TokenCell>,
+    build: (values: readonly unknown[]) => unknown): Binding
+{
+    return new DynamicResourceBinding(host, '', undefined, new CompositeSpec(cells, build));
 }
