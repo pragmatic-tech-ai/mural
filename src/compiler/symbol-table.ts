@@ -37,6 +37,8 @@ const ENTRIES: ReadonlyArray<readonly [string, string]> = [
     ['Binding',             '@pragmatic-tech-ai/mural/runtime'],
     ['BindingMode',         '@pragmatic-tech-ai/mural/runtime'],
     ['DynamicResource',     '@pragmatic-tech-ai/mural/runtime'],
+    ['DynamicResourceComposite', '@pragmatic-tech-ai/mural/runtime'],
+    ['TokenCell',           '@pragmatic-tech-ai/mural/runtime'],
     ['DataContextBinding',  '@pragmatic-tech-ai/mural/runtime'],
     ['ElementNameBinding',  '@pragmatic-tech-ai/mural/runtime'],
     ['ServiceBinding',      '@pragmatic-tech-ai/mural/runtime'],

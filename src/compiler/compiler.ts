@@ -46,6 +46,8 @@ import type {
     TriggerGroup,
     TupleValue,
     ValueNode,
+    StaticResourceValue,
+    DynamicResourceValue,
     XAttr,
 } from './ast.js';
 import {
@@ -342,6 +344,13 @@ interface ValueCtx
 // state is not designed to be reused across compiles.
 export class Compiler
 {
+    private static readonly CompositeBindingName = 'DynamicResourceComposite';
+    private static readonly TokenCellName = 'TokenCell';
+    private static readonly CompositeValuesParam = 'v';
+    private static readonly TupleCellsSingle = 1;
+    private static readonly TupleCellsPair = 2;
+    private static readonly TupleCellsQuad = 4;
+
     private readonly symbols: SymbolMap;
     private readonly slots:   ReadonlyMap<string, SlotInfo>;
     private readonly include: IncludeResolver | undefined;
@@ -4818,6 +4827,10 @@ export class Compiler
             targetExpr:  ctx.targetExpr ?? '_t',
             insideTuple: hasToken,
         };
+        if (ctx.targetExpr !== undefined && tuple.values.some(v => this.isLiveTokenCell(v)))
+        {
+            return this.compileTokenTupleComposite(tuple, ctor, ctx.targetExpr);
+        }
         const exprs = tuple.values.map(v => this.compileValue(v, cellCtx));
         let body: string;
         if (exprs.length === 1)
@@ -4846,6 +4859,45 @@ export class Compiler
         if (!hasToken || ctx.targetExpr !== undefined) return body;
         this.ensureImport('SetterFactory');
         return `new SetterFactory((_t) => ${body})`;
+    }
+
+    // A tuple cell that must resolve live: a `@@key` (always dynamic) or a
+    // `@key` with no same-dictionary local var to short-circuit to.
+    private isLiveTokenCell(cell: ValueNode): cell is StaticResourceValue | DynamicResourceValue
+    {
+        if (cell.kind === 'dynamic-resource') return true;
+        return cell.kind === 'static-resource'
+            && this.localResourceVars?.get(cell.key) === undefined;
+    }
+
+    // Token-bearing Thickness / CornerRadius tuple on a direct target DP:
+    // emit a live DynamicResourceComposite so an unresolved token never
+    // bakes undefined/NaN into the struct, and the value re-resolves when
+    // the dictionary arrives. WPF fill-in expands the cells positionally,
+    // so `build` simply spreads them into the ctor.
+    private compileTokenTupleComposite(tuple: TupleValue, ctor: string, targetExpr: string): string
+    {
+        const count = tuple.values.length;
+        if (count !== Compiler.TupleCellsSingle
+            && count !== Compiler.TupleCellsPair
+            && count !== Compiler.TupleCellsQuad)
+        {
+            throw new EmitError(
+                `tuple of ${count} values has no ${ctor} shape (1, 2, or 4 expected)`,
+                tuple.span);
+        }
+        this.ensureImport(ctor);
+        this.ensureImport(Compiler.CompositeBindingName);
+        this.ensureImport(Compiler.TokenCellName);
+        const cellCtx: ValueCtx = { targetExpr };
+        const cells = tuple.values.map(v => this.isLiveTokenCell(v)
+            ? `new ${Compiler.TokenCellName}(${JSON.stringify(v.key)})`
+            : this.compileValue(v, cellCtx));
+        const expanded = count === Compiler.TupleCellsPair
+            ? [cells[0], cells[1], cells[0], cells[1]]
+            : cells;
+        return `${Compiler.CompositeBindingName}(${targetExpr}, [${expanded.join(', ')}], `
+            + `(${Compiler.CompositeValuesParam}) => new ${ctor}(...${Compiler.CompositeValuesParam}))`;
     }
 
     // Element node in value position — `Ident [Prop = val, …]`. Emits a
