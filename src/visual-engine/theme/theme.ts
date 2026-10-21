@@ -1057,43 +1057,54 @@ export class ThemeManager
         }
         ThemeManager._activeTokenDict = undefined;
 
-        // Merge the theme's dictionaries in array order — later entries
-        // shadow earlier ones for the same key. The compiled
-        // `.template.mu.js` outputs are mutable per-instance (each
-        // .Clone() in the Theme ctor produces a fresh ResourceDictionary
-        // subclass) so re-activation is symmetric without aliasing.
-        if (!sameTheme)
+        // BATCH the whole merge sequence (structural dicts AND the scheme token
+        // dict): each AddMergedDictionary would otherwise fire a synchronous
+        // style fan-out, letting an element already subscribed to
+        // Application.Resources re-apply its style/template (and read eagerly)
+        // while the token dict is still absent. Batched, one fan-out fires after
+        // every dictionary is merged. Merge order — hence last-merged-wins
+        // precedence — is unchanged.
+        let tokenDict!: ResourceDictionary;
+        app.Resources.Batch(() =>
         {
-            const dictionaryRefs: ResourceDictionary[] = [];
-            for (const d of theme.dictionaries)
+            // Merge the theme's dictionaries in array order — later entries
+            // shadow earlier ones for the same key. The compiled
+            // `.template.mu.js` outputs are mutable per-instance (each
+            // .Clone() in the Theme ctor produces a fresh ResourceDictionary
+            // subclass) so re-activation is symmetric without aliasing.
+            if (!sameTheme)
             {
-                app.Resources.AddMergedDictionary(d);
-                dictionaryRefs.push(d);
+                const dictionaryRefs: ResourceDictionary[] = [];
+                for (const d of theme.dictionaries)
+                {
+                    app.Resources.AddMergedDictionary(d);
+                    dictionaryRefs.push(d);
+                }
+                ThemeManager._activeDictionaries = dictionaryRefs;
             }
-            ThemeManager._activeDictionaries = dictionaryRefs;
-        }
 
-        // Token dict — ADD-BEFORE-REMOVE within the same app. Merge the
-        // NEW token dict first: `Resolve` walks merged dicts last-added
-        // wins, so every token immediately resolves to its new value
-        // while the old token dict is still present. Only THEN drop the
-        // old dict — at which point no token's resolved value changes, so
-        // the removal's notify is a no-op for every consumer.
-        //
-        // Paired with DynamicResource's per-key SubscribeKey this yields:
-        // a token identical across the two schemes fires ZERO binding
-        // refreshes; a token that changed fires each consumer exactly
-        // ONCE. The previous remove-then-add fired twice per consumer
-        // (old → undefined → new) and momentarily flashed `undefined`
-        // through every bound slot mid-swap.
-        const tokenDict = new ResourceDictionary();
-        const mergedTokens = ThemeManager.resolveBasedOn(scheme);
-        for (const [k, v] of mergedTokens) tokenDict.Set(k, v);
-        app.Resources.AddMergedDictionary(tokenDict);
-        if (sameApp && oldTokenDict !== undefined)
-        {
-            app.Resources.RemoveMergedDictionary(oldTokenDict);
-        }
+            // Token dict — ADD-BEFORE-REMOVE within the same app. Merge the
+            // NEW token dict first: `Resolve` walks merged dicts last-added
+            // wins, so every token immediately resolves to its new value
+            // while the old token dict is still present. Only THEN drop the
+            // old dict — at which point no token's resolved value changes, so
+            // the removal's notify is a no-op for every consumer.
+            //
+            // Paired with DynamicResource's per-key SubscribeKey this yields:
+            // a token identical across the two schemes fires ZERO binding
+            // refreshes; a token that changed fires each consumer exactly
+            // ONCE. The previous remove-then-add fired twice per consumer
+            // (old → undefined → new) and momentarily flashed `undefined`
+            // through every bound slot mid-swap.
+            tokenDict = new ResourceDictionary();
+            const mergedTokens = ThemeManager.resolveBasedOn(scheme);
+            for (const [k, v] of mergedTokens) tokenDict.Set(k, v);
+            app.Resources.AddMergedDictionary(tokenDict);
+            if (sameApp && oldTokenDict !== undefined)
+            {
+                app.Resources.RemoveMergedDictionary(oldTokenDict);
+            }
+        });
 
         ThemeManager._activeTheme     = theme;
         ThemeManager._activeScheme    = scheme;
