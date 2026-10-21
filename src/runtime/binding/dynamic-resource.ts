@@ -83,17 +83,15 @@ class SingleKeySpec implements IResourceSpec
 {
     public readonly Keys: readonly string[];
 
-    public constructor(key: string)
+    public constructor(private readonly key: string)
     {
         this.Keys = [key];
     }
 
     public Compute(resolve: (key: string) => unknown): { value: unknown }
     {
-        return { value: resolve(this.Keys[SingleKeySpec.OnlyKeyIndex] as string) };
+        return { value: resolve(this.key) };
     }
-
-    private static readonly OnlyKeyIndex = 0;
 }
 
 // Composite: positional cells resolved into a values array and folded into
@@ -135,8 +133,20 @@ class KeySubscriptions implements IDisposable
 
     public dispose(): void
     {
-        for (const u of this.unsubs) u();
+        const failures: unknown[] = [];
+        for (const u of this.unsubs)
+        {
+            try
+            {
+                u();
+            }
+            catch (e)
+            {
+                failures.push(e);
+            }
+        }
         this.unsubs.length = 0;
+        if (failures.length > 0) throw failures[0];
     }
 }
 

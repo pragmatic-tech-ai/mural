@@ -145,10 +145,17 @@ describe('DynamicResourceComposite', () =>
             return original(key, listener);
         };
         const space = new TokenCell(CompositeHarness.SpaceKey);
-        h.Bind([space, CompositeHarness.LiteralOne, new TokenCell(CompositeHarness.SpaceKey), CompositeHarness.LiteralOne]);
-        h.MergeTokens({ [CompositeHarness.SpaceKey]: CompositeHarness.SpaceValue });
+        try
+        {
+            h.Bind([space, CompositeHarness.LiteralOne, new TokenCell(CompositeHarness.SpaceKey), CompositeHarness.LiteralOne]);
+            h.MergeTokens({ [CompositeHarness.SpaceKey]: CompositeHarness.SpaceValue });
 
-        assert.equal(subscribeCount, CompositeHarness.ExpectedSubscriptionCount);
-        assert.equal(h.Host.Padding.Horizontal, CompositeHarness.ExpectedSpaceHorizontal);
+            assert.equal(subscribeCount, CompositeHarness.ExpectedSubscriptionCount);
+            assert.equal(h.Host.Padding.Horizontal, CompositeHarness.ExpectedSpaceHorizontal);
+        }
+        finally
+        {
+            resources.SubscribeKey = original;
+        }
     });
 });
