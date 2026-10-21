@@ -1298,9 +1298,11 @@ export class Visual extends MuralBase
 
         // Add Margin back so the parent reserves the full bounding box
         // (inner content + outer spacing) for this Visual.
+        // Backstop: a leaf that yields a non-finite size (e.g. an unresolved
+        // design token) must not propagate NaN geometry up the Stretch layout.
         this._desiredSize = new Size(
-            footprint.Width  + marginH,
-            footprint.Height + marginV,
+            Visual.finiteOrZero(footprint.Width  + marginH),
+            Visual.finiteOrZero(footprint.Height + marginV),
         );
         this._isMeasureValid = true;
         // A new desired size invalidates any prior arrangement that was
@@ -1474,6 +1476,11 @@ export class Visual extends MuralBase
         }
 
         return { minW, maxW, minH, maxH };
+    }
+
+    private static finiteOrZero(n: number): number
+    {
+        return Number.isFinite(n) ? n : 0;
     }
 
     private static clamp(v: number, min: number, max: number): number
