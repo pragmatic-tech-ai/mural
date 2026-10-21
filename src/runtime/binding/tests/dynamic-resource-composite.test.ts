@@ -17,13 +17,17 @@ class CompositeHarness
     public static readonly ExpectedSpaceHorizontal = 24;
     public static readonly ExpectedSpaceVertical = 2;
     public static readonly ExpectedOffsetHorizontal = 4;
+    public static readonly Literals = [3, 5, 7, 9];
+    public static readonly ExpectedSubscriptionCount = 1;
 
+    public readonly Parent = new Border();
     public readonly Host = new Border();
     public BuildCount = 0;
 
     public constructor()
     {
-        new HeadlessTarget(200, 200).Content = this.Host;
+        this.Parent.SetChild(this.Host);
+        new HeadlessTarget(200, 200).Content = this.Parent;
     }
 
     public Bind(cells: ReadonlyArray<number | TokenCell>): Binding
@@ -84,5 +88,67 @@ describe('DynamicResourceComposite', () =>
         h.MergeTokens({ [CompositeHarness.OffsetKey]: CompositeHarness.OffsetValue });
 
         assert.equal(h.BuildCount, before);
+    });
+
+    test('dispose() tears down the ancestor-chain subscription', () =>
+    {
+        const h = new CompositeHarness();
+        h.Parent.Resources.Set(CompositeHarness.OffsetKey, CompositeHarness.OffsetValue);
+        const binding = h.Bind([new TokenCell(CompositeHarness.OffsetKey)]);
+        assert.equal(h.Host.Padding.Left, CompositeHarness.OffsetValue);
+        const before = h.BuildCount;
+        binding.dispose();
+
+        h.Parent.Resources.Set(CompositeHarness.OffsetKey, CompositeHarness.SpaceValue);
+
+        assert.equal(h.BuildCount, before);
+    });
+
+    test('dispose() unsubscribes every key of a multi-key cell list', () =>
+    {
+        const h = new CompositeHarness();
+        const binding = h.Bind([
+            new TokenCell(CompositeHarness.OffsetKey), CompositeHarness.LiteralOne,
+            new TokenCell(CompositeHarness.SpaceKey), CompositeHarness.LiteralOne]);
+        const before = h.BuildCount;
+        binding.dispose();
+
+        h.MergeTokens({ [CompositeHarness.OffsetKey]: CompositeHarness.OffsetValue });
+        h.MergeTokens({ [CompositeHarness.SpaceKey]: CompositeHarness.SpaceValue });
+
+        assert.equal(h.BuildCount, before);
+    });
+
+    test('literal-only cell list passes literals to build unchanged', () =>
+    {
+        const h = new CompositeHarness();
+        let received: readonly unknown[] = [];
+        const binding = DynamicResourceComposite(h.Host, CompositeHarness.Literals, v =>
+        {
+            received = v;
+            return new Thickness(0);
+        });
+        h.Host.set_property_value(Border.PaddingKey, binding);
+
+        assert.deepEqual(received, CompositeHarness.Literals);
+    });
+
+    test('duplicate token key subscribes once and resolves every cell', () =>
+    {
+        const h = new CompositeHarness();
+        const resources = Application.current!.Resources;
+        const original = resources.SubscribeKey.bind(resources);
+        let subscribeCount = 0;
+        resources.SubscribeKey = (key, listener) =>
+        {
+            subscribeCount++;
+            return original(key, listener);
+        };
+        const space = new TokenCell(CompositeHarness.SpaceKey);
+        h.Bind([space, CompositeHarness.LiteralOne, new TokenCell(CompositeHarness.SpaceKey), CompositeHarness.LiteralOne]);
+        h.MergeTokens({ [CompositeHarness.SpaceKey]: CompositeHarness.SpaceValue });
+
+        assert.equal(subscribeCount, CompositeHarness.ExpectedSubscriptionCount);
+        assert.equal(h.Host.Padding.Horizontal, CompositeHarness.ExpectedSpaceHorizontal);
     });
 });

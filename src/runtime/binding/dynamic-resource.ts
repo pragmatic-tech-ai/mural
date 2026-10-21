@@ -5,6 +5,7 @@ import type { ValueConverter } from './binding.js';
 import { MetaData } from '../metadata.js';
 import { MuralBase } from '../model.js';
 import { getSchemeTransitionAnimator, SchemeTransitionTokens, ThemeManager } from '../../visual-engine/theme/index.js';
+import type { IDisposable } from '@pragmatic-tech-ai/todl-runtime';
 import type { Visual } from '../../visual-engine/visual.js';
 
 // Internal MuralBase that holds the most-recent resolved value of a
@@ -68,14 +69,74 @@ export class TokenCell
     }
 }
 
-// Composite-mode description: positional cells resolved into a values array
-// and folded into one value by `Build`.
-class CompositeSpec
+// What a DynamicResourceBinding resolves: the distinct resource keys it must
+// watch, and how to fold them into one value. Compute returns undefined when
+// nothing changed since the last computation.
+interface IResourceSpec
 {
-    public constructor(
-        public readonly Cells: ReadonlyArray<number | TokenCell>,
-        public readonly Build: (values: readonly unknown[]) => unknown)
+    readonly Keys: readonly string[];
+    Compute(resolve: (key: string) => unknown): { value: unknown } | undefined;
+}
+
+// Single resource key: the value is the resolved resource itself.
+class SingleKeySpec implements IResourceSpec
+{
+    public readonly Keys: readonly string[];
+
+    public constructor(key: string)
     {
+        this.Keys = [key];
+    }
+
+    public Compute(resolve: (key: string) => unknown): { value: unknown }
+    {
+        return { value: resolve(this.Keys[SingleKeySpec.OnlyKeyIndex] as string) };
+    }
+
+    private static readonly OnlyKeyIndex = 0;
+}
+
+// Composite: positional cells resolved into a values array and folded into
+// one value by `Build`. Literals pass through; TokenCells are looked up.
+class CompositeSpec implements IResourceSpec
+{
+    public readonly Keys: readonly string[];
+    private lastValues: readonly unknown[] | undefined;
+
+    public constructor(
+        private readonly cells: ReadonlyArray<number | TokenCell>,
+        private readonly build: (values: readonly unknown[]) => unknown)
+    {
+        this.Keys = [...new Set(cells.filter((c): c is TokenCell => c instanceof TokenCell).map(c => c.Key))];
+    }
+
+    public Compute(resolve: (key: string) => unknown): { value: unknown } | undefined
+    {
+        const values = this.cells.map(c => c instanceof TokenCell ? resolve(c.Key) : c);
+        const prev = this.lastValues;
+        if (prev !== undefined && prev.length === values.length && prev.every((v, i) => Object.is(v, values[i])))
+        {
+            return undefined;
+        }
+        this.lastValues = values;
+        return { value: this.build(values) };
+    }
+}
+
+// Owns a set of unsubscribe callbacks; dispose() runs them all.
+class KeySubscriptions implements IDisposable
+{
+    private readonly unsubs: Array<() => void> = [];
+
+    public Add(unsub: () => void): void
+    {
+        this.unsubs.push(unsub);
+    }
+
+    public dispose(): void
+    {
+        for (const u of this.unsubs) u();
+        this.unsubs.length = 0;
     }
 }
 
@@ -84,9 +145,7 @@ class DynamicResourceBinding extends Binding
     private readonly watcher: ResourceWatcher;
     private readonly subscriptions: Array<() => void>;
     private readonly host: Visual | MuralBase;
-    private readonly keys: readonly string[];
-    private readonly composite: CompositeSpec | undefined;
-    private lastValues: readonly unknown[] | undefined;
+    private readonly spec: IResourceSpec;
     private readonly unsubscribeRewire: (() => void) | undefined;
     // Registered for the binding's whole lifetime — not only until the first
     // Application appears — so a LATER swap to a different Application
@@ -105,7 +164,7 @@ class DynamicResourceBinding extends Binding
     // `subscriptions` above so an Application swap can replace just this
     // one registration without re-walking the Visual ancestor chain — see
     // wireAppSubscription().
-    private appSubscription: (() => void) | undefined;
+    private appSubscription: KeySubscriptions | undefined;
     // The Application instance `appSubscription` is currently wired
     // against (undefined before the first wireAppSubscription() call).
     // Compared against Application.current by the swap listener below.
@@ -116,7 +175,7 @@ class DynamicResourceBinding extends Binding
     // the animated slot.
     private activeStoryboard: Storyboard | undefined;
 
-    constructor(host: Visual | MuralBase, key: string, converter?: ValueConverter, composite?: CompositeSpec)
+    constructor(host: Visual | MuralBase, spec: IResourceSpec, converter?: ValueConverter)
     {
         const watcher = new ResourceWatcher();
         super(watcher, 'Value', BindingMode.OneWay,
@@ -124,10 +183,7 @@ class DynamicResourceBinding extends Binding
         this.watcher = watcher;
         this.subscriptions = [];
         this.host = host;
-        this.composite = composite;
-        this.keys = composite !== undefined
-            ? [...new Set(composite.Cells.filter((c): c is TokenCell => c instanceof TokenCell).map(c => c.Key))]
-            : [key];
+        this.spec = spec;
         this.wireSubscriptions();
         this.refresh();
         // Re-walk the ancestor chain whenever the host is attached /
@@ -187,7 +243,7 @@ class DynamicResourceBinding extends Binding
         this.unsubscribeAppCurrentChanged();
         for (const unsub of this.subscriptions) unsub();
         this.subscriptions.length = 0;
-        this.appSubscription?.();
+        this.appSubscription?.dispose();
         this.appSubscription = undefined;
         this.activeStoryboard?.Stop();
         this.activeStoryboard = undefined;
@@ -258,7 +314,7 @@ class DynamicResourceBinding extends Binding
                 const dict = back['_resources'];
                 if (dict !== undefined)
                 {
-                    for (const key of this.keys)
+                    for (const key of this.spec.Keys)
                     {
                         this.subscriptions.push(dict.SubscribeKey(key, () => this.refresh()));
                     }
@@ -277,19 +333,21 @@ class DynamicResourceBinding extends Binding
     // host's Visual ancestry, so there's nothing else to redo.
     private wireAppSubscription(): void
     {
-        this.appSubscription?.();
+        this.appSubscription?.dispose();
         const app = Application.current;
-        const unsubs: Array<() => void> = [];
         if (app !== undefined && app !== null)
         {
-            for (const key of this.keys)
+            const subs = new KeySubscriptions();
+            for (const key of this.spec.Keys)
             {
-                unsubs.push(app.Resources.SubscribeKey(key, () => this.refresh()));
+                subs.Add(app.Resources.SubscribeKey(key, () => this.refresh()));
             }
+            this.appSubscription = subs;
         }
-        this.appSubscription = unsubs.length > 0
-            ? () => { for (const u of unsubs) u(); }
-            : undefined;
+        else
+        {
+            this.appSubscription = undefined;
+        }
         this.wiredApp = app;
     }
 
@@ -300,20 +358,6 @@ class DynamicResourceBinding extends Binding
             : Application.ResolveDefaultResource(key);
     }
 
-    // Composite mode: resolve every cell positionally; null when nothing
-    // changed since the last build (skips a redundant rebuild).
-    private composeValue(spec: CompositeSpec): { value: unknown } | undefined
-    {
-        const values = spec.Cells.map(c => c instanceof TokenCell ? this.resolveKey(c.Key) : c);
-        const prev = this.lastValues;
-        if (prev !== undefined && prev.length === values.length && prev.every((v, i) => v === values[i]))
-        {
-            return undefined;
-        }
-        this.lastValues = values;
-        return { value: spec.Build(values) };
-    }
-
     private refresh(): void
     {
         const oldValue = this.watcher.Value;
@@ -322,17 +366,9 @@ class DynamicResourceBinding extends Binding
         // hosts skip straight to the Application-level fallback —
         // that's where theme bundles live, so theme-token references
         // (`@Primary`, …) still resolve from a Pen / Brush resource.
-        let newValue: unknown;
-        if (this.composite !== undefined)
-        {
-            const composed = this.composeValue(this.composite);
-            if (composed === undefined) return;
-            newValue = composed.value;
-        }
-        else
-        {
-            newValue = this.resolveKey(this.keys[0]!);
-        }
+        const computed = this.spec.Compute(key => this.resolveKey(key));
+        if (computed === undefined) return;
+        const newValue = computed.value;
         if (oldValue === newValue) return;
 
         // Animation gate. Skip the factory entirely when no transition is
@@ -423,7 +459,7 @@ class DynamicResourceBinding extends Binding
 // the modifier stays reactive rather than folding to a constant.
 export function DynamicResource(host: Visual | MuralBase, key: string, converter?: ValueConverter): Binding
 {
-    return new DynamicResourceBinding(host, key, converter);
+    return new DynamicResourceBinding(host, new SingleKeySpec(key), converter);
 }
 
 // Live composite of several resource tokens and literals. Each TokenCell is
@@ -436,5 +472,5 @@ export function DynamicResourceComposite(
     cells: ReadonlyArray<number | TokenCell>,
     build: (values: readonly unknown[]) => unknown): Binding
 {
-    return new DynamicResourceBinding(host, '', undefined, new CompositeSpec(cells, build));
+    return new DynamicResourceBinding(host, new CompositeSpec(cells, build));
 }
