@@ -25,20 +25,26 @@ describe('ThemeManager.activate batches dictionary merges', () =>
 {
     test('a style subscriber never observes a scheme token missing mid-activation', () =>
     {
-        const app = ActivateBatchFixture.Prepare();
-        const observed: unknown[] = [];
-        // Eager read (not a composite binding) on every style fan-out, as a
-        // control re-applying its style/template would do.
-        app.Resources.SubscribeStyle(() =>
+        try
         {
-            observed.push(app.Resources.Resolve(ActivateBatchFixture.SchemeOnlyToken));
-        });
+            const app = ActivateBatchFixture.Prepare();
+            const observed: unknown[] = [];
+            // Eager read (not a composite binding) on every style fan-out, as a
+            // control re-applying its style/template would do.
+            app.Resources.SubscribeStyle(() =>
+            {
+                observed.push(app.Resources.Resolve(ActivateBatchFixture.SchemeOnlyToken));
+            });
 
-        ThemeManager.ApplyScheme(PragmaticLight.instance as never);
+            ThemeManager.ApplyScheme(PragmaticLight.instance as never);
 
-        assert.ok(observed.length > 0, 'activation must fan out to style subscribers');
-        assert.ok(observed.every(v => v !== undefined), 'token must resolve in every fan-out');
-        ThemeManager._resetForTesting();
-        Application.current = null;
+            assert.ok(observed.length > 0, 'activation must fan out to style subscribers');
+            assert.ok(observed.every(v => v !== undefined), 'token must resolve in every fan-out');
+        }
+        finally
+        {
+            ThemeManager._resetForTesting();
+            Application.current = null;
+        }
     });
 });

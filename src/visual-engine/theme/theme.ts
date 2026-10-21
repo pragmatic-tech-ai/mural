@@ -1064,7 +1064,7 @@ export class ThemeManager
         // while the token dict is still absent. Batched, one fan-out fires after
         // every dictionary is merged. Merge order — hence last-merged-wins
         // precedence — is unchanged.
-        let tokenDict!: ResourceDictionary;
+        const tokenDict = new ResourceDictionary();
         app.Resources.Batch(() =>
         {
             // Merge the theme's dictionaries in array order — later entries
@@ -1096,7 +1096,6 @@ export class ThemeManager
             // ONCE. The previous remove-then-add fired twice per consumer
             // (old → undefined → new) and momentarily flashed `undefined`
             // through every bound slot mid-swap.
-            tokenDict = new ResourceDictionary();
             const mergedTokens = ThemeManager.resolveBasedOn(scheme);
             for (const [k, v] of mergedTokens) tokenDict.Set(k, v);
             app.Resources.AddMergedDictionary(tokenDict);
