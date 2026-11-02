@@ -28,6 +28,8 @@ import {
 import type { Border } from './border.js';
 import { TemplatedControl } from './templated-control.js';
 import { TextWrapping } from './text-block.js';
+import { InputPurpose } from './input-purpose.js';
+import { NativeTextInput } from './native-text-input.js';
 import type { ScrollViewer } from '../framework/surfaces/scroll-viewer.js';
 
 // Resource-dictionary key — matches the `x:key` literal in
@@ -132,6 +134,11 @@ export class TextEditorSurface extends Element
     private readonly _lineCache = new Map<string, RelativeVisualLine[]>();
     private _cachedFontSig:     string = '';
 
+    // The TextBox's native <input> while UsesNativeInput is on: the renderer
+    // hosts it in a persistent <foreignObject> sized to this surface (the
+    // DomHost path), and RenderOverride then paints nothing of its own.
+    public get ForeignElement(): HTMLElement | undefined { return this.textBox?.NativeInputElement; }
+
     public get Lines():        readonly LineLayout[] { return this._lines; }
     public get LineHeight():   number                { return this._lineHeight; }
     public get BaselineRise(): number                { return this._baselineRise; }
@@ -171,7 +178,7 @@ export class TextEditorSurface extends Element
         // Split on \n into logical lines. Always at least one entry
         // (the empty string) so caret rendering at an empty TextBox
         // still has a valid line / position to anchor against.
-        const text  = tb.Text ?? '';
+        const text  = tb.DisplayText;
         const logicalLines = text.split('\n');
 
         const out: LineLayout[] = [];
@@ -265,6 +272,7 @@ export class TextEditorSurface extends Element
     {
         const tb = this.textBox;
         if (tb === undefined) return;
+        if (tb.IsNativeInputActive) return;   // the native input draws text, caret and selection
         if (this._lines.length === 0 || this._lineHeight === 0) return;
 
         // ── 1. Selection backgrounds ──────────────────────────────
@@ -430,7 +438,7 @@ export class TextEditorSurface extends Element
 
     public TotalLength(): number
     {
-        return this.textBox?.Text.length ?? 0;
+        return this.textBox?.DisplayText.length ?? 0;
     }
 
     // Find the visual-line index that contains the absolute char index.
@@ -731,6 +739,10 @@ export class TextBox extends TemplatedControl
     // inserts no newline; Shift+Return still inserts '\n'. Lets a multiline
     // TextBox act as a chat composer (Enter sends, Shift+Enter newline).
     public static readonly SubmitsOnEnterKey   = MuralBase.RegisterProperty<boolean>(          TextBox, 'SubmitsOnEnter',    false,               MetaData.None);
+    // Masked entry: layout + paint substitute MaskChar for every glyph while
+    // Text keeps the true value (render-only; indices map 1:1). Cut/Copy are
+    // suppressed so the secret never reaches the clipboard.
+    public static readonly IsPasswordKey       = MuralBase.RegisterProperty<boolean>(          TextBox, 'IsPassword',        false,               MetaData.Measure | MetaData.Render);
     public static readonly AcceptsTabKey       = MuralBase.RegisterProperty<boolean>(          TextBox, 'AcceptsTab',        false,               MetaData.None);
     public static readonly IsReadOnlyKey       = MuralBase.RegisterProperty<boolean>(          TextBox, 'IsReadOnly',        false,               MetaData.None);
     // Wrap policy. Default Wrap matches the notes-app shape the demo
@@ -761,6 +773,17 @@ export class TextBox extends TemplatedControl
     // falls back to Foreground when unset.
     public static readonly PlaceholderKey      = MuralBase.RegisterProperty<string>(           TextBox, 'Placeholder',       '',                  MetaData.Render);
     public static readonly PlaceholderBrushKey = MuralBase.RegisterProperty<Brush | undefined>(TextBox, 'PlaceholderBrush',  undefined,           MetaData.Render);
+    // Edit through a real browser <input> instead of mural's painted editor
+    // (single-line only; AcceptsReturn keeps the painted editor). The browser
+    // then does the editing, so IME / dead keys, autofill and password
+    // managers, mobile soft keyboards and assistive technology all work. Only
+    // takes effect in a browser document (HtmlTarget); elsewhere (Node tests)
+    // the painted editor stays. Off by default: existing apps are unchanged.
+    public static readonly UsesNativeInputKey  = MuralBase.RegisterProperty<boolean>(          TextBox, 'UsesNativeInput',   false,               MetaData.Render);
+    // What the text is for (email, username, current password, ...): sets the
+    // native input's autocomplete token, type and on-screen keyboard. Read
+    // only with UsesNativeInput.
+    public static readonly InputPurposeKey     = MuralBase.RegisterProperty<InputPurpose>(     TextBox, 'InputPurpose',      InputPurpose.None,   MetaData.None);
 
     // M3 text-field variant - Filled (filled surface + bottom underline,
     // M3 spec default) and Outlined (1dp stroked border on all four
@@ -786,6 +809,9 @@ export class TextBox extends TemplatedControl
     // platform clipboard. Static so a single override affects every
     // TextBox instance in the process.
     public static Clipboard: ClipboardSink = DEFAULT_CLIPBOARD;
+
+    // Bullet substituted for every glyph when IsPassword is true.
+    public static readonly MaskChar: string = '•'
 
     // Template parts — resolved from the active TextBox template. Not
     // readonly: a Variant swap (Outlined → Plain, etc.) re-fires the Style
@@ -825,6 +851,10 @@ export class TextBox extends TemplatedControl
     // RenderOverride.
     public CaretVisible: boolean = false;
     private _blinkTimer: ReturnType<typeof setInterval> | undefined;
+
+    // The native <input> behind UsesNativeInput; created on first use in a
+    // browser document and kept (hidden while inactive) for the control's life.
+    private _native: NativeTextInput | undefined;
 
     constructor()
     {
@@ -884,6 +914,59 @@ export class TextBox extends TemplatedControl
             this._editor?.InvalidateMeasure();
             this._editor?.InvalidateVisual();
         });
+
+        // Keep the native input (when there is one) in step with every
+        // property it mirrors; switching UsesNativeInput / AcceptsReturn also
+        // repaints the editor, which paints itself only while the input is off.
+        const syncNative = (): void => this._native?.Sync(this.IsNativeInputActive);
+        for (const key of [TextBox.TextKey, TextBox.IsPasswordKey, TextBox.InputPurposeKey, TextBox.PlaceholderKey,
+            TextBox.PlaceholderBrushKey, TextBox.IsReadOnlyKey, TextBox.FontFamilyKey, TextBox.FontSizeKey,
+            TextBox.FontWeightKey, TextBox.FontStyleKey, TextBox.ForegroundKey, TextBox.CaretBrushKey, Element.IsEnabledKey])
+        {
+            this.PropertyChanged(key).subscribe(syncNative);
+        }
+        for (const key of [TextBox.UsesNativeInputKey, TextBox.AcceptsReturnKey])
+        {
+            this.PropertyChanged(key).subscribe(() =>
+            {
+                syncNative();
+                this._editor?.InvalidateVisual();
+            });
+        }
+    }
+
+    public get UsesNativeInput(): boolean { return this.get_property_value(TextBox.UsesNativeInputKey); }
+    public set UsesNativeInput(v: boolean) { this.set_property_value(TextBox.UsesNativeInputKey, v); }
+
+    public get InputPurpose(): InputPurpose { return this.get_property_value(TextBox.InputPurposeKey); }
+    public set InputPurpose(v: InputPurpose) { this.set_property_value(TextBox.InputPurposeKey, v); }
+
+    // True while the native input edits this TextBox: UsesNativeInput on a
+    // single-line box in a browser document.
+    public get IsNativeInputActive(): boolean
+    {
+        return this.UsesNativeInput && !this.AcceptsReturn && this.NativeDocument() !== undefined;
+    }
+
+    // The native <input> the editor surface hosts; undefined until the
+    // TextBox first becomes native-input active (then kept, hidden when off).
+    public get NativeInputElement(): HTMLElement | undefined
+    {
+        if (this._native === undefined && this.IsNativeInputActive)
+        {
+            this._native = new NativeTextInput(this, this.NativeDocument()!);
+        }
+        return this._native?.Element;
+    }
+
+    // Document the native input is created in (as DomHost.OwnerDocument):
+    // defaults to the ambient browser document; tests and off-screen hosts
+    // assign one before the TextBox first becomes native-input active.
+    public OwnerDocument: Document | undefined;
+
+    private NativeDocument(): Document | undefined
+    {
+        return this.OwnerDocument ?? (globalThis as { document?: Document }).document;
     }
 
     // Re-resolve and re-wire the template parts against the CURRENT template
@@ -1003,6 +1086,23 @@ export class TextBox extends TemplatedControl
     public get SubmitsOnEnter(): boolean { return this.get_property_value(TextBox.SubmitsOnEnterKey); }
     public set SubmitsOnEnter(v: boolean) { this.set_property_value(TextBox.SubmitsOnEnterKey, v); }
 
+    public get IsPassword(): boolean { return this.get_property_value(TextBox.IsPasswordKey); }
+    public set IsPassword(v: boolean)
+    {
+        this.set_property_value(TextBox.IsPasswordKey, v);
+        this._editor?.InvalidateMeasure();
+        this._editor?.InvalidateVisual();
+    }
+
+    /** The string the editor surface lays out and paints: MaskChar x Text.length
+     *  in password mode (same length as Text, so every index stays valid),
+     *  otherwise Text itself. */
+    public get DisplayText(): string
+    {
+        const text = this.Text ?? '';
+        return this.IsPassword ? TextBox.MaskChar.repeat(text.length) : text;
+    }
+
     public get AcceptsTab(): boolean { return this.get_property_value(TextBox.AcceptsTabKey); }
     public set AcceptsTab(v: boolean) { this.set_property_value(TextBox.AcceptsTabKey, v); }
 
@@ -1084,6 +1184,7 @@ export class TextBox extends TemplatedControl
 
     protected override OnPointerDown(args: PointerEventArgs): void
     {
+        if (this.IsNativeInputActive) return;   // the native input owns pointer editing
         // Take focus + capture so the drag-extends-selection flow works
         // even when the pointer wanders outside the editor's bounds.
         args.SetFocus(this);
@@ -1109,7 +1210,7 @@ export class TextBox extends TemplatedControl
 
     protected override OnPointerMove(args: PointerEventArgs): void
     {
-        if (!this._dragging) return;
+        if (!this._dragging || this.IsNativeInputActive) return;
         const idx = this.indexAtPointer(args);
         if (idx === this._caret) return;
         this._caret = idx;
@@ -1129,6 +1230,17 @@ export class TextBox extends TemplatedControl
 
     protected override OnGotFocus(_args: FocusEventArgs): void
     {
+        if (this.IsNativeInputActive)
+        {
+            // mural focus arrived some other way (Tab, code): hand it to the
+            // input, creating it if the first paint has not happened yet (the
+            // input then takes focus once it is attached).
+            if (this.NativeInputElement !== undefined)
+            {
+                this._native?.Focus();
+            }
+            return;
+        }
         this.CaretVisible = true;
         this.startBlink();
         this._editor.InvalidateVisual();
@@ -1136,6 +1248,7 @@ export class TextBox extends TemplatedControl
 
     protected override OnLostFocus(_args: FocusEventArgs): void
     {
+        this._native?.Blur();
         this.CaretVisible = false;
         this.stopBlink();
         this._dragging = false;
@@ -1144,6 +1257,9 @@ export class TextBox extends TemplatedControl
 
     protected override OnKeyDown(args: KeyEventArgs): void
     {
+        // The native input edits; only Enter / Escape reach here, left
+        // unhandled so they bubble (submit triggers and the like).
+        if (this.IsNativeInputActive) return;
         const mods   = args.Modifiers;
         const shift  = hasModifier(mods, ModifierKeys.Shift);
         const ctrl   = hasModifier(mods, ModifierKeys.Control)
@@ -1217,7 +1333,7 @@ export class TextBox extends TemplatedControl
 
     protected override OnTextInput(args: TextInputEventArgs): void
     {
-        if (this.IsReadOnly) return;
+        if (this.IsReadOnly || this.IsNativeInputActive) return;
         if (args.Text.length === 0) return;
         this.insertText(args.Text);
         args.Handled = true;
@@ -1382,6 +1498,8 @@ export class TextBox extends TemplatedControl
     // Option+Arrow is similar.
     private nextWordBoundary(from: number, direction: -1 | 1): number
     {
+        // Masked text must not leak word structure through Ctrl+Arrow.
+        if (this.IsPassword) return direction > 0 ? this.Text.length : 0;
         const text = this.Text;
         if (direction > 0)
         {
@@ -1407,6 +1525,7 @@ export class TextBox extends TemplatedControl
 
     private async copyToClipboard(): Promise<void>
     {
+        if (this.IsPassword) return;
         const [start, end] = this.selectionRange();
         if (start === end) return;
         await TextBox.Clipboard.Write(this.Text.substring(start, end));
@@ -1414,6 +1533,9 @@ export class TextBox extends TemplatedControl
 
     private async cutToClipboard(): Promise<void>
     {
+        // Password mode: never place the secret on the clipboard (and do not
+        // delete it either, so Ctrl+X is a full no-op).
+        if (this.IsPassword) return;
         const [start, end] = this.selectionRange();
         if (start === end) return;
         // Capture + delete are SYNCHRONOUS so the text model settles
@@ -1490,6 +1612,12 @@ export class TextBox extends TemplatedControl
         this.set_property_value(TextBox.SelectionLengthKey, e - s);
         this.set_property_value(TextBox.CaretIndexKey,      this._caret);
         this._suppressSelectionSync = false;
+        // A selection set from code (Select / SelectAll / CaretIndex) reaches
+        // the native input; the input's own reports are not echoed back.
+        if (this.IsNativeInputActive)
+        {
+            this._native?.SetSelection(s, e);
+        }
         this.bringCaretIntoView();
     }
 

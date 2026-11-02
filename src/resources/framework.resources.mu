@@ -23,6 +23,7 @@ resources MuralFramework {
     import Formatting from "../framework/formatting/formatting.template.mu.js"
     import Hierarchy from "../framework/hierarchy/hierarchy.template.mu.js"
     import ComboBoxes from "../framework/list/combo-box.template.mu.js"
+    import DataGrids from "../framework/data-grid/data-grid.template.mu.js"
     import ListBoxes from "../framework/list/list-box.template.mu.js"
     import TreeViews from "../framework/list/tree-view.template.mu.js"
     import Markers from "../framework/markers/markers.template.mu.js"

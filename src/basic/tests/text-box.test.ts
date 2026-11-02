@@ -927,3 +927,76 @@ describe('TextBox — pre-template (editor not yet wired)', () => {
         assert.doesNotThrow(() => { tb.SelectAll(); }, 'SelectAll');
     });
 });
+
+describe('TextBox — IsPassword', () => {
+    beforeEach(() => { initTestApp(); });
+
+    function editorLines(tb: TextBox): readonly { Text: string; GlobalStart: number }[]
+    {
+        const found = (tb.visualChildren[0] as Visual).FindName('PART_Editor')!;
+        return (found as unknown as { Lines: readonly { Text: string; GlobalStart: number }[] }).Lines;
+    }
+
+    test('lays out MaskChar x N while Text keeps the true value', () => {
+        const { tb, target } = fixture('s3cret');
+        tb.IsPassword = true;
+        target.Flush();
+        assert.equal(tb.Text, 's3cret');
+        assert.equal(tb.DisplayText, TextBox.MaskChar.repeat(6));
+        const lines = editorLines(tb);
+        assert.equal(lines.length, 1);
+        assert.equal(lines[0]!.Text, TextBox.MaskChar.repeat(6));
+    });
+
+    test('MaskChar is exactly the U+2022 bullet (guards against a mojibake/invalid-byte regression)', () => {
+        assert.equal(TextBox.MaskChar.length, 1);
+        assert.equal(TextBox.MaskChar.codePointAt(0), 0x2022);
+    });
+
+    test('IsPassword false lays out the real text', () => {
+        const { tb } = fixture('plain');
+        assert.equal(editorLines(tb)[0]!.Text, 'plain');
+    });
+
+    test('typing edits the real Text; caret and selection indices stay valid', () => {
+        const { tb, im, target } = fixture('abc');
+        tb.IsPassword = true;
+        tb.Select(3, 0);
+        im.SetFocus(tb);
+        im.InjectTextInput({ Text: 'd' });
+        target.Flush();
+        assert.equal(tb.Text, 'abcd');
+        assert.equal(tb.CaretIndex, 4);
+        tb.Select(1, 2);
+        assert.equal(tb.SelectionStart, 1);
+        assert.equal(tb.SelectionLength, 2);
+        assert.equal(editorLines(tb)[0]!.Text.length, 4);
+    });
+
+    test('Ctrl+C and Ctrl+X place nothing on the clipboard and Cut keeps the text', async () => {
+        const cb = makeClipboardStub();
+        TextBox.Clipboard = cb;
+        try
+        {
+            const { tb, im } = fixture('hunter2');
+            tb.IsPassword = true;
+            tb.SelectAll();
+            im.SetFocus(tb);
+            im.InjectKeyDown(key(Key.C, { Control: true }));
+            im.InjectKeyDown(key(Key.X, { Control: true }));
+            await Promise.resolve();
+            assert.equal(cb.Buffer, '');
+            assert.equal(tb.Text, 'hunter2');
+        }
+        finally { TextBox.Clipboard = makeClipboardStub(); }
+    });
+
+    test('plain Return bubbles unhandled on a single-line SubmitsOnEnter password box', () => {
+        const { tb, im } = fixture('pw');
+        tb.IsPassword = true;
+        tb.SubmitsOnEnter = true;
+        im.SetFocus(tb);
+        assert.equal(im.InjectKeyDown(key(Key.Return)), false);
+        assert.equal(tb.Text, 'pw');
+    });
+});

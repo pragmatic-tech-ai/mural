@@ -104,6 +104,8 @@ export {
     TextEditorSurface,
     type ClipboardSink,
 } from './text-box.js';
+export { InputPurpose } from './input-purpose.js';
+export { NativeTextInput } from './native-text-input.js';
 export { SpinEdit } from './spin-edit.js';
 export { EditableTextBlock } from './editable-text-block.js';
 export { Slider, SliderLayout } from './slider.js';
