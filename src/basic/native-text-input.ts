@@ -81,6 +81,9 @@ export class NativeTextInput
     private static readonly PixelSuffix = 'px';
     private static readonly HiddenDisplay = 'none';
     private static readonly ShownDisplay = 'block';
+    // Explicit, never inherited: a hit-test-transparent ancestor (a dialog or overlay container renders
+    // pointer-events="none" and relies on each visual's own hit pad) would otherwise make the input unclickable.
+    private static readonly HitTestablePointerEvents = 'auto';
     private static readonly InheritColor = 'inherit';
     private static readonly BorderBox = 'border-box';
     private static readonly Fill = '100%';
@@ -182,6 +185,7 @@ export class NativeTextInput
         C.SetOptional(input, C.AriaLabelAttribute, box.Placeholder.length > 0 ? box.Placeholder : undefined);
         input.readOnly = box.IsReadOnly;
         input.disabled = !box.IsEnabled;
+        input.style.pointerEvents = box.IsHitTestVisible ? C.HitTestablePointerEvents : C.NoneText;
         input.style.fontFamily = box.FontFamily.Source;
         input.style.fontSize = String(box.FontSize) + C.PixelSuffix;
         input.style.fontWeight = box.FontWeight;

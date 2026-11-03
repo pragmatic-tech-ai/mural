@@ -146,6 +146,19 @@ describe('TextBox.UsesNativeInput', () =>
         assert.equal(input.disabled, true);
     });
 
+    test('the input takes pointer hits itself, even under a hit-test-transparent container; not when the box opts out', () =>
+    {
+        const fx = new NativeFixture();
+        const tb = fx.Box();
+        const input = fx.Input(tb);
+        // Explicit, so an ancestor's pointer-events="none" (a dialog/overlay container) cannot silence it.
+        assert.equal(input.style.pointerEvents, 'auto');
+        tb.IsHitTestVisible = false;
+        assert.equal(fx.Input(tb).style.pointerEvents, 'none');
+        tb.IsHitTestVisible = true;
+        assert.equal(fx.Input(tb).style.pointerEvents, 'auto');
+    });
+
     test('editing keys stay in the input; Enter, Escape and Tab continue to the mural host', () =>
     {
         const fx = new NativeFixture();

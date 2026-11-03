@@ -921,7 +921,8 @@ export class TextBox extends TemplatedControl
         const syncNative = (): void => this._native?.Sync(this.IsNativeInputActive);
         for (const key of [TextBox.TextKey, TextBox.IsPasswordKey, TextBox.InputPurposeKey, TextBox.PlaceholderKey,
             TextBox.PlaceholderBrushKey, TextBox.IsReadOnlyKey, TextBox.FontFamilyKey, TextBox.FontSizeKey,
-            TextBox.FontWeightKey, TextBox.FontStyleKey, TextBox.ForegroundKey, TextBox.CaretBrushKey, Element.IsEnabledKey])
+            TextBox.FontWeightKey, TextBox.FontStyleKey, TextBox.ForegroundKey, TextBox.CaretBrushKey, Element.IsEnabledKey,
+            Element.IsHitTestVisibleKey])
         {
             this.PropertyChanged(key).subscribe(syncNative);
         }
