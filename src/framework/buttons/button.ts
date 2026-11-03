@@ -7,6 +7,7 @@
     Key,
     type PointerEventArgs,
     type PropertyDescriptor,
+    PropertyValueSource,
 } from '../../runtime/index.js';
 import { CornerRadius } from '../../visual-engine/index.js';
 import {
@@ -144,7 +145,10 @@ export class Button extends ContentControl implements ICommandSource
     // Command / CommandParameter / CommandTarget DP writes refresh the
     // cache regardless of write source (binding push, setter call,
     // compiler emission).
-    private readonly _commandSource = new CommandSourceHelper(this);
+    // The change callback mirrors CanExecute onto IsEnabled (like MenuItem), so a button whose command
+    // cannot run is really disabled: its template's `when ( IsEnabled = false )` dims it, instead of
+    // looking clickable while silently ignoring clicks.
+    private readonly _commandSource = new CommandSourceHelper(this, () => this.syncIsEnabledFromCommand());
 
     constructor(content?: Visual)
     {
@@ -325,6 +329,19 @@ export class Button extends ContentControl implements ICommandSource
     }
 
     // ── Command bookkeeping ────────────────────────────────────────
+
+    private syncIsEnabledFromCommand(): void
+    {
+        // A bound IsEnabled owns the value: a plain write (or ClearValue) would
+        // dispose the binding, so the command sync stands down.
+        if (this.GetValueSource(Element.IsEnabledKey) === PropertyValueSource.Binding) return;
+        if (this.Command === undefined)
+        {
+            this.ClearValue(Element.IsEnabledKey);
+            return;
+        }
+        this.IsEnabled = this._commandSource.CanExecute;
+    }
 
     // Forward Command / CommandParameter / CommandTarget changes to the
     // helper so the cached _canExecute boolean and the CanExecuteChanged

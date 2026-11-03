@@ -229,6 +229,28 @@ describe('Button — ICommand integration', () => {
         assert.equal(executed, 1, 'after RaiseCanExecuteChanged the click should fire');
     });
 
+    test('IsEnabled follows the command: a button that cannot execute shows as disabled', () => {
+        const root = new Root();
+        const btn  = new Button();
+        root.AddChild(btn);
+
+        let allow = false;
+        const cmd = new RelayCommand(() => { }, () => allow);
+        btn.Command = cmd;
+        assert.equal(btn.IsEnabled, false, 'CanExecute false at bind time disables the button (its template dims it)');
+
+        allow = true;
+        cmd.RaiseCanExecuteChanged();
+        assert.equal(btn.IsEnabled, true, 'CanExecuteChanged re-enables it');
+
+        allow = false;
+        cmd.RaiseCanExecuteChanged();
+        assert.equal(btn.IsEnabled, false);
+
+        btn.Command = undefined;
+        assert.equal(btn.IsEnabled, true, 'removing the command restores the default');
+    });
+
     test('CommandParameter change refreshes the cached gate', () => {
         const root = new Root();
         const btn  = new Button();

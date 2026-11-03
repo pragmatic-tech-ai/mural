@@ -309,7 +309,9 @@ describe('ToolBarSplitButton — primary + dropdown', () => {
     // still dismiss the popup. Button.fireClick bails on !CanExecute, so an
     // AddClickHandler close would never fire — the popup would stick open.
     // Gallery closes such buttons on PointerUp instead.
-    test('icon-grid variant: a disabled-command button still closes the popup', () => {
+    // Same rule as a disabled MenuItem: a button whose command cannot run is really disabled
+    // (dimmed), and clicking it neither runs the command nor dismisses the popup.
+    test('icon-grid variant: a disabled-command button shows disabled and leaves the popup open', () => {
         const sb = new ToolBarSplitButton();
         let ran = 0;
         const btn = new ToolBarButton();
@@ -323,9 +325,10 @@ describe('ToolBarSplitButton — primary + dropdown', () => {
 
         const popupHost = (sb as unknown as { _popupHost: Visual })._popupHost;
         const hosted = findType(popupHost, ToolBarButton)!;
+        assert.equal(hosted.IsEnabled, false, 'a never-executable command disables the button');
         pressRelease(hosted);
         assert.equal(ran, 0, 'the disabled command did not run');
-        assert.equal(sb.IsOpen, false, 'the popup still closed despite the disabled command');
+        assert.equal(sb.IsOpen, true, 'clicking a disabled button does not dismiss the popup');
     });
 });
 
