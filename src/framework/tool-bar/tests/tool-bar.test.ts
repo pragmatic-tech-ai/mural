@@ -363,6 +363,34 @@ describe('ToolBarSplitButton — primary + dropdown', () => {
         assert.equal(ran, 1);
     });
 
+    // The real template's PART_Primary is a Border whose templated parent is
+    // the split button, so SetTemplatePartIsEnabledCore accepts it (no throw)
+    // and the veto goes on and off with the command.
+    test('the real Border PART_Primary takes and drops the template-part veto', () => {
+        const sb = new ToolBarSplitButton();
+        let open = false;
+        const cmd = new RelayCommand(() => {}, () => open);
+        assert.doesNotThrow(() => { sb.Command = cmd; }, 'applying the veto to the Border part does not throw');
+        const target = new HeadlessTarget(600, 200, sb);
+        target.Flush();
+        const primary = findNamed(sb, 'PART_Primary') as Border;
+        assert.ok(primary instanceof Border, 'the real template primary is a Border');
+        assert.equal(primary.templatedParent, sb, 'its templated parent is the split button');
+        assert.equal(primary.IsEnabled, false, 'veto applied');
+
+        open = true;
+        assert.doesNotThrow(() => cmd.RaiseCanExecuteChanged());
+        assert.equal(primary.IsEnabled, true, 'veto lifted by CanExecute');
+
+        open = false;
+        cmd.RaiseCanExecuteChanged();
+        assert.equal(primary.IsEnabled, false);
+        assert.doesNotThrow(() => { sb.Command = undefined; target.Flush(); }, 'clearing the Command does not throw');
+        const dropdownPrimary = findNamed(sb, 'PART_Primary') as Border;
+        assert.equal(dropdownPrimary.IsEnabled, true, 'clearing the Command lifts the veto (dropdown chrome)');
+        assert.equal(primary.IsEnabled, true, 'and the discarded split primary is no longer vetoed either');
+    });
+
     test('an authored IsEnabled=false still disables both halves while the command can execute', () => {
         const sb = new ToolBarSplitButton();
         sb.Command = new RelayCommand(() => {});

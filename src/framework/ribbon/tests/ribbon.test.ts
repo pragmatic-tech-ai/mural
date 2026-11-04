@@ -383,6 +383,28 @@ describe('Template-part IsEnabledCore veto', () => {
         assert.equal(primary.IsEnabled, false, "the part's own command allowing does not override the owner veto");
     });
 
+    test('clearing the Command lifts each veto: on the owner and on the part', () => {
+        const sb = new RibbonSplitButton();
+        sb.Command = new RelayCommand(() => {}, () => false);
+        layout(sb);
+        const primary = findButton(sb, 'PART_Primary')!;
+        assert.equal(primary.IsEnabled, false, 'the owner vetoes the primary');
+        sb.Command = undefined;
+        assert.equal(primary.IsEnabled, true, 'clearing the owner command lifts the owner veto');
+
+        primary.Command = new RelayCommand(() => {}, () => false);
+        assert.equal(primary.IsEnabled, false, 'the part vetoes itself');
+        primary.Command = undefined;
+        assert.equal(primary.IsEnabled, true, 'clearing the part command lifts the part veto');
+
+        sb.Command = new RelayCommand(() => {}, () => false);
+        primary.Command = new RelayCommand(() => {}, () => false);
+        sb.Command = undefined;
+        assert.equal(primary.IsEnabled, false, 'the part veto still holds with the owner veto lifted');
+        primary.Command = undefined;
+        assert.equal(primary.IsEnabled, true, 'both vetoes lifted');
+    });
+
     test('a control cannot veto an element that is not its own template part', () => {
         const probe = new VetoProbe();
         const sb = new RibbonSplitButton();
