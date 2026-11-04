@@ -1,7 +1,7 @@
 import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { initTestApp } from '../../../basic/tests/test-app.js';
-import { Binding, Observable, Panel, PointerButton, NoModifiers, RelayCommand, type PointerEventInit } from '../../../runtime/index.js';
+import { Binding, Observable, Panel, PointerButton, PropertyValueSource, NoModifiers, RelayCommand, type PointerEventInit } from '../../../runtime/index.js';
 import { InputManager } from '../../../framework/index.js';
 import { MenuItem } from '../menu-strip.js';
 
@@ -77,13 +77,33 @@ describe('MenuItem enable state follows Command.CanExecute', () => {
         assert.equal(mi.IsEnabled, true);
     });
 
-    test('a bound IsEnabled keeps winning over the command sync (Binding > Local)', () => {
+    test('a bound IsEnabled stays bound and is ANDed with CanExecute (WPF coercion)', () => {
         const source = new (class extends Observable { public Enabled = true; })();
         const gate = new Gate();
         const mi = new MenuItem();
         mi.set_property_value(MenuItem.IsEnabledKey, new Binding(source as unknown as never, 'Enabled'));
         mi.Command = gate.Command;
-        assert.equal(mi.IsEnabled, true);
+        assert.equal(mi.IsEnabled, false, 'bound true AND CanExecute false');
+        gate.Open = true;
+        gate.Command.RaiseCanExecuteChanged();
+        assert.equal(mi.IsEnabled, true, 'bound true AND CanExecute true');
+        assert.equal(mi.GetValueSource(MenuItem.IsEnabledKey), PropertyValueSource.Binding, 'the binding was never replaced');
+    });
+
+    test('an explicit IsEnabled=false is never overridden by a command that can execute', () => {
+        const gate = new Gate();
+        gate.Open = true;
+        const mi = new MenuItem();
+        mi.IsEnabled = false;
+        mi.Command = gate.Command;
+        assert.equal(mi.IsEnabled, false);
+        gate.Open = false;
+        gate.Command.RaiseCanExecuteChanged();
+        gate.Open = true;
+        gate.Command.RaiseCanExecuteChanged();
+        assert.equal(mi.IsEnabled, false, 'a CanExecute transition does not override the authored value');
+        mi.Command = undefined;
+        assert.equal(mi.IsEnabled, false);
     });
 
     test('clicking a disabled item neither executes nor activates', () => {

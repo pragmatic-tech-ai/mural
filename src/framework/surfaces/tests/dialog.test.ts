@@ -88,6 +88,27 @@ describe('Dialog — Actions array', () => {
         assert.equal(deleted, 1, 'invoking the bound command runs the action');
     });
 
+    test('a stamped button (.mu Command = $Command) follows its command\'s CanExecute and dims', () => {
+        const target = new HeadlessTarget(600, 400);
+        const dialog = new Dialog();
+        let open = false;
+        const reset = new RelayCommand(() => {}, () => open);
+        dialog.Actions = [new DialogAction('Reset', reset, ButtonVariant.Filled)];
+        target.Content = dialog;
+        target.Flush();
+
+        const btn = findButtons(dialog).find((b) => labelOf(b) === 'Reset')!;
+        const root = btn.GetTemplateChild('PART_Root') as unknown as { Opacity: number };
+        assert.equal(btn.Command, reset, 'the .mu binding delivered the command');
+        assert.equal(btn.IsEnabled, false, 'a markup-bound command that cannot execute disables the button');
+        assert.ok(root.Opacity < 1, 'the template\'s when ( IsEnabled = false ) dims PART_Root');
+
+        open = true;
+        reset.RaiseCanExecuteChanged();
+        assert.equal(btn.IsEnabled, true, 'CanExecuteChanged re-enables it');
+        assert.equal(root.Opacity, 1, 'the dim trigger released');
+    });
+
     test('title bar carries a PART_CloseButton', () => {
         const dialog = new Dialog();
         assert.notEqual(dialog.GetTemplateChild('PART_CloseButton'), undefined);

@@ -2,7 +2,16 @@ import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { initTestApp } from '../../basic/tests/test-app.js';
 
-import { Application, NoModifiers, PointerButton, RelayCommand, type PointerEventInit } from '../../runtime/index.js';
+import {
+    Application,
+    DataContextBinding,
+    NoModifiers,
+    Observable,
+    PointerButton,
+    PropertyValueSource,
+    RelayCommand,
+    type PointerEventInit,
+} from '../../runtime/index.js';
 import { InputManager } from '../../framework/index.js';;
 import { Border } from '../../basic/border.js';
 import { CornerRadius } from '../../visual-engine/index.js';
@@ -297,6 +306,186 @@ describe('Button — ICommand integration', () => {
         btn.Command = newCmd;
         assert.equal(peek(oldCmd), 0, 'old Command should have its listener removed');
         assert.equal(peek(newCmd), 1, 'new Command picks up the subscription');
+    });
+});
+
+// A command whose CanExecute is an open/closed gate the test flips.
+class CommandGate
+{
+    public Open = false;
+    public Executed = 0;
+    public readonly Command = new RelayCommand(() => { this.Executed++; }, () => this.Open);
+
+    public Set(open: boolean): void
+    {
+        this.Open = open;
+        this.Command.RaiseCanExecuteChanged();
+    }
+}
+
+// A view model exposing a command and an enabled flag as notifying properties,
+// the shape a `.mu` `Command = $Command` / `IsEnabled = $Enabled` binds to.
+class GateViewModel extends Observable
+{
+    private _command: RelayCommand | undefined;
+    private _enabled = true;
+
+    public get Command(): RelayCommand | undefined { return this._command; }
+    public set Command(value: RelayCommand | undefined)
+    {
+        const old = this._command;
+        this._command = value;
+        this.RaisePropertyChanged('Command', old, value);
+    }
+
+    public get Enabled(): boolean { return this._enabled; }
+    public set Enabled(value: boolean)
+    {
+        const old = this._enabled;
+        this._enabled = value;
+        this.RaisePropertyChanged('Enabled', old, value);
+    }
+}
+
+// Effective IsEnabled = authored IsEnabled (local / binding / inherited) AND
+// Command.CanExecute — WPF's ButtonBase.IsEnabledCore coercion, shared with MenuItem.
+describe('Button — IsEnabled follows Command.CanExecute (WPF coercion)', () => {
+    beforeEach(() => { initTestApp(); });
+
+    test('a Command bound through DataContext drives IsEnabled and follows a command swap', () => {
+        const root = new Root();
+        const btn  = new Button();
+        root.AddChild(btn);
+        const vm = new GateViewModel();
+        const closed = new CommandGate();
+        vm.Command = closed.Command;
+        btn.set_property_value(Button.CommandKey, DataContextBinding(btn, 'Command') as unknown as RelayCommand);
+        btn.DataContext = vm;
+        assert.equal(btn.Command, closed.Command, 'the binding delivered the command');
+        assert.equal(btn.IsEnabled, false, 'a bound command that cannot execute disables the button');
+
+        closed.Set(true);
+        assert.equal(btn.IsEnabled, true, 'CanExecuteChanged through the bound command re-enables it');
+
+        const other = new CommandGate();
+        vm.Command = other.Command;
+        assert.equal(btn.IsEnabled, false, 'the binding pushed a new command that cannot execute');
+        vm.Command = undefined;
+        assert.equal(btn.IsEnabled, true, 'the binding cleared the command: enabled again');
+    });
+
+    test('replacing the command re-subscribes; the old command no longer drives IsEnabled', () => {
+        const btn = new Button();
+        const a = new CommandGate();
+        const b = new CommandGate();
+        btn.Command = a.Command;
+        assert.equal(btn.IsEnabled, false);
+        b.Open = true;
+        btn.Command = b.Command;
+        assert.equal(btn.IsEnabled, true, 'the new command can execute');
+
+        a.Set(false);
+        a.Set(true);
+        a.Set(false);
+        assert.equal(btn.IsEnabled, true, 'the old command is unsubscribed');
+
+        b.Set(false);
+        assert.equal(btn.IsEnabled, false, 'the new command is subscribed');
+        btn.Command = undefined;
+        assert.equal(btn.IsEnabled, true, 'clearing the command restores IsEnabled');
+        assert.equal(btn.GetValueSource(Button.IsEnabledKey), PropertyValueSource.Default,
+            'nothing was written to the IsEnabled tiers: the default shows through');
+    });
+
+    test('an explicit IsEnabled=false is never overridden by a command that can execute', () => {
+        const btn = new Button();
+        btn.IsEnabled = false;
+        const gate = new CommandGate();
+        gate.Open = true;
+        btn.Command = gate.Command;
+        assert.equal(btn.IsEnabled, false, 'authored false AND CanExecute true is false');
+
+        gate.Set(false);
+        gate.Set(true);
+        assert.equal(btn.IsEnabled, false, 'a CanExecute transition back to true does not override the author');
+
+        btn.Command = undefined;
+        assert.equal(btn.IsEnabled, false, 'clearing the command keeps the authored value');
+        btn.IsEnabled = true;
+        assert.equal(btn.IsEnabled, true);
+    });
+
+    test('an explicit IsEnabled=true written while the command cannot execute stays disabled', () => {
+        const btn = new Button();
+        const gate = new CommandGate();
+        btn.Command = gate.Command;
+        btn.IsEnabled = true;
+        assert.equal(btn.IsEnabled, false, 'CanExecute false vetoes the authored true');
+        gate.Set(true);
+        assert.equal(btn.IsEnabled, true);
+    });
+
+    test('a bound IsEnabled stays bound and is ANDed with CanExecute', () => {
+        const btn = new Button();
+        const vm = new GateViewModel();
+        btn.set_property_value(Button.IsEnabledKey, DataContextBinding(btn, 'Enabled') as unknown as boolean);
+        btn.DataContext = vm;
+        const gate = new CommandGate();
+        btn.Command = gate.Command;
+        assert.equal(btn.IsEnabled, false, 'bound true AND CanExecute false');
+
+        gate.Set(true);
+        assert.equal(btn.IsEnabled, true, 'bound true AND CanExecute true');
+        vm.Enabled = false;
+        assert.equal(btn.IsEnabled, false, 'the binding is still live after the command sync');
+        vm.Enabled = true;
+        assert.equal(btn.IsEnabled, true);
+    });
+
+    test('IsEnabled change notifications fire on CanExecute transitions (templates dim)', () => {
+        const btn = new Button();
+        const seen: unknown[] = [];
+        btn.PropertyChanged(Button.IsEnabledKey).subscribe(({ newValue }) => { seen.push(newValue); });
+        const gate = new CommandGate();
+        btn.Command = gate.Command;
+        gate.Set(true);
+        gate.Set(true);
+        btn.Command = undefined;
+        assert.deepEqual(seen, [false, true], 'one notification per effective transition');
+    });
+
+    test('a command that cannot execute disables the button\'s content subtree and blocks clicks', () => {
+        const root = new Root();
+        const content = new Border();
+        const btn  = new Button(content);
+        root.AddChild(btn);
+        const gate = new CommandGate();
+        btn.Command = gate.Command;
+        assert.equal(content.IsEnabled, false, 'the disabled state inherits into the content');
+
+        const im = new InputManager();
+        im.InjectPointerDown(btn, pointer());
+        im.InjectPointerUp  (btn, pointer());
+        assert.equal(gate.Executed, 0);
+
+        gate.Set(true);
+        assert.equal(content.IsEnabled, true, 'the content re-enables with the button');
+        im.InjectPointerDown(btn, pointer());
+        im.InjectPointerUp  (btn, pointer());
+        assert.equal(gate.Executed, 1);
+    });
+
+    test('a disabled ancestor still disables a button whose command can execute', () => {
+        const root = new Root();
+        const btn  = new Button();
+        root.AddChild(btn);
+        const gate = new CommandGate();
+        gate.Open = true;
+        btn.Command = gate.Command;
+        root.IsEnabled = false;
+        assert.equal(btn.IsEnabled, false, 'inherited false is not overridden by CanExecute');
+        root.IsEnabled = true;
+        assert.equal(btn.IsEnabled, true);
     });
 });
 

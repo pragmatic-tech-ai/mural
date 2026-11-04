@@ -764,6 +764,16 @@ export class MuralBase extends Observable
         return evd;
     }
 
+    // WPF CoerceValue(dp) analog: an input the property's CoerceValue
+    // callback reads (not itself a DP) has changed. Coercion runs on every
+    // read, so only the notification is missing; pass the effective value
+    // read BEFORE the input changed and listeners (triggers, inheritance
+    // cascade, bindings) see the transition if the value moved.
+    protected RecoerceValue<T>(key: PropertyKey<T>, previousValue: T): void
+    {
+        this.ensure_effective_value_for(key.descriptor).NotifyCoercionChanged(previousValue);
+    }
+
     private new_effective_value(descriptor: PropertyDescriptor): EffectiveValueDescriptor
     {
         const evd = new EffectiveValueDescriptor(descriptor, this);

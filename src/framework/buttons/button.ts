@@ -7,7 +7,6 @@
     Key,
     type PointerEventArgs,
     type PropertyDescriptor,
-    PropertyValueSource,
 } from '../../runtime/index.js';
 import { CornerRadius } from '../../visual-engine/index.js';
 import {
@@ -145,10 +144,12 @@ export class Button extends ContentControl implements ICommandSource
     // Command / CommandParameter / CommandTarget DP writes refresh the
     // cache regardless of write source (binding push, setter call,
     // compiler emission).
-    // The change callback mirrors CanExecute onto IsEnabled (like MenuItem), so a button whose command
-    // cannot run is really disabled: its template's `when ( IsEnabled = false )` dims it, instead of
-    // looking clickable while silently ignoring clicks.
-    private readonly _commandSource = new CommandSourceHelper(this, () => this.syncIsEnabledFromCommand());
+    // The change callback feeds CanExecute into IsEnabledCore (like MenuItem), so a button whose
+    // command cannot run is really disabled: IsEnabled coerces to false and its template's
+    // `when ( IsEnabled = false )` dims it, instead of looking clickable while silently ignoring
+    // clicks. Coercion (WPF semantics: effective IsEnabled = authored IsEnabled AND CanExecute)
+    // leaves an authored or bound IsEnabled in place.
+    private readonly _commandSource = new CommandSourceHelper(this, () => this.SetIsEnabledCore(this._commandSource.CanExecute));
 
     constructor(content?: Visual)
     {
@@ -329,19 +330,6 @@ export class Button extends ContentControl implements ICommandSource
     }
 
     // ── Command bookkeeping ────────────────────────────────────────
-
-    private syncIsEnabledFromCommand(): void
-    {
-        // A bound IsEnabled owns the value: a plain write (or ClearValue) would
-        // dispose the binding, so the command sync stands down.
-        if (this.GetValueSource(Element.IsEnabledKey) === PropertyValueSource.Binding) return;
-        if (this.Command === undefined)
-        {
-            this.ClearValue(Element.IsEnabledKey);
-            return;
-        }
-        this.IsEnabled = this._commandSource.CanExecute;
-    }
 
     // Forward Command / CommandParameter / CommandTarget changes to the
     // helper so the cached _canExecute boolean and the CanExecuteChanged

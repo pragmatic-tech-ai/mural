@@ -3,7 +3,6 @@
     MetaData,
     MuralBase,
     Panel,
-    PropertyValueSource,
     Rect,
     Size,
     Visual,
@@ -224,10 +223,11 @@ export class MenuItem extends HeaderedItemsControl implements ICommandSource
     public set IsSubmenuOpen(v:    boolean) { this.set_property_value(MenuItem.IsSubmenuOpenKey, v); }
 
     // Tracks Command.CanExecute (listener bookkeeping + cached value) the
-    // same way Button does; on every transition it pushes the result into
-    // IsEnabled so the row templates' `when ( IsEnabled = false )` dims the
-    // item and pointer/keyboard routing skips it.
-    private readonly _commandSource = new CommandSourceHelper(this, () => this.syncIsEnabledFromCommand());
+    // same way Button does; on every transition it feeds the result into
+    // IsEnabledCore, so IsEnabled coerces to false (WPF: authored IsEnabled
+    // AND CanExecute), the row templates' `when ( IsEnabled = false )` dims
+    // the item and pointer/keyboard routing skips it.
+    private readonly _commandSource = new CommandSourceHelper(this, () => this.SetIsEnabledCore(this._commandSource.CanExecute));
 
     // MenuItem has no CommandTarget DP — a RoutedCommand targets the item.
     public get CommandTarget(): Visual | undefined { return undefined; }
@@ -267,19 +267,6 @@ export class MenuItem extends HeaderedItemsControl implements ICommandSource
         {
             this._childItemsUnsub = source.Subscribe(() => this.refreshRow());
         }
-    }
-
-    private syncIsEnabledFromCommand(): void
-    {
-        // A bound IsEnabled owns the value: a plain write (or ClearValue) would
-        // dispose the binding, so the command sync stands down.
-        if (this.GetValueSource(MenuItem.IsEnabledKey) === PropertyValueSource.Binding) return;
-        if (this.Command === undefined)
-        {
-            this.ClearValue(MenuItem.IsEnabledKey);
-            return;
-        }
-        this.IsEnabled = this._commandSource.CanExecute;
     }
 
     public get SeparatorBefore():  boolean { return this.get_property_value(MenuItem.SeparatorBeforeKey); }
@@ -609,13 +596,11 @@ export class MenuItem extends HeaderedItemsControl implements ICommandSource
         if (name === 'Command')
         {
             this._commandSource.OnCommandChanged(oldValue as ICommand | undefined, newValue as ICommand | undefined);
-            this.syncIsEnabledFromCommand();
             return;
         }
         if (name === 'CommandParameter')
         {
             this._commandSource.OnParameterOrTargetChanged();
-            this.syncIsEnabledFromCommand();
             return;
         }
         if (name === 'RowTemplate')

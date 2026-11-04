@@ -172,8 +172,25 @@ export class Element extends Visual implements ITriggerHost
     // `Element[]` (every routed node is an Element). Enter / Leave still
     // update IsMouseOver on enabled ancestors so hover chrome on a
     // disabled descendant's surrounding container behaves naturally.
+    //
+    // The effective value is the authored value (local / binding / style /
+    // inherited) AND IsEnabledCore, exactly as WPF's UIElement coerces it.
+    // A command source (Button, MenuItem) reports its command's CanExecute
+    // through SetIsEnabledCore, so an authored IsEnabled=false is never
+    // overridden by a command that can run, a bound IsEnabled stays bound,
+    // and a disabled command disables the control's subtree too.
     public static readonly IsEnabledKey = MuralBase.RegisterProperty<boolean>(
-        Element, 'IsEnabled', true, MetaData.Inherits | MetaData.IsAnimationProhibited);
+        Element, 'IsEnabled', true, MetaData.Inherits | MetaData.IsAnimationProhibited,
+        (model: MuralBase, base: unknown): unknown => Element.CoerceIsEnabled(model, base));
+
+    // Coerce for IsEnabledKey. Returns the base value itself when the core
+    // allows it (so GetValueSource reports the authored tier); `false` when
+    // IsEnabledCore vetoes. The `=== false` test tolerates a read during
+    // construction, before the instance field is initialised.
+    private static CoerceIsEnabled(model: MuralBase, base: unknown): unknown
+    {
+        return model instanceof Element && model._isEnabledCore === false ? false : base;
+    }
 
     // ── Style / Resources / apply_setter ──────────────────────────────
 
@@ -333,6 +350,23 @@ export class Element extends Visual implements ITriggerHost
     // can actually be disabled.
     public override get IsEnabled(): boolean { return this.get_property_value(Element.IsEnabledKey); }
     public override set IsEnabled(value: boolean) { this.set_property_value(Element.IsEnabledKey, value); }
+
+    // WPF IsEnabledCore: the control's own veto on being enabled, ANDed
+    // into IsEnabled by CoerceIsEnabled. Default true (no veto).
+    private _isEnabledCore: boolean = true;
+
+    protected get IsEnabledCore(): boolean { return this._isEnabledCore; }
+
+    // Updates the IsEnabledCore veto and re-coerces IsEnabled, firing the
+    // change notification (templates' `when ( IsEnabled = false )`, the
+    // inheritance cascade) when the effective value moves.
+    protected SetIsEnabledCore(value: boolean): void
+    {
+        if (this._isEnabledCore === value) return;
+        const before = this.IsEnabled;
+        this._isEnabledCore = value;
+        this.RecoerceValue(Element.IsEnabledKey, before);
+    }
 
     // Pick which Style should be driving the StyleValue tier. Priority
     // matches WPF: explicit Style > implicit (user-side

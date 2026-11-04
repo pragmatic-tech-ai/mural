@@ -279,6 +279,17 @@ export class EffectiveValueDescriptor implements ISettingReArmable
         this.releaseSettingSubscription();
     }
 
+    // An input of the descriptor's CoerceValue callback changed outside
+    // the property system (WPF CoerceValue(dp)). Coercion runs on every
+    // read, so the new effective value is already visible; this fires the
+    // change notification the base tiers never saw. `previous_value` is the
+    // effective value read before the coerce input changed.
+    NotifyCoercionChanged(previous_value: any): void
+    {
+        const current = this.value;
+        if (current !== previous_value) this.OnPropertyChange(previous_value, current);
+    }
+
     OnPropertyChange(old_value: any, new_value: any): void
     {
         // Internal callback first (matches WPF: metadata callbacks run
