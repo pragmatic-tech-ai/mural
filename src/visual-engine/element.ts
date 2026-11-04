@@ -179,17 +179,22 @@ export class Element extends Visual implements ITriggerHost
     // through SetIsEnabledCore, so an authored IsEnabled=false is never
     // overridden by a command that can run, a bound IsEnabled stays bound,
     // and a disabled command disables the control's subtree too.
+    //
+    // The coerce only applies while the veto is up (IsEnabledVetoed), so
+    // for the common, un-vetoed Element an IsEnabled read or Source probe
+    // skips coercion entirely and the authored tier reports as the source.
     public static readonly IsEnabledKey = MuralBase.RegisterProperty<boolean>(
         Element, 'IsEnabled', true, MetaData.Inherits | MetaData.IsAnimationProhibited,
-        (model: MuralBase, base: unknown): unknown => Element.CoerceIsEnabled(model, base));
+        (): unknown => false,
+        undefined, undefined, undefined,
+        (model: MuralBase): boolean => Element.IsEnabledVetoed(model));
 
-    // Coerce for IsEnabledKey. Returns the base value itself when the core
-    // allows it (so GetValueSource reports the authored tier); `false` when
-    // IsEnabledCore vetoes. The `=== false` test tolerates a read during
-    // construction, before the instance field is initialised.
-    private static CoerceIsEnabled(model: MuralBase, base: unknown): unknown
+    // CoerceApplies for IsEnabledKey: true while IsEnabledCore vetoes. The
+    // `=== false` test tolerates a read during construction, before the
+    // instance field is initialised.
+    private static IsEnabledVetoed(model: MuralBase): boolean
     {
-        return model instanceof Element && model._isEnabledCore === false ? false : base;
+        return model instanceof Element && model._isEnabledCore === false;
     }
 
     // ── Style / Resources / apply_setter ──────────────────────────────
@@ -352,15 +357,18 @@ export class Element extends Visual implements ITriggerHost
     public override set IsEnabled(value: boolean) { this.set_property_value(Element.IsEnabledKey, value); }
 
     // WPF IsEnabledCore: the control's own veto on being enabled, ANDed
-    // into IsEnabled by CoerceIsEnabled. Default true (no veto).
+    // into IsEnabled by the IsEnabledKey coerce. Default true (no veto).
     private _isEnabledCore: boolean = true;
-
-    protected get IsEnabledCore(): boolean { return this._isEnabledCore; }
 
     // Updates the IsEnabledCore veto and re-coerces IsEnabled, firing the
     // change notification (templates' `when ( IsEnabled = false )`, the
-    // inheritance cascade) when the effective value moves.
-    protected SetIsEnabledCore(value: boolean): void
+    // inheritance cascade) when the effective value moves. Public (unlike
+    // WPF's protected IsEnabledCore) because a command source may own the
+    // veto for one of its template parts rather than for itself: a split
+    // button disables the primary half its command drives and leaves the
+    // dropdown arrow usable. Whoever calls it owns the veto for that
+    // element; the authored IsEnabled is never written.
+    public SetIsEnabledCore(value: boolean): void
     {
         if (this._isEnabledCore === value) return;
         const before = this.IsEnabled;

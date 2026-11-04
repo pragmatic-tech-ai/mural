@@ -5,6 +5,13 @@ import type { MuralBase } from './model.js';
 // returning the value that becomes the coerced entry.
 export type CoerceValue = (model: MuralBase, base_value: any) => any;
 
+// Optional companion to CoerceValue: reports whether the coerce can
+// change the value for this model right now. While it returns false the
+// property system skips the coerce entirely (no callback, no base-value
+// computation in the Source probe), which keeps a rarely-active coerce
+// registered on a broad class off the DP-get hot path.
+export type CoerceApplies = (model: MuralBase) => boolean;
+
 // Invoked to gate a write at the property boundary. `true` accepts the
 // value; `false` rejects it and the set throws. Runs BEFORE coerce on
 // every set and on default-value registration — a default the rule
@@ -42,6 +49,7 @@ export interface PropertyMetadata
     default_value?: any;
     meta_data?: MetaData;
     coerce_value?: CoerceValue;
+    coerce_applies?: CoerceApplies;
     validate_value?: ValidateValue;
     validate_target?: ValidateTarget;
     setting_value?: SettingValue;
@@ -137,6 +145,28 @@ export class PropertyDescriptor
     {
         if ('coerce_value' in this.own) return this.own.coerce_value;
         return this.parent_descriptor?.CoerceValue;
+    }
+
+    public get CoerceApplies(): CoerceApplies | undefined
+    {
+        if ('coerce_applies' in this.own) return this.own.coerce_applies;
+        return this.parent_descriptor?.CoerceApplies;
+    }
+
+    // True when a coerce is registered and its CoerceApplies predicate (if
+    // any) allows it for `model` right now.
+    public IsCoercing(model: MuralBase): boolean
+    {
+        if (this.CoerceValue === undefined) return false;
+        const applies = this.CoerceApplies;
+        return applies === undefined || applies(model);
+    }
+
+    // The single coerce entry point for the property system: `base` passed
+    // through the registered coerce when it applies, unchanged otherwise.
+    public Coerce(model: MuralBase, base: any): any
+    {
+        return this.IsCoercing(model) ? this.CoerceValue!(model, base) : base;
     }
 
     public get ValidateValue(): ValidateValue | undefined

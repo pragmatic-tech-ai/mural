@@ -5030,3 +5030,36 @@ describe('AddPropertyChangedListener name resolution', () =>
         assert.deepEqual(seen, ['v1']);
     });
 });
+
+// A coerce registered with a CoerceApplies predicate is skipped outright
+// while the predicate reports false: reads and GetValueSource neither run
+// the callback nor compute the base value for it (review M4: Element's
+// IsEnabled coerce sits on the DP-get hot path for every Element, but only
+// vetoes on a command source whose command cannot run).
+describe('Coerce gated by a CoerceApplies predicate', () => {
+    test('the coerce runs only while the predicate applies', () => {
+        let calls = 0;
+        const veto: CoerceValue = () => { calls++; return false; };
+        class Gated extends MuralBase
+        {
+            public Vetoed = false;
+            static
+            {
+                MuralBase.RegisterProperty(Gated, 'Flag', true, MetaData.None, veto,
+                    undefined, undefined, undefined, (m: MuralBase) => (m as Gated).Vetoed);
+            }
+        }
+        const g = new Gated();
+        const key = resolveKey(g, undefined, 'Flag');
+        assert.equal(g.get_property_value(key), true, 'default read, predicate off');
+        g.set_property_value(key, true);
+        assert.equal(g.get_property_value(key), true);
+        assert.equal(g.GetValueSource(key), PropertyValueSource.LocalValue);
+        assert.equal(calls, 0, 'the coerce never ran while the predicate was false');
+
+        g.Vetoed = true;
+        assert.equal(g.get_property_value(key), false, 'the coerce applies once the predicate is true');
+        assert.equal(g.GetValueSource(key), PropertyValueSource.CoercedValue);
+        assert.ok(calls > 0);
+    });
+});

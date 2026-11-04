@@ -359,6 +359,42 @@ export class Button extends ContentControl implements ICommandSource
         {
             this._commandSource.OnParameterOrTargetChanged();
         }
+        else if (descriptor.Name === 'IsEnabled' && newValue === false)
+        {
+            this.CancelPress();
+        }
+    }
+
+    // WPF parity (ButtonBase clears IsPressed when IsEnabled goes false). A
+    // button can disable itself mid-press: Enter / Space or ClickMode.Press
+    // fire the click on the DOWN edge, and a command whose Execute makes
+    // CanExecute false disables the button before the matching KeyUp /
+    // PointerUp arrives. The disabled-route gate then swallows that up edge,
+    // so without this the pressed chrome and the pending press would stick
+    // until the next press. (Hover needs no help: InputManager writes
+    // IsMouseOver directly, only the Leave event is swallowed.)
+    private CancelPress(): void
+    {
+        this._pressOriginatedHere = false;
+        if (this.IsPressed) this._setIsPressed(false);
+    }
+
+    // The CanExecuteChanged subscription follows the tree: released when
+    // the button leaves it (a long-lived command must not keep a discarded
+    // button alive) and restored, with a CanExecute re-query, when it joins
+    // one (a RoutedCommand's answer depends on the ancestors' bindings).
+    protected override SetVisualParent(p: Visual | undefined): void
+    {
+        super.SetVisualParent(p);
+        if (p !== undefined) this._commandSource.OnAttachedToTree();
+        else this._commandSource.OnDetachedFromTree();
+    }
+
+    protected override propagate_target_to_visual_children(): void
+    {
+        super.propagate_target_to_visual_children();
+        if (this.target !== undefined) this._commandSource.OnAttachedToTree();
+        else this._commandSource.OnDetachedFromTree();
     }
 
     // When Command is set to a CommandBase AND no explicit ToolTip is on

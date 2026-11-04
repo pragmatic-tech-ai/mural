@@ -330,6 +330,58 @@ describe('ToolBarSplitButton — primary + dropdown', () => {
         assert.equal(ran, 0, 'the disabled command did not run');
         assert.equal(sb.IsOpen, true, 'clicking a disabled button does not dismiss the popup');
     });
+    // Same rule as Button: the half that runs the command follows its
+    // CanExecute (disabled + dimmed), the dropdown arrow stays usable so the
+    // menu of variants remains reachable.
+    test('a command that cannot execute disables and dims the primary half; the arrow still opens', () => {
+        const sb = new ToolBarSplitButton();
+        let open = false;
+        let ran = 0;
+        const cmd = new RelayCommand(() => { ran++; }, () => open);
+        sb.Command = cmd;
+        const target = new HeadlessTarget(600, 200, sb);
+        target.Flush();
+
+        const primary = findNamed(sb, 'PART_Primary') as Border;
+        const arrow   = findNamed(sb, 'PART_Arrow') as Border;
+        assert.equal(primary.IsEnabled, false, 'the primary half is disabled');
+        assert.ok(primary.Opacity < 1, 'the primary half is dimmed');
+        assert.equal(arrow.IsEnabled, true, 'the arrow half stays enabled');
+        assert.equal(arrow.Opacity, 1, 'the arrow half is not dimmed');
+        pressRelease(primary);
+        assert.equal(ran, 0, 'the disabled primary does not run the command');
+        pressRelease(arrow);
+        assert.equal(sb.IsOpen, true, 'the arrow still opens the dropdown');
+        sb.IsOpen = false;
+
+        open = true;
+        cmd.RaiseCanExecuteChanged();
+        target.Flush();
+        assert.equal(primary.IsEnabled, true, 'CanExecuteChanged re-enables the primary half');
+        assert.equal(primary.Opacity, 1, 'and un-dims it');
+        pressRelease(primary);
+        assert.equal(ran, 1);
+    });
+
+    test('an authored IsEnabled=false still disables both halves while the command can execute', () => {
+        const sb = new ToolBarSplitButton();
+        sb.Command = new RelayCommand(() => {});
+        sb.IsEnabled = false;
+        const target = new HeadlessTarget(600, 200, sb);
+        target.Flush();
+        assert.equal((findNamed(sb, 'PART_Primary') as Border).IsEnabled, false);
+        assert.equal((findNamed(sb, 'PART_Arrow') as Border).IsEnabled, false);
+    });
+
+    test('the primary half follows CanExecute across a chrome swap (dropdown -> split)', () => {
+        const sb = new ToolBarSplitButton();
+        const target = new HeadlessTarget(600, 200, sb);
+        target.Flush();
+        sb.Command = new RelayCommand(() => {}, () => false);
+        target.Flush();
+        assert.equal((findNamed(sb, 'PART_Primary') as Border).IsEnabled, false,
+            'the re-adopted primary half picks up the current CanExecute');
+    });
 });
 
 describe('ToolBar — split-button group chrome', () => {

@@ -320,17 +320,19 @@ export class EffectiveValueDescriptor implements ISettingReArmable
         return this.changed;
     }
 
-    // Reports the effective source. When a CoerceValue callback is
-    // registered AND its result differs from the underlying base value,
-    // returns CoercedValue (matches WPF — the diagnostic "this isn't
-    // what you set"). Otherwise returns the base source.
+    // Reports the effective source. When a CoerceValue callback applies
+    // (registered, and its CoerceApplies predicate, if any, allows it) AND
+    // its result differs from the underlying base value, returns
+    // CoercedValue (matches WPF — the diagnostic "this isn't what you
+    // set"). Otherwise returns the base source. A coerce that does not
+    // apply skips the base-value computation entirely.
     get Source(): PropertyValueSource
     {
-        const coerce = this.property_descriptor.CoerceValue;
-        if (coerce !== undefined)
+        const descriptor = this.property_descriptor;
+        if (descriptor.IsCoercing(this.owner))
         {
             const base = this.compute_base_value();
-            if (coerce(this.owner, base) !== base)
+            if (descriptor.CoerceValue!(this.owner, base) !== base)
             {
                 return PropertyValueSource.CoercedValue;
             }
@@ -855,7 +857,6 @@ export class EffectiveValueDescriptor implements ISettingReArmable
     // listeners see the same values `value` returns.
     private apply_coerce(base: any): any
     {
-        const coerce = this.property_descriptor.CoerceValue;
-        return coerce !== undefined ? coerce(this.owner, base) : base;
+        return this.property_descriptor.Coerce(this.owner, base);
     }
 }

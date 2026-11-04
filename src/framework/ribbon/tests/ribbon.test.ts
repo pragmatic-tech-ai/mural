@@ -298,6 +298,34 @@ describe('Ribbon popup buttons', () => {
         click(arrow!);
         assert.equal(sb.IsOpen, true, 'arrow opened the dropdown');
     });
+
+    // Same rule as Button: the primary region follows the command's
+    // CanExecute (disabled + dimmed); the arrow keeps the dropdown reachable.
+    test('RibbonSplitButton primary disables with CanExecute; the arrow still opens', () => {
+        const sb = new RibbonSplitButton();
+        let open = false;
+        let ran = 0;
+        const cmd = new RelayCommand(() => { ran++; }, () => open);
+        sb.Command = cmd;
+        sb.Text = 'Paste';
+        layout(sb);
+
+        const primary = findButton(sb, 'PART_Primary')!;
+        const arrow   = findButton(sb, 'PART_Arrow')!;
+        assert.equal(primary.IsEnabled, false, 'the primary region is disabled');
+        assert.equal(arrow.IsEnabled, true, 'the arrow region stays enabled');
+        click(primary);
+        assert.equal(ran, 0);
+        click(arrow);
+        assert.equal(sb.IsOpen, true, 'the arrow still opens the dropdown');
+        sb.IsOpen = false;
+
+        open = true;
+        cmd.RaiseCanExecuteChanged();
+        assert.equal(primary.IsEnabled, true, 'CanExecuteChanged re-enables the primary region');
+        click(primary);
+        assert.equal(ran, 1);
+    });
 });
 
 // Walk a control's visual subtree for a named Button part (the trigger

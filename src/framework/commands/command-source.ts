@@ -59,6 +59,11 @@ export class CommandSourceHelper
 
     private _canExecute: boolean = true;
     private _attachedCommand: ICommand | undefined;
+    // Whether the CanExecuteChanged subscription is held. True from
+    // construction (a control used outside any tree still tracks its
+    // command); dropped when the owner leaves the tree and restored when
+    // it rejoins (OnDetachedFromTree / OnAttachedToTree).
+    private _listening: boolean = true;
 
     private readonly _refresh = (): void =>
     {
@@ -100,16 +105,40 @@ export class CommandSourceHelper
      *  _canExecute refresh. */
     public OnCommandChanged(oldCmd: ICommand | undefined, newCmd: ICommand | undefined): void
     {
-        if (oldCmd !== undefined)
+        if (this._listening)
         {
-            oldCmd.RemoveCanExecuteChangedListener(this._refresh);
-        }
-        if (newCmd !== undefined)
-        {
-            newCmd.AddCanExecuteChangedListener(this._refresh);
+            oldCmd?.RemoveCanExecuteChangedListener(this._refresh);
+            newCmd?.AddCanExecuteChangedListener(this._refresh);
         }
         this._attachedCommand = newCmd;
         this._refresh();
+    }
+
+    /** Owner calls this when it joins a tree (gains a visual parent or a
+     *  host). Restores a subscription released on detach, then re-queries
+     *  CanExecute: a RoutedCommand's answer depends on the ancestors'
+     *  CommandBindings (unreachable before the attach), and a change raised
+     *  while detached was missed. */
+    public OnAttachedToTree(): void
+    {
+        if (!this._listening)
+        {
+            this._listening = true;
+            this._attachedCommand?.AddCanExecuteChangedListener(this._refresh);
+        }
+        this._refresh();
+    }
+
+    /** Owner calls this when it leaves the tree (loses its visual parent or
+     *  its host). The command is often longer-lived than the control (a view
+     *  model's command, a static RoutedCommand), so a detached control must
+     *  not stay in its listener set: that would keep the control alive and
+     *  re-coerce its dead subtree on every CanExecuteChanged. */
+    public OnDetachedFromTree(): void
+    {
+        if (!this._listening) return;
+        this._listening = false;
+        this._attachedCommand?.RemoveCanExecuteChangedListener(this._refresh);
     }
 
     /** Owner must call this when CommandParameter OR CommandTarget

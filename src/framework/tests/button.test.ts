@@ -10,11 +10,13 @@ import {
     PointerButton,
     PropertyValueSource,
     RelayCommand,
+    Key,
+    type KeyEventInit,
     type PointerEventInit,
 } from '../../runtime/index.js';
 import { InputManager } from '../../framework/index.js';;
 import { Border } from '../../basic/border.js';
-import { CornerRadius } from '../../visual-engine/index.js';
+import { CornerRadius, HeadlessTarget } from '../../visual-engine/index.js';
 import { type ClickHandler } from '../buttons/button.js';
 import { Button, ButtonVariant, ClickMode } from '../buttons/button.js';
 import { ContentPresenter } from '../../basic/templates/content-presenter.js';
@@ -598,5 +600,136 @@ describe('Button — CornerRadius DP (18.2)', () => {
         btn.CornerRadius = 4;
         const border = btn.visualChildren[0] as Border;
         assert.equal(border.CornerRadius, 4);
+    });
+});
+
+// Input state and command lifetime once CanExecute can disable the button
+// (review I1-I3, M3). A command whose Execute closes its own gate is the
+// common "Save / Continue disables itself while running" shape.
+class SelfClosingGate
+{
+    public Open = true;
+    public Executed = 0;
+    public readonly Command = new RelayCommand(() =>
+    {
+        this.Executed++;
+        this.Set(false);
+    }, () => this.Open);
+
+    public Set(open: boolean): void
+    {
+        this.Open = open;
+        this.Command.RaiseCanExecuteChanged();
+    }
+}
+
+describe('Button — input state when the command disables the button', () => {
+    beforeEach(() => { initTestApp(); });
+
+    function enter(): KeyEventInit
+    {
+        return { Key: Key.Return, KeyText: '', Code: 'Enter', Modifiers: NoModifiers, IsRepeat: false };
+    }
+
+    test('Enter on a button whose command disables itself does not leave IsPressed stuck', () => {
+        const root = new Root();
+        const btn  = new Button();
+        root.AddChild(btn);
+        const gate = new SelfClosingGate();
+        btn.Command = gate.Command;
+        btn.Focusable = true;
+
+        const im = new InputManager();
+        im.SetFocus(btn);
+        im.InjectKeyDown(enter());
+        assert.equal(gate.Executed, 1, 'Enter ran the command');
+        assert.equal(btn.IsEnabled, false, 'the command disabled the button');
+        assert.equal(btn.IsPressed, false, 'disabling the button clears IsPressed');
+        im.InjectKeyUp(enter());
+
+        gate.Set(true);
+        assert.equal(btn.IsEnabled, true);
+        assert.equal(btn.IsPressed, false, 'the re-enabled button does not show pressed chrome');
+    });
+
+    test('ClickMode.Press: a self-disabling command clears IsPressed and the pending press', () => {
+        const root = new Root();
+        const btn  = new Button();
+        btn.ClickMode = ClickMode.Press;
+        root.AddChild(btn);
+        const gate = new SelfClosingGate();
+        btn.Command = gate.Command;
+
+        const im = new InputManager();
+        im.InjectPointerDown(btn, pointer());
+        assert.equal(gate.Executed, 1);
+        assert.equal(btn.IsPressed, false, 'disabling the button clears IsPressed');
+        im.InjectPointerUp(btn, pointer());   // swallowed: the button is disabled
+
+        gate.Set(true);
+        assert.equal(btn.IsPressed, false, 're-enabled without pressed chrome');
+        assert.equal((btn as unknown as { _pressOriginatedHere: boolean })._pressOriginatedHere, false,
+            'the press that disabled the button is forgotten');
+    });
+
+    test('IsMouseOver clears when the pointer leaves a button that disabled itself on click', () => {
+        const root = new Root();
+        const btn  = new Button();
+        root.AddChild(btn);
+        const gate = new SelfClosingGate();
+        btn.Command = gate.Command;
+
+        const im = new InputManager();
+        im.InjectPointerMove(btn, pointer({ Button: PointerButton.None, Buttons: 0 }));
+        assert.equal(btn.IsMouseOver, true);
+        im.InjectPointerDown(btn, pointer());
+        im.InjectPointerUp(btn, pointer());
+        assert.equal(btn.IsEnabled, false, 'the click disabled the button');
+        im.InjectPointerMove(root, pointer({ Button: PointerButton.None, Buttons: 0 }));
+        assert.equal(btn.IsMouseOver, false, 'hover clears even though Leave is swallowed while disabled');
+    });
+});
+
+describe('Button — command subscription follows the tree', () => {
+    beforeEach(() => { initTestApp(); });
+
+    const listeners = (c: RelayCommand): number =>
+        ((c as unknown as { _canExecuteListeners: Set<unknown> })._canExecuteListeners).size;
+
+    test('detaching from the tree releases the CanExecuteChanged subscription; re-attach restores it', () => {
+        const root   = new Root();
+        const btn    = new Button();
+        const target = new HeadlessTarget(400, 200, root);
+        root.AddChild(btn);
+        target.Flush();
+        const gate = new CommandGate();
+        btn.Command = gate.Command;
+        assert.equal(listeners(gate.Command), 1, 'an attached button listens to its command');
+
+        root.RemoveChild(btn);
+        assert.equal(listeners(gate.Command), 0, 'a detached button releases its subscription');
+
+        gate.Set(true);
+        root.AddChild(btn);
+        assert.equal(listeners(gate.Command), 1, 're-attaching subscribes again');
+        assert.equal(btn.IsEnabled, true, 're-attaching re-queries CanExecute missed while detached');
+        gate.Set(false);
+        assert.equal(btn.IsEnabled, false, 'the restored subscription drives IsEnabled');
+    });
+
+    test('a button inside a discarded template subtree releases its subscription when the host goes', () => {
+        const root   = new Root();
+        const inner  = new Root();
+        const btn    = new Button();
+        inner.AddChild(btn);
+        root.AddChild(inner);
+        const target = new HeadlessTarget(400, 200, root);
+        target.Flush();
+        const gate = new CommandGate();
+        btn.Command = gate.Command;
+        assert.equal(listeners(gate.Command), 1);
+
+        root.RemoveChild(inner);   // btn keeps its visual parent; its host goes away
+        assert.equal(listeners(gate.Command), 0, 'losing the host releases the subscription');
     });
 });

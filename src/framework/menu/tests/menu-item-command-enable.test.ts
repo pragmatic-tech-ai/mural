@@ -4,6 +4,8 @@ import { initTestApp } from '../../../basic/tests/test-app.js';
 import { Binding, Observable, Panel, PointerButton, PropertyValueSource, NoModifiers, RelayCommand, type PointerEventInit } from '../../../runtime/index.js';
 import { InputManager } from '../../../framework/index.js';
 import { MenuItem } from '../menu-strip.js';
+import { CommandBinding, CommandManager, Control, RoutedCommand } from '../../index.js';
+import { Visual } from '../../../runtime/index.js';
 
 class Root extends Panel {}
 
@@ -119,5 +121,62 @@ describe('MenuItem enable state follows Command.CanExecute', () => {
         im.InjectPointerUp(mi, pointer());
         assert.equal(gate.Executed, 0);
         assert.equal(activated, 0);
+    });
+});
+
+// Same tree-following subscription as Button (review I2/I3): a detached item
+// releases its CanExecuteChanged subscription, and attaching re-queries, so a
+// RoutedCommand assigned before the item joins the tree finds its binding.
+describe('MenuItem command subscription follows the tree', () => {
+    beforeEach(() => { initTestApp(); CommandManager._resetForTests(); });
+
+    class BindingRoot extends Control
+    {
+        private readonly _kids: Visual[] = [];
+        public AddChild(child: Visual): void
+        {
+            this._kids.push(child);
+            (this as unknown as { AttachLogical(v: Visual): void }).AttachLogical(child);
+            (this as unknown as { AttachVisual(v: Visual): void }).AttachVisual(child);
+        }
+        public RemoveChild(child: Visual): void
+        {
+            this._kids.splice(this._kids.indexOf(child), 1);
+            (this as unknown as { DetachLogical(v: Visual): void }).DetachLogical(child);
+            (this as unknown as { DetachVisual(v: Visual): void }).DetachVisual(child);
+        }
+        public override get visualChildren():  readonly Visual[] { return this._kids; }
+        public override get logicalChildren(): readonly Visual[] { return this._kids; }
+    }
+
+    test('a RoutedCommand assigned before attach is re-queried when the item joins the tree', () => {
+        const root = new BindingRoot();
+        const cmd  = new RoutedCommand('Paste', RoutedCommand);
+        root.CommandBindings.push(new CommandBinding(cmd, {
+            executed:   () => { /* no-op */ },
+            canExecute: (_s, args) => { args.CanExecute = true; },
+        }));
+        const mi = new MenuItem();
+        mi.Command = cmd;
+        assert.equal(mi.IsEnabled, false, 'detached: no binding reachable');
+        root.AddChild(mi);
+        assert.equal(mi.IsEnabled, true, 'attach re-queried and found the binding');
+    });
+
+    test('detaching releases the subscription; re-attaching restores it and re-queries', () => {
+        const root = new BindingRoot();
+        const gate = new Gate();
+        const mi = new MenuItem();
+        root.AddChild(mi);
+        mi.Command = gate.Command;
+        const listeners = (): number =>
+            ((gate.Command as unknown as { _canExecuteListeners: Set<unknown> })._canExecuteListeners).size;
+        assert.equal(listeners(), 1);
+        root.RemoveChild(mi);
+        assert.equal(listeners(), 0, 'released on detach');
+        gate.Open = true;
+        root.AddChild(mi);
+        assert.equal(listeners(), 1, 'restored on attach');
+        assert.equal(mi.IsEnabled, true, 'the change missed while detached is picked up');
     });
 });

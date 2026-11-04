@@ -116,6 +116,7 @@ resources ToolBars
         when ( PART_Primary.IsMouseOver ) { PART_Primary.Fill = @Bg3; }
         when ( PART_Arrow.IsMouseOver ) { PART_Arrow.Fill = @Bg3; }
         when ( IsEnabled = false ) { PART_Primary.Opacity = @OpacityDisabled; PART_Arrow.Opacity = @OpacityDisabled; }
+        when ( PART_Primary.IsEnabled = false ) { PART_Primary.Opacity = @OpacityDisabled; }
         when ( ThemeManager.Density = Compact )
         {
             PART_PrimaryState.Padding = (8,6,8,6);

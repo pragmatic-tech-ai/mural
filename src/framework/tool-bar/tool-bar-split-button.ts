@@ -91,7 +91,11 @@ export class ToolBarSplitButton extends Gallery implements ICommandSource
     public get TriggerTemplate(): ControlTemplate | undefined  { return this.get_property_value(ToolBarSplitButton.TriggerTemplateKey); }
     public set TriggerTemplate(v: ControlTemplate | undefined) { this.set_property_value(ToolBarSplitButton.TriggerTemplateKey, v); }
 
-    private readonly _cmdHelper: CommandSourceHelper = new CommandSourceHelper(this);
+    // Same rule as Button: the command's CanExecute vetoes IsEnabled, but on
+    // the primary half only (the half that runs the command), so a split
+    // button whose command cannot run dims and blocks its primary while the
+    // arrow keeps the dropdown of variants reachable.
+    private readonly _cmdHelper: CommandSourceHelper = new CommandSourceHelper(this, () => this.ApplyPrimaryCanExecute());
 
     private _trigger:     Visual | undefined;
     private _primary:     Border | undefined;
@@ -191,6 +195,23 @@ export class ToolBarSplitButton extends Gallery implements ICommandSource
             () => { this.IsOpen = !this.IsOpen; });
         this.AttachVisual(this._trigger);
         this.slotContent();
+        this.ApplyPrimaryCanExecute();
+    }
+
+    // Feed CanExecute into the primary half's IsEnabledCore. A disabled
+    // primary also forgets a press in flight: its PointerUp would be
+    // swallowed by the disabled-route gate and leave the pressed chrome on.
+    private ApplyPrimaryCanExecute(): void
+    {
+        const primary = this._primary;
+        if (primary === undefined) return;
+        const canExecute = this._cmdHelper.CanExecute;
+        primary.SetIsEnabledCore(canExecute);
+        if (!canExecute && this._primaryPressed)
+        {
+            this._primaryPressed = false;
+            primary._setIsPressed(false);
+        }
     }
 
     private wireClickable(
@@ -302,6 +323,14 @@ export class ToolBarSplitButton extends Gallery implements ICommandSource
         }
     }
 
+    // The CanExecuteChanged subscription follows the tree, as on Button.
+    protected override SetVisualParent(p: Visual | undefined): void
+    {
+        super.SetVisualParent(p);
+        if (p !== undefined) this._cmdHelper.OnAttachedToTree();
+        else this._cmdHelper.OnDetachedFromTree();
+    }
+
     protected override propagate_target_to_visual_children(): void
     {
         const newTarget = (this as unknown as { target: PresentationTarget | undefined }).target;
@@ -316,6 +345,8 @@ export class ToolBarSplitButton extends Gallery implements ICommandSource
         (this._trigger as unknown as { SetTarget?: (t: PresentationTarget | undefined) => void } | undefined)
             ?.SetTarget?.(newTarget);
         if (newTarget !== undefined && this.IsOpen) this.mountPopup();
+        if (newTarget !== undefined) this._cmdHelper.OnAttachedToTree();
+        else this._cmdHelper.OnDetachedFromTree();
     }
 
     private mountPopup(): void

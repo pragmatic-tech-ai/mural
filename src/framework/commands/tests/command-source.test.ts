@@ -185,3 +185,55 @@ describe('Button — ICommandSource with RoutedCommand', () => {
         assert.equal(executed, 1);
     });
 });
+
+// IsEnabled tracking for a RoutedCommand on Button (review I3, M3): the
+// routed CanExecute walk depends on the button's ancestors, so it must be
+// re-queried when the button joins the tree, and RequerySuggested must move
+// IsEnabled (not only the click gate).
+describe('Button — RoutedCommand drives IsEnabled', () => {
+    beforeEach(() => {
+        Application.current = null;
+        CommandManager._resetForTests();
+    });
+
+    test('a RoutedCommand assigned before the button joins the tree is re-queried on attach', () => {
+        const root = new Root();
+        const cmd  = new RoutedCommand('Save', RoutedCommand);
+        let executed = 0;
+        root.CommandBindings.push(new CommandBinding(cmd, {
+            executed:   () => { executed++; },
+            canExecute: (_s, args) => { args.CanExecute = true; },
+        }));
+        const btn = new Button();
+        btn.Command = cmd;
+        assert.equal(btn.IsEnabled, false, 'detached: no CommandBinding is reachable yet');
+
+        root.AddChild(btn);
+        assert.equal(btn.IsEnabled, true, 'attaching re-queries and finds the ancestor binding');
+        const im = new InputManager();
+        im.InjectPointerDown(btn, pointer());
+        im.InjectPointerUp  (btn, pointer());
+        assert.equal(executed, 1);
+    });
+
+    test('RequerySuggested toggles IsEnabled both ways', () => {
+        const root = new Root();
+        const btn  = new Button();
+        root.AddChild(btn);
+        const cmd = new RoutedCommand('Foo', RoutedCommand);
+        let allowed = false;
+        root.CommandBindings.push(new CommandBinding(cmd, {
+            executed:   () => { /* no-op */ },
+            canExecute: (_s, args) => { args.CanExecute = allowed; },
+        }));
+        btn.Command = cmd;
+        assert.equal(btn.IsEnabled, false);
+
+        allowed = true;
+        CommandManager.InvalidateRequerySuggested();
+        assert.equal(btn.IsEnabled, true, 'RequerySuggested re-enables the button');
+        allowed = false;
+        CommandManager.InvalidateRequerySuggested();
+        assert.equal(btn.IsEnabled, false, 'and disables it again');
+    });
+});

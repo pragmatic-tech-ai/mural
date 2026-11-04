@@ -4,7 +4,7 @@ import type { InternalPropertyChangeCallback, PropertyChangedEventArgs } from '.
 import { Observable } from './observable.js';
 import { Signal } from '@pragmatic-tech-ai/todl-runtime';
 import { PropertyDescriptor } from './property-descriptor.js';
-import type { CoerceValue, PropertyMetadata, SettingValue, ValidateTarget, ValidateValue } from './property-descriptor.js';
+import type { CoerceApplies, CoerceValue, PropertyMetadata, SettingValue, ValidateTarget, ValidateValue } from './property-descriptor.js';
 import { inherits, type MetaData } from './metadata.js';
 
 // Branded handle returned by MuralBase.RegisterProperty (and the read-only /
@@ -271,6 +271,7 @@ export class MuralBase extends Observable
         validate_value?: ValidateValue,
         validate_target?: ValidateTarget,
         setting_value?: SettingValue,
+        coerce_applies?: CoerceApplies,
     ): PropertyKey<T>
     {
         if (property.includes('.'))
@@ -292,6 +293,10 @@ export class MuralBase extends Observable
             if (coerce_value !== undefined)
             {
                 opts.coerce_value = coerce_value;
+            }
+            if (coerce_applies !== undefined)
+            {
+                opts.coerce_applies = coerce_applies;
             }
             if (validate_value !== undefined)
             {
@@ -587,8 +592,7 @@ export class MuralBase extends Observable
             const r = EffectiveValueDescriptor.resolveSetting(this, binding);
             if (r.has)
             {
-                const coerce = descriptor.CoerceValue;
-                return (coerce !== undefined ? coerce(this, r.value) : r.value) as T;
+                return descriptor.Coerce(this, r.value) as T;
             }
         }
         return this.resolve_default(descriptor);
@@ -664,9 +668,7 @@ export class MuralBase extends Observable
     // it the same way it would clamp any explicit write.
     private resolve_default(descriptor: PropertyDescriptor): any
     {
-        const def = descriptor.DefaultValue;
-        const coerce = descriptor.CoerceValue;
-        return coerce !== undefined ? coerce(this, def) : def;
+        return descriptor.Coerce(this, descriptor.DefaultValue);
     }
 
     private set_via_descriptor(descriptor: PropertyDescriptor, value: any): void

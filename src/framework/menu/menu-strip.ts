@@ -684,6 +684,18 @@ export class MenuItem extends HeaderedItemsControl implements ICommandSource
         (this._rowRoot as unknown as { SetTarget?: (t: PresentationTarget | undefined) => void } | undefined)
             ?.SetTarget?.(newTarget);
         if (newTarget !== undefined && this.IsSubmenuOpen) this.mountSubmenu();
+        if (newTarget !== undefined) this._commandSource.OnAttachedToTree();
+        else this._commandSource.OnDetachedFromTree();
+    }
+
+    // The CanExecuteChanged subscription follows the tree, as on Button:
+    // released when the item leaves it, restored (with a CanExecute
+    // re-query) when it joins one.
+    protected override SetVisualParent(p: Visual | undefined): void
+    {
+        super.SetVisualParent(p);
+        if (p !== undefined) this._commandSource.OnAttachedToTree();
+        else this._commandSource.OnDetachedFromTree();
     }
 
     private mountSubmenu(): void

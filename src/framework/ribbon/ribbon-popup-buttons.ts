@@ -261,7 +261,9 @@ export class RibbonDropDownButton extends RibbonPopupButton
 // RibbonSplitButton — a primary action region (PART_Primary, invokes
 // Command) plus an arrow region (PART_Arrow) that opens the dropdown.
 // The primary is an ICommandSource: Command / CommandParameter drive the
-// auto-disable chrome via CommandSourceHelper, same as Button / MenuItem.
+// auto-disable chrome via CommandSourceHelper, same rule as Button /
+// MenuItem — but on PART_Primary only, so a command that cannot run dims
+// and blocks the primary region while the arrow keeps the dropdown usable.
 export class RibbonSplitButton extends RibbonPopupButton implements ICommandSource
 {
     public static readonly CommandKey          = MuralBase.RegisterProperty<ICommand | undefined>(
@@ -277,9 +279,23 @@ export class RibbonSplitButton extends RibbonPopupButton implements ICommandSour
         MuralBase.OverrideMetadata(RibbonSplitButton, Element.DefaultStyleKeyKey, { default_value: RibbonSplitButton });
     }
 
-    private readonly _cmdHelper: CommandSourceHelper = new CommandSourceHelper(this);
+    private readonly _cmdHelper: CommandSourceHelper = new CommandSourceHelper(this, () => this.ApplyPrimaryCanExecute());
 
-    public constructor() { super(); }
+    public constructor()
+    {
+        super();
+        this.ApplyPrimaryCanExecute();
+    }
+
+    // Feed CanExecute into PART_Primary's IsEnabledCore (the split button
+    // owns that veto; the primary Button has no Command of its own). Looked
+    // up from the trigger rather than cached in wireTrigger, which runs in
+    // the base constructor before this class's fields are initialised.
+    private ApplyPrimaryCanExecute(): void
+    {
+        const primary = this._trigger?.FindName('PART_Primary');
+        if (primary instanceof Button) primary.SetIsEnabledCore(this._cmdHelper.CanExecute);
+    }
 
     public get Command(): ICommand | undefined  { return this.get_property_value(RibbonSplitButton.CommandKey); }
     public set Command(v: ICommand | undefined) { this.set_property_value(RibbonSplitButton.CommandKey, v); }
@@ -314,5 +330,21 @@ export class RibbonSplitButton extends RibbonPopupButton implements ICommandSour
         {
             this._cmdHelper.OnParameterOrTargetChanged();
         }
+    }
+
+    // The CanExecuteChanged subscription follows the tree, as on Button.
+    protected override SetVisualParent(p: Visual | undefined): void
+    {
+        super.SetVisualParent(p);
+        if (p !== undefined) this._cmdHelper.OnAttachedToTree();
+        else this._cmdHelper.OnDetachedFromTree();
+    }
+
+    protected override propagate_target_to_visual_children(): void
+    {
+        super.propagate_target_to_visual_children();
+        const attached = (this as unknown as { target: PresentationTarget | undefined }).target !== undefined;
+        if (attached) this._cmdHelper.OnAttachedToTree();
+        else this._cmdHelper.OnDetachedFromTree();
     }
 }
