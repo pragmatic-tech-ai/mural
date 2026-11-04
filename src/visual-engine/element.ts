@@ -189,13 +189,16 @@ export class Element extends Visual implements ITriggerHost
         undefined, undefined, undefined,
         (model: MuralBase): boolean => Element.IsEnabledVetoed(model));
 
-    // CoerceApplies for IsEnabledKey: true while IsEnabledCore vetoes. The
-    // `=== false` test tolerates a read during construction, before the
-    // instance field is initialised.
+    // CoerceApplies for IsEnabledKey: true while IsEnabledCore or the
+    // templated parent's part veto says no. The `=== false` tests tolerate a
+    // read during construction, before the instance fields are initialised.
     private static IsEnabledVetoed(model: MuralBase): boolean
     {
-        return model instanceof Element && model._isEnabledCore === false;
+        return model instanceof Element && (model._isEnabledCore === false || model._templateOwnerVeto === false);
     }
+
+    private static readonly NotOwnTemplatePart =
+        'SetTemplatePartIsEnabledCore: the element is not a template part of this control.';
 
     // ── Style / Resources / apply_setter ──────────────────────────────
 
@@ -373,14 +376,23 @@ export class Element extends Visual implements ITriggerHost
         this.RecoerceValue(Element.IsEnabledKey, before);
     }
 
-    // The same veto applied by a templated control to one of ITS OWN template
-    // parts: a split button disables the primary half its command drives and
-    // leaves the dropdown arrow usable. Protected static, so only Element
-    // subclasses (controls) can reach it; the control owns the veto for that
-    // part, which must not drive its own IsEnabledCore.
-    protected static SetPartIsEnabledCore(part: Element, value: boolean): void
+    // The veto a templated control holds on one of its template parts. A
+    // slot of its own, ANDed with the part's IsEnabledCore, so neither the
+    // owner nor the part's own command source (a part Button with a Command)
+    // can override the other.
+    private _templateOwnerVeto: boolean = true;
+
+    // Vetoes (or lifts the veto on) one of THIS control's template parts: a
+    // split button disables the primary half its command drives and leaves
+    // the dropdown arrow usable. Throws unless `part`'s templated parent is
+    // this control.
+    protected SetTemplatePartIsEnabledCore(part: Element, value: boolean): void
     {
-        part.SetIsEnabledCore(value);
+        if (part.templatedParent !== this) throw new Error(Element.NotOwnTemplatePart);
+        if (part._templateOwnerVeto === value) return;
+        const before = part.IsEnabled;
+        part._templateOwnerVeto = value;
+        part.RecoerceValue(Element.IsEnabledKey, before);
     }
 
     // Pick which Style should be driving the StyleValue tier. Priority

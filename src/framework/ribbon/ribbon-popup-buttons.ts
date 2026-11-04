@@ -279,6 +279,9 @@ export class RibbonSplitButton extends RibbonPopupButton implements ICommandSour
         MuralBase.OverrideMetadata(RibbonSplitButton, Element.DefaultStyleKeyKey, { default_value: RibbonSplitButton });
     }
 
+    private static readonly PrimaryPart = 'PART_Primary';
+    private static readonly ArrowPart   = 'PART_Arrow';
+
     private readonly _cmdHelper: CommandSourceHelper = new CommandSourceHelper(this, () => this.ApplyPrimaryCanExecute());
 
     public constructor()
@@ -293,8 +296,8 @@ export class RibbonSplitButton extends RibbonPopupButton implements ICommandSour
     // the base constructor before this class's fields are initialised.
     private ApplyPrimaryCanExecute(): void
     {
-        const primary = this._trigger?.FindName('PART_Primary');
-        if (primary instanceof Button) Element.SetPartIsEnabledCore(primary, this._cmdHelper.CanExecute);
+        const primary = this._trigger?.FindName(RibbonSplitButton.PrimaryPart);
+        if (primary instanceof Button) this.SetTemplatePartIsEnabledCore(primary, this._cmdHelper.CanExecute);
     }
 
     public get Command(): ICommand | undefined  { return this.get_property_value(RibbonSplitButton.CommandKey); }
@@ -308,8 +311,8 @@ export class RibbonSplitButton extends RibbonPopupButton implements ICommandSour
 
     protected override wireTrigger(triggerRoot: Visual): void
     {
-        const primary = triggerRoot.FindName('PART_Primary');
-        const arrow   = triggerRoot.FindName('PART_Arrow');
+        const primary = triggerRoot.FindName(RibbonSplitButton.PrimaryPart);
+        const arrow   = triggerRoot.FindName(RibbonSplitButton.ArrowPart);
         if (primary instanceof Button) primary.AddClickHandler(() => this._cmdHelper.Execute());
         if (arrow   instanceof Button) arrow.AddClickHandler(() => this.toggleOpen());
     }

@@ -343,3 +343,51 @@ function findButton(root: unknown, name: string): Button | undefined
     }
     return undefined;
 }
+
+// The owner's veto on a template part is its own slot (review N4): it never
+// overrides the part's own command veto, and a control can veto only its OWN
+// template parts.
+class VetoProbe extends Border
+{
+    public Veto(part: Border | Button, value: boolean): void
+    {
+        this.SetTemplatePartIsEnabledCore(part, value);
+    }
+}
+
+describe('Template-part IsEnabledCore veto', () => {
+    beforeEach(() => { initTestApp(); });
+
+    test("the owner veto and the part's own command veto are ANDed, neither overrides the other", () => {
+        const sb = new RibbonSplitButton();
+        let ownerCan = true;
+        const ownerCmd = new RelayCommand(() => {}, () => ownerCan);
+        sb.Command = ownerCmd;
+        layout(sb);
+        const primary = findButton(sb, 'PART_Primary')!;
+        let partCan = false;
+        const partCmd = new RelayCommand(() => {}, () => partCan);
+        primary.Command = partCmd;
+        assert.equal(primary.IsEnabled, false, "the part's own command vetoes");
+        ownerCmd.RaiseCanExecuteChanged();
+        assert.equal(primary.IsEnabled, false, "the owner allowing does not override the part's own veto");
+
+        partCan = true;
+        partCmd.RaiseCanExecuteChanged();
+        assert.equal(primary.IsEnabled, true);
+        ownerCan = false;
+        ownerCmd.RaiseCanExecuteChanged();
+        assert.equal(primary.IsEnabled, false, 'the owner vetoes');
+        partCan = false; partCmd.RaiseCanExecuteChanged();
+        partCan = true; partCmd.RaiseCanExecuteChanged();
+        assert.equal(primary.IsEnabled, false, "the part's own command allowing does not override the owner veto");
+    });
+
+    test('a control cannot veto an element that is not its own template part', () => {
+        const probe = new VetoProbe();
+        const sb = new RibbonSplitButton();
+        layout(sb);
+        assert.throws(() => probe.Veto(findButton(sb, 'PART_Primary')!, false), /not a template part of this control/);
+        assert.throws(() => probe.Veto(new Border(), false), /not a template part of this control/);
+    });
+});
