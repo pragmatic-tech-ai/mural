@@ -362,18 +362,25 @@ export class Element extends Visual implements ITriggerHost
 
     // Updates the IsEnabledCore veto and re-coerces IsEnabled, firing the
     // change notification (templates' `when ( IsEnabled = false )`, the
-    // inheritance cascade) when the effective value moves. Public (unlike
-    // WPF's protected IsEnabledCore) because a command source may own the
-    // veto for one of its template parts rather than for itself: a split
-    // button disables the primary half its command drives and leaves the
-    // dropdown arrow usable. Whoever calls it owns the veto for that
-    // element; the authored IsEnabled is never written.
-    public SetIsEnabledCore(value: boolean): void
+    // inheritance cascade) when the effective value moves. Protected, as in
+    // WPF: only the control itself vetoes; the authored IsEnabled is never
+    // written.
+    protected SetIsEnabledCore(value: boolean): void
     {
         if (this._isEnabledCore === value) return;
         const before = this.IsEnabled;
         this._isEnabledCore = value;
         this.RecoerceValue(Element.IsEnabledKey, before);
+    }
+
+    // The same veto applied by a templated control to one of ITS OWN template
+    // parts: a split button disables the primary half its command drives and
+    // leaves the dropdown arrow usable. Protected static, so only Element
+    // subclasses (controls) can reach it; the control owns the veto for that
+    // part, which must not drive its own IsEnabledCore.
+    protected static SetPartIsEnabledCore(part: Element, value: boolean): void
+    {
+        part.SetIsEnabledCore(value);
     }
 
     // Pick which Style should be driving the StyleValue tier. Priority

@@ -294,7 +294,7 @@ export class RibbonSplitButton extends RibbonPopupButton implements ICommandSour
     private ApplyPrimaryCanExecute(): void
     {
         const primary = this._trigger?.FindName('PART_Primary');
-        if (primary instanceof Button) primary.SetIsEnabledCore(this._cmdHelper.CanExecute);
+        if (primary instanceof Button) Element.SetPartIsEnabledCore(primary, this._cmdHelper.CanExecute);
     }
 
     public get Command(): ICommand | undefined  { return this.get_property_value(RibbonSplitButton.CommandKey); }

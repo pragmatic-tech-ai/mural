@@ -206,7 +206,7 @@ export class ToolBarSplitButton extends Gallery implements ICommandSource
         const primary = this._primary;
         if (primary === undefined) return;
         const canExecute = this._cmdHelper.CanExecute;
-        primary.SetIsEnabledCore(canExecute);
+        Element.SetPartIsEnabledCore(primary, canExecute);
         if (!canExecute && this._primaryPressed)
         {
             this._primaryPressed = false;
