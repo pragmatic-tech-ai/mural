@@ -14,6 +14,12 @@ export default defineConfig({
   main: {},
   preload: {},
   renderer: {
+    server: {
+      // The renderer aliases resolve mural to Mural/dist and fonts to
+      // Mural/build/resources — both live ABOVE demo/, outside Vite's default
+      // fs allow list. Allow the repo root so those assets can be served.
+      fs: { allow: [repo('')] },
+    },
     resolve: {
       alias: [
         { find: /^@pragmatic-tech-ai\/mural\/framework\//, replacement: repo('dist/framework/') },

@@ -17,7 +17,7 @@ export class TextOnPathDemo extends ResourceDictionary {
     }
     static Clone() {
         const t = new TextOnPathDemo(_gate_TextOnPathDemo);
-        FontManager.Current.Register("Roboto", { kind: FontSourceKind.Url, url: new URL("https://cdn.jsdelivr.net/gh/opentypejs/opentype.js@master/test/fonts/Roboto-Black.ttf", import.meta.url).href });
+        FontManager.Current.Register("Roboto", { kind: FontSourceKind.Url, url: FontManager.ResolveSourceUrl("https://cdn.jsdelivr.net/gh/opentypejs/opentype.js@master/test/fonts/Roboto-Black.ttf", import.meta.url) });
         t.Set("Roboto", new FontFamily("Roboto"));
         const _tmpl0 = new DataTemplate((_data) => {
             let _canvas1;
