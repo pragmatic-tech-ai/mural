@@ -100,8 +100,8 @@ export class TabControl extends Selector
         // HeaderedContentControl and its default template's ONLY ContentPresenter
         // is PART_Header — so ContentControl would present ti.Content THERE, and a
         // data row (a document MuralBase) would render through its implicit
-        // DataTemplate (e.g. DataTemplate[DiagramDocument] → a Diagram) INSIDE the
-        // tab header. For a document whose view hosts shared Visuals (the Diagram's
+        // DataTemplate (e.g. DataTemplate[BoardDocument] → a Board) INSIDE the
+        // tab header. For a document whose view hosts shared Visuals (the Board's
         // node Visuals), that duplicate render collides with the content slot's
         // view → "Visual already has a visual parent". The content area doesn't
         // need it either: for a data row SelectedItem exposes the row itself (its

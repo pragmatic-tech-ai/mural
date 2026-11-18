@@ -135,7 +135,7 @@ describe('TabItem — click writes back through a TwoWay SelectedItem binding', 
         // The content slot (PART_ContentSlot) presents SelectedContent — the
         // selected data row — dispatched through its DataType template. Register
         // one that renders a distinct body marker per document (mirrors Plexus'
-        // DataTemplate[DiagramDocument] → canvas).
+        // DataTemplate[BoardDocument] → canvas).
         app.Resources.Set(Doc, new DataTemplate(
             (d) => new TextBlock('BODY:' + (d as Doc).Title), Doc));
 

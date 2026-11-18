@@ -49,7 +49,7 @@ export abstract class Adorner extends Element
     // pass. Identity when the adorned element sits in the layer's frame
     // unscaled. Subclasses that position chrome from EXTERNAL coordinates (not
     // the adorned element's own rect) must map those coordinates through this so
-    // the chrome tracks an ancestor transform, e.g. a diagram camera's
+    // the chrome tracks an ancestor transform, e.g. a board camera's
     // LayoutTransform scale. Adorners that just fill the adorned rect ignore it.
     private _adornedToLayer: Matrix = Matrix.Identity;
     /** @internal — set by AdornerLayer.ArrangeOverride. */
@@ -201,7 +201,7 @@ export class AdornerLayer extends Panel
     // the layer's parent — its ArrangedRect offset, its RenderTransform (pivoted
     // by RenderTransformOrigin), AND its EffectiveLayoutMatrix — in the same
     // order the SVG renderer applies them (layout/render inner, arrange offset
-    // outer). This lets adorners track an element a diagram camera (a
+    // outer). This lets adorners track an element a board camera (a
     // RenderTransform or LayoutTransform on an ancestor) has scaled/panned, while
     // adorner glyphs — children of the unscaled layer — stay a constant
     // on-screen size. With no ancestor transform every factor is identity, so it

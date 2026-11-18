@@ -37,49 +37,49 @@ function appWith(...modules: ShellModule[]): Application
 describe('DocumentTypeRegistry.PopulateFromModules', () => {
     test('aggregates every module\'s document definitions', () => {
         const app = appWith(
-            moduleWith(definition('diagram', ['.diagram', '.dgm'])),
+            moduleWith(definition('board', ['.board', '.dgm'])),
             moduleWith(definition('sheet', ['.sheet'])),
         );
         const registry = app.Services.getRequired(DocumentTypeRegistry.Key);
         const types = [...registry.Definitions].map(d => d.Type);
-        assert.deepEqual(types, ['diagram', 'sheet']);
+        assert.deepEqual(types, ['board', 'sheet']);
     });
 
     test('GetByType resolves a definition', () => {
-        const app = appWith(moduleWith(definition('diagram', ['.diagram'])));
+        const app = appWith(moduleWith(definition('board', ['.board'])));
         const registry = app.Services.getRequired(DocumentTypeRegistry.Key);
-        assert.equal(registry.GetByType('diagram')?.Type, 'diagram');
+        assert.equal(registry.GetByType('board')?.Type, 'board');
         assert.equal(registry.GetByType('missing'), undefined);
     });
 
     test('GetByExtension matches case-insensitively, dot optional', () => {
-        const app = appWith(moduleWith(definition('diagram', ['.diagram', '.dgm'])));
+        const app = appWith(moduleWith(definition('board', ['.board', '.dgm'])));
         const registry = app.Services.getRequired(DocumentTypeRegistry.Key);
-        assert.equal(registry.GetByExtension('.DGM')?.Type, 'diagram');
-        assert.equal(registry.GetByExtension('dgm')?.Type, 'diagram');
-        assert.equal(registry.GetByExtension('.diagram')?.Type, 'diagram');
+        assert.equal(registry.GetByExtension('.DGM')?.Type, 'board');
+        assert.equal(registry.GetByExtension('dgm')?.Type, 'board');
+        assert.equal(registry.GetByExtension('.board')?.Type, 'board');
         assert.equal(registry.GetByExtension('.xyz'), undefined);
     });
 
     test('a duplicate type across modules registers once (first wins)', () => {
-        const first  = definition('diagram', ['.diagram']);
-        const second = definition('diagram', ['.dgm']);
+        const first  = definition('board', ['.board']);
+        const second = definition('board', ['.dgm']);
         const app = appWith(moduleWith(first), moduleWith(second));
         const registry = app.Services.getRequired(DocumentTypeRegistry.Key);
         assert.equal(registry.Definitions.Count, 1);
-        assert.equal(registry.GetByType('diagram'), first);
+        assert.equal(registry.GetByType('board'), first);
         // The dropped duplicate's extension is not indexed.
         assert.equal(registry.GetByExtension('.dgm'), undefined);
     });
 
     test('carries the factory and command-context tokens through', () => {
-        const factory = new ServiceKey<unknown>('DiagramFactory');
-        const editing = new ServiceKey<unknown>('diagram.editing');
-        const def = definition('diagram', ['.diagram'], [editing]);
+        const factory = new ServiceKey<unknown>('BoardFactory');
+        const editing = new ServiceKey<unknown>('board.editing');
+        const def = definition('board', ['.board'], [editing]);
         def.Factory = factory;
         const app = appWith(moduleWith(def));
         const registry = app.Services.getRequired(DocumentTypeRegistry.Key);
-        const resolved = registry.GetByType('diagram')!;
+        const resolved = registry.GetByType('board')!;
         assert.equal(resolved.Factory, factory);
         assert.deepEqual([...resolved.CommandContexts], [editing]);
     });

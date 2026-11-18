@@ -11,7 +11,7 @@ import { Shape } from './shape.js';
 //    measures to the bounding box of its endpoints (max(X1,X2) wide ×
 //    max(Y1,Y2) tall); negative coordinates clip to zero.
 //
-//    Diagram-app usage: the host positions the Line via Canvas.SetLeft /
+//    Board-app usage: the host positions the Line via Canvas.SetLeft /
 //    SetTop to the bounding box's top-left in canvas coords, and sets
 //    X1/Y1/X2/Y2 RELATIVE to that origin so each connector's hit area
 //    stays tight to the line rather than blanket-covering the canvas.

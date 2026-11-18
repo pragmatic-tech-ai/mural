@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 import { Is } from '../value-converters.js';
 
-// `Is(x)` — the value-reflection converter behind the diagram alignment
+// `Is(x)` — the value-reflection converter behind the board alignment
 // toolbars. convert reflects equality; convertBack always yields x (clicking
 // a toggle SELECTS x — clicking the active one re-writes x, a no-op).
 

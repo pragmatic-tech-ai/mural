@@ -120,12 +120,12 @@ test('horizontal rule renders as a hairline border in a paragraph', () =>
 
 test('image renders inline when an image context is given, else falls back to alt text', () =>
 {
-    const withImg = firstInlines('![diagram](a.png)', { image: { baseDir: '', measure: async () => undefined } });
+    const withImg = firstInlines('![board](a.png)', { image: { baseDir: '', measure: async () => undefined } });
     const box = withImg.find((x) => x instanceof InlineUIContainer) as InlineUIContainer;
     assert.ok(box.Child instanceof Image);
 
-    const noImg = firstInlines('![diagram](a.png)');
-    assert.equal((noImg[0] as Run).Text, '[image: diagram]');
+    const noImg = firstInlines('![board](a.png)');
+    assert.equal((noImg[0] as Run).Text, '[image: board]');
 });
 
 test('inline raw html maps whitelisted tags and nests', () =>

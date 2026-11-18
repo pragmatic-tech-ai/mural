@@ -7,7 +7,7 @@ import EllipseFigure from "./commands-vm.mjs"
 import NoteFigure from "./commands-vm.mjs"
 
 // commands.mu — integration showcase: ToolBar + MenuButton + ContextMenu
-// over a Diagram of selectable / movable nodes. The MenuButton and the
+// over a Board of selectable / movable nodes. The MenuButton and the
 // per-node ContextMenu are COMMAND-DRIVEN (CommandsVM.Roots / .NodeContextMenu,
 // built via CommandMenuBuilder / CommandContextMenu — see commands-vm.mts);
 // the ToolBar and Ribbon below were already command-machinery-driven and are
@@ -16,7 +16,7 @@ import NoteFigure from "./commands-vm.mjs"
 //   * Top strip: a hamburger MenuButton (`ItemsSource = $Roots`) and a
 //     ToolBar with icon-only buttons (Save / Cut / Copy / Paste /
 //     Delete / Duplicate + AlignLeft / AlignCenter / AlignRight).
-//   * Body: a Diagram populated with three pre-seeded Figures. Click /
+//   * Body: a Board populated with three pre-seeded Figures. Click /
 //     Ctrl-click / Shift-click / marquee selects; Delete removes
 //     selected; the alignment commands operate on the selected
 //     subset.
@@ -31,7 +31,7 @@ import NoteFigure from "./commands-vm.mjs"
 // dim across all three surfaces in lockstep because the MenuButton, the
 // ToolBar, and the NodeContextMenu all dispatch to the SAME RelayCommand
 // instances (DemoCommandDispatcher resolves every command-driven id to
-// CommandsVM's own getters). The bootstrap subscribes to the Diagram's
+// CommandsVM's own getters). The bootstrap subscribes to the Board's
 // SelectionChanged event and calls CommandsVM.PublishSelectionState —
 // that pulse drives CanExecuteChanged on every gated command.
 
@@ -329,14 +329,14 @@ resources CommandsDemo {
                     }
                 }
 
-                // Canvas — the Diagram's default Template already wraps
+                // Canvas — the Board's default Template already wraps
                 // an ItemsPresenter in a ScrollViewer, so no enclosing
                 // Border / ScrollViewer is needed here. Items are
                 // Figures themselves (RectFigure / EllipseFigure /
                 // NoteFigure); ReflectSelectionToItems pushes the
                 // marquee / Ctrl-click selection state onto each item's
                 // IsSelected DP so the Style triggers fire.
-                Diagram x:name="nodes"
+                Board x:name="nodes"
                     [ ItemsSource             = $Nodes,
                       ItemsPanel              = @CommandsCanvasPanel,
                       SelectionMode           = Extended,

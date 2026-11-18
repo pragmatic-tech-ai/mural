@@ -797,7 +797,7 @@ export class MenuItem extends HeaderedItemsControl implements ICommandSource
         // `$service(...)` Command or `$path` CommandParameter binding to undefined.
         // Reading them after the close (as this once did) silently dropped the
         // invocation for every context-menu item whose Command/param is data-bound
-        // (e.g. the diagram's "Format Shape" → InspectorService.AddInspectorCommand).
+        // (e.g. the board's "Format Shape" → InspectorService.AddInspectorCommand).
         const cmd   = this.Command;
         const param = this.CommandParameter;
         // Activated callback still runs before Execute — the popup closes before a

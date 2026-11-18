@@ -5,7 +5,7 @@ import { ControlHarness } from './control-harness.js';
 
 // Wave 5 Task 1: three theme-agnostic semantic aliases, following the
 // @Ink / @AccentInk / @ControlTrack convention. They let code that resolves
-// theme colours by string (color-picker.ts row hover; diagram-settings.ts
+// theme colours by string (color-picker.ts row hover; board-settings.ts
 // THEME_LINK) stay theme-neutral: each alias is a literal copy of the
 // scheme's own backing token (kept in sync by this test, not a live ref).
 //   @RowHoverFill : brand-green-tinted row hover (NO longer == @Bg2 — a

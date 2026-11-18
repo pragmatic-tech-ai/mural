@@ -5,7 +5,7 @@
 //   * `Control` — the WPF-parity templated-control base.
 //   * `./commands/` — RoutedCommand / CommandBinding / CommandManager /
 //     InputBinding / ICommandSource / ApplicationCommands etc.
-//   * (Forthcoming as `mv` proceeds) Menu, ToolBar, Diagram, list
+//   * (Forthcoming as `mv` proceeds) Menu, ToolBar, Board, list
 //     controls — promoted from the basic primitives layer.
 
 export { Control } from './base/control.js';
@@ -74,11 +74,11 @@ export { ClipboardService, type ClipboardWriter } from './shell/services/clipboa
 export { EditCommandsService } from './shell/commands/edit-commands-service.js';
 export { AutosaveService } from './shell/services/autosave-service.js';
 export { DocumentShortcutsService, type IDocumentShortcutCommands } from './shell/services/document-shortcuts-service.js';
-export { FileDiagramStorage } from './diagram/file-diagram-storage.js';
-export { DiagramWorkspaceService } from './diagram/services/diagram-workspace-service.js';
-export { DiagramCanvasService } from './diagram/services/diagram-canvas-service.js';
-export { DiagramCameraService } from './diagram/services/diagram-camera-service.js';
-export { DiagramGuidesService } from './diagram/services/diagram-guides-service.js';
+export { FileBoardStorage } from './board/file-board-storage.js';
+export { BoardWorkspaceService } from './board/services/board-workspace-service.js';
+export { BoardCanvasService } from './board/services/board-canvas-service.js';
+export { BoardCameraService } from './board/services/board-camera-service.js';
+export { BoardGuidesService } from './board/services/board-guides-service.js';
 export { PanelService, PanelSection } from './shell/services/panel-service.js';
 export { CandidateChooserService, ChooserRow } from './pickers/candidate-chooser-service.js';
 export {
@@ -203,41 +203,41 @@ export { ClickAwayScrim } from '../basic/click-away-scrim.js';
 export { SplitRow, ComboBoxPopupHost, ComboBoxItemList } from './list/combo-box.js';
 export { ClickableRow, ChevronTarget, CollapsibleStack } from './list/tree-view.js';
 
-// ── Diagram ─────────────────────────────────────────────────────────
+// ── Board ─────────────────────────────────────────────────────────
 export {
-    Diagram,
+    Board,
     attachCanvasDropBehavior,
     TOOLBOX_ITEM_FORMAT,
     MuralDataFormat,
-    type IDiagramViewHost,
+    type IBoardViewHost,
     type ItemDroppedArgs,
     type ItemDroppedListener,
     type ExternalDroppedArgs,
     type ExternalDroppedListener,
-} from './diagram/diagram.js';
+} from './board/board.js';
 export {
-    DiagramDocument,
-    DiagramStorageKey,
-    type DiagramStorage,
-} from './diagram/diagram-document.js';
+    BoardDocument,
+    BoardStorageKey,
+    type BoardStorage,
+} from './board/board-document.js';
 export type {
     LayoutPreview,
     LayoutPreviewNode,
     LayoutPreviewEdge,
-} from './diagram/layout-preview.js';
-export { LayoutPreviewAdorner } from './diagram/layout/layout-preview-adorner.js';
-export { DiagramHistory } from './diagram/history/diagram-history.js';
-export { HistoryLayerId, type IHistoryLayer } from './diagram/history/history-layer.js';
-export { DiagramEditingContext, DiagramCommandId } from './diagram/diagram-command-contexts.js';
-export { DiagramInspector } from './diagram/diagram-inspector.js';
-export { InspectorPage, ShapeStylePage, SizePositionPage } from './diagram/inspector-pages.js';
-export { Figure } from './diagram/figure.js';
-export { PositionAnchor } from './diagram/position-anchor.js';
-export { SizePositionControl } from './diagram/size-position-control.js';
-export { NodeViewModel } from './diagram/node-view-model.js';
-export { NodeVisualStore, type NodeVisual } from './diagram/serialization/node-visual-store.js';
-export { TextNode } from './diagram/text-node.js';
-export { Callout, type ILeaderTarget } from './diagram/callout.js';
+} from './board/layout-preview.js';
+export { LayoutPreviewAdorner } from './board/layout/layout-preview-adorner.js';
+export { BoardHistory } from './board/history/board-history.js';
+export { HistoryLayerId, type IHistoryLayer } from './board/history/history-layer.js';
+export { BoardEditingContext, BoardCommandId } from './board/board-command-contexts.js';
+export { BoardInspector } from './board/board-inspector.js';
+export { InspectorPage, ShapeStylePage, SizePositionPage } from './board/inspector-pages.js';
+export { Figure } from './board/figure.js';
+export { PositionAnchor } from './board/position-anchor.js';
+export { SizePositionControl } from './board/size-position-control.js';
+export { NodeViewModel } from './board/node-view-model.js';
+export { NodeVisualStore, type NodeVisual } from './board/serialization/node-visual-store.js';
+export { TextNode } from './board/text-node.js';
+export { Callout, type ILeaderTarget } from './board/callout.js';
 export {
     registerNodeSerializer,
     serializerFor,
@@ -245,12 +245,12 @@ export {
     type NodeSerializer,
     type NodeBaseRecord,
     type SerializedNodeV2,
-} from './diagram/serialization/node-serialization.js';
+} from './board/serialization/node-serialization.js';
 export {
-    DiagramSettings,
-    DiagramSettingKey,
+    BoardSettings,
+    BoardSettingKey,
     SidePortsOptimizer,
-} from './diagram/diagram-settings.js';
+} from './board/board-settings.js';
 export {
     ShapeText,
     TextPlacement,
@@ -258,7 +258,7 @@ export {
     isOutsideTextPlacement,
     computeTextBlockAnchor,
     type ITextStyleTarget,
-} from './diagram/shape-text.js';
+} from './board/shape-text.js';
 export {
     serializeFlowDocument,
     deserializeFlowDocument,
@@ -269,14 +269,14 @@ export {
     type SerializedDoc,
     type SerializedParagraph,
     type SerializedRun,
-} from './diagram/serialization/shape-text-document.js';
-export { TextBlockAdorner } from './diagram/behaviors/text-block-adorner.js';
+} from './board/serialization/shape-text-document.js';
+export { TextBlockAdorner } from './board/behaviors/text-block-adorner.js';
 export {
     pointAlongPolyline,
     nearestTOnPolyline,
     polylineLength,
     type RoutePoint,
-} from './diagram/connector-route.js';
+} from './board/connector-route.js';
 export {
     Field,
     FieldKind,
@@ -284,45 +284,45 @@ export {
     resolveFields,
     documentWithFields,
     type FieldResolver,
-} from './diagram/shape-text-field.js';
-export { Group } from './diagram/group.js';
+} from './board/shape-text-field.js';
+export { Group } from './board/group.js';
 // ── Toolbox repository subsystem ───────────────────────────────────────
-export { ToolboxRepository } from './diagram/toolbox/toolbox-repository.js';
-export { ToolboxPage } from './diagram/toolbox/toolbox-page.js';
-export { ToolboxItem } from './diagram/toolbox/toolbox-item.js';
-export { ToolboxVisualDescriptor } from './diagram/toolbox/toolbox-visual-descriptor.js';
-export { ToolboxVisualPresenter } from './diagram/toolbox/toolbox-visual-presenter.js';
-export { reconcile } from './diagram/toolbox/reconcile.js';
+export { ToolboxRepository } from './board/toolbox/toolbox-repository.js';
+export { ToolboxPage } from './board/toolbox/toolbox-page.js';
+export { ToolboxItem } from './board/toolbox/toolbox-item.js';
+export { ToolboxVisualDescriptor } from './board/toolbox/toolbox-visual-descriptor.js';
+export { ToolboxVisualPresenter } from './board/toolbox/toolbox-visual-presenter.js';
+export { reconcile } from './board/toolbox/reconcile.js';
 export {
     type IToolboxContextTarget,
     isToolboxContextTarget,
-} from './diagram/toolbox/toolbox-context.js';
-export { RulerBar } from './diagram/guides/ruler-bar.js';
-export { PersistentGuidesAdorner } from './diagram/guides/persistent-guides-adorner.js';
+} from './board/toolbox/toolbox-context.js';
+export { RulerBar } from './board/guides/ruler-bar.js';
+export { PersistentGuidesAdorner } from './board/guides/persistent-guides-adorner.js';
 export {
     attachPersistentGuides,
     type PersistentGuidesHandlers,
-} from './diagram/behaviors/persistent-guides-behavior.js';
+} from './board/behaviors/persistent-guides-behavior.js';
 export {
     VisualContext,
     type IToolboxVisualResolver,
-} from './diagram/toolbox/toolbox-visual-resolver.js';
-export { VisualContextScope } from './diagram/toolbox/visual-context-scope.js';
+} from './board/toolbox/toolbox-visual-resolver.js';
+export { VisualContextScope } from './board/toolbox/visual-context-scope.js';
 export {
     type IToolboxDropFactory,
     type ToolboxDropContext,
-} from './diagram/toolbox/toolbox-drop-factory.js';
-export { ShapeToolboxItem } from './diagram/toolbox/shape-toolbox-item.js';
+} from './board/toolbox/toolbox-drop-factory.js';
+export { ShapeToolboxItem } from './board/toolbox/shape-toolbox-item.js';
 export {
     ShapeVisualResolver,
     ShapeVisualResolverKey,
-} from './diagram/toolbox/shape-visual-resolver.js';
-export { ShapeDropFactory, ShapeDropFactoryKey } from './diagram/toolbox/shape-drop-factory.js';
+} from './board/toolbox/shape-visual-resolver.js';
+export { ShapeDropFactory, ShapeDropFactoryKey } from './board/toolbox/shape-drop-factory.js';
 export {
     FigureKindDropFactory,
     FigureKindDropFactoryKey,
-} from './diagram/toolbox/figure-kind-drop-factory.js';
-export { ensureToolboxDefaults } from './diagram/toolbox/ensure-toolbox-defaults.js';
+} from './board/toolbox/figure-kind-drop-factory.js';
+export { ensureToolboxDefaults } from './board/toolbox/ensure-toolbox-defaults.js';
 export {
     SHAPE_CATALOG,
     SHAPE_CATALOG_MAP,
@@ -335,15 +335,15 @@ export {
     type ShapeCatalogEntry,
     type NormalizedGeometry,
     type CombinableShape,
-} from './diagram/shape-catalog.js';
+} from './board/shape-catalog.js';
 export {
-    attachStandardDiagramMutations,
-    type DiagramMutator,
-} from './diagram/behaviors/attach-standard-mutations.js';
-export { Connector, AnchorClip } from './diagram/connector.js';
-export { connectorCapOptions } from './diagram/caps/connector-cap-options.js';
-export { ConnectorEndpoint, type ConnectorEndpointInit } from './diagram/connector-endpoint.js';
-export { ConnectorRoutingScheduler } from './diagram/connector-routing-scheduler.js';
+    attachStandardBoardMutations,
+    type BoardMutator,
+} from './board/behaviors/attach-standard-mutations.js';
+export { Connector, AnchorClip } from './board/connector.js';
+export { connectorCapOptions } from './board/caps/connector-cap-options.js';
+export { ConnectorEndpoint, type ConnectorEndpointInit } from './board/connector-endpoint.js';
+export { ConnectorRoutingScheduler } from './board/connector-routing-scheduler.js';
 export {
     Port,
     PortSide,
@@ -351,7 +351,7 @@ export {
     PortResolver,
     type PortInit,
     type IPortHost,
-} from './diagram/port.js';
+} from './board/port.js';
 export {
     ConnectorEnd,
     RoutingMode,
@@ -359,17 +359,17 @@ export {
     type RouteSpec,
     type IRouter,
     type ResolvedPortSide,
-} from './diagram/routing/router.js';
+} from './board/routing/router.js';
 export {
     ConnectorCreateBehavior,
     attachConnectorCreate,
     type ConnectorCreatedArgs,
     type ConnectorCreatedListener,
-} from './diagram/behaviors/connector-create-behavior.js';
+} from './board/behaviors/connector-create-behavior.js';
 export {
     ConnectorEditAdorner,
     attachConnectorEditAdorner,
-} from './diagram/behaviors/connector-edit-adorner.js';
+} from './board/behaviors/connector-edit-adorner.js';
 
 // ── Property grid ────────────────────────────────────────────────────
 export { PropertyGrid } from './property-grid/property-grid.js';

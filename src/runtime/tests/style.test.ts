@@ -736,7 +736,7 @@ describe('Style — PropertyTrigger', () => {
 
 // Data-driven trigger: condition watches the styled visual's DataContext
 // via DataContextBinding semantics, not a DP on the visual itself.
-// Drives the diagram-style "per-element data-driven re-skinning" use
+// Drives the board-style "per-element data-driven re-skinning" use
 // case. Backing VM exposes the watched property as a regular MuralBase DP
 // so changes flow through the existing property-change machinery.
 class ItemVM extends MuralBase

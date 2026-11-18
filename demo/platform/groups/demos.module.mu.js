@@ -1,7 +1,7 @@
+import { BoardDemo } from "../../demos/board/board.mu.js";
 import { BouncingBallDemo } from "../../demos/bouncing-ball/bouncing-ball.mu.js";
 import { ColorPickerDemo } from "../../demos/color-picker/color-picker.mu.js";
 import { CommandsDemo } from "../../demos/commands/commands.mu.js";
-import { DiagramDemo } from "../../demos/diagram/diagram.mu.js";
 import { DragDropExtendedDemo } from "../../demos/drag-drop-extended/drag-drop-extended.mu.js";
 import { DragDropDemo } from "../../demos/drag-drop/drag-drop.mu.js";
 import { FillEditorDemo } from "../../demos/fill-editor/fill-editor.mu.js";
@@ -25,7 +25,7 @@ export const DemosModule = (() => {
     for (const [_k, _v] of BouncingBallDemo.Clone().Entries()) _rd1.Set(_k, _v);
     for (const [_k, _v] of ColorPickerDemo.Clone().Entries()) _rd1.Set(_k, _v);
     for (const [_k, _v] of CommandsDemo.Clone().Entries()) _rd1.Set(_k, _v);
-    for (const [_k, _v] of DiagramDemo.Clone().Entries()) _rd1.Set(_k, _v);
+    for (const [_k, _v] of BoardDemo.Clone().Entries()) _rd1.Set(_k, _v);
     for (const [_k, _v] of DragDropDemo.Clone().Entries()) _rd1.Set(_k, _v);
     for (const [_k, _v] of DragDropExtendedDemo.Clone().Entries()) _rd1.Set(_k, _v);
     for (const [_k, _v] of FillEditorDemo.Clone().Entries()) _rd1.Set(_k, _v);

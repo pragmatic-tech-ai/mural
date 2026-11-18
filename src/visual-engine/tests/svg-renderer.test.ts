@@ -307,7 +307,7 @@ describe('SvgRenderer — visual-tree reparent', () => {
     // A Visual moved to a NEW visual parent AFTER its first render must have its
     // outer <g> RELOCATED under the new parent's DOM group — otherwise the SVG
     // DOM diverges from the visual tree and ancestor transforms stop composing
-    // onto the moved subtree (the diagram-container "children don't follow the
+    // onto the moved subtree (the board-container "children don't follow the
     // container" bug). Mirrors ContainerPlacement.reparent: RemoveVisualChild
     // from the old host, AddVisualChild into the new one.
     test('moving a child to a new visual parent relocates its outer <g> in the DOM', () => {

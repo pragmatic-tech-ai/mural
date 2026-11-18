@@ -447,7 +447,7 @@ describe('ListBox — ItemTemplate precedence for MuralBase rows', () => {
         // the fix, a MuralBase row with such a template rendered through IT even
         // when the ListBox had an explicit ItemTemplate — so a document tab
         // strip (ItemTemplate = title+close) instead materialized each open
-        // document's heavy DataType template (a Diagram), double-attaching
+        // document's heavy DataType template (a Board), double-attaching
         // shared child Visuals and throwing on the second attach.
         let implicitFired = 0;
         Application.current.Resources.Set(

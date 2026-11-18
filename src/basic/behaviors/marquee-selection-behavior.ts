@@ -365,9 +365,9 @@ export function attachMarqueeSelection(selector: Selector): () => void
         // The two frames coincide when the layer is an inner SCP
         // AdornerLayer arranged at the same rect as the content
         // (word-toolbox / ListBox path). They differ when the layer
-        // is a platform-root AdornerDecorator (Diagram has no SCP,
+        // is a platform-root AdornerDecorator (Board has no SCP,
         // so the layer resolves to the platform root; layer-host-
-        // origin = (0, 0), panel-host-origin = wherever the Diagram
+        // origin = (0, 0), panel-host-origin = wherever the Board
         // sits inside its parent chain). Without this split the
         // marquee draws at (cursorHost - panelHost) instead of
         // (cursorHost - layerHost) and the rect appears offset by
@@ -382,13 +382,13 @@ export function attachMarqueeSelection(selector: Selector): () => void
         const h = Math.abs(args.HostY - startHostY);
 
         // PANEL-LOCAL hit-test rect. When the Selector exposes a host->content
-        // mapping (the Diagram, whose PART_Camera carries a LayoutTransform
+        // mapping (the Board, whose PART_Camera carries a LayoutTransform
         // zoom), route both endpoints through it so the rect lands in the same
         // content space as each container's rectInFrame(c, panel) — at ANY
         // zoom/pan. originIn() only sums ArrangedRect (a pure translation) and
         // can't see the camera scale, so the plain path is off by the zoom
         // factor once zoom != 1. Mirrors figure.ts / canvas-drop-behavior's use
-        // of Diagram.HostToContent. Non-diagram Selectors (ListBox, TreeView —
+        // of Board.HostToContent. Non-board Selectors (ListBox, TreeView —
         // no scale in the chain) have no HostToContent and keep the plain path,
         // where content space == panel-local up to the originIn translation.
         const coord = selector as unknown as {

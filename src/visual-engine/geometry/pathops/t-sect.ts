@@ -1953,7 +1953,7 @@ Intersections.prototype.intersectCubicQuad = function (c: Cubic, q: Quad): numbe
 // (c1, c2, point, c1t, c2t, dist) candidate tuples from each end-pair of
 // span1×span2 and sort by distance at the end. SkClosestSect's
 // merge/update optimisation matters at very large coincidence runs; for
-// our diagram-scale inputs the plain list works.
+// our board-scale inputs the plain list works.
 function considerEndPair(
     span1: TSpan, span2: TSpan,
     out: { c1: TSpan; c2: TSpan; pt: Point; c1t: number; c2t: number; dist: number }[],

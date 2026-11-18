@@ -42,15 +42,15 @@ describe('ShellCompositionRoot module routing', () => {
     test('a shell module still enters Modules and registers its services', () => {
         const app = new Application();
         const mod = new ShellModule();
-        mod.Name = 'diagram';
-        const key = new ServiceKey<{ id: string }>('diagram');
-        mod.AddRegistration(key, () => ({ id: 'diagram' }), ServiceLifetime.Singleton);
+        mod.Name = 'board';
+        const key = new ServiceKey<{ id: string }>('board');
+        mod.AddRegistration(key, () => ({ id: 'board' }), ServiceLifetime.Singleton);
         const cap = new Capability();
-        cap.Name = 'diagram';
+        cap.Name = 'board';
         mod.AddChild(cap);
 
         app.AddModule(mod);
-        assert.deepEqual(app.Services.get(key), { id: 'diagram' });
+        assert.deepEqual(app.Services.get(key), { id: 'board' });
         assert.equal(app.Modules.Count, 1);                          // shell module surfaced to registries
     });
 

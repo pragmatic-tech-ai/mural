@@ -3,11 +3,11 @@ import { AlignmentAxis, EdgeKind } from './alignment-math.js';
 
 // Persistent (Visio-style) guide model + the pure snap/tick math that drives
 // placement, node snapping, glue, and ruler tick layout. No Visual / DP deps —
-// the diagram behavior and adorner are the consumers. Sibling of alignment-math.ts.
+// the board behavior and adorner are the consumers. Sibling of alignment-math.ts.
 
 export interface GuideGlue
 {
-    // The stable DiagramDocument node id (Figure.Id / NodeViewModel.Id) glued
+    // The stable BoardDocument node id (Figure.Id / NodeViewModel.Id) glued
     // to the guide, and which of the node's edges is stuck.
     readonly nodeId: string;
     readonly edge:   EdgeKind;

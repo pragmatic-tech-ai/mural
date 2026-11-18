@@ -42,10 +42,10 @@ describe('ApplicationService — the application self-service', () => {
         const svc = app.Services.getRequired(ApplicationService.Key);   // resolve BEFORE any module
         assert.equal([...svc.Modules].length, 0);
 
-        app.Modules.Add(new FakeModule('Diagram'));
+        app.Modules.Add(new FakeModule('Board'));
         app.Modules.Add(new FakeModule('Layers'));
 
-        assert.deepEqual([...svc.Modules].map(m => m.Name), ['Diagram', 'Layers']);
+        assert.deepEqual([...svc.Modules].map(m => m.Name), ['Board', 'Layers']);
     });
 
     test('IsInitialized mirrors the Application lifecycle', () => {

@@ -7,7 +7,7 @@ import { Setting } from '../settings/setting.js'
 // App-scoped background service: on an interval (default 5 min, from settings),
 // save every dirty document. Reacts live to the enabled toggle and interval
 // setting. Renderer-only — setInterval is fine here (the timer prohibition is
-// main-process). Mirrors DiagramCameraService's provider/host wiring.
+// main-process). Mirrors BoardCameraService's provider/host wiring.
 export class AutosaveService extends ServiceBase
 {
     public static readonly Key = new ServiceKey<AutosaveService>('AutosaveService')

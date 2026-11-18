@@ -4,7 +4,7 @@ import DemosService from "./demos-service.mjs"
 import BouncingBallDemo from "../../demos/bouncing-ball/bouncing-ball.mu.js"
 import ColorPickerDemo from "../../demos/color-picker/color-picker.mu.js"
 import CommandsDemo from "../../demos/commands/commands.mu.js"
-import DiagramDemo from "../../demos/diagram/diagram.mu.js"
+import BoardDemo from "../../demos/board/board.mu.js"
 import DragDropDemo from "../../demos/drag-drop/drag-drop.mu.js"
 import DragDropExtendedDemo from "../../demos/drag-drop-extended/drag-drop-extended.mu.js"
 import FillEditorDemo from "../../demos/fill-editor/fill-editor.mu.js"
@@ -26,7 +26,7 @@ shell module DemosModule [ Name = "Demos" ] {
         merge BouncingBallDemo
         merge ColorPickerDemo
         merge CommandsDemo
-        merge DiagramDemo
+        merge BoardDemo
         merge DragDropDemo
         merge DragDropExtendedDemo
         merge FillEditorDemo

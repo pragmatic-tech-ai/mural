@@ -41,7 +41,7 @@ export enum MarqueeBoundsPolicy
 
 // Selector — the WPF parity layer between ItemsControl and any list-
 // rendering control that exposes a "currently selected item" surface
-// (ListBox, ComboBox, TabControl, ListView, TreeView, Diagram, …).
+// (ListBox, ComboBox, TabControl, ListView, TreeView, Board, …).
 // Mirrors System.Windows.Controls.Primitives.Selector plus the
 // MultiSelector surface (one layer, not two — single-select descendants
 // just leave SelectionMode at its default).

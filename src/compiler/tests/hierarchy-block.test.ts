@@ -77,13 +77,13 @@ describe('Hierarchy { } block — Contributor fan-out', () =>
     test('a normal .commands: block Context keeps the bare class/token reference (hook does not leak)', () =>
     {
         const js = emitted(`
-            shell module DiagramModule {
+            shell module BoardModule {
                 .commands: {
-                    CommandDefinition[Id="build", Title="Build", Context=DiagramEditingContext]
+                    CommandDefinition[Id="build", Title="Build", Context=BoardEditingContext]
                 }
             }
         `);
-        assert.match(js, /set_property_value\(CommandDefinition\.ContextKey, DiagramEditingContext\)/);
+        assert.match(js, /set_property_value\(CommandDefinition\.ContextKey, BoardEditingContext\)/);
         assert.doesNotMatch(js, /HierarchyContext\.For/);
     });
 

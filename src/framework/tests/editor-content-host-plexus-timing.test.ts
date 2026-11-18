@@ -10,7 +10,7 @@ import { DocumentsContentHostService } from '../shell/services/documents-content
 import { TabControl, TabItem } from '../tabs/tabs.js';
 
 // A document whose body renders through a registered DataTemplate — mirrors
-// the Plexus DiagramDocument (DataTemplate[DiagramDocument] → a Diagram).
+// the Plexus BoardDocument (DataTemplate[BoardDocument] → a Board).
 class DemoDoc extends MuralBase
 {
     constructor(public readonly Id: string, public readonly Title: string) { super(); }
@@ -48,7 +48,7 @@ describe('EditorShell content host — Plexus launch timing', () => {
         // the SAME instance.
         Application.current.Services.register(
             ContentHostService.Key, (p) => new DocumentsContentHostService(p), 'singleton');
-        // A body template for the document (stands in for DataTemplate[DiagramDocument]),
+        // A body template for the document (stands in for DataTemplate[BoardDocument]),
         // registered app-global so the content slot resolves it by type.
         Application.current.Resources.Set(DemoDoc, new DataTemplate((d) => {
             const b = new Border();

@@ -98,7 +98,7 @@ export class ToolbarToggleGroup extends ToolbarGroupViewModel { }
 // would re-point its own DataContext to $Target (the document) when it resolves
 // Content — clobbering the `$Template` DataContext binding (the document has no
 // `Template`), so ContentTemplate falls to undefined and the presenter drops to
-// the IMPLICIT `DataTemplate[DataType=<document>]`. For a DiagramDocument that
+// the IMPLICIT `DataTemplate[DataType=<document>]`. For a BoardDocument that
 // implicit template is the CANVAS, whose node Visuals are shared with the content
 // area → "Visual already has a visual parent". Applying the template here and
 // slotting the resulting Visual sidesteps the self-clobber entirely (a Visual

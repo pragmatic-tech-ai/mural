@@ -150,7 +150,7 @@ export class ApplicationSettings extends ServiceBase implements ISettingSource
     }
 
     // Contribute definitions from a NON-module source — a framework component
-    // that owns its own tunable constants (e.g. DiagramSettings) and publishes
+    // that owns its own tunable constants (e.g. BoardSettings) and publishes
     // them wherever it finds a settings host, rather than routing every default
     // through a module's `.settings:` markup. Idempotent per key (addSetting
     // skips a key already present), so a repeat call after a late resolve only

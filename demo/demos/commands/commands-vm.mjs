@@ -1,5 +1,5 @@
 // CommandsVM — exercises all three command surfaces (Menu, ToolBar,
-// ContextMenu) over the framework Diagram. Extends DiagramDocument with:
+// ContextMenu) over the framework Board. Extends BoardDocument with:
 //
 //   * Alignment commands (AlignLeft / AlignTop / AlignRight / AlignBottom)
 //     operating on whichever Figures are selected.
@@ -8,7 +8,7 @@
 //     clipboard / undo plumbing is out of scope; the demo's job is to
 //     show that one ICommand instance drives the toolbar, the menu,
 //     AND each node's context menu in lockstep.
-//   * HasSelection — bool DP the bootstrap writes from the Diagram's
+//   * HasSelection — bool DP the bootstrap writes from the Board's
 //     SelectionChanged event. The selection-gated commands' CanExecute
 //     reads it; CanExecuteChanged pulses on every flip.
 //
@@ -23,7 +23,7 @@
 import { Application, MetaData, MuralBase, Color, RelayCommand, } from '@pragmatic-tech-ai/mural/runtime';
 import { SolidColorBrush, Visual } from '@pragmatic-tech-ai/mural/visual-engine';
 import { Figure } from '@pragmatic-tech-ai/mural/framework';
-import { DiagramDocument } from '@pragmatic-tech-ai/mural/framework';
+import { BoardDocument } from '@pragmatic-tech-ai/mural/framework';
 import { CommandContext, CommandDefinition, CommandMenuBuilder, } from '@pragmatic-tech-ai/mural/framework';
 import { CommandContextMenu } from '@pragmatic-tech-ai/mural/framework/surface.js';
 import { DemoCommandDispatcher } from '../_shared/demo-command-dispatcher.mjs';
@@ -93,14 +93,14 @@ const CMD_KIND_TO_CLASS = {
     ellipse: EllipseFigure,
     note: NoteFigure,
 };
-export class CommandsVM extends DiagramDocument {
+export class CommandsVM extends BoardDocument {
     // All command surfaces in commands.mu bind via $-syntax
     // (DataContextBinding), which resolves through MuralBase.HasProperty —
     // unregistered plain fields are invisible. Register every command
     // CommandsVM owns as a DP.
     //
     // The Align* / Distribute* / Group* / Ungroup* / Combine* surfaces
-    // are populated by the bootstrap from the framework Diagram control's
+    // are populated by the bootstrap from the framework Board control's
     // own RelayCommand instances (CommandsVM owns the proxy DPs so the
     // menu / toolbar markup can bind them through `$AlignLeftCommand`).
     static HasSelectionKey = MuralBase.RegisterProperty(CommandsVM, 'HasSelection', false, MetaData.None);
@@ -121,8 +121,8 @@ export class CommandsVM extends DiagramDocument {
     static AlignBottomCommandKey = MuralBase.RegisterProperty(CommandsVM, 'AlignBottomCommand', undefined, MetaData.None);
     static UndoCommandKey = MuralBase.RegisterProperty(CommandsVM, 'UndoCommand', undefined, MetaData.None);
     static RedoCommandKey = MuralBase.RegisterProperty(CommandsVM, 'RedoCommand', undefined, MetaData.None);
-    // Proxy DPs for the framework Diagram's command surface — the
-    // bootstrap (commands.mjs) copies the Diagram's own RelayCommand
+    // Proxy DPs for the framework Board's command surface — the
+    // bootstrap (commands.mjs) copies the Board's own RelayCommand
     // instances into these so the menu / toolbar bindings reach them
     // via `$AlignLeftCommand` etc.
     static AlignLeftCommandKey = MuralBase.RegisterProperty(CommandsVM, 'AlignLeftCommand', undefined, MetaData.None);
@@ -184,7 +184,7 @@ export class CommandsVM extends DiagramDocument {
     _clipboard = [];
     constructor(storage) {
         super(storage);
-        const setStatus = (msg) => this.set_property_value(DiagramDocument.StatusKey, msg);
+        const setStatus = (msg) => this.set_property_value(BoardDocument.StatusKey, msg);
         const selected = () => {
             const out = [];
             const nodes = this.Nodes;
@@ -239,7 +239,7 @@ export class CommandsVM extends DiagramDocument {
         }));
         // ── Alignment commands ────────────────────────────────────────
         // AlignLeft / Right / Top / Middle / Center proxy to the framework
-        // Diagram's own RelayCommands (filled in by the bootstrap). The
+        // Board's own RelayCommands (filled in by the bootstrap). The
         // local AlignBottom stays here — the framework's align surface
         // doesn't include it (Top + Middle + bbox-relative-bottom-via-
         // Middle covers the common cases; demo needed the explicit
@@ -314,7 +314,7 @@ export class CommandsVM extends DiagramDocument {
     }
     // Commands-local kind map — 'rect' / 'ellipse' / 'note' map to the
     // per-kind Figure subclasses defined above. Overrides the inherited
-    // DiagramDocument.CreateNode (which routes through Figure.fromKind
+    // BoardDocument.CreateNode (which routes through Figure.fromKind
     // against the framework SHAPE_CATALOG keyed by the catalog kind name
     // — 'rectangle' / 'ellipse' / …). Returns null for unknown kinds.
     // Base CreateNode returns Figure | null (shapes are self-painting Figures);
@@ -324,7 +324,7 @@ export class CommandsVM extends DiagramDocument {
         const Cls = CMD_KIND_TO_CLASS[kind];
         if (Cls === undefined)
             return null;
-        // `_nextId` is the base DiagramDocument's private id counter; reach in
+        // `_nextId` is the base BoardDocument's private id counter; reach in
         // through a named interface (cross-class internal — see CLAUDE.md).
         const id = 'n' + this._nextId++;
         const fig = new Cls(id, left, top);
@@ -349,7 +349,7 @@ export class CommandsVM extends DiagramDocument {
     get AlignBottomCommand() { return this.get_property_value(CommandsVM.AlignBottomCommandKey); }
     get UndoCommand() { return this.get_property_value(CommandsVM.UndoCommandKey); }
     get RedoCommand() { return this.get_property_value(CommandsVM.RedoCommandKey); }
-    /** Bootstrap calls this when the Diagram's SelectionChanged fires.
+    /** Bootstrap calls this when the Board's SelectionChanged fires.
      *  Flipping HasSelection re-pulses CanExecuteChanged on every
      *  selection-gated command so toolbar / menu / context-menu chrome
      *  refreshes in lockstep. */
@@ -421,6 +421,6 @@ export class CommandsVM extends DiagramDocument {
                 break;
             }
         }
-        this.set_property_value(DiagramDocument.StatusKey, `Align ${mode}: ${sel.length} node${sel.length === 1 ? '' : 's'}.`);
+        this.set_property_value(BoardDocument.StatusKey, `Align ${mode}: ${sel.length} node${sel.length === 1 ? '' : 's'}.`);
     }
 }

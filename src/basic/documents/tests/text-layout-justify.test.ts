@@ -6,7 +6,7 @@ import { FontStyle, FontWeight, TextAlignment, TextDecorations, type TextMetrics
 import { Run } from '../inlines.js';
 import type { RunProps } from '../text-element.js';
 
-// Justify in the inline layout engine (§ diagram-text). Wrapped lines have
+// Justify in the inline layout engine (§ board-text). Wrapped lines have
 // their inter-word gaps widened to fill the slot; the last line (and hard-
 // break-terminated lines) stay natural. A deterministic stub measurer makes
 // the fragment positions exact.

@@ -1688,12 +1688,12 @@ resources Formatting {
     // so the Fill section can collapse as a whole when Variant=None.
     // The wrapper stacks the two editors and ALSO carries an empty-state
     // placeholder shown when both Fill and Stroke are undefined (the
-    // diagrammer's "no shape selected" signal). ShapeFormatControl.ts
+    // boardmer's "no shape selected" signal). ShapeFormatControl.ts
     // toggles PART_Editors / PART_EmptyMessage heights on every Fill or
     // Stroke change.
     // Cap dropdown row: a small glyph silhouette (filled OR stroked per
     // option) + the option label. Generic — renders any CapOption; the
-    // diagram layer supplies connector-cap values. The glyph Path is
+    // board layer supplies connector-cap values. The glyph Path is
     // layout-free, so a fixed-size Border reserves the row's icon slot.
     DataTemplate x:key="CapOptionTemplate" [DataType = CapOption] {
         StackPanel [ Orientation = Horizontal ] {

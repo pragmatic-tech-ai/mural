@@ -284,7 +284,7 @@ export class HtmlTarget extends PresentationTarget
     // and re-parents its outer <g> into `dragGhost` so the cursor-
     // follow transform covers it. Mode B (preview = null) creates the
     // overlay but no ghost — the author renders the feedback themselves
-    // via session.OnMove (e.g. the diagram demo's rubber-band line).
+    // via session.OnMove (e.g. the board demo's rubber-band line).
     private dragOverlay: SVGGElement | undefined;
     private dragGhost:   SVGGElement | undefined;
 

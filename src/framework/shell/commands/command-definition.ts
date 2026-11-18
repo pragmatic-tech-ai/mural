@@ -40,11 +40,11 @@ export enum CommandGroupPresentation
 // A MuralBase so it is DP-backed, bindable, and declarable in markup — the same
 // shape as SettingDefinition / DocumentDefinition:
 //
-//     module DiagramModule [ Name = "Diagram" ] {
+//     module BoardModule [ Name = "Board" ] {
 //         .commands: {
 //             CommandDefinition
-//                 [ Id      = "diagram.align.left", Title = "Align Left",
-//                   Icon    = @alignLeft, Context = DiagramEditingContext,
+//                 [ Id      = "board.align.left", Title = "Align Left",
+//                   Icon    = @alignLeft, Context = BoardEditingContext,
 //                   Group   = "align", Order = 10 ]
 //         }
 //     }
@@ -62,7 +62,7 @@ export enum CommandGroupPresentation
 // declaration and the document interprets it.
 export class CommandDefinition extends MuralBase
 {
-    // Stable id ("diagram.align.left"). The token a document's Execute /
+    // Stable id ("board.align.left"). The token a document's Execute /
     // CanExecute switches on. Namespace by module.
     public static readonly IdKey = MuralBase.RegisterProperty<string>(
         CommandDefinition, 'Id', '', MetaData.None);
@@ -79,7 +79,7 @@ export class CommandDefinition extends MuralBase
     // live CommandContexts. The command is visible on the toolbar iff the active
     // document activates this context. A ServiceToken used purely as an identity
     // tag (never resolved), so contexts are shareable across document types and
-    // authored as real references (`Context = DiagramEditingContext`).
+    // authored as real references (`Context = BoardEditingContext`).
     public static readonly ContextKey = MuralBase.RegisterProperty<ServiceToken<unknown> | undefined>(
         CommandDefinition, 'Context', undefined, MetaData.None);
 

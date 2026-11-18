@@ -180,7 +180,7 @@ export class ListBox extends Selector
         // `DataTemplate[T]` in scope IGNORE an explicit ItemTemplate and
         // materialize T's template instead — e.g. a document tab strip
         // (ItemTemplate = a title+close row) rendered each open
-        // DiagramDocument as a whole Diagram, double-attaching the doc's
+        // BoardDocument as a whole Board, double-attaching the doc's
         // node Figures the content region already hosts (throw on attach).
         const tmpl = DataTemplateSelector.resolve(this.ItemTemplateSelector, item, this) ?? this.ItemTemplate;
         if (tmpl !== undefined)

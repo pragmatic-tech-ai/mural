@@ -14,7 +14,7 @@ function emitted(src: string): string
 describe('compile — nested CommandDefinition bodies (Children)', () => {
     test('a nested CommandDefinition body lowers into the parent via AddChild', () => {
         const js = emitted(`
-            shell module DiagramModule {
+            shell module BoardModule {
                 .commands: {
                     CommandDefinition[Id="build", Title="Build"] {
                         CommandDefinition[Id="build.default", Title="Build (Default)"]
@@ -41,7 +41,7 @@ describe('compile — CommandDefinition.Region = MainMenu (ShellRegion)', () => 
         // be registered in ENUM_MEMBERS['ShellRegion'] for a bare `MainMenu`
         // identifier to resolve here.
         const js = emitted(`
-            shell module DiagramModule {
+            shell module BoardModule {
                 .commands: {
                     CommandDefinition[Id="file", Title="File", Region=MainMenu]
                 }

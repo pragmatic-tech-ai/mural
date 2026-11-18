@@ -285,7 +285,7 @@ export class CommandManager
     /** Force every subscriber to re-evaluate. Call after a state change
      *  that could affect command executability when there's no per-
      *  command CanExecuteChanged signal — e.g. selection changes on a
-     *  diagram, page-state edits that ungate Save / Undo. */
+     *  board, page-state edits that ungate Save / Undo. */
     public static InvalidateRequerySuggested(): void
     {
         const snap = [...CommandManager._requerySuggestedListeners];

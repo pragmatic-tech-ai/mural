@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { compile, EmitError } from '../compile.js';
 
 // Wave-1 follow-up (A): a parenthesized 2-cell tuple assigned to a
-// Pen-typed DP (Visual.Stroke, Diagram.SelectionFormatStroke, …) must
+// Pen-typed DP (Visual.Stroke, Board.SelectionFormatStroke, …) must
 // compile to `new Pen(brush, thickness)`, not fall into the default
 // Thickness/CornerRadius tuple shape (which silently produced a
 // Thickness that nothing ever painted — see PEN_PROPERTIES in

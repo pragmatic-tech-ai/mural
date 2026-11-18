@@ -4,14 +4,14 @@ import assert from 'node:assert/strict';
 import { RelayCommand, ServiceKey, ServiceProvider } from '../../../../runtime/index.js';
 import { ContentHostService } from '../../services/content-host-service.js';
 import { DocumentsContentHostService, type IDocument } from '../../services/documents-content-host-service.js';
-import { DiagramDocument } from '../../../diagram/diagram-document.js';
-import type { Diagram } from '../../../diagram/diagram.js';
-import type { DiagramHistory } from '../../../diagram/history/diagram-history.js';
+import { BoardDocument } from '../../../board/board-document.js';
+import type { Board } from '../../../board/board.js';
+import type { BoardHistory } from '../../../board/history/board-history.js';
 import { EditCommandsService } from '../edit-commands-service.js';
 
-// A DiagramDocument whose undo/redo and active view are observable fakes, so the
-// service's routing can be asserted without standing up a live Diagram control.
-class SpyDiagramDocument extends DiagramDocument
+// A BoardDocument whose undo/redo and active view are observable fakes, so the
+// service's routing can be asserted without standing up a live Board control.
+class SpyBoardDocument extends BoardDocument
 {
     public UndoCalls = 0;
     public RedoCalls = 0;
@@ -24,13 +24,13 @@ class SpyDiagramDocument extends DiagramDocument
 
     public override Undo(): void { this.UndoCalls++; }
     public override Redo(): void { this.RedoCalls++; }
-    public override get History(): DiagramHistory
+    public override get History(): BoardHistory
     {
-        return { CanUndo: true, CanRedo: true } as unknown as DiagramHistory;
+        return { CanUndo: true, CanRedo: true } as unknown as BoardHistory;
     }
-    public override get ActiveView(): Diagram | undefined
+    public override get ActiveView(): Board | undefined
     {
-        return { CutCommand: this.CutSpy, CopyCommand: this.CopySpy, PasteCommand: this.PasteSpy } as unknown as Diagram;
+        return { CutCommand: this.CutSpy, CopyCommand: this.CopySpy, PasteCommand: this.PasteSpy } as unknown as Board;
     }
 }
 
@@ -68,7 +68,7 @@ describe('EditCommandsService', () =>
         assert.doesNotThrow(() => f.Service.PasteCommand.Execute(undefined));
     });
 
-    test('a non-diagram active document keeps all commands disabled', () =>
+    test('a non-board active document keeps all commands disabled', () =>
     {
         const f = new Fixture();
         const doc: IDocument = { Id: 'x', Title: 'x', IsDirty: false, Save: () => undefined };
@@ -76,18 +76,18 @@ describe('EditCommandsService', () =>
         assert.deepEqual(f.CanExecuteStates(), [false, false, false, false, false]);
     });
 
-    test('an active DiagramDocument enables Paste (Undo stays off with empty history)', () =>
+    test('an active BoardDocument enables Paste (Undo stays off with empty history)', () =>
     {
         const f = new Fixture();
-        f.Host.Open(new DiagramDocument());
+        f.Host.Open(new BoardDocument());
         assert.equal(f.Service.PasteCommand.CanExecute(undefined), true);
         assert.equal(f.Service.UndoCommand.CanExecute(undefined), false);
     });
 
-    test('each command routes to the active diagram operation', () =>
+    test('each command routes to the active board operation', () =>
     {
         const f = new Fixture();
-        const doc = new SpyDiagramDocument();
+        const doc = new SpyBoardDocument();
         f.Host.Open(doc);
         assert.deepEqual(f.CanExecuteStates(), [true, true, true, true, true]);
 
@@ -110,7 +110,7 @@ describe('EditCommandsService', () =>
         const raised = commands.map(() => 0);
         commands.forEach((c, i) => c.AddCanExecuteChangedListener(() => { raised[i]++; }));
 
-        f.Host.Open(new SpyDiagramDocument());
+        f.Host.Open(new SpyBoardDocument());
 
         assert.ok(raised.every(n => n >= 1), `each command should re-raise, got ${raised.join(',')}`);
     });

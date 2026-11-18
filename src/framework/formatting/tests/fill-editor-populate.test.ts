@@ -1,6 +1,6 @@
 // Regression: the FillEditor's body controls must reflect the CURRENT fill —
 // both when a fill first arrives and when a different one replaces it (the
-// Format Shape pane re-seeding as the diagram selection changes). The solid
+// Format Shape pane re-seeding as the board selection changes). The solid
 // ColorPicker was wired one-way (imperative seed at body-apply time + a
 // picker→editor listener only), so a reselect left the swatch stale even
 // though FillEditor.SolidColor tracked the new colour correctly.

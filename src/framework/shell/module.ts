@@ -4,7 +4,7 @@
 // A ShellModule is a DECLARATION of the elements that make up the
 // capabilities a provider contributes to the shell. It is the unit by which a
 // shell app is composed: adding a module lights up its capabilities in the
-// shell's navigation. (An editor is then "shell + a set of modules": a diagram
+// shell's navigation. (An editor is then "shell + a set of modules": a board
 // module, a layers module, an outline module, …)
 //
 // A Capability is one such element. It carries:
@@ -32,7 +32,7 @@
 //
 // ─── DECISIONS (confirmed) ────────────────────────────────────────────────
 //   1. Icon = Geometry — vector, theme-tintable via a Shape, no font
-//      dependency (matches DiagramTool.Icon and the diagram toolbar).
+//      dependency (matches BoardTool.Icon and the board toolbar).
 //   2. Panel — confirmed LAZY (build from a template on first activation), but
 //      that needs the compiler to accept an inline template as a child value.
 //      For now Capability.Panel is an EAGER Visual (the content child), built
@@ -100,7 +100,7 @@ interface ServiceRegistration
 // One capability a module contributes: a destination in the shell's root
 // navigation rail (Icon + Name) that names — via ServiceKey — the service whose
 // content is shown while the capability is active. A MuralBase so it is DP-backed,
-// bindable, and declarable in markup (like DiagramTool / CommandBase).
+// bindable, and declarable in markup (like BoardTool / CommandBase).
 export class Capability extends MuralBase implements ICapability
 {
     public static readonly NameKey = MuralBase.RegisterProperty<string>(
@@ -153,7 +153,7 @@ export class Capability extends MuralBase implements ICapability
 // `ServiceKey` references one of those tokens — the module supplies the service
 // pool, the capability names its entry point within it:
 //
-//     module DiagramModule [ Name = "Diagram" ] {
+//     module BoardModule [ Name = "Board" ] {
 //         .services: { ShapesService  LayersService }
 //         Capability [ Name = "Shapes", ServiceKey = ShapesService ]
 //         Capability [ Name = "Layers", ServiceKey = LayersService ]

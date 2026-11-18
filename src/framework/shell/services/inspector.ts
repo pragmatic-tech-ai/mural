@@ -26,7 +26,7 @@ export interface IInspector
     IsExpanded: boolean;
 }
 
-// Base view-model for a hosted inspector. Concrete inspectors (DiagramInspector,
+// Base view-model for a hosted inspector. Concrete inspectors (BoardInspector,
 // …) extend this and add their own reactive state; they render through a
 // DataTemplate[DataType=<subclass>]. Extends MuralBase so Title / IsExpanded are
 // bindable DPs — the InspectorPanel chrome binds `$Title` and round-trips

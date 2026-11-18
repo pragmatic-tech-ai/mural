@@ -1,4 +1,4 @@
-﻿// SelectionBoundsAdorner — framework-level promotion of the diagram
+﻿// SelectionBoundsAdorner — framework-level promotion of the board
 // demo's selection-resize-adorner.mjs (§19.4 follow-up). Decouples the
 // resize chrome from any specific VM shape via the SelectionSource
 // interface; exposes Stroke / Fill / HandleSize as DPs so consumers
@@ -199,7 +199,7 @@ export class SelectionBoundsAdorner extends Adorner
     {
         // The selection bounds are in the adorned element's (content) space; map
         // them into this adorner's own local frame so the chrome tracks an
-        // ancestor camera transform (e.g. the diagram's PART_Camera
+        // ancestor camera transform (e.g. the board's PART_Camera
         // LayoutTransform scale). Identity when unscaled — the box + handles then
         // sit at the raw bounds exactly as before.
         const b    = this._mapBounds(this._source.Bounds);
