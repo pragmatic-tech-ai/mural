@@ -20,6 +20,9 @@ import { Selector } from './selector.js';
 import { StackPanel } from '../../basic/panels/stack-panel.js';
 import { TextBlock } from '../../basic/text-block.js';
 import { TextBox } from '../../basic/text-box.js';
+import { ContentPresenter } from '../../basic/templates/content-presenter.js';
+import { DataTemplateSelector, type TemplateSelection } from '../../basic/templates/data-template-selector.js';
+import type { DataTemplate } from '../../basic/templates/data-template.js';
 import type { ControlTemplate } from '../../basic/templates/control-template.js';
 
 // Resource-dictionary keys for the two ControlTemplates the ComboBox
@@ -285,16 +288,34 @@ export class ComboBoxItemList extends ItemsControl
     {
         // ComboBoxItem's default Style fills in Fill / Padding /
         // hover / selected chrome via triggers — see
-        // `Style [TargetType=ComboBoxItem]` in basic.resources.mu. The
-        // label TextBlock is the only content authoring; everything
-        // visual rides through the Style.
-        const row   = new ComboBoxItem();
-        const label = new TextBlock(displayString(item));
-        // Match the closed selection box's font so the dropdown row reads
-        // at the same size as what it'll show once picked (see
-        // ComboBox._applyValueFontTo / the value-font forwarding).
-        this.combo?._applyValueFontTo(label);
-        row.SetChild(label);
+        // `Style [TargetType=ComboBoxItem]` in basic.resources.mu.
+        const row = new ComboBoxItem();
+        // Honour the owning combo's item presentation. ItemTemplate /
+        // ItemTemplateSelector / DisplayMemberPath are forwarded onto this
+        // list by the ComboBox, so the standard ItemsControl resolution
+        // applies: a resolved DataTemplate wraps the item in a
+        // ContentPresenter (object items render their chosen field / shape);
+        // with none set, fall back to the plain display-string label so bare
+        // string items keep rendering as before.
+        const template = DataTemplateSelector.resolve(this.ItemTemplateSelector, item, this)
+            ?? this.ItemTemplate
+            ?? this.buildDisplayMemberTemplate();
+        if (template !== undefined)
+        {
+            const cp = new ContentPresenter();
+            cp.ContentTemplate = template;
+            cp.Content         = item;
+            row.SetChild(cp);
+        }
+        else
+        {
+            const label = new TextBlock(displayString(item));
+            // Match the closed selection box's font so the dropdown row reads
+            // at the same size as what it'll show once picked (see
+            // ComboBox._applyValueFontTo / the value-font forwarding).
+            this.combo?._applyValueFontTo(label);
+            row.SetChild(label);
+        }
         return row;
     }
 
@@ -512,6 +533,13 @@ export class ComboBox extends Selector
         // through us (and so item rows can read SelectedIndex for the
         // selected-highlight via itemBackgroundFor).
         this._popupList.combo = this;
+        // Forward the item-presentation DPs so the popup rows resolve the
+        // same ItemTemplate / DisplayMemberPath the combo was configured
+        // with. Markup usually sets these after construction too — see the
+        // OnPropertyChanged cases that keep the forward live.
+        this._popupList.ItemTemplate         = this.ItemTemplate;
+        this._popupList.ItemTemplateSelector = this.ItemTemplateSelector;
+        this._popupList.DisplayMemberPath    = this.DisplayMemberPath;
         this._scrim.onClick = (): void =>
         {
             this.IsDropDownOpen = false;
@@ -666,6 +694,19 @@ export class ComboBox extends Selector
                 // back and DESTROYS the VM value before the binding reads it.
                 this.refreshSelectionText();
                 break;
+            case 'ItemTemplate':
+                // Keep the popup rows' presentation in sync with the combo's.
+                this._popupList.ItemTemplate = newValue as DataTemplate | undefined;
+                break;
+            case 'ItemTemplateSelector':
+                this._popupList.ItemTemplateSelector = newValue as TemplateSelection | undefined;
+                break;
+            case 'DisplayMemberPath':
+                // Rows re-resolve via the forwarded path; the closed selection
+                // box reads the same field, so refresh it too.
+                this._popupList.DisplayMemberPath = newValue as string | undefined;
+                this.refreshSelectionText();
+                break;
             case 'IsDropDownOpen':
                 this.applyDropDownVisibility(newValue as boolean);
                 break;
@@ -708,7 +749,7 @@ export class ComboBox extends Selector
         let found = -1;
         for (let i = 0; i < items.length; i++)
         {
-            if (displayString(items[i]) === text) { found = i; break; }
+            if (this.displayStringForItem(items[i]) === text) { found = i; break; }
         }
         if (this.SelectedIndex !== found) this.SelectedIndex = found;
     }
@@ -748,7 +789,7 @@ export class ComboBox extends Selector
     {
         if (!this.IsEditable) return;
         const item = this.SelectedItem;
-        if (item !== undefined && item !== null) this.Text = displayString(item);
+        if (item !== undefined && item !== null) this.Text = this.displayStringForItem(item);
     }
 
     // Enter in the editable field commits the value and closes the
@@ -784,6 +825,22 @@ export class ComboBox extends Selector
         }
     }
 
+    // The display string for a selected / typed item. Honours
+    // DisplayMemberPath (the field the rows render) so the closed selection
+    // box and the editable field agree with the dropdown; falls back to the
+    // Label/Name/Text heuristic for bare items. A full ItemTemplate with no
+    // DisplayMemberPath still resolves the rows graphically but can't be
+    // rendered as a string here, so this falls back to displayString.
+    private displayStringForItem(item: unknown): string
+    {
+        const path = this.DisplayMemberPath;
+        if (path !== undefined && path !== '' && item !== null && item !== undefined && typeof item === 'object')
+        {
+            return String((item as Record<string, unknown>)[path] ?? '');
+        }
+        return displayString(item);
+    }
+
     private refreshSelectionText(): void
     {
         // Guard for the super-construction window — see the matching
@@ -792,7 +849,7 @@ export class ComboBox extends Selector
         if (this._selectionText === undefined) return;
         const item = this.SelectedItem;
         const hasSelection = item !== undefined && item !== null;
-        this._selectionText.Text = hasSelection ? displayString(item) : this.Placeholder;
+        this._selectionText.Text = hasSelection ? this.displayStringForItem(item) : this.Placeholder;
         // PART_SelectionText.Foreground is owned by the template's
         // `when(HasSelection)` trigger via DynamicResource — flipping
         // HasSelection here is enough to re-tint live (and tracks

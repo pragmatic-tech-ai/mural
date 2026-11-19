@@ -442,6 +442,16 @@ export class ItemsControl extends Control
             // Cleared still tears down (it's the destructive case).
             this._itemsSubscription = value.Subscribe(change => this.handleItemsChange(change));
         }
+        else if (_collectionViewCtor !== undefined && value instanceof _collectionViewCtor)
+        {
+            // A ComboBox forwards its own projected CollectionView into the
+            // popup list's Items (rather than the raw source). The view is
+            // observable, so track its mutations the same way an
+            // ObservableCollection would — otherwise a source populated after
+            // the forward (async discovery) never reaches the realised rows.
+            this._itemsSubscription = (value as unknown as CollectionView).Subscribe(
+                change => this.handleItemsChange(change));
+        }
 
         this.rebuildContainers();
     }
