@@ -1,4 +1,4 @@
-// ribbon.mu — a tabbed Ribbon driven by the framework Diagram's command
+// ribbon.mu — a tabbed Ribbon driven by the framework Board's command
 // palette, showcasing every invoker footprint:
 //
 //   * Large  — the group anchor: a 32px icon over a wrapping label.
@@ -7,9 +7,9 @@
 //   * RibbonSplitButton   — a primary action + a ▾ dropdown of variants.
 //   * RibbonDropDownButton — the whole button opens a dropdown (no primary).
 //
-// Every button binds to the Diagram control's OWN RelayCommand DPs by
+// Every button binds to the Board control's OWN RelayCommand DPs by
 // ElementName (`$canvas.…`), so the ribbon drives the same command surface the
-// Diagrammer demo's toolbars do — no view-model command proxy. The commands
+// Boardmer demo's toolbars do — no view-model command proxy. The commands
 // are selection-gated, so most open disabled and light up once you select
 // shapes on the canvas below.
 
@@ -99,7 +99,7 @@ resources RibbonDemo {
 
                     // Font: a Medium Grow/Shrink column, then the four
                     // decoration toggles as Small (icon-only) toggle buttons
-                    // bound to the diagram's live Selection* reflection DPs.
+                    // bound to the board's live Selection* reflection DPs.
                     RibbonGroup [ Header = "Font" ] {
                         RibbonSmallButtonColumn {
                             RibbonButton [ Text = "Grow",   SmallIcon = Shape [ Geometry = @text_increase, Width = 16, Height = 16 ], Command = $canvas.IncreaseFontSizeCommand ]
@@ -139,10 +139,10 @@ resources RibbonDemo {
                 TextBlock [ Text = $Status, Foreground = @OnSurfaceVariant, Style = @LabelMedium ]
             }
 
-            // ── Canvas — a live Diagram; the ribbon commands act on its
+            // ── Canvas — a live Board; the ribbon commands act on its
             //    selection. Mutator auto-wires from the DataContext
-            //    (RibbonDemoDoc is a DiagramMutator). ──
-            Diagram x:name="canvas"
+            //    (RibbonDemoDoc is a BoardMutator). ──
+            Board x:name="canvas"
                 [ ItemsSource             = $Nodes,
                   ItemsPanel              = @RibbonCanvasPanel,
                   SelectionMode           = Extended,

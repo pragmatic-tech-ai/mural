@@ -352,7 +352,7 @@ resources Shells {
     // Presenting $View (a Visual) — NOT `Content=$Target, ContentTemplate=$Template`
     // — is deliberate: the latter makes the presenter re-point its DataContext to
     // the document, clobbering the $Template binding and dropping to the document's
-    // IMPLICIT DataTemplate (e.g. a DiagramDocument's canvas, whose shared node
+    // IMPLICIT DataTemplate (e.g. a BoardDocument's canvas, whose shared node
     // Visuals then collide → "Visual already has a visual parent"). See
     // ShellControlViewModel.
     DataTemplate [DataType = ShellControlViewModel] {
@@ -386,7 +386,7 @@ resources Shells {
     // under ContentHostService.Key). It renders as a TabControl: the header
     // strip lists the open documents, and the TabControl's content area shows
     // the active document's body through ITS DataTemplate (e.g. a
-    // DataTemplate[DiagramDocument] painting a canvas). SelectedItem TwoWay-
+    // DataTemplate[BoardDocument] painting a canvas). SelectedItem TwoWay-
     // binds to ActiveDocument so clicking a tab activates it and an
     // Open()/Close() re-selects. ItemTemplate is the TAB HEADER (WPF
     // semantics) — title + close.

@@ -18,16 +18,16 @@ import { HeadlessTarget } from '../../visual-engine/index.js';
 import { ContextMenu } from '../menu/context-menu.js';
 import { MenuItem } from '../menu/menu-strip.js';
 import { PanelDockService } from '../shell/services/panel-dock-service.js';
-import { DiagramInspector } from '../diagram/diagram-inspector.js';
+import { BoardInspector } from '../board/board-inspector.js';
 
-// A stand-in for DiagramDocument: carries an `Inspector` DP the menu's
-// CommandParameter binds ($Inspector), like DiagramDocument.Inspector.
+// A stand-in for BoardDocument: carries an `Inspector` DP the menu's
+// CommandParameter binds ($Inspector), like BoardDocument.Inspector.
 class FakeDoc extends MuralBase
 {
-    public static readonly InspectorKey = MuralBase.RegisterProperty<DiagramInspector>(
-        FakeDoc, 'Inspector', undefined as unknown as DiagramInspector, MetaData.None);
-    constructor() { super(); this.set_property_value(FakeDoc.InspectorKey, new DiagramInspector()); }
-    public get Inspector(): DiagramInspector { return this.get_property_value(FakeDoc.InspectorKey); }
+    public static readonly InspectorKey = MuralBase.RegisterProperty<BoardInspector>(
+        FakeDoc, 'Inspector', undefined as unknown as BoardInspector, MetaData.None);
+    constructor() { super(); this.set_property_value(FakeDoc.InspectorKey, new BoardInspector()); }
+    public get Inspector(): BoardInspector { return this.get_property_value(FakeDoc.InspectorKey); }
 }
 
 class Root extends Panel {}
@@ -43,8 +43,8 @@ function rightClick(): PointerEventInit
 }
 const settle = (): Promise<void> => new Promise((r) => setTimeout(r, 0));
 
-// Reproduces the Plexus wiring: a host (the Diagram) with an inherited
-// ServiceScope + a DiagramDocument DataContext, an attached ContextMenu whose
+// Reproduces the Plexus wiring: a host (the Board) with an inherited
+// ServiceScope + a BoardDocument DataContext, an attached ContextMenu whose
 // "Format Shape" item binds Command=$service(PanelDockService).AddPanelCommand
 // and CommandParameter=$Inspector. Verifies both bindings resolve THROUGH the
 // overlay-mounted menu to the shell-scoped service + the document's inspector.
@@ -63,7 +63,7 @@ describe('Inspector — Format Shape context menu resolves through the overlay',
         const root = new Root();
         target.Content = root;
 
-        // Host publishes the scope + the document, like the shell + Diagram.
+        // Host publishes the scope + the document, like the shell + Board.
         root.ServiceScope = scope;
         const doc = new FakeDoc();
         root.DataContext = doc;
@@ -95,7 +95,7 @@ describe('Inspector — Format Shape context menu resolves through the overlay',
         assert.equal(svc.Panels.Get(0), doc.Inspector, 'the exact document inspector');
     });
 
-    // The REAL shell condition: the host (Diagram) does NOT own a local
+    // The REAL shell condition: the host (Board) does NOT own a local
     // ServiceScope — it INHERITS one from an ancestor (the shell). DataContext,
     // by contrast, is a local value on the host (set by its DataTemplate). This
     // reproduces the reported failure if overlay children only pick up the host's
@@ -115,7 +115,7 @@ describe('Inspector — Format Shape context menu resolves through the overlay',
         const host = new Root();
         outer.AddChild(host);
         const doc = new FakeDoc();
-        host.DataContext = doc;   // DataContext local on the host, like the Diagram
+        host.DataContext = doc;   // DataContext local on the host, like the Board
 
         const cm = new ContextMenu();
         const mi = new MenuItem();

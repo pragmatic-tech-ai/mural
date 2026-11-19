@@ -9,7 +9,7 @@ import { Application, ServiceKey } from '../../runtime/index.js';
 
 // Compiles a `.services:` block on an Application and returns the emitted
 // JS. NavigationService / PanelDockService / StatusService resolve via
-// DEFAULT_SYMBOLS; DiagramStorageKey is a real ServiceKey token.
+// DEFAULT_SYMBOLS; BoardStorageKey is a real ServiceKey token.
 function svc(body: string): string
 {
     return compile(`
@@ -61,7 +61,7 @@ describe('compile — .services: DI block', () => {
 
     test('removed ctor-dependency syntax `Impl(Dep)` is a pointed parse error', () => {
         assert.throws(
-            () => svc('PanelDockService(DiagramStorageKey)'),
+            () => svc('PanelDockService(BoardStorageKey)'),
             /constructor-dependency syntax 'Impl\(\.\.\.\)' was removed/);
     });
 

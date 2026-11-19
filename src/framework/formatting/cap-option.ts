@@ -13,7 +13,7 @@ import { type DataTemplate } from '../../basic/templates/data-template.js';
 // just renders `Label` + a `Glyph` preview and round-trips the chosen
 // `Template` through ShapeFormatControl's Source/TargetCapTemplate DPs.
 //
-// The consumer (e.g. the diagram layer's connectorCapOptions() helper)
+// The consumer (e.g. the board layer's connectorCapOptions() helper)
 // builds the list: a `Template` to apply (undefined = "None"), a `Glyph`
 // path-data silhouette for the dropdown preview, and the glyph paint —
 // `GlyphFill` for filled caps, `GlyphStroke` for open (stroked) caps.

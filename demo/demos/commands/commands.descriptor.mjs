@@ -1,28 +1,28 @@
-// commands demo bootstrap — wires the framework Diagram's selection
+// commands demo bootstrap — wires the framework Board's selection
 // state through to the VM (CommandsVM.HasSelection drives the gated
 // commands' CanExecute) and seeds the canvas with a few starter
 // Figures.
 //
 // Items are framework Figures themselves now; `ReflectSelectionToItems`
-// on the Diagram does the IsSelected mirroring the old bridge used to do
+// on the Board does the IsSelected mirroring the old bridge used to do
 // in JS. This bootstrap just publishes the aggregate HasSelection state
 // to the VM.
 import { Application } from '@pragmatic-tech-ai/mural/runtime';
-import { Diagram, DiagramStorageKey } from '@pragmatic-tech-ai/mural/framework';
+import { Board, BoardStorageKey } from '@pragmatic-tech-ai/mural/framework';
 import { CommandsVM } from './commands-vm.mjs';
 
 let vmInstance;
 
 function attachBehaviors(view, vm) {
     const nodes = view.FindName('nodes');
-    if (!(nodes instanceof Diagram)) throw new Error('commands.mu missing x:name="nodes" Diagram');
+    if (!(nodes instanceof Board)) throw new Error('commands.mu missing x:name="nodes" Board');
 
-    // Same framework-command proxy wire-up as the diagram demo. The
+    // Same framework-command proxy wire-up as the board demo. The
     // commands demo's markup binds to $AlignLeftCommand etc. on the VM;
-    // each proxy DP is populated from the framework Diagram's own
+    // each proxy DP is populated from the framework Board's own
     // RelayCommand instance here.
     {
-        const Diagram_ = Diagram;
+        const Board_ = Board;
         const VM       = vm.constructor;
         const COMMANDS = [
             'AlignLeftCommandKey', 'AlignRightCommandKey', 'AlignTopCommandKey',
@@ -33,12 +33,12 @@ function attachBehaviors(view, vm) {
             'CombineSubtractCommandKey', 'CombineExcludeCommandKey',
         ];
         for (const key of COMMANDS) {
-            vm.set_property_value(VM[key], nodes.get_property_value(Diagram_[key]));
+            vm.set_property_value(VM[key], nodes.get_property_value(Board_[key]));
         }
     }
 
     // SelectionChanged → publish HasSelection. ReflectSelectionToItems
-    // on the Diagram (set in markup) already mirrors selection onto
+    // on the Board (set in markup) already mirrors selection onto
     // each Figure.IsSelected — the Style triggers fire off that.
     const onSelectionChanged = () => {
         vm.PublishSelectionState(nodes.SelectedItems.length > 0);
@@ -72,9 +72,9 @@ function attachBehaviors(view, vm) {
 export default {
     id:       'commands',
     title:    'Commands',
-    subtitle: 'ToolBar + Menu + ContextMenu over a Diagram. One ICommand instance drives every surface.',
+    subtitle: 'ToolBar + Menu + ContextMenu over a Board. One ICommand instance drives every surface.',
     factory: () => {
-        if (vmInstance === undefined) vmInstance = new CommandsVM(Application.current?.Services.get(DiagramStorageKey));
+        if (vmInstance === undefined) vmInstance = new CommandsVM(Application.current?.Services.get(BoardStorageKey));
         vmInstance.OnViewMounted = (view) => attachBehaviors(view, vmInstance);
         return vmInstance;
     },

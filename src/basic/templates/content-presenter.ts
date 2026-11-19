@@ -53,8 +53,8 @@ export class ContentPresenter extends Element
     // per-row views. A host that re-presents a SMALL, FIXED set of objects and
     // needs the SAME view back each time turns it on — notably a TabControl's
     // content slot: re-selecting a tab must return that document's existing view,
-    // never a second one over the document's shared Visuals (a Diagram whose items
-    // ARE the document's Figures — a rebuilt Diagram would try to re-parent
+    // never a second one over the document's shared Visuals (a Board whose items
+    // ARE the document's Figures — a rebuilt Board would try to re-parent
     // already-parented Figures and trip the single-parent guard, the classic
     // tab-switch "Visual already has a visual parent" crash).
     public static readonly ReuseContentViewsKey = MuralBase.RegisterProperty<boolean>(
@@ -65,7 +65,7 @@ export class ContentPresenter extends Element
     // default so a plain presenter / ItemsControl item container never steals
     // focus. A document host's content slot turns it on so activating a document
     // (its view becomes the slotted content) lands focus on its root control (e.g.
-    // a diagram canvas), and the pane reads as focused (IsKeyboardFocusWithin).
+    // a board canvas), and the pane reads as focused (IsKeyboardFocusWithin).
     // Fires on every slot change, including a ReuseContentViews re-activation.
     public static readonly FocusContentOnActivateKey = MuralBase.RegisterProperty<boolean>(
         ContentPresenter, 'FocusContentOnActivate', false, MetaData.None);

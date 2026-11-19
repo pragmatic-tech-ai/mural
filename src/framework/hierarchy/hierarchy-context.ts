@@ -3,7 +3,7 @@ import { ServiceKey, type ServiceToken } from '../../runtime/index.js';
 // Interns a node-type key string to a stable ServiceToken used as a command
 // CONTEXT tag (identity, never resolved as a service). Equal key strings return
 // the same instance so `def.Context === HierarchyContext.For(item.Key)` matches
-// by reference — the same identity contract DiagramEditingContext relies on,
+// by reference — the same identity contract BoardEditingContext relies on,
 // keyed off the hierarchy node kind. Shared across modules: any module referring
 // to "project" gets the one token, so a contributor can tag actions for a type
 // it does not itself produce.

@@ -9,7 +9,7 @@
 // `edges` set, then compute the snapped rectangle by applying the
 // closest matching delta independently per axis.
 //
-// Pure functions — no Visual / DP / MuralBase dependencies. The diagram
+// Pure functions — no Visual / DP / MuralBase dependencies. The board
 // behavior (`attachAlignEdges`) is the consumer.
 
 // Which edge of a rectangle a guide line passes through:
@@ -34,11 +34,11 @@ export interface AlignmentGuide
     // Which axis the guide line is perpendicular to. An 'x' guide is a
     // VERTICAL line at the named position; a 'y' guide is a horizontal
     // line. Consumers visualise it as a line extending across the
-    // diagram surface at the guide's `position` coordinate.
+    // board surface at the guide's `position` coordinate.
     axis: AlignmentAxis;
 
     // The coordinate value where the guide line should be drawn. In
-    // the diagram's content-coordinate space (canvas coords).
+    // the board's content-coordinate space (canvas coords).
     position: number;
 
     // Which edges of the moving and other rectangles aligned. Useful

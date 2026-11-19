@@ -48,10 +48,10 @@ export enum ShellControlAlignment
 // Declared in a module's `.ShellControls:` block (a generic member-block, so
 // each entry lowers to `module.ShellControls.Add(def)`):
 //
-//     module DiagramModule [ Name = "Diagram" ] {
+//     module BoardModule [ Name = "Board" ] {
 //         .ShellControls: {
 //             ShellControlDefinition
-//                 [ Template = @FontFormatEditor, Context = DiagramEditingContext, Order = 330 ]
+//                 [ Template = @FontFormatEditor, Context = BoardEditingContext, Order = 330 ]
 //         }
 //     }
 //

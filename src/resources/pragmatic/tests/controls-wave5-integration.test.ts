@@ -15,10 +15,10 @@ import { BrushPicker } from '../../../framework/formatting/brush-picker.js';
 import { FillEditor } from '../../../framework/formatting/fill-editor.js';
 import { PenEditor } from '../../../framework/formatting/pen-editor.js';
 import { ShapeFormatControl } from '../../../framework/formatting/shape-format-control.js';
-import { Diagram } from '../../../framework/diagram/diagram.js';
-import { Group } from '../../../framework/diagram/group.js';
-import { ContainerFigure } from '../../../framework/diagram/container-figure.js';
-import { SizePositionControl } from '../../../framework/diagram/size-position-control.js';
+import { Board } from '../../../framework/board/board.js';
+import { Group } from '../../../framework/board/group.js';
+import { ContainerFigure } from '../../../framework/board/container-figure.js';
+import { SizePositionControl } from '../../../framework/board/size-position-control.js';
 import { PropertyGrid } from '../../../framework/property-grid/property-grid.js';
 import { Gallery } from '../../../framework/gallery/gallery.js';
 import { PragmaticLight, PragmaticDark } from '../pragmatic.js';
@@ -51,7 +51,7 @@ class Wave5Controls
         { Name: 'FillEditor', Make: () => new FillEditor() },
         { Name: 'PenEditor', Make: () => new PenEditor() },
         { Name: 'ShapeFormatControl', Make: () => new ShapeFormatControl() },
-        { Name: 'Diagram', Make: () => new Diagram() },
+        { Name: 'Board', Make: () => new Board() },
         { Name: 'Group', Make: () => new Group() },
         { Name: 'ContainerFigure', Make: () => new ContainerFigure() },
         { Name: 'SizePositionControl', Make: () => new SizePositionControl() },

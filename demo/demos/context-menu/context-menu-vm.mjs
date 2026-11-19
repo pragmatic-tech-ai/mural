@@ -38,7 +38,7 @@ export class RecentCommandContributor {
     static Item2Id = 'context-menu.blue.recent.2';
     static Item3Id = 'context-menu.blue.recent.3';
     static ItemIds = [RecentCommandContributor.Item1Id, RecentCommandContributor.Item2Id, RecentCommandContributor.Item3Id];
-    static FileNames = ['diagram-draft.mu', 'architecture-v2.mu', 'notes.mu'];
+    static FileNames = ['board-draft.mu', 'architecture-v2.mu', 'notes.mu'];
     openCount = 0;
     Contribute(_parent, _context) {
         this.openCount++;

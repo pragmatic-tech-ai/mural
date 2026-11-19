@@ -10,7 +10,7 @@ import { PatternsModule } from "./groups/patterns.module.mu.js";
 import { ShapeLibraryModule } from "./groups/shape-library.module.mu.js";
 import { StylesModule } from "./groups/styles.module.mu.js";
 import { DataTemplate, TextBlock } from "@pragmatic-tech-ai/mural/basic";
-import { DiagramStorageKey } from "@pragmatic-tech-ai/mural/framework/diagram/diagram-document.js";
+import { BoardStorageKey } from "@pragmatic-tech-ai/mural/framework/board/board-document.js";
 import { ListBox } from "@pragmatic-tech-ai/mural/framework/list/list-box.js";
 import { EditorShell } from "@pragmatic-tech-ai/mural/framework/shell/editor-shell.js";
 import { ContentHostService } from "@pragmatic-tech-ai/mural/framework/shell/services/content-host-service.js";
@@ -20,7 +20,7 @@ import { Application, DataContextBinding, NameScope, ServiceProvider, Thickness 
 export const app = (() => {
     const _app0 = new Application();
     _app0.initialize({ theme: Pragmatic, scheme: PragmaticLight });
-    _app0.Services.register(ServiceProvider.tokenFor(DiagramStorageKey), (p) => new DemoStorageStore(p), 'singleton');
+    _app0.Services.register(ServiceProvider.tokenFor(BoardStorageKey), (p) => new DemoStorageStore(p), 'singleton');
     _app0.Services.register(ServiceProvider.tokenFor(ContentHostService), (p) => new ContentHostService(p), 'singleton');
     _app0.AddModule(AnimationsModule);
     _app0.AddModule(ControlsModule);

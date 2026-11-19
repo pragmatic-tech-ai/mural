@@ -4965,7 +4965,7 @@ export class Compiler
             // `$binding` values install directly onto it (DynamicResource(_e,…),
             // DataContextBinding(_e,…)) rather than emitting an un-applied
             // SetterFactory that nothing ever resolves. Without this, an
-            // element-value attr like `DiagramTool [ Icon = @alignLeft ]`
+            // element-value attr like `BoardTool [ Icon = @alignLeft ]`
             // assigned the raw SetterFactory to _e.Icon — the consumer then
             // read a factory object where a Geometry was expected. `_e` being
             // a plain MuralBase (not a Visual) is fine: DynamicResource falls back

@@ -4,16 +4,16 @@ import {
 } from '../../../runtime/index.js'
 import { ContentHostService } from '../services/content-host-service.js'
 import type { DocumentsContentHostService } from '../services/documents-content-host-service.js'
-import { DiagramDocument } from '../../diagram/diagram-document.js'
-import type { Diagram } from '../../diagram/diagram.js'
+import { BoardDocument } from '../../board/board-document.js'
+import type { Board } from '../../board/board.js'
 
-// Diagram-scoped bridge from the main menu's Edit commands (Undo/Redo/Cut/Copy/
-// Paste) to the active document. Only a DiagramDocument supports these ops
+// Board-scoped bridge from the main menu's Edit commands (Undo/Redo/Cut/Copy/
+// Paste) to the active document. Only a BoardDocument supports these ops
 // today; any other active document (or none) disables all five and Execute is
-// a no-op — it never throws. Undo/Redo route through the diagram's own
+// a no-op — it never throws. Undo/Redo route through the board's own
 // History; Cut/Copy defer to the active view's own CopyCommand/CutCommand
 // (which already gate on selection); Paste is unconditionally enabled once a
-// diagram is active — the view's own PasteCommand has no selection gate
+// board is active — the view's own PasteCommand has no selection gate
 // either, so this stays true even before a view is attached. Delete and
 // Select-All are out of scope.
 export class EditCommandsService extends ServiceBase
@@ -35,12 +35,12 @@ export class EditCommandsService extends ServiceBase
         super(provider)
 
         this._undoCommand = new RelayCommand(
-            () => this.ActiveDiagram()?.Undo(),
-            () => this.ActiveDiagram()?.History.CanUndo ?? false,
+            () => this.ActiveBoard()?.Undo(),
+            () => this.ActiveBoard()?.History.CanUndo ?? false,
         )
         this._redoCommand = new RelayCommand(
-            () => this.ActiveDiagram()?.Redo(),
-            () => this.ActiveDiagram()?.History.CanRedo ?? false,
+            () => this.ActiveBoard()?.Redo(),
+            () => this.ActiveBoard()?.History.CanRedo ?? false,
         )
         this._cutCommand = new RelayCommand(
             () => this.ActiveView()?.CutCommand?.Execute(),
@@ -52,7 +52,7 @@ export class EditCommandsService extends ServiceBase
         )
         this._pasteCommand = new RelayCommand(
             () => this.ActiveView()?.PasteCommand?.Execute(),
-            () => this.ActiveDiagram() !== undefined,
+            () => this.ActiveBoard() !== undefined,
         )
         this._commands = [this._undoCommand, this._redoCommand, this._cutCommand, this._copyCommand, this._pasteCommand]
 
@@ -74,16 +74,16 @@ export class EditCommandsService extends ServiceBase
         super.dispose()
     }
 
-    private ActiveDiagram(): DiagramDocument | undefined
+    private ActiveBoard(): BoardDocument | undefined
     {
         const host = this.Provider.get(ContentHostService.Key) as DocumentsContentHostService | undefined
         const doc = host?.ActiveDocument
-        return doc instanceof DiagramDocument ? doc : undefined
+        return doc instanceof BoardDocument ? doc : undefined
     }
 
-    private ActiveView(): Diagram | undefined
+    private ActiveView(): Board | undefined
     {
-        return this.ActiveDiagram()?.ActiveView
+        return this.ActiveBoard()?.ActiveView
     }
 
     private RaiseAllCanExecuteChanged(): void

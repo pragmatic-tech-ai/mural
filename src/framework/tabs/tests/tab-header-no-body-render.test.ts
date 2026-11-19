@@ -13,7 +13,7 @@ import { DocumentsContentHostService } from '../../shell/services/documents-cont
 import { TabControl, TabItem } from '../tabs.js';
 
 // A document whose IMPLICIT DataTemplate renders a control hosting SHARED Visual
-// children — exactly the shape that bites the real Diagram (its ItemsSource is
+// children — exactly the shape that bites the real Board (its ItemsSource is
 // the document's node Visuals). If the document gets dispatched through its
 // implicit template MORE THAN ONCE (e.g. the tab header wrongly renders the whole
 // document as well as the content slot), the second attach of a shared Visual
@@ -48,7 +48,7 @@ describe('TabControl data path — tab header must NOT render the document body'
         Application.current.Services.register(
             ContentHostService.Key, (p) => new DocumentsContentHostService(p), 'singleton');
         // The document's implicit body template — an ItemsControl over the shared
-        // node Visuals (stands in for DataTemplate[DiagramDocument] → Diagram).
+        // node Visuals (stands in for DataTemplate[BoardDocument] → Board).
         Application.current.Resources.Set(SharedVisualDoc, new DataTemplate((d) => {
             const doc = d as SharedVisualDoc;
             const ic = new ItemsControl();

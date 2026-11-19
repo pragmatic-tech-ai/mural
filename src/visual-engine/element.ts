@@ -2085,7 +2085,7 @@ export class Panel extends Element
         // would add a ZIndex EVD + subscription to every child of every panel
         // app-wide. Notifying the parent here costs nothing for children that
         // never touch Z. A runtime Binding / raw set_property_value to ZIndex will
-        // NOT auto-reorder — the diagram commands and markup both use SetZIndex /
+        // NOT auto-reorder — the board commands and markup both use SetZIndex /
         // construction-time set, the supported paths.
         const parent = v.GetVisualParent();
         if (parent instanceof Panel) parent._invalidateZOrder();
@@ -2187,10 +2187,10 @@ export class Panel extends Element
     {
         this.AttachVisual(child);
         // Clamp to a valid slot. An ItemsControl syncs children at ITEM indices,
-        // but a host that reparents some containers OUT of this panel — a diagram's
+        // but a host that reparents some containers OUT of this panel — a board's
         // ContentContainerFigure adopts its nested nodes' figures — leaves fewer
         // visual children than items, so an item's index can exceed the child
-        // count (e.g. restoring/rebuilding a nested diagram). The exact slot of
+        // count (e.g. restoring/rebuilding a nested board). The exact slot of
         // such an out-of-order insert is irrelevant: the reparenting host re-places
         // the figure. Append rather than throw.
         const at = Math.max(0, Math.min(index, this._children.Count));

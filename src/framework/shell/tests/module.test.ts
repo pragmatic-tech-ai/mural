@@ -23,13 +23,13 @@ describe('ShellModule / Capability', () => {
         // Mirrors the compiler's `list` content slot: `ShellModule { Capability … }`
         // emits `_module.AddChild(_capability)`.
         const mod = new ShellModule();
-        mod.Name = 'Diagram';
+        mod.Name = 'Board';
         const a = new Capability(); a.Name = 'Shapes';
         const b = new Capability(); b.Name = 'Layers';
         mod.AddChild(a);
         mod.AddChild(b);
 
-        assert.equal(mod.Name, 'Diagram');
+        assert.equal(mod.Name, 'Board');
         assert.equal(mod.Capabilities.Count, 2);
         assert.equal(mod.Capabilities.Get(0), a);
         assert.equal(mod.Capabilities.Get(1), b);

@@ -12,7 +12,7 @@ class TestPanel extends Panel { }
 
 describe('Panel.InsertVisualChild — clamps an out-of-range index', () => {
     test('an index past the child count appends instead of throwing', () => {
-        // A host that reparents some containers OUT of the panel (a diagram
+        // A host that reparents some containers OUT of the panel (a board
         // container adopting nested figures) leaves fewer visual children than the
         // items it syncs at item indices — so an insert index can exceed the count.
         const panel = new TestPanel();

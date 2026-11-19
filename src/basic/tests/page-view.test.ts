@@ -132,7 +132,7 @@ describe('PageView — Content swap', () => {
     });
 });
 
-// A demo VM that OWNS a persistent Visual (mirrors DiagramDocument
+// A demo VM that OWNS a persistent Visual (mirrors BoardDocument
 // holding the shared toolbox preview Visual Figures / fused canvas Figures). The
 // matching DataTemplate slots that very Visual as Content — so naively
 // re-applying the template on nav-back would re-attach an

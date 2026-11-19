@@ -17,15 +17,15 @@ const EMPTY_CONTEXTS: readonly ServiceToken<unknown>[] = Object.freeze([]);
 // A MuralBase so it is DP-backed, bindable, and declarable in markup — the same
 // shape as SettingDefinition:
 //
-//     module DiagramModule [ Name = "Diagram" ] {
+//     module BoardModule [ Name = "Board" ] {
 //         .documents: {
 //             DocumentDefinition
-//                 [ Type            = "diagram",
-//                   Title           = "Diagram",
-//                   Description     = "A node-and-connector diagram.",
-//                   FileExtensions  = [".diagram", ".dgm"],
-//                   Factory         = DiagramDocumentFactory,
-//                   CommandContexts = [DiagramEditingContext, DiagramShapeContext] ]
+//                 [ Type            = "board",
+//                   Title           = "Board",
+//                   Description     = "A node-and-connector board.",
+//                   FileExtensions  = [".board", ".dgm"],
+//                   Factory         = BoardDocumentFactory,
+//                   CommandContexts = [BoardEditingContext, BoardShapeContext] ]
 //         }
 //     }
 //
@@ -37,7 +37,7 @@ const EMPTY_CONTEXTS: readonly ServiceToken<unknown>[] = Object.freeze([]);
 // composed module.
 export class DocumentDefinition extends MuralBase
 {
-    // Stable id for the document type ("diagram", "settings"). The registry key,
+    // Stable id for the document type ("board", "settings"). The registry key,
     // and the correlation point a future commands service uses to map an active
     // document → its type → CommandContexts. Namespace by module.
     public static readonly TypeKey = MuralBase.RegisterProperty<string>(
@@ -52,8 +52,8 @@ export class DocumentDefinition extends MuralBase
         DocumentDefinition, 'Description', '', MetaData.None);
 
     // File extensions this type opens (leading dot, matched case-insensitively:
-    // ".diagram"). A file-open flow matches an extension here to pick the type
-    // and its Factory. Authored as a markup list — `[".diagram", ".dgm"]`.
+    // ".board"). A file-open flow matches an extension here to pick the type
+    // and its Factory. Authored as a markup list — `[".board", ".dgm"]`.
     public static readonly FileExtensionsKey = MuralBase.RegisterProperty<readonly string[]>(
         DocumentDefinition, 'FileExtensions', EMPTY_EXTENSIONS, MetaData.None);
 
@@ -67,7 +67,7 @@ export class DocumentDefinition extends MuralBase
     // document. A future commands service shows toolbar commands tagged with any
     // active context and hides the rest — the tokens are opaque identity tags
     // (ServiceKeys used as keys), NOT services to resolve. Authored as a markup
-    // list of real references — `[DiagramEditingContext, DiagramShapeContext]`.
+    // list of real references — `[BoardEditingContext, BoardShapeContext]`.
     public static readonly CommandContextsKey = MuralBase.RegisterProperty<readonly ServiceToken<unknown>[]>(
         DocumentDefinition, 'CommandContexts', EMPTY_CONTEXTS, MetaData.None);
 

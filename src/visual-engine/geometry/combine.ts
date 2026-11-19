@@ -5,7 +5,7 @@
 // reads the result back as a PathGeometry. Two consumer surfaces:
 //
 //   * `combine(a, b, mode)` — imperative helper. One call, returns a fresh
-//     PathGeometry. Suitable for behaviors / one-shot diagram operations.
+//     PathGeometry. Suitable for behaviors / one-shot board operations.
 //   * `CombinedGeometry` — MuralBase class. Carries Geometry1 / Geometry2 /
 //     GeometryCombineMode DPs and memoizes the flattened result; the
 //     memo invalidates when any input's Render-flagged DP changes. The

@@ -28,7 +28,7 @@ const EMPTY_CAP_OPTIONS: readonly CapOption[] = Object.freeze([]) as readonly Ca
 //   * Stroke — the shape's outline Pen. Forwarded to PART_PenEditor.
 //
 // Both DPs are BindsTwoWayByDefault so a TwoWay binding on a consumer-
-// side mirror DP (e.g., `DiagramVM.FormatFill`) round-trips edits made
+// side mirror DP (e.g., `BoardVM.FormatFill`) round-trips edits made
 // inside the inner editors back to the consumer without per-consumer
 // listener plumbing.
 //
@@ -53,13 +53,13 @@ export class ShapeFormatControl extends TemplatedControl
         MetaData.None | MetaData.BindsTwoWayByDefault);
 
     // Connector end-cap I/O. Two-way like Fill/Stroke so a consumer's
-    // mirror DP (e.g. Diagram.SelectionFormatSourceCap) round-trips a cap
+    // mirror DP (e.g. Board.SelectionFormatSourceCap) round-trips a cap
     // chosen in the dropdown back onto the selected connector(s). The
     // VALUE is the DataTemplate to apply at that end (undefined = "None").
     // The dropdown rows come from CapOptions; ShowCaps gates the whole
     // cap section so it only appears for a connector selection. The
     // formatting layer stays domain-agnostic — the consumer supplies the
-    // catalog via CapOptions (see the diagram layer's connectorCapOptions()).
+    // catalog via CapOptions (see the board layer's connectorCapOptions()).
     public static readonly SourceCapTemplateKey = MuralBase.RegisterProperty<DataTemplate | undefined>(
         ShapeFormatControl, 'SourceCapTemplate', undefined,
         MetaData.None | MetaData.BindsTwoWayByDefault);
@@ -327,10 +327,10 @@ export class ShapeFormatControl extends TemplatedControl
         // change — which is NOT a user pick. If the cap-template handler treats
         // it as one and writes it back through the TwoWay cap binding while that
         // binding's source is still an unresolved forward reference (the demo's
-        // `$nodes.SelectionFormatTargetCap`, where the Diagram is constructed
+        // `$nodes.SelectionFormatTargetCap`, where the Board is constructed
         // later in the markup), the writeback fails and effective-value.ts
         // DISPOSES the binding — permanently. A later genuine pick then writes
-        // only locally and never reaches the diagram, so the connector's caps
+        // only locally and never reaches the board, so the connector's caps
         // never update. Guarding population makes the handler bail on the
         // spurious change and keeps the binding alive for real selections.
         const wasSyncing = this._syncing;

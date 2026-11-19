@@ -105,7 +105,7 @@ export class EditorShell extends ShellBase
         // Provide the Status region's service by default: a StatusService whose
         // Items back the bottom StatusBar. The default template binds
         // `PART_StatusHost` to `$service(StatusService)` unconditionally, and the
-        // ToolbarService syncs StatusBar-region shell controls (e.g. a diagram's
+        // ToolbarService syncs StatusBar-region shell controls (e.g. a board's
         // connector-mode cell) into its Items — both silently no-op if it's
         // absent, leaving an empty strip. Same opt-out guard: an app registering
         // its own up-chain wins.
@@ -123,7 +123,7 @@ export class EditorShell extends ShellBase
         //
         // Registered at the APPLICATION ROOT as a singleton (not this shell's
         // scope): settings are app-global, and a scope-less consumer — the
-        // static DiagramSettings helper — resolves them via
+        // static BoardSettings helper — resolves them via
         // `Application.current.Services`. A singleton at the root is shared by
         // the whole subtree (the shell's region hosts resolve the same
         // instance the helper does); a scoped registration would hand the

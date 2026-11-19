@@ -1,0 +1,70 @@
+// UnwrapContainer dissolves a container: its children re-home to root (screen
+// position preserved), then the container node is removed. Symmetric with Ungroup.
+
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { Size, Visual } from '../../../runtime/index.js';
+import { Border, Canvas, ItemsPanelTemplate } from '../../../basic/index.js';
+import { initTestApp } from '../../../basic/tests/test-app.js';
+import { Board } from '../board.js';
+import { Figure } from '../figure.js';
+import { ContainerFigure } from '../container-figure.js';
+import { BoardDocument } from '../board-document.js';
+import { boardSpaceRect } from '../coordinate-space.js';
+
+function mountDoc(doc: BoardDocument): Board
+{
+    const board = new Board();
+    board.ItemsPanel = new ItemsPanelTemplate(() => new Canvas());
+    board.DataContext = doc;
+    board.ItemsSource = doc.Nodes;
+    doc.ActiveView = board;
+    const surface = new Border();
+    (surface as unknown as { Child: Visual }).Child = board;
+    (surface as Visual).Measure(new Size(800, 600));
+    (surface as Visual).Arrange({ X: 0, Y: 0, Width: 800, Height: 600 } as never);
+    return board;
+}
+
+test('UnwrapContainer dissolves the container; its child survives at root', () => {
+    initTestApp();
+    const doc = new BoardDocument();
+    const container = new ContainerFigure();
+    container.Id = 'C'; container.Left = 100; container.Top = 100; container.Width = 220; container.Height = 160;
+    const child = Figure.fromKind('rectangle', 22, 18, { width: 30, height: 20 });
+    child.Id = 'n1'; child.ParentId = 'C';
+    doc.Nodes.Add(container); doc.Nodes.Add(child);
+    const board = mountDoc(doc);
+    board.ContainerPlacement.placeAll();
+    const screen = boardSpaceRect(child);
+
+    doc.UnwrapContainer([container]);
+
+    assert.equal(doc.Nodes.IndexOf(container), -1, 'container removed');
+    assert.ok(doc.Nodes.IndexOf(child) >= 0, 'child survives');
+    assert.equal(child.ParentId, undefined);
+    assert.equal(child.ContainerParent, undefined);
+    assert.equal(child.Left, screen.X); assert.equal(child.Top, screen.Y);
+});
+
+test('UnwrapContainer is a no-op when no container is selected', () => {
+    initTestApp();
+    const doc = new BoardDocument();
+    const fig = doc.CreateNode('rectangle', 10, 10)!;
+    const before = doc.Nodes.Count;
+    doc.UnwrapContainer([fig]);
+    assert.equal(doc.Nodes.Count, before);
+});
+
+test('unwrapping an empty container just removes it', () => {
+    initTestApp();
+    const doc = new BoardDocument();
+    const container = new ContainerFigure();
+    container.Id = 'C'; container.Left = 0; container.Top = 0; container.Width = 200; container.Height = 150;
+    doc.Nodes.Add(container);
+    const board = mountDoc(doc);
+    board.ContainerPlacement.placeAll();
+
+    doc.UnwrapContainer([container]);
+    assert.equal(doc.Nodes.IndexOf(container), -1, 'empty container removed, no error');
+});

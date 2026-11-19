@@ -498,7 +498,7 @@ describe('compile — DataTemplate triggers', () => {
 
     test('`$name` without a trailing path binds to the named element itself', () => {
         // Empty-path ElementNameBinding — the binding's value IS the
-        // source Visual. Used by markup-driven Diagram.DropReceiver /
+        // source Visual. Used by markup-driven Board.DropReceiver /
         // Mutator wiring (`DropReceiver = $surface`).
         const js = emitted(`
             import FooVM from "./foo-vm.mjs"
@@ -1036,7 +1036,7 @@ describe('compile — ShellModule (module declaration)', () => {
     // attribute-only (Name / Icon / ServiceKey — its content is a SERVICE named
     // by ServiceKey, not a mounted child).
     const src = `
-        ShellModule[Name="Diagram"]{
+        ShellModule[Name="Board"]{
             Capability[Name="Shapes"]
             Capability[Name="Layers"]
         }
@@ -1046,7 +1046,7 @@ describe('compile — ShellModule (module declaration)', () => {
         const js = emitted(src);
         assert.match(js, /export function create\(\)/);
         assert.match(js, /const _shellModule\d+ = new ShellModule\(\);/);
-        assert.match(js, /_shellModule\d+\.set_property_value\(ShellModule\.NameKey, "Diagram"\);/);
+        assert.match(js, /_shellModule\d+\.set_property_value\(ShellModule\.NameKey, "Board"\);/);
     });
 
     test('Capabilities route through AddChild (the list slot)', () => {
@@ -1066,13 +1066,13 @@ describe('compile — ShellModule (module declaration)', () => {
 });
 
 describe('compile — shell module NAME form', () => {
-    const src = `shell module DiagramModule[Name="Diagram"]{ Capability[Name="Shapes"] }`;
+    const src = `shell module BoardModule[Name="Board"]{ Capability[Name="Shapes"] }`;
 
     test('exports `const NAME` as an IIFE building the ShellModule', () => {
         const js = emitted(src);
-        assert.match(js, /export const DiagramModule = \(\(\) => \{/);
+        assert.match(js, /export const BoardModule = \(\(\) => \{/);
         assert.match(js, /const _shellModule\d+ = new ShellModule\(\);/);
-        assert.match(js, /_shellModule\d+\.set_property_value\(ShellModule\.NameKey, "Diagram"\);/);
+        assert.match(js, /_shellModule\d+\.set_property_value\(ShellModule\.NameKey, "Board"\);/);
         assert.match(js, /_shellModule\d+\.AddChild\(_capability\d+\);/);
         assert.match(js, /return _shellModule\d+;/);
     });
@@ -1096,7 +1096,7 @@ describe('compile — shell module NAME form', () => {
         // element-resources slot lowers onto `<shellModule>.Resources`, which
         // the Application merges app-global when the module is added.
         const js = emitted(
-            `shell module DiagramModule { resources: { @ModIcon = #ff0000 } Capability[Name="Shapes"]{} }`);
+            `shell module BoardModule { resources: { @ModIcon = #ff0000 } Capability[Name="Shapes"]{} }`);
         assert.match(js, /const _rd\d+ = _shellModule\d+\.Resources;/);
         assert.match(js, /_rd\d+\.Set\("ModIcon",/);
     });
@@ -1108,7 +1108,7 @@ describe('compile — shell module NAME form', () => {
         // the module is composed. A Capability's ServiceKey then references one
         // of these tokens.
         const js = emitted(
-            `shell module DiagramModule {
+            `shell module BoardModule {
                 .services: { StatusService  scoped NavigationService }
                 Capability[Name="Shapes", ServiceKey=StatusService]
              }`);
@@ -1123,15 +1123,15 @@ describe('compile — shell module NAME form', () => {
         // / `.modules:`) remaps to the PascalCase `Settings` property. `Kind =
         // Boolean` resolves to the SettingKind enum member.
         const js = emitted(
-            `shell module DiagramModule {
+            `shell module BoardModule {
                 .settings: {
-                    SettingDefinition[Key="diagram.grid.snap", Label="Snap to grid", Kind=Boolean, Default=true]
+                    SettingDefinition[Key="board.grid.snap", Label="Snap to grid", Kind=Boolean, Default=true]
                 }
                 Capability[Name="Shapes"]
              }`);
         assert.match(js, /import \{ SettingDefinition, SettingKind \} from "@pragmatic-tech-ai\/todl-runtime";/);
         assert.match(js, /const _settingDefinition\d+ = new SettingDefinition\(\);/);
-        assert.match(js, /_settingDefinition\d+\.Key = "diagram\.grid\.snap";/);
+        assert.match(js, /_settingDefinition\d+\.Key = "board\.grid\.snap";/);
         assert.match(js, /_settingDefinition\d+\.Kind = SettingKind\.Boolean;/);
         assert.match(js, /_settingDefinition\d+\.Default = true;/);
         assert.match(js, /_shellModule\d+\.Settings\.Add\(_settingDefinition\d+\);/);
@@ -1141,12 +1141,12 @@ describe('compile — shell module NAME form', () => {
 describe('compile — .modules: block on Application', () => {
     test('adds each imported module const to Application.Modules, in order', () => {
         const js = emitted(`
-            import DiagramModule from "./diagram.module.mu.js"
+            import BoardModule from "./board.module.mu.js"
             import LayersModule from "./layers.module.mu.js"
-            Application { .modules: { DiagramModule LayersModule } resources: {} }
+            Application { .modules: { BoardModule LayersModule } resources: {} }
         `);
-        assert.match(js, /import \{ DiagramModule \} from "\.\/diagram\.module\.mu\.js";/);
-        assert.match(js, /_app\d+\.AddModule\(DiagramModule\);/);
+        assert.match(js, /import \{ BoardModule \} from "\.\/board\.module\.mu\.js";/);
+        assert.match(js, /_app\d+\.AddModule\(BoardModule\);/);
         assert.match(js, /_app\d+\.AddModule\(LayersModule\);/);
         assert.doesNotMatch(js, /_app\d+\.Modules\.Add\(/);
     });
@@ -1158,7 +1158,7 @@ describe('compile — .targets: block in a module body', () => {
         const js = emitted(`
             import Desktop from "./host-kinds.js"
             import Web from "./host-kinds.js"
-            module DiagramModule { .targets: { Desktop Web } }
+            module BoardModule { .targets: { Desktop Web } }
         `);
         assert.match(js, /_module\d+\.AddTarget\(Desktop\);/);
         assert.match(js, /_module\d+\.AddTarget\(Web\);/);

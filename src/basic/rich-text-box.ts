@@ -156,7 +156,7 @@ export class RichTextBox extends RichTextBlock
     }
 
     // ── Selection-changed notification ──────────────────────────────
-    // Fires after every caret move / edit so a host (a diagram alignment
+    // Fires after every caret move / edit so a host (a board alignment
     // toolbar) can re-reflect the caret paragraph's format.
     private readonly _selectionListeners: Array<() => void> = [];
     public AddSelectionChangedListener(l: () => void): void { this._selectionListeners.push(l); }

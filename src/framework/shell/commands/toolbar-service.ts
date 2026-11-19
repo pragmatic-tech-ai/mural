@@ -243,7 +243,7 @@ export class ToolbarService extends ServiceBase
 
         // Signature of the command set this activation would show. When it equals
         // the last-built one — switching between documents that expose the SAME
-        // commands (the common case, e.g. two diagrams) — the command ToolBar's
+        // commands (the common case, e.g. two boards) — the command ToolBar's
         // realized buttons and split-menu dropdowns are already correct: each
         // cached command VM dispatches to the LIVE active document, so tearing
         // down and re-materializing ~500 controls reproduces exactly what's

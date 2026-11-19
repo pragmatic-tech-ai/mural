@@ -11,7 +11,7 @@ import { SolidColorBrush, Color, Pen, HeadlessTarget } from '../../../visual-eng
 import { ShapeFormatControl } from '../shape-format-control.js';
 import { ScrollViewer } from '../../surfaces/scroll-viewer.js';
 import { PenEditor } from '../pen-editor.js';
-import { connectorCapOptions } from '../../diagram/caps/connector-cap-options.js';
+import { connectorCapOptions } from '../../board/caps/connector-cap-options.js';
 import { initTestApp } from '../../../basic/tests/test-app.js';
 
 function mountedPane(): ShapeFormatControl
@@ -90,7 +90,7 @@ describe('ShapeFormatControl — shared-size 2-column layout', () => {
             `every arranged rect is finite; offenders: ${offenders.join('; ')}`);
     });
 
-    // Regression: the diagram hosts the pane inside a ScrollViewer. A
+    // Regression: the board hosts the pane inside a ScrollViewer. A
     // ScrollViewer with HorizontalScrollEnabled (the default) measures its
     // content with +Infinity width — so PART_EmptyMessage (TextWrapping=Wrap)
     // hit the "unbounded width" single-line bail in TextBlock.MeasureOverride

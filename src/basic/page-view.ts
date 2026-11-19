@@ -102,7 +102,7 @@ export class PageView extends TemplatedControl
     // Memoised DataTemplate output, keyed by MuralBase identity. Navigating
     // away from a MuralBase-content demo only unslots its view (DetachVisual)
     // — it does NOT logically detach the persistent Visuals the MuralBase may
-    // own (the diagram's fused Figures, toolbox PreviewNodes). Re-running
+    // own (the board's fused Figures, toolbox PreviewNodes). Re-running
     // tpl.Apply on nav-back would build a fresh tree that re-attaches
     // those still-parented Visuals → "Element already has a logical
     // parent". Caching the resolved view by MuralBase identity makes nav-back

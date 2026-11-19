@@ -182,7 +182,7 @@ export class FillEditor extends TemplatedControl
     // Re-seed closures for the body's controls — one per part, each pushing the
     // current mirror-DP value into its control. Run at wire time AND after every
     // external Fill decompose (reseedBody) so the body reflects the CURRENT fill
-    // — e.g. as the diagram selection changes — not just the value present when
+    // — e.g. as the board selection changes — not just the value present when
     // the body template was applied. Without this the pickers/sliders were
     // wired one-way (seed once, listen for user edits) and went stale on reselect.
     private _bodySeeds: Array<() => void> = [];
@@ -201,7 +201,7 @@ export class FillEditor extends TemplatedControl
         // until a real brush arrives via a later binding push. We used
         // to auto-build a default Solid brush here, but that left the
         // editor stuck on Solid for genuinely unbound consumers (e.g.,
-        // the diagrammer's "nothing selected" state) and pushed an
+        // the boardmer's "nothing selected" state) and pushed an
         // unrequested brush back upstream.
         this.decomposeFill(this.Fill);
         this.refreshTabHighlight();
@@ -426,7 +426,7 @@ export class FillEditor extends TemplatedControl
 
     // Push every body control back to its current mirror-DP value. Called after
     // an external Fill decompose so the swappable body reflects the new fill (a
-    // diagram reselect hands the editor a fresh Fill but never re-applies the
+    // board reselect hands the editor a fresh Fill but never re-applies the
     // body when the variant is unchanged). Runs under _syncing so each control's
     // own change listener bails instead of echoing back into the mirror DPs.
     private reseedBody(): void

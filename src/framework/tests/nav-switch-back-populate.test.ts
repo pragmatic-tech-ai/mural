@@ -35,7 +35,7 @@ const settle = () => new Promise((r) => setTimeout(r, 0));
 describe('Navigation — switch back with shell-default PopulateFromModules (Plexus path)', () => {
     beforeEach(() => {
         const app = initTestApp();
-        // Compose a module with two capabilities — like DiagramModule's ToolBox /
+        // Compose a module with two capabilities — like BoardModule's ToolBox /
         // Layers. The shell's DEFAULT NavigationService flattens these via
         // PopulateFromModules and lands on the first (SelectedItem = capA) during
         // its async, forward-ref resolution.

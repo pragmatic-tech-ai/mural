@@ -133,7 +133,7 @@ describe('SelectionBoundsAdorner', () => {
     });
 
     test('bbox + handles track the selection through an ancestor LayoutTransform (zoom)', () => {
-        // Reproduces the diagram: AdornerDecorator > PART_Camera[LayoutTransform
+        // Reproduces the board: AdornerDecorator > PART_Camera[LayoutTransform
         // Scale] > adorned. The selection bounds are content-space; the chrome
         // must be projected through the camera scale so it hugs the zoomed node.
         const decorator = new AdornerDecorator();

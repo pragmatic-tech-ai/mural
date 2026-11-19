@@ -5,7 +5,7 @@
 //
 // Templated controls (ContentControl, ItemsControl, Button, ToggleButton,
 // ScrollViewer, Drawer, GroupItem, ListBox, TreeView, ComboBox, Menu /
-// ContextMenu / MenuButton, ToolBar, Diagram, Selector base) live in
+// ContextMenu / MenuButton, ToolBar, Board, Selector base) live in
 // `mural/framework`.
 
 export { Adorner, AdornerLayer, AdornerDecorator } from '../runtime/index.js';

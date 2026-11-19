@@ -15,7 +15,7 @@
 // the slot collapses to zero — hence the decode step. `measure` is injected
 // (default decodes via a browser HTMLImageElement) so this unit-tests headless.
 //
-// ResolveUri / MimeForPath / BytesToDataUri are PUBLIC statics: diagram media
+// ResolveUri / MimeForPath / BytesToDataUri are PUBLIC statics: board media
 // (media-node-vm, media-storage) call them without rendering any markdown.
 import { Size } from '../../runtime/index.js';
 import { Image, InlineUIContainer } from '../index.js';

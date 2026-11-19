@@ -107,7 +107,7 @@ class DataContextBindingImpl extends Binding
         // DataContext subscription entirely. Without this short-circuit,
         // `$Self` would walk `DataContext.Self` and fail unless the
         // current DataContext has a registered `Self` DP — a footgun
-        // that's bitten the diagram demo before.
+        // that's bitten the board demo before.
         if (path === 'Self')
         {
             this.watcher.Value = target;

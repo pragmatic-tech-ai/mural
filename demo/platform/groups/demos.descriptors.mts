@@ -2,7 +2,7 @@ import type { DemoDescriptor } from '../demo-descriptor.mjs';
 import bouncingBallDemo from '../../demos/bouncing-ball/bouncing-ball.descriptor.mjs';
 import colorPickerDemo from '../../demos/color-picker/color-picker.descriptor.mjs';
 import commandsDemo from '../../demos/commands/commands.descriptor.mjs';
-import diagramDemo from '../../demos/diagram/diagram.descriptor.mjs';
+import boardDemo from '../../demos/board/board.descriptor.mjs';
 import dragDropDemo from '../../demos/drag-drop/drag-drop.descriptor.mjs';
 import dragDropExtendedDemo from '../../demos/drag-drop-extended/drag-drop-extended.descriptor.mjs';
 import fillEditorDemo from '../../demos/fill-editor/fill-editor.descriptor.mjs';
@@ -22,7 +22,7 @@ export const demosDescriptors: readonly DemoDescriptor[] = [
     bouncingBallDemo,
     colorPickerDemo,
     commandsDemo,
-    diagramDemo,
+    boardDemo,
     dragDropDemo,
     dragDropExtendedDemo,
     fillEditorDemo,

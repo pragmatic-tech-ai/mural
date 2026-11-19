@@ -2,7 +2,7 @@
 //
 // Given a Geometry + a Pen, produces a `PathGeometry` whose filled area
 // reproduces what the renderer would paint when stroking the input
-// geometry with that Pen. Useful for diagram tooling that needs to:
+// geometry with that Pen. Useful for board tooling that needs to:
 //
 //   * hit-test against thick lines without false misses through the
 //     space between adjacent strokes;

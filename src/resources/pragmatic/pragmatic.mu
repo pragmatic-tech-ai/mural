@@ -77,7 +77,7 @@ theme Pragmatic
         @BorderFocus : Brush "2px focus ring colour."
         // ── Selection / canvas ─────────────────────────────────
         @SurfaceSelected : Brush "Selected row fill."
-        @CanvasBg : Brush "Diagram drawing-paper background."
+        @CanvasBg : Brush "Board drawing-paper background."
         @CanvasGridDot : Brush "Canvas grid dots."
         @SelectionMarqueeFill : Brush
         @SelectionMarqueeStroke : Brush

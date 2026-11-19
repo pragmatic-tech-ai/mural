@@ -225,36 +225,36 @@ const ENTRIES: ReadonlyArray<readonly [string, string]> = [
     ['WrapPanel',               '@pragmatic-tech-ai/mural/basic'],
     ['UniformGrid',             '@pragmatic-tech-ai/mural/basic'],
     ['Orientation',             '@pragmatic-tech-ai/mural/basic'],
-    ['PositionAnchor',          '@pragmatic-tech-ai/mural/framework/diagram/position-anchor.js'],
-    ['SizePositionControl',     '@pragmatic-tech-ai/mural/framework/diagram/size-position-control.js'],
+    ['PositionAnchor',          '@pragmatic-tech-ai/mural/framework/board/position-anchor.js'],
+    ['SizePositionControl',     '@pragmatic-tech-ai/mural/framework/board/size-position-control.js'],
     ['ContentControl',          '@pragmatic-tech-ai/mural/framework/base/content-control.js'],
     ['ContentPresenter',        '@pragmatic-tech-ai/mural/basic'],
-    ['Figure',                  '@pragmatic-tech-ai/mural/framework/diagram/figure.js'],
-    ['TextNode',                '@pragmatic-tech-ai/mural/framework/diagram/text-node.js'],
-    ['ContainerFigure',         '@pragmatic-tech-ai/mural/framework/diagram/container-figure.js'],
-    ['ContentContainerFigure',  '@pragmatic-tech-ai/mural/framework/diagram/content-container-figure.js'],
-    ['Callout',                 '@pragmatic-tech-ai/mural/framework/diagram/callout.js'],
-    ['ShapeText',               '@pragmatic-tech-ai/mural/framework/diagram/shape-text.js'],
-    ['Group',                   '@pragmatic-tech-ai/mural/framework/diagram/group.js'],
-    ['Diagram',                 '@pragmatic-tech-ai/mural/framework/diagram/diagram.js'],
+    ['Figure',                  '@pragmatic-tech-ai/mural/framework/board/figure.js'],
+    ['TextNode',                '@pragmatic-tech-ai/mural/framework/board/text-node.js'],
+    ['ContainerFigure',         '@pragmatic-tech-ai/mural/framework/board/container-figure.js'],
+    ['ContentContainerFigure',  '@pragmatic-tech-ai/mural/framework/board/content-container-figure.js'],
+    ['Callout',                 '@pragmatic-tech-ai/mural/framework/board/callout.js'],
+    ['ShapeText',               '@pragmatic-tech-ai/mural/framework/board/shape-text.js'],
+    ['Group',                   '@pragmatic-tech-ai/mural/framework/board/group.js'],
+    ['Board',                 '@pragmatic-tech-ai/mural/framework/board/board.js'],
     // Connector — markup references it for the `Connector.CapInset`
     // attached property on cap templates. ConnectorCapDataContext is the
     // DataType those cap DataTemplates bind against ($Brush / $Pen).
-    ['Connector',               '@pragmatic-tech-ai/mural/framework/diagram/connector.js'],
-    ['ConnectorCapDataContext', '@pragmatic-tech-ai/mural/framework/diagram/caps/connector-cap-data-context.js'],
-    ['RulerBar',                '@pragmatic-tech-ai/mural/framework/diagram/guides/ruler-bar.js'],
-    ['ToolboxVisualPresenter',  '@pragmatic-tech-ai/mural/framework/diagram/toolbox/toolbox-visual-presenter.js'],
-    ['ToolboxRepository',       '@pragmatic-tech-ai/mural/framework/diagram/toolbox/toolbox-repository.js'],
-    ['ToolboxPage',             '@pragmatic-tech-ai/mural/framework/diagram/toolbox/toolbox-page.js'],
-    ['ToolboxItem',             '@pragmatic-tech-ai/mural/framework/diagram/toolbox/toolbox-item.js'],
-    ['VisualContext',           '@pragmatic-tech-ai/mural/framework/diagram/toolbox/toolbox-visual-resolver.js'],
-    ['VisualContextScope',      '@pragmatic-tech-ai/mural/framework/diagram/toolbox/visual-context-scope.js'],
-    ['DiagramDocument',         '@pragmatic-tech-ai/mural/framework/diagram/diagram-document.js'],
-    ['DiagramStorageKey',       '@pragmatic-tech-ai/mural/framework/diagram/diagram-document.js'],
-    ['DiagramEditingContext',   '@pragmatic-tech-ai/mural/framework/diagram/diagram-command-contexts.js'],
-    ['DiagramInspector',        '@pragmatic-tech-ai/mural/framework/diagram/diagram-inspector.js'],
-    ['ShapeStylePage',          '@pragmatic-tech-ai/mural/framework/diagram/inspector-pages.js'],
-    ['SizePositionPage',        '@pragmatic-tech-ai/mural/framework/diagram/inspector-pages.js'],
+    ['Connector',               '@pragmatic-tech-ai/mural/framework/board/connector.js'],
+    ['ConnectorCapDataContext', '@pragmatic-tech-ai/mural/framework/board/caps/connector-cap-data-context.js'],
+    ['RulerBar',                '@pragmatic-tech-ai/mural/framework/board/guides/ruler-bar.js'],
+    ['ToolboxVisualPresenter',  '@pragmatic-tech-ai/mural/framework/board/toolbox/toolbox-visual-presenter.js'],
+    ['ToolboxRepository',       '@pragmatic-tech-ai/mural/framework/board/toolbox/toolbox-repository.js'],
+    ['ToolboxPage',             '@pragmatic-tech-ai/mural/framework/board/toolbox/toolbox-page.js'],
+    ['ToolboxItem',             '@pragmatic-tech-ai/mural/framework/board/toolbox/toolbox-item.js'],
+    ['VisualContext',           '@pragmatic-tech-ai/mural/framework/board/toolbox/toolbox-visual-resolver.js'],
+    ['VisualContextScope',      '@pragmatic-tech-ai/mural/framework/board/toolbox/visual-context-scope.js'],
+    ['BoardDocument',         '@pragmatic-tech-ai/mural/framework/board/board-document.js'],
+    ['BoardStorageKey',       '@pragmatic-tech-ai/mural/framework/board/board-document.js'],
+    ['BoardEditingContext',   '@pragmatic-tech-ai/mural/framework/board/board-command-contexts.js'],
+    ['BoardInspector',        '@pragmatic-tech-ai/mural/framework/board/board-inspector.js'],
+    ['ShapeStylePage',          '@pragmatic-tech-ai/mural/framework/board/inspector-pages.js'],
+    ['SizePositionPage',        '@pragmatic-tech-ai/mural/framework/board/inspector-pages.js'],
     ['Grid',                    '@pragmatic-tech-ai/mural/basic'],
     ['GridLength',              '@pragmatic-tech-ai/mural/basic'],
     ['ColumnDefinition',        '@pragmatic-tech-ai/mural/basic'],
@@ -659,7 +659,7 @@ export const STATIC_MEMBERS: ReadonlyMap<string, ReadonlySet<string>> = new Map<
     // the enum-member resolution.
     ['FontWeight', new Set(['Normal', 'Medium', 'SemiBold', 'Bold'])],
     // Exposed for the dotted form `TextAlignment.Justify` / `TextPlacement.Center`
-    // as `Is(...)` converter-factory arguments in the diagram alignment
+    // as `Is(...)` converter-factory arguments in the board alignment
     // toolbars (also in ENUM_MEMBERS for TextAlignment so `TextAlignment=Left`
     // property assignment keeps working).
     ['TextAlignment', new Set(['Left', 'Center', 'Right', 'Justify'])],
@@ -669,7 +669,7 @@ export const STATIC_MEMBERS: ReadonlyMap<string, ReadonlySet<string>> = new Map<
         'Above', 'Below', 'LeftOf', 'RightOf',
     ])],
     // ToolboxVisualPresenter.Context = VisualContext.Tile / .Figure. The `Context`
-    // property name is overloaded (a class-ref `Context = DiagramEditingContext`
+    // property name is overloaded (a class-ref `Context = BoardEditingContext`
     // also exists), so the bare-member PROPERTY_TO_ENUM path can't be used — author
     // the qualified `VisualContext.Tile` form, resolved here.
     ['VisualContext', new Set(['Tile', 'Figure'])],
@@ -738,8 +738,8 @@ export const TYPE_REF_META_ATTRS: ReadonlySet<string> = new Set([
 //   Visual.Stroke                     (visual-engine/visual.ts)
 //   ShapeFormatControl.Stroke         (framework/formatting/shape-format-control.ts)
 //   PenEditor.Pen                     (framework/formatting/pen-editor.ts)
-//   ConnectorCapDataContext.Pen       (framework/diagram/caps/connector-cap-data-context.ts)
-//   Diagram.SelectionFormatStroke     (framework/diagram/diagram.ts)
+//   ConnectorCapDataContext.Pen       (framework/board/caps/connector-cap-data-context.ts)
+//   Board.SelectionFormatStroke     (framework/board/board.ts)
 //   CapOption.GlyphStroke             (framework/formatting/cap-option.ts)
 export const PEN_PROPERTIES: ReadonlySet<string> = new Set([
     'Stroke',
@@ -848,7 +848,7 @@ export const DEFAULT_SLOT_INFO: ReadonlyMap<string, SlotInfo> = new Map<string, 
     ['Group',                   { name: 'Content',  kind: 'object' }],
     ['ItemsControl',            { name: 'Items',    kind: 'list'   }],
     ['Selector',                { name: 'Items',    kind: 'list'   }],
-    ['Diagram',                 { name: 'Items',    kind: 'list'   }],
+    ['Board',                 { name: 'Items',    kind: 'list'   }],
     ['VirtualizingStackPanel',  { name: 'Children', kind: 'list'   }],
     ['VirtualizingWrapPanel',   { name: 'Children', kind: 'list'   }],
     ['ScrollViewer',            { name: 'Content',  kind: 'object' }],

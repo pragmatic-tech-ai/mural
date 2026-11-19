@@ -22,9 +22,9 @@ function serviceModule(id: string, targets: HostKind[]): { mod: ShellModule; key
 describe('Application host-kind composition', () => {
     test('AddModule composes an admitted module (its services + capability appear)', () => {
         const app = new Application(Desktop);
-        const { mod, key } = serviceModule('diagram', [Desktop, Web]);
+        const { mod, key } = serviceModule('board', [Desktop, Web]);
         app.AddModule(mod);
-        assert.deepEqual(app.Services.get(key), { id: 'diagram' });
+        assert.deepEqual(app.Services.get(key), { id: 'board' });
         assert.equal(app.Modules.Count, 1);
     });
 

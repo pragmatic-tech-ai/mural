@@ -58,7 +58,7 @@ export class RecentCommandContributor implements ICommandContributor
         [RecentCommandContributor.Item1Id, RecentCommandContributor.Item2Id, RecentCommandContributor.Item3Id];
 
     private static readonly FileNames: readonly string[] =
-        ['diagram-draft.mu', 'architecture-v2.mu', 'notes.mu'];
+        ['board-draft.mu', 'architecture-v2.mu', 'notes.mu'];
 
     private openCount = 0;
 

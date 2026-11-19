@@ -1,6 +1,6 @@
 import { CommandsVM, EllipseFigure, NoteFigure, RectFigure } from "./commands-vm.mjs";
 import { Border, Canvas, DataTemplate, Dock, DockPanel, ItemsPanelTemplate, Line, Orientation, Shape, StackPanel, TargetedSetter, TemplateDataTrigger, TextBlock, UniformGrid } from "@pragmatic-tech-ai/mural/basic";
-import { Diagram } from "@pragmatic-tech-ai/mural/framework/diagram/diagram.js";
+import { Board } from "@pragmatic-tech-ai/mural/framework/board/board.js";
 import { SelectionMode } from "@pragmatic-tech-ai/mural/framework/list/list-box.js";
 import { MenuButton, MenuItem, MenuSeparator, Ribbon, RibbonButton, RibbonContextualGroup, RibbonGroup, RibbonSmallButtonColumn, RibbonTab, ToolBar, ToolBarButton, ToolBarSeparator, ToolBarSplitButton } from "@pragmatic-tech-ai/mural/framework/surface.js";
 import { Checkbox } from "@pragmatic-tech-ai/mural/framework/toggles/checkbox.js";
@@ -105,7 +105,7 @@ export class CommandsDemo extends ResourceDictionary {
         t.Set(NoteFigure, _style22);
         const _tmpl23 = (() => {
             const _factory = (_data) => {
-                let _stackPanel24, _border25, _diagram26;
+                let _stackPanel24, _border25, _board26;
                 const _border27 = new Border();
                 _border27.set_property_value(Border.FillKey, DynamicResource(_border27, "Surface"));
                 _border27.set_property_value(Border.StrokeKey, ((_e) => { _e.Brush = DynamicResource(_e, "OutlineVariant"); return _e; })(new Pen()));
@@ -353,7 +353,7 @@ export class CommandsDemo extends ResourceDictionary {
                 _toolBarSplitButton86.set_property_value(ToolBarSplitButton.ContentKey, DynamicResource(_toolBarSplitButton86, "PlacementSplitLabel"));
                 _toolBarSplitButton86.set_property_value(ToolBarSplitButton.ItemsPanelKey, _tmpl6);
                 const _toolBarButton87 = new ToolBarButton();
-                _toolBarButton87.set_property_value(ToolBarButton.CommandKey, ElementNameBinding(() => _diagram26, "SetTextPlacementTopLeftCommand"));
+                _toolBarButton87.set_property_value(ToolBarButton.CommandKey, ElementNameBinding(() => _board26, "SetTextPlacementTopLeftCommand"));
                 const _shape88 = new Shape();
                 _shape88.set_property_value(Shape.GeometryKey, DynamicResource(_shape88, "north_west"));
                 _shape88.set_property_value(Shape.WidthKey, 16);
@@ -362,7 +362,7 @@ export class CommandsDemo extends ResourceDictionary {
                 _toolBarButton87.Content = _shape88;
                 _toolBarSplitButton86.AddChild(_toolBarButton87);
                 const _toolBarButton89 = new ToolBarButton();
-                _toolBarButton89.set_property_value(ToolBarButton.CommandKey, ElementNameBinding(() => _diagram26, "SetTextPlacementTopCommand"));
+                _toolBarButton89.set_property_value(ToolBarButton.CommandKey, ElementNameBinding(() => _board26, "SetTextPlacementTopCommand"));
                 const _shape90 = new Shape();
                 _shape90.set_property_value(Shape.GeometryKey, DynamicResource(_shape90, "north"));
                 _shape90.set_property_value(Shape.WidthKey, 16);
@@ -371,7 +371,7 @@ export class CommandsDemo extends ResourceDictionary {
                 _toolBarButton89.Content = _shape90;
                 _toolBarSplitButton86.AddChild(_toolBarButton89);
                 const _toolBarButton91 = new ToolBarButton();
-                _toolBarButton91.set_property_value(ToolBarButton.CommandKey, ElementNameBinding(() => _diagram26, "SetTextPlacementTopRightCommand"));
+                _toolBarButton91.set_property_value(ToolBarButton.CommandKey, ElementNameBinding(() => _board26, "SetTextPlacementTopRightCommand"));
                 const _shape92 = new Shape();
                 _shape92.set_property_value(Shape.GeometryKey, DynamicResource(_shape92, "north_east"));
                 _shape92.set_property_value(Shape.WidthKey, 16);
@@ -380,7 +380,7 @@ export class CommandsDemo extends ResourceDictionary {
                 _toolBarButton91.Content = _shape92;
                 _toolBarSplitButton86.AddChild(_toolBarButton91);
                 const _toolBarButton93 = new ToolBarButton();
-                _toolBarButton93.set_property_value(ToolBarButton.CommandKey, ElementNameBinding(() => _diagram26, "SetTextPlacementLeftCommand"));
+                _toolBarButton93.set_property_value(ToolBarButton.CommandKey, ElementNameBinding(() => _board26, "SetTextPlacementLeftCommand"));
                 const _shape94 = new Shape();
                 _shape94.set_property_value(Shape.GeometryKey, DynamicResource(_shape94, "west"));
                 _shape94.set_property_value(Shape.WidthKey, 16);
@@ -389,7 +389,7 @@ export class CommandsDemo extends ResourceDictionary {
                 _toolBarButton93.Content = _shape94;
                 _toolBarSplitButton86.AddChild(_toolBarButton93);
                 const _toolBarButton95 = new ToolBarButton();
-                _toolBarButton95.set_property_value(ToolBarButton.CommandKey, ElementNameBinding(() => _diagram26, "SetTextPlacementCenterCommand"));
+                _toolBarButton95.set_property_value(ToolBarButton.CommandKey, ElementNameBinding(() => _board26, "SetTextPlacementCenterCommand"));
                 const _shape96 = new Shape();
                 _shape96.set_property_value(Shape.GeometryKey, DynamicResource(_shape96, "filter_center_focus"));
                 _shape96.set_property_value(Shape.WidthKey, 16);
@@ -398,7 +398,7 @@ export class CommandsDemo extends ResourceDictionary {
                 _toolBarButton95.Content = _shape96;
                 _toolBarSplitButton86.AddChild(_toolBarButton95);
                 const _toolBarButton97 = new ToolBarButton();
-                _toolBarButton97.set_property_value(ToolBarButton.CommandKey, ElementNameBinding(() => _diagram26, "SetTextPlacementRightCommand"));
+                _toolBarButton97.set_property_value(ToolBarButton.CommandKey, ElementNameBinding(() => _board26, "SetTextPlacementRightCommand"));
                 const _shape98 = new Shape();
                 _shape98.set_property_value(Shape.GeometryKey, DynamicResource(_shape98, "east"));
                 _shape98.set_property_value(Shape.WidthKey, 16);
@@ -407,7 +407,7 @@ export class CommandsDemo extends ResourceDictionary {
                 _toolBarButton97.Content = _shape98;
                 _toolBarSplitButton86.AddChild(_toolBarButton97);
                 const _toolBarButton99 = new ToolBarButton();
-                _toolBarButton99.set_property_value(ToolBarButton.CommandKey, ElementNameBinding(() => _diagram26, "SetTextPlacementBottomLeftCommand"));
+                _toolBarButton99.set_property_value(ToolBarButton.CommandKey, ElementNameBinding(() => _board26, "SetTextPlacementBottomLeftCommand"));
                 const _shape100 = new Shape();
                 _shape100.set_property_value(Shape.GeometryKey, DynamicResource(_shape100, "south_west"));
                 _shape100.set_property_value(Shape.WidthKey, 16);
@@ -416,7 +416,7 @@ export class CommandsDemo extends ResourceDictionary {
                 _toolBarButton99.Content = _shape100;
                 _toolBarSplitButton86.AddChild(_toolBarButton99);
                 const _toolBarButton101 = new ToolBarButton();
-                _toolBarButton101.set_property_value(ToolBarButton.CommandKey, ElementNameBinding(() => _diagram26, "SetTextPlacementBottomCommand"));
+                _toolBarButton101.set_property_value(ToolBarButton.CommandKey, ElementNameBinding(() => _board26, "SetTextPlacementBottomCommand"));
                 const _shape102 = new Shape();
                 _shape102.set_property_value(Shape.GeometryKey, DynamicResource(_shape102, "south"));
                 _shape102.set_property_value(Shape.WidthKey, 16);
@@ -425,7 +425,7 @@ export class CommandsDemo extends ResourceDictionary {
                 _toolBarButton101.Content = _shape102;
                 _toolBarSplitButton86.AddChild(_toolBarButton101);
                 const _toolBarButton103 = new ToolBarButton();
-                _toolBarButton103.set_property_value(ToolBarButton.CommandKey, ElementNameBinding(() => _diagram26, "SetTextPlacementBottomRightCommand"));
+                _toolBarButton103.set_property_value(ToolBarButton.CommandKey, ElementNameBinding(() => _board26, "SetTextPlacementBottomRightCommand"));
                 const _shape104 = new Shape();
                 _shape104.set_property_value(Shape.GeometryKey, DynamicResource(_shape104, "south_east"));
                 _shape104.set_property_value(Shape.WidthKey, 16);
@@ -577,15 +577,15 @@ export class CommandsDemo extends ResourceDictionary {
                 _ribbon105.QuickAccessItems.Add(_ribbonButton141);
                 _border25.SetChild(_ribbon105);
                 _dockPanel28.AddChild(_border25);
-                _diagram26 = new Diagram();
-                _diagram26.Name = "nodes";
-                _diagram26.set_property_value(Diagram.ItemsSourceKey, DataContextBinding(_diagram26, "Nodes"));
-                _diagram26.set_property_value(Diagram.ItemsPanelKey, _tmpl8);
-                _diagram26.set_property_value(Diagram.SelectionModeKey, SelectionMode.Extended);
-                _diagram26.set_property_value(Diagram.AllowMarqueeSelectionKey, true);
-                _diagram26.set_property_value(Diagram.ReflectSelectionToItemsKey, true);
-                _diagram26.set_property_value(Diagram.FocusableKey, true);
-                _dockPanel28.AddChild(_diagram26);
+                _board26 = new Board();
+                _board26.Name = "nodes";
+                _board26.set_property_value(Board.ItemsSourceKey, DataContextBinding(_board26, "Nodes"));
+                _board26.set_property_value(Board.ItemsPanelKey, _tmpl8);
+                _board26.set_property_value(Board.SelectionModeKey, SelectionMode.Extended);
+                _board26.set_property_value(Board.AllowMarqueeSelectionKey, true);
+                _board26.set_property_value(Board.ReflectSelectionToItemsKey, true);
+                _board26.set_property_value(Board.FocusableKey, true);
+                _dockPanel28.AddChild(_board26);
                 _border27.SetChild(_dockPanel28);
                 return _border27;
             };

@@ -26,12 +26,12 @@ import EditorShell from "@pragmatic-tech-ai/mural/framework/shell/editor-shell.j
 import Pragmatic from "@pragmatic-tech-ai/mural/resources/pragmatic"
 import PragmaticLight from "@pragmatic-tech-ai/mural/resources/pragmatic"
 
-// Persistence backend for the framework's DiagramStorageKey — resolved by the
-// Diagrammer / Commands demos through DI. (DiagramStorageKey is a default compiler
+// Persistence backend for the framework's BoardStorageKey — resolved by the
+// Boardmer / Commands demos through DI. (BoardStorageKey is a default compiler
 // symbol — no import.)
 import DemoStorageStore from "./demo-storage-store.mjs"
 
-// Shared toolbox-glyph dictionary the Diagrammer / Commands demos reference — an
+// Shared toolbox-glyph dictionary the Boardmer / Commands demos reference — an
 // ASSET dictionary (not a per-demo view dict), so it stays app-global here.
 import Icons from "../assets/icons.mu.js"
 
@@ -53,8 +53,8 @@ import HierarchyTreeDemoModule from "../demos/hierarchy-tree/hierarchy-tree.modu
 
 Application [ Theme = Pragmatic, Scheme = PragmaticLight ] {
     .services: {
-        // Persistence backend, bound to the framework's DiagramStorageKey token.
-        DemoStorageStore -> DiagramStorageKey
+        // Persistence backend, bound to the framework's BoardStorageKey token.
+        DemoStorageStore -> BoardStorageKey
 
         // The shared content host, registered at the app root so the group
         // services (root singletons) resolve the SAME instance the shell's
@@ -77,7 +77,7 @@ Application [ Theme = Pragmatic, Scheme = PragmaticLight ] {
         // `Icon = @<Key>` (a DynamicResource) resolves.
         merge DemoPlatformIcons
 
-        // Shared toolbox glyphs (Diagrammer / Commands).
+        // Shared toolbox glyphs (Boardmer / Commands).
         merge Icons
 
         // Shared content template: every group service extends DemoGroupService,

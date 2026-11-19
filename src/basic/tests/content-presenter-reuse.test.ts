@@ -10,8 +10,8 @@ import { TextBlock } from '../text-block.js';
 
 // ReuseContentViews makes a ContentPresenter hand back the SAME view when the
 // same content object is presented again (a tab re-activation) instead of
-// rebuilding it. Critical for a body that owns shared Visuals — a Diagram whose
-// items are its document's Figures: a rebuilt Diagram would re-parent already-
+// rebuilding it. Critical for a body that owns shared Visuals — a Board whose
+// items are its document's Figures: a rebuilt Board would re-parent already-
 // parented Figures and crash ("Visual already has a visual parent").
 class Doc extends MuralBase
 {
