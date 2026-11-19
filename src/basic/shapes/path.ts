@@ -42,7 +42,11 @@ export class Path extends Shape
         super.OnPropertyChanged(descriptor, oldValue, newValue);
         if (descriptor === Path.DataKey.descriptor)
         {
-            this.Geometry = new PathGeometry(parsePathData(newValue as string));
+            // A binding may resolve Data to undefined/null (e.g. a template
+            // bound to an item field that is absent for one option) — treat
+            // that as an empty path (no geometry) rather than crashing the
+            // tokenizer.
+            this.Geometry = new PathGeometry(parsePathData((newValue as string | undefined | null) ?? ''));
         }
     }
 }
