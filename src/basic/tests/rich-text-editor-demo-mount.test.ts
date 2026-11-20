@@ -1,5 +1,6 @@
 import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { DemoModuleResolution } from './demo-module-resolution.js';
 import { initTestApp } from './test-app.js';
 import { Application, type Visual } from '../../runtime/index.js';
 import { HeadlessTarget, FontWeight } from '../../visual-engine/index.js';
@@ -13,6 +14,7 @@ import { DocumentParagraphs } from '../documents/text-navigation.js';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function loadDemo(): Promise<{ dict: any; VM: any }>
 {
+    DemoModuleResolution.Install();
     const mu = await import('../../../demo/demos/rich-text-editor/rich-text-editor.mu.js');
     const vm = await import('../../../demo/demos/rich-text-editor/rich-text-editor-vm.mjs');
     return { dict: (mu as never)['RichTextEditorDemo'], VM: (vm as never)['RichTextEditorVM'] };
