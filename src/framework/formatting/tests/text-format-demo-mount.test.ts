@@ -1,5 +1,6 @@
 import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
+import { DemoModuleResolution } from '../../../basic/tests/demo-module-resolution.js';
 import { initTestApp } from '../../../basic/tests/test-app.js';
 import { Application } from '../../../runtime/index.js';
 import { HeadlessTarget } from '../../../visual-engine/index.js';
@@ -24,6 +25,7 @@ function findByText(root: Visual, text: string): TextBlock | undefined
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function loadDemo(): Promise<{ TextFormatDemo: any; TextFormatVM: any }>
 {
+    DemoModuleResolution.Install();
     const mu = await import('../../../../demo/demos/text-format/text-format.mu.js');
     const vm = await import('../../../../demo/demos/text-format/text-format-vm.mjs');
     return { TextFormatDemo: (mu as never)['TextFormatDemo'], TextFormatVM: (vm as never)['TextFormatVM'] };
