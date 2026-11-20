@@ -1,0 +1,35 @@
+# CI: build (control templates, demo templates, the library, the demo TypeScript) and the unit suite, on every push to
+# main and every pull request. Mural's one @pragmatic-tech-ai dependency (todl-runtime) is a registry dependency read
+# from GitHub Packages with this run's token. The demo app's own install (Electron, Playwright) is not needed: the
+# tests that mount compiled demos resolve Mural through the repo's package exports.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - name: Configure GitHub Packages auth
+        env:
+          PACKAGES_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          (umask 077 && printf 'registry=https://registry.npmjs.org/\n@pragmatic-tech-ai:registry=https://npm.pkg.github.com\n//npm.pkg.github.com/:_authToken=%s\n' "$PACKAGES_TOKEN" > ~/.npmrc)
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - run: npm test
