@@ -2,7 +2,7 @@ import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { TokenSnapshot } from '../token-snapshot.js';
+import { DesignSystemTokens } from './design-system-tokens.js';
 import { SchemeValues } from '../scheme-values.js';
 import { ColorValue } from '../color-value.js';
 import { PragmaticShadowEffect } from '../../../visual-engine/drawing/pragmatic-shadow-effect.js';
@@ -10,10 +10,6 @@ import { PragmaticShadowEffect } from '../../../visual-engine/drawing/pragmatic-
 function read(rel: string): string
 {
     return readFileSync(fileURLToPath(new URL(rel, import.meta.url)), 'utf8');
-}
-function snapshot(): TokenSnapshot
-{
-    return new TokenSnapshot(JSON.parse(read('../../../../../dev-kit/design/design-systems/pragmatic/tokens.json')));
 }
 function kebab(pascal: string): string
 {
@@ -24,9 +20,9 @@ function kebab(pascal: string): string
         .toLowerCase();
 }
 
-describe('Pragmatic conformance', () =>
+describe('Pragmatic conformance', { skip: DesignSystemTokens.SkipReason() }, () =>
 {
-    const snap  = snapshot();
+    const snap  = DesignSystemTokens.Load();
     const light = SchemeValues.Parse(read('../light.mu'));
     const dark  = SchemeValues.Parse(read('../dark.mu'));
     const colourNames = snap.ColorNames().filter(n => !n.startsWith('neutral-'));
