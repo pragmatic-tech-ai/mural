@@ -1071,6 +1071,16 @@ export class Visual extends MuralBase
      *  subscriptions across its subtree before a detach. */
     public _unsubscribe_styles_subtree(): void { }
 
+    /** @internal — Visual-tier no-op virtual; `Element` overrides to
+     *  resolve its OWN implicit + theme styles (and subscribe to the
+     *  Application dictionary) when it is mounted as the parentless
+     *  root of a PresentationTarget. A root never goes through
+     *  AttachLogical, which is otherwise the only place styles resolve,
+     *  so a root whose Template comes from its theme Style (a bare
+     *  ContentControl) would stay un-templated. Descendants already
+     *  resolved at their own AttachLogical, so this is root-only. */
+    public _refresh_root_styles(): void { }
+
     // ── Overlay children — logical-owner-side wiring ─────────────────
     //
     // AttachOverlayChild / DetachOverlayChild moved to `Element`

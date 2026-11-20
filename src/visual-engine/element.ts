@@ -779,6 +779,18 @@ export class Element extends Visual implements ITriggerHost
         }
     }
 
+    /** @internal — See Visual.`_refresh_root_styles`. Root-only: an
+     *  Element that has a logical or templated parent already resolved
+     *  (and subscribed) through the AttachLogical cascade. */
+    public override _refresh_root_styles(): void
+    {
+        if (this.GetLogicalParent() !== undefined || this.templatedParent !== undefined) return;
+        this.unsubscribe_styles();
+        this.resolve_implicit_style();
+        this.resolve_theme_style();
+        this.subscribe_styles();
+    }
+
     /** @internal — § 1.10. See `_refresh_styles_subtree`. Tears down
      *  ancestor ResourceDictionary subscriptions across the subtree
      *  before a detach so they can't fire through the still-attached

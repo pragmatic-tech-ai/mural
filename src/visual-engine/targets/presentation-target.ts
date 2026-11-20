@@ -263,6 +263,12 @@ export abstract class PresentationTarget extends MuralBase implements VisualHost
         if (old === value) return;
         old?.['SetTarget'](undefined);
         this.set_property_value(PresentationTarget.ContentKey, value);
+        // The mounted root has no logical parent, so it never ran the
+        // AttachLogical style cascade: resolve its own implicit / theme
+        // Style now (a ContentControl root gets its Template here). Done
+        // before SetTarget so a freshly-applied template subtree is
+        // covered by the host back-pointer cascade.
+        value?._refresh_root_styles();
         value?.['SetTarget'](this);
         // Kick the layout queue. The new Content's subtree may carry
         // stale `_isMeasureValid = false` flags from property writes
